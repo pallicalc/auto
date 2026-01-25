@@ -43,3 +43,85 @@ textarea {
     cursor: not-allowed; 
     opacity: 0.6; 
 }
+body { 
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+    min-height: 100vh; 
+}
+
+/* --- DASHBOARD CARDS --- */
+.admin-card { 
+    background: white; 
+    border-radius: 15px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+    transition: transform 0.2s; 
+    border: none;
+    color: inherit; /* Inherit text color */
+}
+
+.admin-card:hover { 
+    transform: translateY(-5px); 
+    color: inherit;
+}
+
+/* --- STATUS BAR --- */
+.status-bar { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    z-index: 1000; 
+}
+
+/* --- FORMS --- */
+textarea { 
+    resize: vertical; 
+    min-height: 100px; 
+}
+
+/* --- LOGIN OVERLAY --- */
+#loginMessage { 
+    position: fixed; 
+    top: 30%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); 
+    z-index: 9999; 
+    max-width: 400px; 
+}
+
+/* --- UTILITIES --- */
+.btn-disabled-wait { 
+    background-color: #6c757d !important; 
+    border-color: #6c757d !important; 
+    cursor: not-allowed; 
+    opacity: 0.6; 
+}
+
+/* =========================================
+   --- NEW: STAFF MANAGEMENT STYLES ---
+   ========================================= */
+
+/* The "Red Border" for the Remove Account Card on the main dashboard */
+.card-danger-left {
+    border-left: 5px solid #dc3545 !important;
+}
+
+/* The Cards for individual users in the list */
+.user-card { 
+    background: white; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+    transition: 0.2s; 
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.user-card:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
+}
+
+/* The small status badges (if you use them) */
+.status-badge { 
+    font-size: 0.8rem; 
+    padding: 5px 10px; 
+    border-radius: 20px; 
+}
