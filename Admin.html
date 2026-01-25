@@ -12,7 +12,50 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="admin-style.css">
+  
   <script src="admin.js" defer></script>
+
+  <style>
+    /* 1. Make the body a Flex Column to push footer down */
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+
+    /* 2. Main content grows to fill empty space */
+    #main-wrapper {
+        flex: 1;
+    }
+
+    /* 3. Feedback Section - Full Width */
+    .feedback-section {
+        background-color: #e9ecef; /* Light gray to separate from body */
+        border-top: 1px solid #dee2e6;
+        padding: 40px 0;
+        margin-top: auto; /* Double insurance to push to bottom */
+    }
+
+    /* 4. Footer Section - Full Width */
+    .footer-section {
+        background-color: #f8f9fa;
+        border-top: 1px solid #dcdcdc;
+        padding: 20px 0;
+        width: 100%;
+    }
+    
+    /* Card Hover Effects */
+    .admin-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    .admin-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+  </style>
 </head>
 <body>
 
@@ -38,99 +81,129 @@
     </div>
   </div>
 
-  <div class="container py-5 mt-5" id="adminContent" style="display: none;">
-    <div class="row justify-content-center">
-      <div class="col-lg-8 col-xl-6">
-        
-        <div class="text-center mb-5">
-          <h1 class="display-5 fw-bold text-primary mb-3">Admin Dashboard</h1>
-          <p class="lead text-muted">Manage your institution settings securely</p>
+  <div id="main-wrapper" class="d-none"> <div class="container py-5 mt-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+          
+          <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold text-primary mb-3">Admin Dashboard</h1>
+            <p class="lead text-muted">Manage your institution settings securely</p>
+          </div>
+
+          <a href="Admin/ratios.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-block text-dark">
+            <div class="d-flex align-items-center">
+              <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-4">
+                <i class="bi bi-calculator-fill text-primary fs-3"></i>
+              </div>
+              <div>
+                <h3 class="mb-1 h4">Custom Ratios</h3>
+                <p class="text-muted mb-0 small">Edit & save opioid conversion ratios</p>
+              </div>
+              <i class="bi bi-arrow-right ms-auto fs-4 text-muted"></i>
+            </div>
+          </a>
+
+          <a href="Admin/institution.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-block text-dark">
+            <div class="d-flex align-items-center">
+              <div class="bg-info bg-opacity-10 p-3 rounded-circle me-4">
+                <i class="bi bi-building-fill text-info fs-3"></i>
+              </div>
+              <div>
+                <h3 class="mb-1 h4">Institution Info</h3>
+                <p class="text-muted mb-0 small">Logo, name, address, contact details</p>
+              </div>
+              <i class="bi bi-arrow-right ms-auto fs-4 text-muted"></i>
+            </div>
+          </a>
+
+          <a href="Admin/remove-account.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-block text-dark" style="border-left: 5px solid #dc3545;">
+            <div class="d-flex align-items-center">
+              <div class="bg-danger bg-opacity-10 p-3 rounded-circle me-4">
+                <i class="bi bi-people-fill text-danger fs-3"></i>
+              </div>
+              <div>
+                <h3 class="mb-1 h4 text-danger">Manage Staff</h3>
+                <p class="text-muted mb-0 small">Remove accounts (14-day notice)</p>
+              </div>
+              <i class="bi bi-arrow-right ms-auto fs-4 text-danger"></i>
+            </div>
+          </a>
+
+          <div class="card admin-card p-4 mb-4 shadow-sm">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-4">
+                <i class="bi bi-arrow-right-circle-fill text-warning fs-3"></i>
+              </div>
+              <h3 class="mb-0 h4">Transfer Account</h3>
+            </div>
+            <p class="text-muted mb-3 small">
+              Secure handover. <strong>Note:</strong> Government emails may delay delivery by 10 minutes.
+            </p>
+            <button id="transferBtn" class="btn btn-warning w-100 mb-2 fw-bold text-dark">
+              <i class="bi bi-envelope me-2"></i> Send Transfer Link
+            </button>
+            <div id="transferStatus" class="small mt-2"></div>
+          </div>
+
         </div>
-
-        <a href="Admin/ratios.html" class="admin-card text-decoration-none mb-4 p-5 d-block">
-          <div class="d-flex align-items-center">
-            <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-4">
-              <i class="bi bi-calculator-fill text-primary fs-3"></i>
-            </div>
-            <div>
-              <h3 class="mb-1">Custom Ratios</h3>
-              <p class="text-muted mb-0">Edit & save opioid conversion ratios</p>
-            </div>
-          </div>
-          <i class="bi bi-arrow-right ms-auto fs-4"></i>
-        </a>
-
-        <a href="Admin/institution.html" class="admin-card text-decoration-none mb-4 p-5 d-block">
-          <div class="d-flex align-items-center">
-            <div class="bg-info bg-opacity-10 p-3 rounded-circle me-4">
-              <i class="bi bi-building-fill text-info fs-3"></i>
-            </div>
-            <div>
-              <h3 class="mb-1">Institution Info</h3>
-              <p class="text-muted mb-0">Logo, name, address, contact details</p>
-            </div>
-          </div>
-          <i class="bi bi-arrow-right ms-auto fs-4"></i>
-        </a>
-
-        <a href="Admin/remove-account.html" class="admin-card text-decoration-none mb-4 p-5 d-block" style="border-left: 5px solid #dc3545;">
-          <div class="d-flex align-items-center">
-            <div class="bg-danger bg-opacity-10 p-3 rounded-circle me-4">
-              <i class="bi bi-people-fill text-danger fs-3"></i>
-            </div>
-            <div>
-              <h3 class="mb-1 text-danger">Manage Staff</h3>
-              <p class="text-muted mb-0">Remove accounts (14-day notice)</p>
-            </div>
-          </div>
-          <i class="bi bi-arrow-right ms-auto fs-4 text-danger"></i>
-        </a>
-
-        <div class="admin-card p-5 mb-4">
+      </div>
+    </div>
+    
+  </div> <div id="feedbackSection" class="feedback-section d-none"> <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
           <div class="d-flex align-items-center mb-3">
-            <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-4">
-              <i class="bi bi-arrow-right-circle-fill text-warning fs-3"></i>
+            <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3">
+              <i class="bi bi-chat-square-text-fill text-success fs-4"></i>
             </div>
-            <h3 class="mb-0">Transfer Account</h3>
+            <h4 class="mb-0">Feedback & Suggestions</h4>
           </div>
-          <p class="text-muted mb-3">
-            Secure handover. <strong>Note:</strong> Government emails may delay delivery by 10 minutes.
-          </p>
-          <button id="transferBtn" class="btn btn-warning btn-lg w-100 mb-2">
-            <i class="bi bi-envelope"></i> Send Transfer Link
-          </button>
-          <div id="transferStatus" class="small mt-2"></div>
+          
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <div class="mb-3">
+                <input id="feedbackTitle" type="text" class="form-control bg-light" placeholder="Subject (e.g. Feature Request)">
+              </div>
+              <div class="mb-3">
+                <textarea id="feedbackText" class="form-control bg-light" rows="3" placeholder="Share your ideas or issues..."></textarea>
+              </div>
+              <div class="text-end">
+                <button id="submitFeedbackBtn" class="btn btn-success px-4 rounded-pill">
+                  <i class="bi bi-send me-2"></i> Submit Feedback
+                </button>
+              </div>
+              <div id="feedbackStatus" class="mt-2 text-end"></div>
+            </div>
+          </div>
         </div>
-
-        <div class="admin-card p-4 mb-4">
-          <div class="d-flex align-items-center mb-4">
-            <div class="bg-success bg-opacity-10 p-3 rounded-circle me-4">
-              <i class="bi bi-chat-square-text-fill text-success fs-3"></i>
-            </div>
-            <h3>Feedback & Suggestions</h3>
-          </div>
-          <div class="row">
-            <div class="col-12 col-md-8">
-              <input id="feedbackTitle" type="text" class="form-control mb-2" placeholder="Subject">
-              <textarea id="feedbackText" class="form-control" placeholder="Share your ideas or issues..."></textarea>
-            </div>
-            <div class="col-12 col-md-4 d-flex align-items-end">
-              <button id="submitFeedbackBtn" class="btn btn-success w-100">
-                <i class="bi bi-send"></i> Submit
-              </button>
-            </div>
-          </div>
-          <div id="feedbackStatus" class="mt-3"></div>
-        </div>
-
       </div>
     </div>
   </div>
 
-  <footer style="max-width: 480px; margin: 30px auto 0; padding: 20px; background-color: #f8f9fa; border-top: 1px solid #dee2e6; text-align: center; font-family: sans-serif; font-size: 11px; color: #6c757d; border-radius: 8px 8px 0 0;">
-    <p style="margin: 0 0 5px; font-weight: bold;">&copy; 2026 Alivioscript Solutions</p>
-    <p style="margin: 0 0 5px;">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
-    <p style="margin: 0; color: #dc3545; font-weight: 600;">For professional use only. Verify all results.</p>
+  <footer class="footer-section text-center">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <p class="mb-1 text-muted small fw-bold">© 2026 Alivioscript Solutions</p>
+          <p class="mb-1 text-muted small">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+          <p class="mb-0 text-danger small fw-bold">For professional use only. Verify all results.</p>
+        </div>
+      </div>
+    </div>
   </footer>
+
+  <script>
+    // Simple helper to toggle visibility based on your existing auth logic
+    // Your admin.js likely handles the specific ID showing, but we need to ensure 
+    // the new wrapper and feedback section are targeted.
+    
+    // NOTE: Ensure your admin.js is updated to show 'main-wrapper' and 'feedbackSection' 
+    // instead of just 'adminContent' if you used that ID previously.
+    // To make this seamless with your existing JS, I kept 'adminContent' conceptually 
+    // but split it. You might need to update admin.js to:
+    // document.getElementById('main-wrapper').classList.remove('d-none');
+    // document.getElementById('feedbackSection').classList.remove('d-none');
+  </script>
+
 </body>
 </html>

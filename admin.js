@@ -29,15 +29,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Monitor Auth State
     auth.onAuthStateChanged(async (user) => {
+        // UI Elements
         const loginMsg = document.getElementById('loginMessage');
         const loginText = document.getElementById('loginText');
         const statusBar = document.getElementById('statusBar');
-        const adminContent = document.getElementById('adminContent');
+        
+        // NEW: Target the wrapper and feedback section separately
+        const mainWrapper = document.getElementById('main-wrapper');
+        const feedbackSection = document.getElementById('feedbackSection');
 
         // Reset UI to hidden state
         loginMsg.classList.add('d-none');
         statusBar.classList.add('d-none');
-        adminContent.style.display = 'none';
+        
+        // Hide the new main sections
+        if(mainWrapper) mainWrapper.classList.add('d-none');
+        if(feedbackSection) feedbackSection.classList.add('d-none');
 
         // 1. Check if User exists
         if (!user) {
@@ -67,10 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 3. Access Granted
+            // 3. Access Granted: Show the Dashboard
             document.getElementById('adminEmail').textContent = user.email;
             statusBar.classList.remove('d-none');
-            adminContent.style.display = 'block';
+            
+            // Reveal the Main Content and Feedback Section
+            if(mainWrapper) mainWrapper.classList.remove('d-none');
+            if(feedbackSection) feedbackSection.classList.remove('d-none');
 
         } catch (error) {
             console.error('Auth check failed:', error);
@@ -96,7 +106,7 @@ async function requestTransferLink() {
 
     // Disable button immediately
     btn.disabled = true;
-    const originalText = '<i class="bi bi-envelope"></i> Send Transfer Link';
+    const originalText = '<i class="bi bi-envelope me-2"></i> Send Transfer Link';
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
     
     try {
@@ -128,13 +138,13 @@ async function requestTransferLink() {
 
             // Anti-Spam Timer (2 minutes)
             btn.innerText = "Email Sent (Wait 2m)";
-            btn.classList.add('btn-disabled-wait');
+            btn.classList.add('btn-secondary'); // Visual disable style
             btn.classList.remove('btn-warning');
             
             setTimeout(() => {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
-                btn.classList.remove('btn-disabled-wait');
+                btn.classList.remove('btn-secondary');
                 btn.classList.add('btn-warning');
             }, 120000); 
 
