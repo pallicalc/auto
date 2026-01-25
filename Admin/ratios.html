@@ -1,0 +1,69 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin – Manage Ratios</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+  <link rel="stylesheet" href="../admin-style.css">
+
+  <link rel="stylesheet" href="ratios.css">
+</head>
+
+<body>
+
+  <div id="loadingOverlay">
+    <div class="spinner-border text-primary mb-3" role="status"></div>
+    <div class="text-muted">Verifying Admin Access...</div>
+  </div>
+
+  <div class="container-box px-3" id="mainContent">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold text-primary"><i class="bi bi-sliders"></i> Ratio Management</h2>
+      <p class="text-muted">Select a category to manage your institution's conversion protocols.</p>
+    </div>
+
+    <a href="Opioid-ratio.html" class="ratio-card">
+      <div class="d-flex align-items-center">
+        <div class="icon-box bg-primary bg-opacity-10 text-primary">
+          <i class="bi bi-capsule"></i>
+        </div>
+        <div>
+          <h5 class="mb-1 fw-bold">Opioid Ratios</h5>
+          <div class="text-muted small">Morphine, Oxycodone, Fentanyl, etc.</div>
+        </div>
+      </div>
+      <i class="bi bi-chevron-right text-muted"></i>
+    </a>
+
+    <a href="Benzodiazepines-ratio.html" class="ratio-card">
+      <div class="d-flex align-items-center">
+        <div class="icon-box bg-warning bg-opacity-10 text-warning">
+          <i class="bi bi-prescription2"></i> 
+        </div>
+        <div>
+          <h5 class="mb-1 fw-bold">Benzodiazepine Ratios</h5>
+          <div class="text-muted small">Midazolam, Lorazepam, Diazepam, etc.</div>
+        </div>
+      </div>
+      <i class="bi bi-chevron-right text-muted"></i>
+    </a>
+
+    <div class="text-center mt-4">
+      <a href="../admin.html" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+      </a>
+    </div>
+  </div>
+
+  <script src="ratios.js"></script>
+
+</body>
+</html>

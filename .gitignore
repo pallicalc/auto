@@ -1,0 +1,14 @@
+# 1. The Big Junk Folders (The most important part)
+node_modules/
+functions/node_modules/
+
+# 2. Firebase & Environment Keys (Security)
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+.env
+
+# 3. System Junk
+.DS_Store
+Thumbs.db
+.vscode/

@@ -1,0 +1,200 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>癫痫发作管理方案 | 患者指南</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+</head>
+<body>
+    <div class="main-container">
+
+        <div id="pdf-loading">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #007bff; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+            <div style="font-weight: bold; color: #555;">正在生成 PDF...</div>
+            <div style="font-size: 13px; color: #888; margin-top: 5px;">处理图像与页脚中...</div>
+            <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+        </div>
+
+        <div class="header">
+            <div id="inst-header-container" class="inst-header-container">
+                <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+                <div class="inst-info">
+                    <h3 id="inst-name-display"></h3>
+                    <p id="inst-contact-display"></p>
+                </div>
+            </div>
+            <h1>⚡ 癫痫发作管理</h1>
+            <p>管理癫痫发作的分步指南</p>
+        </div>
+
+        <div class="nav-bar">
+            <div id="backBtn" class="nav-link" onclick="window.history.back()">
+                <i class="bi bi-arrow-left"></i> 返回
+            </div>
+            <div class="nav-link" onclick="showQR()">
+                <i class="bi bi-share-fill"></i> 分享
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><i class="bi bi-stopwatch-fill"></i> 紧急措施</h2>
+            <div class="fear-grid">
+                <div class="fear-card">
+                    <strong>1. 保持冷静并记录时间</strong>
+                    <p>发作期间请保持冷静。记录发作开始的时间。</p>
+                    <img src="seizure.png" alt="seizure" class="card-img">
+                </div>
+                <div class="fear-card">
+                    <strong>2. 侧卧姿势</strong>
+                    <p>将患者侧卧（复苏体位）以协助呼吸。</p>
+                    <img src="sideway.png" alt="sideway" class="card-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><i class="bi bi-shield-exclamation"></i> 安全警示</h2>
+            <div class="side-effect">
+                <strong>切勿在口中放入任何物品</strong>
+                <p>切勿将手指、勺子或任何物体放入口中。</p>
+                <img src="Xmouth.png" alt="Xmouth" class="card-img">
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><i class="bi bi-capsule-pill"></i> 用药方案</h2>
+            <div class="rules-grid">
+                <div class="rule-card">
+                    <div class="rule-number">1</div>
+                    <div class="rule-content">
+                        <strong>1. 给予第1剂</strong>
+                        <div class="dose-badge">Midazolam 1ml(5mg) / Lorazepam 1mg</div>
+                        <p>立即通过注射器注入脸颊内侧（颊粘膜）。如果发作持续，请通知负责的姑息治疗团队。</p>
+                        <img src="buccal.png" alt="buccal" class="card-img">
+                    </div>
+                </div>
+                <div class="rule-card">
+                    <div class="rule-number">2</div>
+                    <div class="rule-content">
+                        <strong>2. 10分钟后</strong>
+                        <p>如果抽搐在10分钟后持续：</p>
+                        <div class="dose-badge">第2剂: Midazolam 1ml(5mg) / Lorazepam 1mg</div>
+                        <img src="10mins.png" alt="10mins" class="card-img">
+                    </div>
+                </div>
+                <div class="rule-card">
+                    <div class="rule-number">3</div>
+                    <div class="rule-content">
+                        <strong>3. 再过10分钟后（共20分钟）</strong>
+                        <p>如果抽搐仍然持续：</p>
+                        <div class="dose-badge">第3剂: Midazolam 1ml(5mg) / Lorazepam 1mg</div>
+                        <p style="color:red; font-weight:bold;">立即呼叫救护车</p>
+                        <img src="10mins.png" alt="10mins" class="card-img">
+                    </div>
+                </div>
+                <div class="rule-card" style="border-left-color: #6c5ce7;">
+                    <div class="rule-number" style="background: #6c5ce7;"><i class="bi bi-pencil-fill"></i></div>
+                    <div class="rule-content">
+                        <strong>记录并告知</strong>
+                        <p>务必记录发作持续时间、时间和给药剂量。通知医生。</p>
+                        <img src="clock.png" alt="clock" class="card-img">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons no-print">
+            <button class="btn btn-pdf" onclick="generateAndPrintPDF('seizure-protocol-cn.pdf')">
+                <i class="bi bi-printer-fill"></i> 打印 PDF
+            </button>
+        </div>
+
+        <div id="qr-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeQR()">&times;</span>
+                <h3 style="margin: 0 0 20px 0;">📱 分享方案</h3>
+                
+                <div id="qrcode-wrapper-safe">
+                    <div id="qrcode"></div>
+                </div>
+
+                <p style="text-align: center; color: #666;">扫描二维码在手机上查看</p>
+            </div>
+        </div>
+
+        <div id="print-area">
+            <div class="print-header">
+                <h1>癫痫发作管理方案</h1>
+                <p>Seizure Management Protocol</p>
+            </div>
+
+            <h2>紧急措施 (Immediate Actions)</h2>
+            <div class="print-item">
+                <img src="seizure.png" class="print-img">
+                <div class="print-content">
+                    <strong>1. 保持冷静并记录时间</strong>
+                    <p>发作期间请保持冷静。记录发作开始的时间。</p>
+                </div>
+            </div>
+            <div class="print-item">
+                <img src="sideway.png" class="print-img">
+                <div class="print-content">
+                    <strong>2. 侧卧姿势</strong>
+                    <p>将患者侧卧（复苏体位）以协助呼吸。</p>
+                </div>
+            </div>
+
+            <h2>安全警示 (Safety)</h2>
+            <div class="print-item warning-box">
+                <img src="Xmouth.png" class="print-img">
+                <div class="print-content">
+                    <strong style="color:#cc0000;">切勿在口中放入任何物品</strong>
+                    <p>切勿将手指、勺子或任何物体放入口中。</p>
+                </div>
+            </div>
+
+            <h2>用药方案 (Medication)</h2>
+            <div class="print-item">
+                <img src="buccal.png" class="print-img">
+                <div class="print-content">
+                    <strong>1. 给予第1剂</strong>
+                    <p>Midazolam 1ml(5mg) / lorazepam 1mg，注入脸颊内侧。如停止，通知团队。</p>
+                </div>
+            </div>
+            <div class="print-item">
+                <img src="10mins.png" class="print-img">
+                <div class="print-content">
+                    <strong>2. 10分钟后</strong>
+                    <p>如果抽搐在10分钟后持续：给予第2剂 咪达唑仑 1ml(5mg)。</p>
+                </div>
+            </div>
+            <div class="print-item">
+                <img src="10mins.png" class="print-img">
+                <div class="print-content">
+                    <strong>3. 再过10分钟后 (共20分钟)</strong>
+                    <p>如果持续：给予第3剂。立即呼叫救护车。</p>
+                </div>
+            </div>
+            <div class="print-item">
+                <img src="clock.png" class="print-img">
+                <div class="print-content">
+                    <strong>4. 记录并告知</strong>
+                    <p>务必记录发作持续时间、时间和给药剂量。通知医生。</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="../education.js"></script>
+</body>
+</html>

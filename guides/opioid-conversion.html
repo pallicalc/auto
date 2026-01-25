@@ -1,0 +1,212 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Opioid Conversion Guide</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<div class="main-container">
+
+    <nav class="nav-header">
+        <a href="../all-calculators.html" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Calculators
+        </a>
+    </nav>
+
+    <h1 class="guide-header-h1"><i class="bi bi-calculator"></i> Opioid Conversion Guide</h1>
+    
+    <div class="disclaimer">
+        <strong>Clinical Disclaimer:</strong> This page explains the mathematical method used by the calculator. It does not replace clinical judgement. Always consider patient factors, incomplete cross-tolerance, organ function, and local guidelines.
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">1</span> Primary Opioid → Oral Morphine Equivalent Dose (oMED)</h2>
+    <div class="formula-box">
+        <p>The calculator first converts the <strong>primary regular opioid</strong> into an equivalent oral morphine dose.</p>
+        <div class="formula">
+            Primary Opioid oMED (mg/day) = Primary Dose × Primary Ratio
+        </div>
+        <p>
+            <strong>Primary Dose</strong> = total 24-hour dose of the chosen primary opioid (e.g. PO oxycodone).<br>
+            <strong>Primary Ratio</strong> = conversion factor from that opioid to PO morphine (from the ratio table below).
+        </p>
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">2</span> Add All Additional Opioids → Total oMED</h2>
+    <div class="formula-box">
+        <p>The calculator then adds in any <strong>additional/PRN opioids</strong> you enter (up to 3), converting each to PO morphine and summing them.</p>
+        <div class="formula">
+            Total oMED = Primary oMED + Σ (Add. Dose × Add. Ratio)
+        </div>
+        <p>
+            <strong>Additional Dose</strong> = total 24-hour dose for each other opioid.<br>
+            <strong>Additional Ratio</strong> = its conversion factor to PO morphine.
+        </p>
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">3</span> Convert Total oMED → Output Opioid</h2>
+    <div class="formula-box">
+        <p>The total PO morphine is then converted into the <strong>target opioid and route</strong> you selected in the "Convert to opioid" box.</p>
+        <div class="formula">
+            <span>Output Dose = </span>
+            <span class="fraction">
+                <span class="top">Total oMED </span>
+                <span class="bottom">Ratio for Output Opioid</span>
+            </span>
+        </div>
+        <p>
+            <strong>Ratio for Output Opioid</strong> = the same type of ratio used in Step 1, but for the <strong>output opioid</strong>.
+        </p>
+    </div>
+
+    <h2 class="guide-header-h2"><i class="bi bi-exclamation-triangle-fill"></i> Clinical Warnings</h2>
+
+    <div class="clinical-warning">
+        <span class="warning-title">⚠️ Incomplete Cross-Tolerance</span>
+        <p>When switching between different opioids (especially at high doses >100mg PO morphine/day), patients exhibit incomplete cross-tolerance. Reduce calculated equianalgesic dose by 25-50% of calculated dose and titrate carefully based on response over 24-48 hours.</p>
+    </div>
+
+    <div class="clinical-warning">
+        <span class="warning-title">⚠️ Poor Oral Absorption</span>
+        <p>Patients with poor oral absorption (nausea, vomiting, bowel obstruction, dysphagia, cachexia) require parenteral routes (SC/IV). Do NOT include all PRN doses in 24-hour totals for these conversions - use only regular doses. Oral bioavailability is unpredictable due to poor absorption.</p>
+    </div>
+
+    <div class="clinical-warning">
+        <span class="warning-title">⚠️ Opioid Overlap</span>
+        <p>Long-acting formulations require careful overlap planning (4-24 hours) during rotation to avoid gaps or overdose.</p>
+        
+        <div class="example-box" style="margin-top: 15px; background: white; border-left: 4px solid #ffc107;">
+            <strong>CSCI → Fentanyl Patch (6-12hr overlap)</strong><br>
+            • Current: CSCI morphine 60mg/24h<br>
+            • Apply fentanyl patch 50μg/hr (fentanyl peaks at 12-24hrs)<br>
+            • <strong>Continue running CSCI for 6-12hrs</strong>
+        </div>
+        
+        <div class="example-box" style="margin-top: 10px; background: white; border-left: 4px solid #ffc107;">
+            <strong>IR Morphine → MST Slow Release (4hr overlap)</strong><br>
+            • Current: IR morphine 10mg q4h (60mg/24h)<br>
+            • <strong>Give 1st MST 60mg WITH last IR dose</strong> (overlap 4hrs)<br>
+            • Stop IR after MST taken (MST starts working ~4hrs)
+        </div>
+    </div>
+
+    <div class="clinical-warning danger">
+        <span class="warning-title">⚠️ Fentanyl Patch Safety Warning</span>
+        <p>Do not initiate fentanyl transdermal therapy in opioid-naïve patients.</p>
+        <p>Only convert to a fentanyl patch <strong>after</strong> the patient has been on <strong>regular, stable opioid therapy</strong> and has achieved steady-state opioid levels.</p>
+        <p>During dose titration, use an <strong>immediate-release opioid</strong> alongside the fentanyl patch to manage breakthrough pain and ensure adequate analgesia before completing the conversion.</p>
+    </div>
+
+    <div class="clinical-warning">
+        <span class="warning-title">⚠️ Opioid-Refractory Pain</span>
+        <p>High opioid requirements with poor response suggest neuropathic component or opioid rotation failure. Consider methadone rotation (NMDA antagonism), ketamine infusion, or adjuvants (gabapentinoids).</p>
+    </div>
+
+    <div class="clinical-warning">
+        <span class="warning-title">⚠️ Total Pain Management</span>
+        <p>Pain has physical, psychological, social, and spiritual dimensions ("total pain"). High opioid needs often indicate "total pain" requiring multidisciplinary team (psychology, physiotherapy, social work, spiritual care) alongside pharmacotherapy.</p>
+    </div>
+
+    <h2 class="guide-header-h2">Default Ratios Used in the Calculator</h2>
+    <div class="table-wrapper">
+        <table class="guide-table">
+            <thead>
+                <tr>
+                    <th>Opioid</th>
+                    <th>Route</th>
+                    <th>Ratio to PO Morphine</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Morphine</td><td>PO</td><td>1.0</td></tr>
+                <tr><td>Morphine</td><td>SC/IV</td><td>2.0</td></tr>
+                <tr><td>Oxycodone</td><td>PO</td><td>1.5</td></tr>
+                <tr><td>Oxycodone</td><td>SC/IV</td><td>3.0</td></tr>
+                <tr><td>Tramadol</td><td>PO</td><td>0.2</td></tr>
+                <tr><td>Tramadol</td><td>IV</td><td>0.2</td></tr>
+                <tr><td>Codeine</td><td>PO</td><td>0.1</td></tr>
+                <tr><td>Dihydrocodeine</td><td>PO</td><td>0.1</td></tr>
+                <tr><td>Fentanyl Patch</td><td>TD</td><td>2.4</td></tr>
+                <tr><td>Fentanyl</td><td>SC/IV</td><td>0.1</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="guide-header-h2">Worked Example</h2>
+    <div class="formula-box">
+        <p><strong>Example inputs:</strong></p>
+        <ul>
+            <li>Primary: 40 mg PO oxycodone / 24 hours</li>
+            <li>Additional: 20 mg SC morphine / 24 hours</li>
+        </ul>
+        <hr style="border: 0; border-top: 1px solid #dee2e6; margin: 15px 0;">
+        
+        <p><strong>Step 1 – Primary PO Morphine:</strong><br>
+        40 mg × 1.5 = 60 mg PO morphine</p>
+        
+        <p><strong>Step 2 – Total PO Morphine:</strong><br>
+        Additional SC morphine: 20 mg × 2.0 = 40 mg PO morphine<br>
+        Total PO morphine = 60 + 40 = 100 mg / day</p>
+        
+        <p><strong>Step 3 – Convert to SC oxycodone:</strong><br>
+        Ratio for SC oxycodone = 3.0<br>
+        Output Dose =
+        <span class="fraction">
+            <span class="top">100</span>
+            <span class="bottom">3.0</span>
+        </span>
+        ≈ 33.3 mg SC oxycodone / day</p>
+    </div>
+
+    <div class="references">
+        <strong>References</strong>
+        <ol>
+            <li>Faculty of Pain Medicine, ANZCA. (2021). <em>Opioid dose equivalence</em>.</li>
+            <li>Wilcock, A., Howard, P., & Charlesworth, S. (2022). <em>PCF 8: Palliative care formulary</em>.</li>
+            <li>Davis, M. P., et al. (2024). Opioid analgesic dose conversion ratios. <em>Support Care Cancer</em>.</li>
+            <li>Adams, M. C. B., et al. (2025). NIH HEAL morphine milligram equivalent calculator. <em>PAIN</em>.</li>
+            <li>Faculty of Pain Medicine. (n.d.). <em>Opioid rotation guidelines</em>.</li>
+            <li>Bhatnagar, M., & Pruskowski, J. (2024). Opioid equivalency. In <em>StatPearls</em>.</li>
+            <li>MD Anderson Cancer Center. (n.d). <em>Peri-operative pain management</em>.</li>
+            <li>Australian Journal of General Practice. (2024). Morphine toxicity and opioid rotation.</li>
+            <li>Doulton, B. (2014). Pharmacologic management of breakthrough cancer pain. <em>Can Fam Physician</em>.</li>
+            <li>Fraser Health Authority. (n.d.). <em>Principles of opioid management</em>.</li>
+            <li>Caraceni, A., et al. (2023). Parenteral opioids in cancer pain management.</li>
+            <li>Webber, K., et al. (2014). Breakthrough pain assessment.</li>
+            <li>Chou, R., et al. (2023). ASCO opioid guidelines for cancer pain.</li>
+            <li>Mercadante, S., et al. (2024). Methadone rotation for refractory pain.</li>
+            <li>Prommer, E. (2024). Methadone vs other opioids for bone pain.</li>
+            <li>Saunders, C. (2010). <em>Total pain management</em>.</li>
+            <li>IASP Task Force. (n.d.). <em>Multidisciplinary pain management</em>.</li>
+            <li>Twycross, R., & Wilcock, A. (2014). Alternative routes to oral opioid administration. <em>Pain Medicine</em>.</li>
+            <li>NHS England North West. (2020). <em>Palliative care pain & symptom control guidelines</em>.</li>
+            <li>Twycross, R., et al. (2022). <em>Palliative Care Formulary</em>, 7th ed.</li>
+            <li>NHS Specialist Pharmacy Service. (2021). <em>Fentanyl patch conversion guidelines</em>.</li>
+            <li>Faculty of Pain Medicine, ANZCA. (2021). <em>Opioid patch overlap protocols</em>.</li>
+            <li>Correll, D. J., et al. (2004). Burst ketamine to reverse opioid tolerance.</li>
+        </ol>
+    </div>
+    
+    <nav style="margin-top: 30px;">
+        <a href="../healthcare-guidelines.html" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Healthcare Guidelines
+        </a>
+    </nav>
+
+    </div> <footer class="legal-footer">
+        <div class="container">
+            <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
+            <div class="author-info">
+                <span class="author-name">Author: Alison Chai</span>
+                <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
+            </div>
+            <p class="legal-warning">For professional use only. Verify all results.</p>
+        </div>
+    </footer>
+
+
+</body>
+</html>

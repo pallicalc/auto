@@ -1,0 +1,116 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Benzodiazepine Equivalence Calculator</title>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="calculator.css">
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <nav class="navbar-main">
+    <a href="../all-calculators.html" class="navbar-link"><i class="bi bi-house-door"></i> Back to All Calculators</a>
+    <a href="../guides/Benzodiazepines-conversion.html" class="navbar-link">📖 Guide</a>
+  </nav>
+
+  <div id="nav">
+    <span id="toCalcLink" style="display:none;"><a onclick="navigateToCalc()">← Back</a></span>
+    <span id="toEditLink"><a onclick="navigateToEdit()">Edit Equivalence Data</a></span>
+  </div>
+
+  <div id="ratioBanner" class="ratio-banner">Loading...</div>
+
+  <div id="calcPage" style="display:none;">
+    <h2>Benzodiazepine Equivalence</h2>
+    <fieldset>
+      <legend>Current Primary Benzodiazepine</legend>
+      <select id="inputRoute1"></select>
+      <select id="inputName1"></select>
+      <label>Dose (mg)</label>
+      <input type="number" id="inputDose1" class="dose-input" /> <span class="unit-span">mg</span>
+      <div id="warningMsg1" class="inline-warning">⚠️ High Dose Alert: Please confirm dose and units.</div>
+    </fieldset>
+
+    <button id="showExtraBtn" class="btn btn-success" onclick="toggleExtra()">Add Additional Benzodiazepine</button>
+
+    <fieldset id="extraBenzo1" style="display:none;">
+      <legend>Additional 1</legend>
+      <select id="inputRoute2"></select>
+      <select id="inputName2"></select>
+      <input type="number" id="inputDose2" class="dose-input" /> mg
+      <div id="warningMsg2" class="inline-warning">⚠️ High Dose Alert: Please confirm dose and units.</div>
+    </fieldset>
+
+    <fieldset id="extraBenzo2" style="display:none;">
+      <legend>Additional 2</legend>
+      <select id="inputRoute3"></select>
+      <select id="inputName3"></select>
+      <input type="number" id="inputDose3" class="dose-input" /> mg
+      <div id="warningMsg3" class="inline-warning">⚠️ High Dose Alert: Please confirm dose and units.</div>
+    </fieldset>
+
+    <fieldset id="extraBenzo3" style="display:none;">
+      <legend>Additional 3</legend>
+      <select id="inputRoute4"></select>
+      <select id="inputName4"></select>
+      <input type="number" id="inputDose4" class="dose-input" /> mg
+      <div id="warningMsg4" class="inline-warning">⚠️ High Dose Alert: Please confirm dose and units.</div>
+    </fieldset>
+
+    <fieldset class="fieldset-convert">
+      <legend class="legend-blue">Convert To</legend>
+      <select id="outputRoute"></select>
+      <select id="outputName"></select>
+    </fieldset>
+
+    <button class="btn btn-primary" onclick="convert()">Calculate</button>
+    
+    <div id="resultBox" class="result-box blue-theme" style="display:none;"></div>
+    
+    <button class="btn btn-danger" onclick="clearCalculator()">Clear</button>
+  </div>
+
+  <div id="editPage" style="display:none;">
+    <h2>Edit Benzodiazepine Data</h2>
+    <form onsubmit="return saveRatios();">
+      <button id="resetBtn" class="btn btn-danger" type="button" onclick="resetToDefaults()">Reset Defaults</button>
+      
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th class="select-col">Use</th>
+              <th class="route-col">Route</th>
+              <th class="name-col">Drug</th>
+              <th class="equiv-col">Equiv</th>
+              <th class="data-col">Onset</th>
+              <th class="data-col">Dur.</th>
+            </tr>
+          </thead>
+          <tbody id="ratioTableBody"></tbody>
+        </table>
+      </div>
+
+      <label for="passInput">Enter login password:</label>
+      <input type="password" id="passInput" autocomplete="off" />
+      <button id="saveBtn" class="btn btn-primary" type="submit">Save Changes</button>
+      <span id="msgArea" class="success" style="display:none;"></span>
+      <span id="errorArea" class="fail" style="display:none;"></span>
+    </form>
+  </div>
+
+  <footer style="max-width: 480px; margin: 30px auto 0; padding: 20px; background-color: #f8f9fa; border-top: 1px solid #dee2e6; text-align: center; font-family: sans-serif; font-size: 11px; color: #6c757d; border-radius: 8px 8px 0 0;">
+    <p style="margin: 0 0 5px; font-weight: bold;">&copy; 2026 Alivioscript Solutions</p>
+    <p style="margin: 0 0 5px;">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+    <p style="margin: 0; color: #dc3545; font-weight: 600;">For professional use only. Verify all results.</p>
+  </footer>
+
+  <script src="js/benzodiazepine.js"></script>
+</body>
+</html>

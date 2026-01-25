@@ -1,0 +1,269 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malignant Bowel Obstruction | Patient Guide</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+
+    <style>
+        /* --- 1. WEB VIEW STYLES --- */
+        .info-grid { display: grid; gap: 16px; margin-top: 20px; }
+        .info-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333; padding: 20px; border-radius: 16px;
+        }
+        .info-card strong { display: block; margin-bottom: 6px; font-size: 17px; color: #2c3e50; }
+
+        .step-card {
+            background: white;
+            padding: 20px; border-radius: 16px; border-left: 5px solid #0061f2;
+            display: flex; align-items: flex-start; gap: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 16px;
+        }
+        .step-number {
+            background: #0061f2; color: white; width: 32px; height: 32px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px; flex-shrink: 0; margin-top: 2px;
+        }
+        .step-content { flex: 1; }
+
+        .food-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .food-item {
+            background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 12px;
+        }
+        .food-title { font-weight: 700; color: #0061f2; font-size: 14px; margin-bottom: 5px; display: block; }
+        .food-list { margin: 0; padding-left: 15px; font-size: 13px; color: #555; }
+
+        /* --- 2. PRINT PDF STYLES --- */
+        #print-area {
+            position: absolute; top: -9999px; left: -9999px; width: 794px; /* A4 */
+            background: white; color: #333; padding: 40px; box-sizing: border-box;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+        #print-area h1 { color: #0061f2; font-size: 26px; border-bottom: 2px solid #0061f2; padding-bottom: 10px; margin: 0 0 10px 0; }
+        #print-area h2 { font-size: 18px; color: #2c3e50; background: #f0f4f8; padding: 8px; border-radius: 4px; margin: 0 0 10px 0; }
+        
+        .print-box { border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .print-row { display: flex; gap: 20px; }
+        .print-col { flex: 1; }
+        .print-list { margin: 0; padding-left: 20px; font-size: 13px; color: #444; }
+        .print-list li { margin-bottom: 4px; }
+        
+        @media print { .step-number { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    </style>
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #0061f2; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Generating PDF...</div>
+    </div>
+
+    <div class="header header-mbo">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>Malignant Bowel Obstruction</h1>
+        <p>Self Care Guide</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link mbo-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> Back
+        </div>
+        <div class="nav-link mbo-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> Share
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-info-circle-fill"></i> What is MBO?</h2>
+        <p style="font-size:15px; color:#444; margin-bottom: 12px; line-height:1.6;">
+            <strong>Malignant Bowel Obstruction (MBO)</strong> occurs when the intestines become blocked, usually due to advanced cancer. This blockage stops food, fluids, and gas from passing through normally.
+        </p>
+        <p style="font-size:14px; color:#666; background-color: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
+            <i class="bi bi-lightbulb-fill" style="color: #f39c12;"></i> <strong>Note:</strong> It can be caused by the tumor itself, constipation, or scar tissue from previous surgeries. This guide helps you manage the symptoms at home.
+        </p>
+        
+        <div class="info-grid">
+            <div class="info-card">
+                <strong><i class="bi bi-exclamation-diamond-fill"></i> Common Symptoms</strong>
+                <ul style="padding-left: 20px; margin: 0; font-size: 14px;">
+                    <li>Abdominal pain (Cramping)</li>
+                    <li>Swollen abdomen (Distention)</li>
+                    <li>Nausea & Vomiting</li>
+                    <li>Cannot pass gas or stool</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-activity"></i> When Symptoms Recur</h2>
+        <p style="font-size:14px; margin-bottom:15px;">If symptoms return at home, follow these steps:</p>
+
+        <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <strong>Bowel Rest (Fasting)</strong>
+                <p>Stop solid foods for 12-24 hours. You may take small sips of clear fluids if thirsty. This gives your bowel a break.</p>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <strong>If Improving...</strong>
+                <p>Gradually restart with liquids, then puree, then soft foods (e.g., porridge). Stick to a <strong>Low-Fibre Diet</strong>.</p>
+            </div>
+        </div>
+
+        <div class="step-card" style="border-left-color: #e74c3c;">
+            <div class="step-number" style="background: #e74c3c;">3</div>
+            <div class="step-content">
+                <strong>If Worsening...</strong>
+                <p>If pain persists, vomiting continues, or you have a fever, <strong>contact your doctor or hospice nurse immediately</strong>.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-basket-fill"></i> Low-Fibre Diet</h2>
+        <p style="font-size:14px;">A low-fibre diet produces less waste/bulk, making it easier for your bowel to handle.</p>
+        
+        <div class="food-grid">
+            <div class="food-item">
+                <span class="food-title">Carbohydrates</span>
+                <ul class="food-list">
+                    <li>White bread</li>
+                    <li>White rice / Porridge</li>
+                    <li>Peeled potatoes</li>
+                </ul>
+            </div>
+            <div class="food-item">
+                <span class="food-title">Protein</span>
+                <ul class="food-list">
+                    <li>Fish</li>
+                    <li>Eggs / Tofu</li>
+                    <li>Soft cooked meat</li>
+                    <li>Milk / Cheese</li>
+                </ul>
+            </div>
+            <div class="food-item">
+                <span class="food-title">Fruits & Veg</span>
+                <ul class="food-list">
+                    <li>Cooked carrots/pumpkin</li>
+                    <li>Melon / Papaya</li>
+                    <li><strong>No skins or seeds</strong></li>
+                </ul>
+            </div>
+            <div class="food-item">
+                <span class="food-title">Avoid</span>
+                <ul class="food-list">
+                    <li>Whole grains</li>
+                    <li>Raw vegetables</li>
+                    <li>Nuts & Seeds</li>
+                    <li>Stringy foods</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-mbo" onclick="generateAndPrintPDF('mbo-eng.pdf')">
+            <i class="bi bi-printer-fill"></i> Print PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Share Guide</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="text-align: center; color: #666;">Scan QR code to view on mobile</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header">
+            <h1>Malignant Bowel Obstruction</h1>
+            <p>Patient Self Care Guide</p>
+        </div>
+
+        <div class="print-box">
+            <h2>What is MBO?</h2>
+            <p style="font-size:13px; color:#444;">Malignant Bowel Obstruction (MBO) occurs when the intestines become blocked, usually due to advanced cancer. This stops food, fluids, and gas from passing through normally.</p>
+        </div>
+
+        <div class="print-box">
+            <h2>Common Symptoms</h2>
+            <ul class="print-list">
+                <li>Abdominal Pain (Cramps)</li>
+                <li>Distention (Swollen tummy)</li>
+                <li>Vomiting / Nausea</li>
+                <li>Inability to pass gas or stool</li>
+            </ul>
+        </div>
+
+        <div class="print-box">
+            <h2>Action Plan: When symptoms recur</h2>
+            <div class="print-row">
+                <div class="print-col">
+                    <strong>1. Bowel Rest</strong>
+                    <p style="font-size:13px; color:#555;">Fast for 12-24 hours. Only small sips of clear fluid.</p>
+                </div>
+                <div class="print-col">
+                    <strong>2. Restarting Diet</strong>
+                    <p style="font-size:13px; color:#555;">If better, start liquids -> puree -> soft foods. Low Fibre only.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="print-box">
+            <h2>Low-Fibre Diet Guide</h2>
+            <div class="print-row">
+                <div class="print-col">
+                    <strong>Allowed Foods</strong>
+                    <ul class="print-list">
+                        <li>White rice, white bread</li>
+                        <li>Fish, eggs, tofu, soft meat</li>
+                        <li>Peeled potatoes, cooked carrots</li>
+                        <li>Melon, papaya, clear juice</li>
+                    </ul>
+                </div>
+                <div class="print-col">
+                    <strong>Foods to Avoid</strong>
+                    <ul class="print-list">
+                        <li>Whole grains, brown rice</li>
+                        <li>Raw vegetables, salad</li>
+                        <li>Fruit skins, seeds, nuts</li>
+                        <li>Stringy/tough meats</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div style="font-size:12px; color:#666; margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
+            <strong>Medical Alert:</strong> If pain is severe, vomiting persists, or you have a fever, seek medical attention immediately.
+        </div>
+    </div>
+</div><script src="../education.js"></script>
+</body>
+</html>

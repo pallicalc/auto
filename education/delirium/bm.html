@@ -1,0 +1,289 @@
+﻿<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengurusan Delirium Terminal | Panduan Pesakit</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+
+    <style>
+        /* --- DELIRIUM SPECIFIC STYLES (Preserved for Exact Design) --- */
+        
+        /* Large Icons */
+        .card-icon {
+            display: block; width: 100%; text-align: center;
+            font-size: 48px; color: rgba(255,255,255,0.9); margin: 10px 0;
+        }
+        .text-icon {
+            font-size: 40px; color: #764ba2; text-align: center; display: block; margin: 10px 0;
+        }
+        
+        /* Grids */
+        .fear-grid, .rules-grid { display: grid; gap: 16px; margin-top: 20px; }
+        
+        /* Fear Card (Specific Pink/Purple Gradient) */
+        .fear-card {
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+            color: white; padding: 20px; border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .fear-card strong { font-size: 17px; display: block; margin-bottom: 5px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        
+        /* Warning Box */
+        .side-effect {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px; border-radius: 16px; border-left: 5px solid #ff8c42; margin-top: 20px;
+        }
+        .side-effect strong { color: #e74c3c; display: block; margin-bottom: 8px; font-size: 18px; }
+        
+        /* Rule Cards */
+        .rule-card {
+            background: white;
+            padding: 20px; border-radius: 16px; border-left: 5px solid #764ba2;
+            display: flex; align-items: flex-start; gap: 16px;
+        }
+        .rule-number {
+            background: #764ba2; color: white; width: 32px; height: 32px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px; flex-shrink: 0; margin-top: 2px;
+        }
+        .rule-content { flex: 1; }
+        
+        /* Medication Images Container */
+        .med-images { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+        .med-img {
+            max-width: 140px; width: 48%; height: auto; 
+            border-radius: 8px; border: 1px solid #eee;
+            object-fit: contain; background: #fff;
+        }
+
+        /* --- PDF PRINT STYLES (Specific to Delirium Layout) --- */
+        #print-area {
+            position: absolute; top: -9999px; left: -9999px;
+            width: 794px; background: white; color: black; padding: 40px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box;
+        }
+        #print-area .print-header { border-bottom: 2px solid #764ba2; padding-bottom: 15px; margin-bottom: 20px; }
+        #print-area h1 { color: #764ba2; font-size: 24px; margin: 0; }
+        #print-area h2 { 
+            font-size: 18px; color: #333; border-bottom: 1px solid #eee; 
+            padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px;
+        }
+        #print-area .print-item {
+            display: flex; gap: 15px; margin-bottom: 15px; page-break-inside: avoid;
+            background: #f9f9f9; padding: 10px; border-radius: 8px;
+        }
+        #print-area .print-icon { font-size: 24px; color: #764ba2; width: 40px; text-align: center; padding-top: 5px; }
+        #print-area .print-content { flex: 1; }
+        #print-area strong { color: #000; font-size: 15px; display: block; margin-bottom: 4px; }
+        #print-area p { margin: 0; font-size: 13px; color: #444; }
+        #print-area .warning-box {
+            border: 1px solid #ffcccc; background: #fff5f5; padding: 10px; 
+            border-radius: 8px; color: #cc0000;
+        }
+    </style>
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #764ba2; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Menjana PDF...</div>
+    </div>
+
+    <div class="header header-delirium">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>🧠 Pengurusan Delirium</h1>
+        <p>Panduan Penjagaan & Pengurusan Di Rumah</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link delirium-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> Kembali
+        </div>
+        <div class="nav-link delirium-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> Kongsi
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-question-circle-fill"></i> Apakah itu Delirium?</h2>
+        <div class="fear-grid">
+            <div class="fear-card">
+                <strong>Keliru & Gelisah</strong>
+                <p>Perubahan mendadak pada otak. Tidak tahu masa/tempat, keliru siang/malam, atau kegelisahan.</p>
+                <i class="bi bi-shuffle card-icon"></i>
+            </div>
+            <div class="fear-card">
+                <strong>Halusinasi</strong>
+                <p>Melihat atau mendengar perkara yang tiada. Mencapai-capai udara. Boleh menakutkan pesakit.</p>
+                <i class="bi bi-eye card-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-house-heart-fill"></i> Langkah Penjagaan Di Rumah</h2>
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-number">1</div>
+                <div class="rule-content">
+                    <strong>Bertenang</strong>
+                    <p>Cakap perlahan dan lembut. Tenteramkan pesakit kerap kali. Kurangkan bunyi bising dan cahaya terang.</p>
+                    <i class="bi bi-chat-heart text-icon"></i>
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">2</div>
+                <div class="rule-content">
+                    <strong>Orientasi</strong>
+                    <p>Gunakan jam, kalendar, dan barang kebiasaan. Ingatkan pesakit tentang masa dan tempat dengan lembut.</p>
+                    <i class="bi bi-calendar-date text-icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-clipboard-pulse"></i> Pencetus & Ubat</h2>
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-number">3</div>
+                <div class="rule-content">
+                    <strong>Periksa Pencetus</strong>
+                    <p>Adakah pesakit <strong>sakit</strong>? Adakah mereka <strong>sembelit</strong>? Adakah mereka tidak boleh <strong>kencing</strong>?</p>
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">4</div>
+                <div class="rule-content">
+                    <strong>Protokol Ubat</strong>
+                    <div class="med-images">
+                        <img src="1.png" alt="Medication 1" class="med-img">
+                        <img src="2.png" alt="Medication 2" class="med-img">
+                    </div>
+                    <p>Berikan ubat yang dipreskripsi (Pipi/Bawah Kulit). Ulang setiap 1 jam jika perlu.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-exclamation-triangle-fill"></i> Bantuan Segera</h2>
+        <div class="side-effect">
+            <strong>Hubungi Pasukan Paliatif</strong>
+            <p>Hubungi segera jika:</p>
+            <ul style="margin-left: 20px; margin-top: 8px;">
+                <li>Kegelisahan/Agitasi tidak reda.</li>
+                <li>Terdapat risiko kecederaan atau jatuh.</li>
+                <li>Pesakit demam atau sukar bernafas.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-delirium" onclick="generateAndPrintPDF('protokol-delirium-bm.pdf')">
+            <i class="bi bi-printer-fill"></i> Cetak PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Kongsi Protokol</h3>
+            <div id="qrcode-wrapper-safe"><div id="qrcode"></div></div>
+            <p style="text-align: center; color: #666;">Imbas kod QR untuk lihat di telefon</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header">
+            <h1>Pengurusan Delirium Terminal</h1>
+            <p>Panduan Penjagaan & Simptom Di Rumah</p>
+        </div>
+
+        <h2>Definisi & Tanda-Tanda</h2>
+        <div class="print-item">
+            <div class="print-icon"><i class="bi bi-shuffle"></i></div>
+            <div class="print-content">
+                <strong>Keliru & Gelisah</strong>
+                <p>Perubahan otak mendadak. Tidak tahu masa/tempat, keliru siang/malam, cuba bangun dari katil.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-icon"><i class="bi bi-eye"></i></div>
+            <div class="print-content">
+                <strong>Halusinasi</strong>
+                <p>Melihat/mendengar benda tiada. Mencapai-capai udara. Ketakutan.</p>
+            </div>
+        </div>
+
+        <h2>Langkah Penjagaan</h2>
+        <div class="print-item">
+            <div class="print-icon">1</div>
+            <div class="print-content">
+                <strong>Bertenang & Tenteramkan</strong>
+                <p>Cakap perlahan. Kurangkan bunyi bising. Gunakan cahaya suram.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-icon">2</div>
+            <div class="print-content">
+                <strong>Orientasi</strong>
+                <p>Gunakan barang kebiasaan, jam, dan kalendar untuk mengingatkan pesakit tentang persekitaran.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-icon">3</div>
+            <div class="print-content">
+                <strong>Periksa Pencetus</strong>
+                <p>Periksa jika SAKIT, SEMBELIT, atau RETENSI URIN.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-icon">4</div>
+            <div class="print-content">
+                <strong>Keselamatan</strong>
+                <p>Kosongkan laluan. Jangan tinggalkan pesakit bersendirian jika tidak selamat.</p>
+            </div>
+        </div>
+
+        <h2>Ubat-ubatan</h2>
+        <div class="print-item">
+            <div class="print-icon">💊</div>
+            <div class="print-content">
+                <strong>Berikan Seperti Dipreskripsi</strong>
+                <div style="display:flex; gap:10px; margin: 5px 0;">
+                    <img src="1.png" style="max-width: 100px; height:auto; display:block;">
+                    <img src="2.png" style="max-width: 100px; height:auto; display:block;">
+                </div>
+                <p>Berikan ubat melalui Pipi (Buccal) atau Bawah Kulit (Subcut). Ulang setiap 1 jam jika perlu.</p>
+            </div>
+        </div>
+
+        <h2>Kecemasan</h2>
+        <div class="print-item warning-box">
+            <div class="print-content">
+                <strong style="color:#cc0000;">Hubungi Pasukan Paliatif Jika:</strong>
+                <p>- Agitasi/Kegelisahan tidak reda.</p>
+                <p>- Risiko bahaya kepada diri atau orang lain.</p>
+                <p>- Demam baru atau kesukaran bernafas.</p>
+            </div>
+        </div>
+    </div>
+</div><script src="../education.js"></script>
+</body>
+</html>

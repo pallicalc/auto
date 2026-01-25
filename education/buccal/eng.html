@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buccal Administration | Patient Guide</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #0061f2; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Generating PDF...</div>
+        <div style="font-size: 13px; color: #888; margin-top: 5px;">Formatting & Adding Footer</div>
+    </div>
+
+    <div class="header header-buccal">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>💊 Buccal Administration</h1>
+        <p>Home Guide for Cheek Medication</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link buccal-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> Back
+        </div>
+        <div class="nav-link buccal-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> Share
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-clipboard-check-fill"></i> Preparation</h2>
+        <div class="fear-grid">
+            <div class="fear-card">
+                <strong>Liquids & Tablets</strong>
+                <ul style="padding-left: 20px; margin-top: 5px; font-size: 14px;">
+                    <li style="margin-bottom: 4px;"><strong>Liquids:</strong> Use an oral syringe. Do NOT use a spoon.</li>
+                    <li style="margin-bottom: 4px;"><strong>Tablets:</strong> Remove from package with <strong>dry hands</strong>.</li>
+                    <li style="margin-bottom: 4px;"><strong>Dissolving:</strong> Place tablet in 5ml syringe, add 1ml water + 1ml air, shake.</li>
+                </ul>
+            </div>
+            
+            <div class="fear-card">
+                <strong>Ampoules</strong>
+                <p style="font-size:14px;">Snap top off (away from you). Draw medication with needle.</p>
+                <div style="background: #ffe5e5; color: #c0392b; padding: 8px; border-radius: 6px; margin-top:8px; font-weight:bold; font-size:13px;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> REMOVE NEEDLE BEFORE GIVING
+                </div>
+                <img src="1.jpg" alt="Ampoule Prep" class="card-img">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-person-check-fill"></i> Administration</h2>
+        
+        <img src="2.jpg" alt="Buccal Administration" style="width:100%; border-radius:12px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+
+        <div class="rules-grid">
+            <div class="rule-card buccal-theme">
+                <div class="rule-number buccal-theme">1</div>
+                <div class="rule-content">
+                    <strong>Wash Hands</strong>
+                    <p>Wash and dry your hands thoroughly before and after handling the medicine.</p>
+                </div>
+            </div>
+
+            <div class="rule-card buccal-theme">
+                <div class="rule-number buccal-theme">2</div>
+                <div class="rule-content">
+                    <strong>Place Medicine</strong>
+                    <p>Pull back one side of the mouth. Place medicine (liquid or tablet) <strong>between the gum and inner cheek</strong>.</p>
+                </div>
+            </div>
+
+            <div class="rule-card buccal-theme">
+                <div class="rule-number buccal-theme">3</div>
+                <div class="rule-content">
+                    <strong>Hold & Position</strong>
+                    <p>Patient should stay still until absorbed. If they cannot hold it, lay them on their side (cheek facing down) and place medicine in the lower cheek.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-buccal" onclick="generateAndPrintPDF('buccal-guide-eng.pdf')">
+            <i class="bi bi-printer-fill"></i> Print PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Share Guide</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="text-align: center; color: #666;">Scan QR code to view on mobile</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header buccal-theme">
+            <h1 class="buccal-theme">Buccal Administration</h1>
+            <p>Home Care Protocol</p>
+        </div>
+
+        <h2>Preparation</h2>
+        <div class="print-item">
+            <div class="print-content">
+                <strong>Liquids & Tablets</strong>
+                <p>Use oral syringe (no spoons). Handle tablets with dry hands. Avoid using hot water for dissolving.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="1.jpg" class="print-img">
+            <div class="print-content">
+                <strong>Ampoules</strong>
+                <p>Snap top away from you. Draw up medication.</p>
+                <strong style="color:#c0392b;">REMOVE NEEDLE from syringe before giving.</strong>
+            </div>
+        </div>
+
+        <h2>Administration Procedure</h2>
+        <div class="print-item">
+            <div class="print-content">
+                <strong>1. Clean Hands</strong>
+                <p>Wash and dry hands before handling medication.</p>
+            </div>
+        </div>
+
+        <div class="print-item">
+            <img src="2.jpg" class="print-img">
+            <div class="print-content">
+                <strong>2. Place Medicine</strong>
+                <p>Pull back mouth. Place medicine <strong>between gum and inner cheek</strong>.</p>
+            </div>
+        </div>
+
+        <div class="print-item">
+            <div class="print-content">
+                <strong>3. Positioning</strong>
+                <p>Stay still until absorbed. If unable to hold, lie on side with cheek facing down.</p>
+            </div>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

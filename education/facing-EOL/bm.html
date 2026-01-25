@@ -1,0 +1,327 @@
+﻿<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penjagaan Akhir Hayat | Panduan Pesakit</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+
+    <style>
+        /* --- EOL CARE SPECIFIC STYLES --- */
+        .header-eol-care { background: linear-gradient(135deg, #455a64 0%, #607d8b 100%) !important; }
+        .nav-link.eol-care-theme { color: #455a64; }
+        .btn-eol-care { background: #455a64 !important; color: white !important; }
+
+        .info-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 6px solid #ccc; }
+        .card-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .card-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
+        
+        /* Card Colors */
+        .card-sage { border-left-color: #66bb6a; } .card-sage .card-icon { background: #66bb6a; } .card-sage .card-title { color: #2e7d32; }
+        .card-sky { border-left-color: #29b6f6; } .card-sky .card-icon { background: #29b6f6; } .card-sky .card-title { color: #0277bd; }
+        .card-lavender { border-left-color: #ab47bc; } .card-lavender .card-icon { background: #ab47bc; } .card-lavender .card-title { color: #6a1b9a; }
+        .card-sand { border-left-color: #ffa726; } .card-sand .card-icon { background: #ffa726; } .card-sand .card-title { color: #ef6c00; }
+        .card-grey { border-left-color: #78909c; } .card-grey .card-icon { background: #78909c; } .card-grey .card-title { color: #455a64; }
+        .card-mauve { border-left-color: #ec407a; } .card-mauve .card-icon { background: #ec407a; } .card-mauve .card-title { color: #ad1457; }
+
+        .expect-box { background: #f9f9f9; padding: 10px; border-radius: 8px; font-size: 14px; margin-bottom: 10px; color: #555; font-style: italic; }
+        .action-list { padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 10px; }
+        .action-list ul { margin: 5px 0 0 0; padding-left: 20px; }
+        .med-box { border-top: 1px solid #eee; padding-top: 10px; font-size: 14px; color: #444; }
+        .med-box i { color: #ef5350; }
+
+        .med-method-card { background: white; padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; border: 1px solid #eee; }
+        .warning { background: #fff3e0; border: 1px solid #ffe0b2; color: #e65100; padding: 15px; border-radius: 12px; font-size: 14px; margin-top: 15px; }
+
+        /* PDF Styles */
+        #print-area { position: absolute; top: -9999px; left: -9999px; width: 794px; background: white; color: black; padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; }
+        #print-area .print-header { border-bottom: 2px solid #455a64; padding-bottom: 15px; margin-bottom: 20px; }
+        #print-area h1 { color: #455a64; font-size: 24px; margin: 0; }
+        #print-area h2 { font-size: 16px; background: #eceff1; padding: 8px; color: #37474f; margin: 20px 0 10px 0; border-radius: 4px; }
+        
+        .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .print-card { border: 1px solid #eee; border-left: 4px solid #ccc; padding: 10px; border-radius: 6px; page-break-inside: avoid; background: #fff; }
+        .pc-title { font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #333; }
+        .pc-desc { font-style: italic; font-size: 11px; color: #666; margin-bottom: 6px; }
+        .print-card ul { margin: 0; padding-left: 15px; font-size: 11px; color: #444; }
+        .pc-med { margin-top: 6px; padding-top: 6px; border-top: 1px dashed #eee; font-size: 10px; color: #c62828; font-weight: bold; }
+        
+        .print-full-section { margin-top: 15px; padding: 10px; border: 1px solid #eee; border-radius: 6px; }
+        .print-warning { margin-top: 10px; font-size: 11px; color: #e65100; font-weight: bold; background: #fff3e0; padding: 5px; }
+    </style>
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #455a64; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Menjana PDF...</div>
+    </div>
+
+    <div class="header header-eol-care">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>Menghadapi Saat Akhir Hayat</h1>
+        <p>Panduan Gejala, Penjagaan & Rawatan</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link eol-care-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> Kembali
+        </div>
+        <div class="nav-link eol-care-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> Kongsi
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-heart-pulse"></i> Perubahan Fizikal & Penjagaan</h2>
+        
+        <div class="info-card card-sage">
+            <div class="card-title">
+                <div class="card-icon"><i class="bi bi-cup-hot-fill"></i></div>
+                Minum & Makan
+            </div>
+            <p class="expect-box">Selera makan akan berkurang. Menelan mungkin menjadi sukar atau menyebabkan batuk.</p>
+            <div class="action-list" style="background: #e8f5e9;">
+                <strong style="color: #2e7d32;">Sokongan Penjaga:</strong>
+                <ul style="color: #1b5e20;">
+                    <li>Berikan sedikit air atau ketulan ais kecil.</li>
+                    <li>Gunakan pelembap bibir untuk bibir kering.</li>
+                    <li>Jangan paksa makan; ini adalah proses semula jadi.</li>
+                </ul>
+            </div>
+            <div class="med-box">
+                <strong><i class="bi bi-capsule"></i> Rawatan Perubatan:</strong>
+                <p>Ubat boleh diberi untuk mengurangkan loya atau muntah.</p>
+            </div>
+        </div>
+
+        <div class="info-card card-sky">
+            <div class="card-title">
+                <div class="card-icon"><i class="bi bi-lungs-fill"></i></div>
+                Perubahan Pernafasan
+            </div>
+            <p class="expect-box">Pernafasan mungkin menjadi cetek, tidak sekata, atau berbunyi (sekresi di kerongkong).</p>
+            <div class="action-list" style="background: #e1f5fe;">
+                <strong style="color: #0277bd;">Sokongan Penjaga:</strong>
+                <ul style="color: #01579b;">
+                    <li>Tinggikan kepala katil (gunakan bantal).</li>
+                    <li>Gunakan kipas untuk aliran udara lembut.</li>
+                    <li>Bunyi nafas jarang menyakitkan; menukar posisi selalunya membantu.</li>
+                </ul>
+            </div>
+            <div class="med-box">
+                <strong><i class="bi bi-capsule"></i> Rawatan Perubatan:</strong>
+                <p>Opioid (untuk sesak nafas) atau ubat pengering sekresi.</p>
+            </div>
+        </div>
+
+        <div class="info-card card-lavender">
+            <div class="card-title">
+                <div class="card-icon"><i class="bi bi-moon-stars-fill"></i></div>
+                Minda, Tidur & Kegelisahan
+            </div>
+            <p class="expect-box">Mengantuk, keliru, atau melihat perkara yang tiada (delirium). Kegelisahan mungkin berlaku.</p>
+            <div class="action-list" style="background: #f3e5f5;">
+                <strong style="color: #6a1b9a;">Sokongan Penjaga:</strong>
+                <ul style="color: #4a148c;">
+                    <li>Bercakap dengan tenang; pendengaran adalah deria terakhir yang hilang.</li>
+                    <li>Pastikan bilik tenang dengan pencahayaan lembut.</li>
+                    <li>Elakkan kekangan fizikal; pegang tangan pesakit.</li>
+                </ul>
+            </div>
+            <div class="med-box">
+                <strong><i class="bi bi-capsule"></i> Rawatan Perubatan:</strong>
+                <p>Ubat penenang (sedatif) mungkin diberi untuk kurangkan kegelisahan.</p>
+            </div>
+        </div>
+
+        <div class="info-card card-sand">
+            <div class="card-title">
+                <div class="card-icon"><i class="bi bi-thermometer-half"></i></div>
+                Kulit & Suhu Badan
+            </div>
+            <p class="expect-box">Tangan/kaki mungkin rasa sejuk, pucat, atau bertompok. Demam juga boleh berlaku.</p>
+            <div class="action-list" style="background: #fff3e0;">
+                <strong style="color: #ef6c00;">Sokongan Penjaga:</strong>
+                <ul style="color: #e65100;">
+                    <li>Gunakan selimut yang lembut dan hangat.</li>
+                    <li>Tukar posisi perlahan-lahan setiap beberapa jam.</li>
+                    <li>Sapu losyen untuk kelembapan.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="info-card card-grey">
+            <div class="card-title">
+                <div class="card-icon"><i class="bi bi-droplet-fill"></i></div>
+                Air Kencing & Usus
+            </div>
+            <p class="expect-box">Air kencing berkurang dan menjadi gelap. Tidak dapat kawal kencing atau sembelit mungkin berlaku.</p>
+            <div class="action-list" style="background: #eceff1;">
+                <strong style="color: #455a64;">Sokongan Penjaga:</strong>
+                <ul style="color: #37474f;">
+                    <li>Pastikan kawasan bersih; guna alas/pad.</li>
+                    <li>Jaga kebersihan untuk keselesaan.</li>
+                </ul>
+            </div>
+             <div class="med-box">
+                <strong><i class="bi bi-capsule"></i> Rawatan Perubatan:</strong>
+                <p>Laksatif untuk sembelit; penjagaan kateter jika perlu.</p>
+            </div>
+        </div>
+
+        <div class="info-card card-mauve">
+            <div class="card-title">
+                <div class="card-icon"><i class="bi bi-bandaid-fill"></i></div>
+                Pengurusan Kesakitan
+            </div>
+            <p class="expect-box">Kesakitan mungkin berterusan atau meningkat, atau pesakit kelihatan gelisah.</p>
+            <div class="action-list" style="background: #fce4ec;">
+                <strong style="color: #ad1457;">Sokongan Penjaga:</strong>
+                <ul style="color: #880e4f;">
+                    <li>Perhatikan mimik muka (berkerut) atau mengerang.</li>
+                    <li>Beri dos tambahan (PRN) jika diarahkan.</li>
+                </ul>
+            </div>
+            <div class="med-box">
+                <strong><i class="bi bi-capsule"></i> Rawatan Perubatan:</strong>
+                <p>Ubat tahan sakit berkala (melalui pam/tampalan) yang diselaraskan doktor.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-prescription2"></i> Pemberian Ubat</h2>
+        <p style="margin-bottom:15px;">Ubat diberi untuk keselesaan, bukan untuk mempercepatkan kematian.</p>
+        
+        <div class="med-method-card">
+            <i class="bi bi-hdd-network-fill" style="color:#455a64; font-size:24px;"></i>
+            <div>
+                <strong>Pam Picagari (Syringe Driver)</strong>
+                <p style="font-size:13px; color:#666;">Pam bateri kecil yang memberi ubat secara berterusan di bawah kulit (subkutaneus).</p>
+            </div>
+        </div>
+        
+        <div class="med-method-card">
+            <i class="bi bi-patch-plus-fill" style="color:#455a64; font-size:24px;"></i>
+            <div>
+                <strong>Tampalan (Patch) & Pipi</strong>
+                <p style="font-size:13px; color:#666;">Tampalan kulit (cth: Fentanyl) atau ubat yang diletakkan di dalam pipi untuk penyerapan pantas.</p>
+            </div>
+        </div>
+
+        <div class="warning">
+            <strong><i class="bi bi-exclamation-circle-fill"></i> Penting:</strong>
+            Jangan ubah ubat sendiri. Sentiasa ikut pelan pasukan penjagaan paliatif.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-flower1"></i> Selepas Pemergian</h2>
+        <div style="background:white; padding:20px; border-radius:12px; border:1px solid #eee;">
+            <h4 style="font-size:16px; margin-bottom:10px; color:#455a64;">Saat-saat Awal</h4>
+            <p style="font-size:14px; margin-bottom:15px; color:#555;">Tiada tergesa-gesa. Luangkan masa bersama orang tersayang. Duduk dengan tenang, berdoa, atau ucapkan selamat tinggal.</p>
+            
+            <h4 style="font-size:16px; margin-bottom:10px; color:#455a64;">Tindakan Seterusnya</h4>
+            <ul style="padding-left:20px; font-size:14px; color:#555;">
+                <li style="margin-bottom:5px;"><strong>Hubungi 999:</strong> Maklumkan kematian supaya doktor boleh membuat pengesahan.</li>
+                <li><strong>Pengurus Jenazah:</strong> Hubungi mereka selepas kematian disahkan.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-eol-care" onclick="generateAndPrintPDF('end-of-life-guide-bm.pdf')">
+            <i class="bi bi-printer-fill"></i> Simpan PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Kongsi Panduan</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="text-align: center; color: #666;">Imbas kod QR untuk lihat di telefon</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header eol-care-theme">
+            <h1 class="eol-care-theme">Menghadapi Saat Akhir Hayat</h1>
+            <p>Maklumat untuk pesakit, keluarga dan penjaga</p>
+        </div>
+
+        <h2>Perubahan Fizikal & Penjagaan</h2>
+        <div class="print-grid">
+            <div class="print-card card-sage">
+                <div class="pc-title">Minum & Makan</div>
+                <div class="pc-desc">Selera berkurang. Sukar menelan.</div>
+                <ul><li>Beri sedikit air/ais.</li><li>Pelembap bibir untuk bibir kering.</li><li>Jangan paksa makan.</li></ul>
+                <div class="pc-med">Rx: Ubat loya/muntah.</div>
+            </div>
+            <div class="print-card card-sky">
+                <div class="pc-title">Pernafasan</div>
+                <div class="pc-desc">Cetek, tidak sekata, berbunyi.</div>
+                <ul><li>Tinggikan kepala katil/Bantal.</li><li>Kipas untuk aliran udara.</li><li>Bunyi nafas jarang menyakitkan.</li></ul>
+                <div class="pc-med">Rx: Opioid / Pengering Sekresi.</div>
+            </div>
+            <div class="print-card card-lavender">
+                <div class="pc-title">Minda & Tidur</div>
+                <div class="pc-desc">Mengantuk, keliru, gelisah.</div>
+                <ul><li>Bercakap dengan tenang.</li><li>Bilik tenang, cahaya lembut.</li><li>Elak kekangan fizikal.</li></ul>
+                <div class="pc-med">Rx: Sedatif untuk kegelisahan.</div>
+            </div>
+            <div class="print-card card-sand">
+                <div class="pc-title">Kulit & Suhu</div>
+                <div class="pc-desc">Tangan sejuk/pucat/bertempok.</div>
+                <ul><li>Guna selimut lembut/hangat.</li><li>Tukar posisi perlahan-lahan.</li><li>Sapu losyen.</li></ul>
+            </div>
+            <div class="print-card card-grey">
+                <div class="pc-title">Air Kencing & Usus</div>
+                <div class="pc-desc">Terkucil atau sembelit.</div>
+                <ul><li>Jaga kebersihan / guna pad.</li><li>Pastikan keselesaan.</li></ul>
+                <div class="pc-med">Rx: Laksatif atau Kateter.</div>
+            </div>
+            <div class="print-card card-mauve">
+                <div class="pc-title">Pengurusan Kesakitan</div>
+                <div class="pc-desc">Muka berkerut atau gelisah.</div>
+                <ul><li>Perhatikan tanda bukan lisan.</li><li>Beri dos tambahan (PRN).</li></ul>
+                <div class="pc-med">Rx: Ubat tahan sakit berkala.</div>
+            </div>
+        </div>
+
+        <div class="print-full-section">
+            <div class="pc-title">Pemberian Ubat</div>
+            <p style="font-size:11px; color:#555; margin-bottom:8px;">Ubat diberi untuk keselesaan, bukan untuk mempercepatkan kematian.</p>
+            <div style="margin-bottom:6px;"><strong style="font-size:11px; color:#333;">Pam Picagari (Syringe Driver):</strong> <span style="font-size:11px; color:#666;">Pam bateri kecil memberi ubat berterusan bawah kulit.</span></div>
+            <div style="margin-bottom:6px;"><strong style="font-size:11px; color:#333;">Tampalan & Pipi:</strong> <span style="font-size:11px; color:#666;">Tampalan kulit atau ubat dalam pipi untuk serapan pantas.</span></div>
+            <div class="print-warning"><strong>Penting:</strong> Jangan ubah ubat sendiri. Sentiasa ikut pelan pasukan penjagaan paliatif.</div>
+        </div>
+
+        <div class="print-full-section">
+            <div class="pc-title">Selepas Pemergian</div>
+            <div style="margin-bottom:8px;"><strong style="font-size:11px; color:#455a64;">Saat-saat Awal:</strong> <span style="font-size:11px; color:#555;">Tiada tergesa-gesa. Luangkan masa bersama orang tersayang.</span></div>
+            <strong style="font-size:11px; color:#455a64;">Tindakan Seterusnya:</strong>
+            <ul style="margin-top:4px;"><li><strong>Hubungi 999:</strong> Maklumkan kematian.</li><li><strong>Pengurus Jenazah:</strong> Hubungi selepas pengesahan.</li></ul>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

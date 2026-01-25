@@ -1,0 +1,311 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鸦片类药物与吗啡 | 患者指南</title>
+    
+    <link rel="stylesheet" href="../education.css">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+    <div id="pdf-loading">
+        <div style="text-align:center">
+            <div style="display:inline-block; width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; font-weight: bold;">正在生成 PDF...</p>
+        </div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+    </div>
+
+    <div class="main-container">
+        
+<div class="header header-pain">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1><i class="bi bi-capsule-pill" style="margin-right: 8px;"></i> 鸦片类药物与吗啡</h1>
+        <p>您的疼痛缓解与舒适护理指南</p>
+    </div>
+
+        <div class="nav-bar">
+            <a href="../index.html" class="nav-link">
+                <i class="bi bi-arrow-left"></i> 返回 (Back)
+            </a>
+            <div class="nav-link" onclick="showQR()">
+                <i class="bi bi-share-fill"></i> 分享 (Share)
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><i class="bi bi-capsule-pill" style="color:#1565c0"></i> 什么是鸦片类药物？</h2>
+            <p>鸦片类药物用于控制疼痛、呼吸困难和咳嗽。它们有多种剂型，如药水、药片、贴片和注射剂。</p>
+            <br>
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 12px; border-left: 4px solid #1565c0;">
+                <strong>常见药物:</strong> 可待因 (Codeine), 曲马多 (Tramadol), 吗啡 (Morphine), 芬太尼 (Fentanyl), 羟考酮 (Oxycodone).
+                <br><br>
+                <em>吗啡被认为是治疗癌症疼痛的“黄金标准”。</em>
+            </div>
+            <p style="margin-top: 15px; font-size: 14px;">吗啡起效迅速，口服后 <strong>1 小时</strong> 达到最大药效，药效持续约 <strong>4 小时</strong>。</p>
+        </div>
+
+        <div class="section">
+            <h2><i class="bi bi-shield-check" style="color:#c0392b"></i> 常见担忧</h2>
+            <p>许多患者担心服用强效止痛药。以下是事实：</p>
+
+            <div class="fear-grid">
+                <div class="fear-card" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #333;">
+                    <strong>担忧：是否会加速死亡？</strong>
+                    <p style="margin-top: 8px;"><strong>事实：</strong> 不会。如果使用得当，它不会缩短寿命。研究表明，接受吗啡治疗的安宁疗护患者通常因更舒适和生活质量提高而活得更久。</p>
+                </div>
+
+                <div class="fear-card" style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); color: #333;">
+                    <strong>担忧：是否会上瘾？</strong>
+                    <p style="margin-top: 8px;"><strong>事实：</strong> 不会。按照医疗团队的指示用于缓解疼痛，不会导致成瘾。</p>
+                </div>
+
+                <div class="fear-card" style="background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); color: #333;">
+                    <strong>担忧：药效会失效吗？</strong>
+                    <p style="margin-top: 8px;"><strong>事实：</strong> 止痛效果不会随时间消失。合适的剂量是能缓解疼痛且副作用可控的剂量。没有最高剂量限制。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><i class="bi bi-clipboard-pulse" style="color:#e67e22"></i> 副作用</h2>
+            <p>大多数副作用是暂时的或可治疗的。</p>
+
+            <div class="side-effects-grid"> 
+                <div class="side-effect">
+                    <strong>1. 便秘</strong>
+                    <p>非常常见。通常会配合泻药（软便剂）一起处方以预防此情况。</p>
+                </div>
+
+                <div class="side-effect">
+                    <strong>2. 恶心与呕吐</strong>
+                    <p>通常是暂时的。饭后服药有助于缓解。</p>
+                </div>
+
+                <div class="side-effect">
+                    <strong>3. 嗜睡</strong>
+                    <p>刚开始服用时常见，但通常会好转。请勿驾驶或操作机器。</p>
+                </div>
+
+                <div class="side-effect">
+                    <strong>4. 口干</strong>
+                    <p>小口喝水，含冰块，或吃酸味糖果。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><i class="bi bi-check-circle" style="color:#27ae60;"></i> 如何服用</h2>
+            <div class="rules-grid">
+                <div class="rule-card">
+                    <div class="rule-number">1</div>
+                    <div class="rule-content">
+                        <strong>遵循剂量</strong>
+                        <p>不要超过规定剂量，也不要因为漏服而服用双倍剂量。</p>
+                    </div>
+                </div>
+                <div class="rule-card">
+                    <div class="rule-number">2</div>
+                    <div class="rule-content">
+                        <strong>突发性疼痛</strong>
+                        <p>如果疼痛发作，您可以在固定时间之间服用额外剂量。需与上一次剂量间隔至少 <strong>1 小时</strong>。</p>
+                    </div>
+                </div>
+                <div class="rule-card">
+                    <div class="rule-number">3</div>
+                    <div class="rule-content">
+                        <strong>记录下来</strong>
+                        <p>记录您服用了多少额外剂量，并在下次就诊时告知医生。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-pdf" onclick="printPDF()">
+                <i class="bi bi-printer-fill"></i> 打印 PDF
+            </button>
+        </div>
+
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3>扫描分享</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="margin-top:10px; color:#666">让患者扫描以在手机上查看</p>
+        </div>
+    </div>
+
+    <script src="../education.js"></script>
+
+    <script>
+        async function printPDF() {
+            const loading = document.getElementById('pdf-loading');
+            loading.style.display = 'flex';
+            
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert("Please allow popups to view the PDF.");
+                loading.style.display = 'none';
+                return;
+            }
+            printWindow.document.write('Please wait, generating PDF...');
+
+            try {
+                // A. GET DATA (Maintain English for Header/Footer)
+                let footerData = { name: "PalliCalc Patient Education", contact: "", logos: [] };
+                if (window.context && window.context.instId) {
+                    const cached = localStorage.getItem('cached_inst_' + window.context.instId);
+                    if (cached) {
+                        const d = JSON.parse(cached);
+                        footerData = { 
+                            name: d.headerName || d.name, 
+                            contact: d.headerContact || d.contact, 
+                            logos: d.headerLogos || (d.logo ? [d.logo] : [])
+                        };
+                    }
+                } else {
+                    const s = localStorage.getItem('institutionSettings');
+                    if (s) {
+                        const parsed = JSON.parse(s);
+                        footerData = { name: parsed.name, contact: parsed.contact, logos: parsed.logos || [parsed.logo] };
+                    }
+                }
+
+                // B. LOAD PDF (Target: 'ch.pdf')
+                const { PDFDocument, rgb, StandardFonts } = PDFLib;
+                
+                // IMPORTANT: Ensure 'ch.pdf' exists in the opioid/ folder!
+                const existingPdfBytes = await fetch('ch.pdf').then(res => {
+                    if (!res.ok) throw new Error("ch.pdf not found!");
+                    return res.arrayBuffer();
+                });
+
+                const pdfDoc = await PDFDocument.load(existingPdfBytes);
+                const newPdf = await PDFDocument.create();
+                
+                const helveticaFont = await newPdf.embedFont(StandardFonts.Helvetica);
+                const helveticaBold = await newPdf.embedFont(StandardFonts.HelveticaBold);
+                const embeddedPages = await newPdf.embedPdf(pdfDoc);
+
+                const A4_W = 595.28; 
+                const A4_H = 841.89;
+                const FOOTER_H = 80;
+
+                // C. STAMP FOOTER (English Layout)
+                for (const page of embeddedPages) {
+                    const newPage = newPdf.addPage([A4_W, A4_H]);
+                    
+                    // 1. Content
+                    const scale = Math.min(A4_W / page.width, (A4_H - FOOTER_H) / page.height);
+                    const w = page.width * scale;
+                    const h = page.height * scale;
+                    newPage.drawPage(page, { x: (A4_W - w)/2, y: FOOTER_H, width: w, height: h });
+
+                    // 2. Line
+                    const lineY = FOOTER_H - 10;
+                    newPage.drawLine({ 
+                        start: {x: 30, y: lineY}, 
+                        end: {x: A4_W-30, y: lineY}, 
+                        thickness: 0.5, 
+                        color: rgb(0.6, 0.6, 0.6) 
+                    });
+
+                    // 3. LOGOS (LEFT)
+                    let currentX = 30;
+                    if (footerData.logos && footerData.logos.length > 0) {
+                        for (const logoUrl of footerData.logos) {
+                            try {
+                                if (!logoUrl) continue;
+                                const logoBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
+                                let logoImg;
+                                if (logoUrl.toLowerCase().includes('png')) logoImg = await newPdf.embedPng(logoBytes);
+                                else logoImg = await newPdf.embedJpg(logoBytes);
+
+                                const lScale = 35 / logoImg.height;
+                                const lWidth = logoImg.width * lScale;
+                                
+                                newPage.drawImage(logoImg, {
+                                    x: currentX,
+                                    y: lineY - 45,
+                                    width: lWidth,
+                                    height: 35
+                                });
+                                currentX += lWidth + 15;
+                            } catch (e) { console.warn("Logo error", e); }
+                        }
+                    }
+
+                    // 4. TEXT (RIGHT - ENGLISH)
+                    const nameStr = footerData.name || "PalliCalc Patient Education";
+                    const contactStr = footerData.contact ? `Contact: ${footerData.contact}` : "";
+                    
+                    const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
+                    newPage.drawText(nameStr, { 
+                        x: A4_W - 30 - nameWidth, 
+                        y: lineY - 25, 
+                        size: 12, 
+                        font: helveticaBold, 
+                        color: rgb(0.2, 0.2, 0.2) 
+                    });
+
+                    if (contactStr) {
+                        const contactWidth = helveticaFont.widthOfTextAtSize(contactStr, 10);
+                        newPage.drawText(contactStr, { 
+                            x: A4_W - 30 - contactWidth, 
+                            y: lineY - 40, 
+                            size: 10, 
+                            font: helveticaFont, 
+                            color: rgb(0.4, 0.4, 0.4) 
+                        });
+                    }
+
+                    // 5. COPYRIGHT (CENTER - ENGLISH)
+                    const copyText = "© 2026 Alivioscript Solutions | PalliCalc™";
+                    const copyWidth = helveticaFont.widthOfTextAtSize(copyText, 8);
+                    newPage.drawText(copyText, {
+                        x: (A4_W - copyWidth) / 2,
+                        y: 10,
+                        size: 8,
+                        font: helveticaFont,
+                        color: rgb(0.6, 0.6, 0.6)
+                    });
+                }
+
+                const pdfBytes = await newPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                printWindow.location.href = URL.createObjectURL(blob);
+
+            } catch (e) {
+                printWindow.close();
+                alert("Error: " + e.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

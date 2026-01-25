@@ -1,0 +1,312 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opioids & Morphine | Patient Guide</title>
+    
+    <link rel="stylesheet" href="../education.css">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+    <div id="pdf-loading">
+        <div style="text-align:center">
+            <div style="display:inline-block; width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; font-weight: bold;">Preparing your PDF...</p>
+        </div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+    </div>
+
+    <div class="main-container">
+        
+<div class="header header-pain">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1><i class="bi bi-capsule-pill" style="margin-right: 8px;"></i> Opioids & Morphine</h1>
+        <p>Your guide to pain relief and comfort care</p>
+    </div>
+
+        <div class="nav-bar">
+            <a href="../index.html" class="nav-link">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+            <div class="nav-link" onclick="showQR()">
+                <i class="bi bi-share-fill"></i> Share
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><i class="bi bi-capsule-pill" style="color:#1565c0"></i> What are Opioids?</h2>
+            <p>Opioids help control pain, breathlessness, and cough. They are available as liquid, tablets, patches, or injections.</p>
+            <br>
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 12px; border-left: 4px solid #1565c0;">
+                <strong>Common Opioids:</strong> Codeine, Tramadol, Morphine, Fentanyl, and Oxycodone.
+                <br><br>
+                <em>Morphine is considered the gold standard in treating cancer pain.</em>
+            </div>
+            <p style="margin-top: 15px; font-size: 14px;">Morphine starts working quickly, achieving maximum effect after <strong>1 hour</strong> (oral), and effects last about <strong>4 hours</strong>.</p>
+        </div>
+
+        <div class="section">
+            <h2><i class="bi bi-shield-check" style="color:#c0392b"></i> Common Fears</h2>
+            <p>Many patients worry about taking strong painkillers. Here are the facts:</p>
+
+            <div class="fear-grid">
+                <div class="fear-card" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #333;">
+                    <strong>FEAR: Does opioid speed up death?</strong>
+                    <p style="margin-top: 8px;"><strong>FACT:</strong> No. Opioids, if used correctly, do not shorten your life span. Research shows that palliative patients receiving morphine often live longer due to optimized comfort and better quality of life.</p>
+                </div>
+
+                <div class="fear-card" style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); color: #333;">
+                    <strong>FEAR: Will it lead to addiction?</strong>
+                    <p style="margin-top: 8px;"><strong>FACT:</strong> No. Opioids used as instructed by your medical team for pain relief will not result in addiction.</p>
+                </div>
+
+                <div class="fear-card" style="background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); color: #333;">
+                    <strong>FEAR: Will effects wear off?</strong>
+                    <p style="margin-top: 8px;"><strong>FACT:</strong> Pain-relief effects do not wear off over time. The right dose is simply the one that relieves pain with manageable side effects. There is no maximum dose.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><i class="bi bi-clipboard-pulse" style="color:#e67e22"></i> Side Effects</h2>
+            <p>Most side effects are temporary or treatable.</p>
+
+            <div class="side-effects-grid"> 
+                <div class="side-effect">
+                    <strong>1. Constipation</strong>
+                    <p>This is common. Opioids are usually given with laxatives to prevent this.</p>
+                </div>
+
+                <div class="side-effect">
+                    <strong>2. Nausea & Vomiting</strong>
+                    <p>This is usually temporary. Take your doses after meals to help.</p>
+                </div>
+
+                <div class="side-effect">
+                    <strong>3. Drowsiness</strong>
+                    <p>Common when starting, but usually wears off. Do not drive or operate machinery.</p>
+                </div>
+
+                <div class="side-effect">
+                    <strong>4. Dry Mouth</strong>
+                    <p>Sip water, suck on ice chips, or use oral spray/sour candy.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><i class="bi bi-check-circle" style="color:#27ae60;"></i> How to take Opioids</h2>
+            <div class="rules-grid">
+                <div class="rule-card">
+                    <div class="rule-number">1</div>
+                    <div class="rule-content">
+                        <strong>Follow the Dose</strong>
+                        <p>Do not exceed the prescribed dose or double up for missed doses.</p>
+                    </div>
+                </div>
+                <div class="rule-card">
+                    <div class="rule-number">2</div>
+                    <div class="rule-content">
+                        <strong>Breakthrough Pain</strong>
+                        <p>You can take additional doses between fixed timings if pain occurs. Wait at least <strong>1 hour</strong> from your last dose.</p>
+                    </div>
+                </div>
+                <div class="rule-card">
+                    <div class="rule-number">3</div>
+                    <div class="rule-content">
+                        <strong>Record It</strong>
+                        <p>Write down how many extra doses you take and inform your doctor.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-pdf" onclick="printPDF()">
+                <i class="bi bi-printer-fill"></i> Print PDF
+            </button>
+        </div>
+
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3>Scan to Share</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="margin-top:10px; color:#666">Scan to view on mobile</p>
+        </div>
+    </div>
+
+    <script src="../education.js"></script>
+
+    <script>
+        async function printPDF() {
+            const loading = document.getElementById('pdf-loading');
+            loading.style.display = 'flex';
+            
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert("Please allow popups to view the PDF.");
+                loading.style.display = 'none';
+                return;
+            }
+            printWindow.document.write('Please wait, generating PDF...');
+
+            try {
+                // A. GET DATA
+                let footerData = { name: "PalliCalc Patient Education", contact: "", logos: [] };
+                if (window.context && window.context.instId) {
+                    const cached = localStorage.getItem('cached_inst_' + window.context.instId);
+                    if (cached) {
+                        const d = JSON.parse(cached);
+                        footerData = { 
+                            name: d.headerName || d.name, 
+                            contact: d.headerContact || d.contact, 
+                            logos: d.headerLogos || (d.logo ? [d.logo] : [])
+                        };
+                    }
+                } else {
+                    const s = localStorage.getItem('institutionSettings');
+                    if (s) {
+                        const parsed = JSON.parse(s);
+                        footerData = { name: parsed.name, contact: parsed.contact, logos: parsed.logos || [parsed.logo] };
+                    }
+                }
+
+                // B. LOAD PDF
+                const { PDFDocument, rgb, StandardFonts } = PDFLib;
+                const existingPdfBytes = await fetch('eng.pdf').then(res => {
+                    if (!res.ok) throw new Error("eng.pdf not found in this folder!");
+                    return res.arrayBuffer();
+                });
+
+                const pdfDoc = await PDFDocument.load(existingPdfBytes);
+                const newPdf = await PDFDocument.create();
+                
+                const helveticaFont = await newPdf.embedFont(StandardFonts.Helvetica);
+                const helveticaBold = await newPdf.embedFont(StandardFonts.HelveticaBold);
+                const embeddedPages = await newPdf.embedPdf(pdfDoc);
+
+                const A4_W = 595.28; 
+                const A4_H = 841.89;
+                const FOOTER_H = 80; // Height reserved for footer
+
+                // C. STAMP FOOTER (Exact Match to Picture)
+                for (const page of embeddedPages) {
+                    const newPage = newPdf.addPage([A4_W, A4_H]);
+                    
+                    // 1. Content (Scaled)
+                    const scale = Math.min(A4_W / page.width, (A4_H - FOOTER_H) / page.height);
+                    const w = page.width * scale;
+                    const h = page.height * scale;
+                    newPage.drawPage(page, { x: (A4_W - w)/2, y: FOOTER_H, width: w, height: h });
+
+                    // 2. Line Separator (Greyish/Thin)
+                    const lineY = FOOTER_H - 10;
+                    newPage.drawLine({ 
+                        start: {x: 30, y: lineY}, 
+                        end: {x: A4_W-30, y: lineY}, 
+                        thickness: 0.5, 
+                        color: rgb(0.6, 0.6, 0.6) 
+                    });
+
+                    // 3. LOGOS (LEFT)
+                    let currentX = 30;
+                    if (footerData.logos && footerData.logos.length > 0) {
+                        for (const logoUrl of footerData.logos) {
+                            try {
+                                if (!logoUrl) continue;
+                                const logoBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
+                                let logoImg;
+                                if (logoUrl.toLowerCase().includes('png')) logoImg = await newPdf.embedPng(logoBytes);
+                                else logoImg = await newPdf.embedJpg(logoBytes);
+
+                                // Fit height ~35px
+                                const lScale = 35 / logoImg.height;
+                                const lWidth = logoImg.width * lScale;
+                                
+                                newPage.drawImage(logoImg, {
+                                    x: currentX,
+                                    y: lineY - 45, // Below line
+                                    width: lWidth,
+                                    height: 35
+                                });
+                                currentX += lWidth + 15;
+                            } catch (e) { console.warn("Logo error", e); }
+                        }
+                    }
+
+                    // 4. TEXT (RIGHT) - Name & Contact
+                    const nameStr = footerData.name || "PalliCalc Patient Education";
+                    const contactStr = footerData.contact ? `Contact: ${footerData.contact}` : "";
+                    
+                    // Name (Bold)
+                    const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
+                    newPage.drawText(nameStr, { 
+                        x: A4_W - 30 - nameWidth, 
+                        y: lineY - 25, 
+                        size: 12, 
+                        font: helveticaBold, 
+                        color: rgb(0.2, 0.2, 0.2) 
+                    });
+
+                    // Contact (Normal)
+                    if (contactStr) {
+                        const contactWidth = helveticaFont.widthOfTextAtSize(contactStr, 10);
+                        newPage.drawText(contactStr, { 
+                            x: A4_W - 30 - contactWidth, 
+                            y: lineY - 40, 
+                            size: 10, 
+                            font: helveticaFont, 
+                            color: rgb(0.4, 0.4, 0.4) 
+                        });
+                    }
+
+                    // 5. COPYRIGHT (CENTER BOTTOM - Very Small)
+                    const copyText = "© 2026 Alivioscript Solutions | PalliCalc™";
+                    const copyWidth = helveticaFont.widthOfTextAtSize(copyText, 8);
+                    newPage.drawText(copyText, {
+                        x: (A4_W - copyWidth) / 2,
+                        y: 10,
+                        size: 8,
+                        font: helveticaFont,
+                        color: rgb(0.6, 0.6, 0.6)
+                    });
+                }
+
+                const pdfBytes = await newPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                printWindow.location.href = URL.createObjectURL(blob);
+
+            } catch (e) {
+                printWindow.close();
+                alert("Error: " + e.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>芬太尼贴片 | 患者指南</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #1565c0; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">正在生成 PDF...</div>
+        <div style="font-size: 13px; color: #888; margin-top: 5px;">正在格式化文档</div>
+    </div>
+
+    <div class="header header-pain">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>🩹 芬太尼贴片</h1>
+        <p>使用与安全指南</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link pain-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> 返回
+        </div>
+        <div class="nav-link pain-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> 分享
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-geo-alt-fill"></i> 粘贴部位</h2>
+        <p style="margin-bottom: 15px;">用于缓解慢性疼痛（如癌症疼痛）。请粘贴在<strong>胸部、大腿或手臂</strong>平坦的皮肤上。</p>
+        
+        <img src="1.jpg" alt="Locations: Chest, Thigh, Arm" class="patch-img">
+        
+        <ul style="padding-left: 20px; margin-bottom: 20px;">
+            <li>仅用清水清洗皮肤（确保干燥）。</li>
+            <li><strong>切勿剃毛！</strong> 如有需要，请用剪刀将毛发剪短。</li>
+            <li>粘贴部位避免使用肥皂、精油或乳液。</li>
+        </ul>
+
+        <div class="warning-alert">
+            <strong>🔥 热源警告</strong><br>
+            避免让贴片部位接触热源（如热水澡、桑拿、热敷垫），因为热量会导致药物过量释放，引发危险。
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-123"></i> 使用方法</h2>
+        <div class="rules-grid">
+            <div class="rule-card" style="border-left-color: #1565c0;">
+                <div class="rule-number" style="background: #1565c0;">1</div>
+                <div class="rule-content">
+                    <strong>准备</strong>
+                    <p>撕开包装袋。将贴片轻轻折叠以撕下一般的保护膜。<strong>切勿触摸</strong>有粘性的一面。</p>
+                </div>
+            </div>
+
+            <div class="rule-card" style="border-left-color: #1565c0;">
+                <div class="rule-number" style="background: #1565c0;">2</div>
+                <div class="rule-content">
+                    <strong>粘贴</strong>
+                    <p>将露出的一半贴在皮肤上。撕下剩余的保护膜并贴好整张贴片。用手掌用力按压<strong>30秒</strong>。</p>
+                </div>
+            </div>
+
+            <div class="rule-card" style="border-left-color: #1565c0;">
+                <div class="rule-number" style="background: #1565c0;">3</div>
+                <div class="rule-content">
+                    <strong>贴后护理</strong>
+                    <p>立即洗手。在贴片上写下日期和时间。每<strong>72小时（3天）</strong>更换一次。</p>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 15px; font-size: 14px; color: #555; text-align: center;">
+            <i class="bi bi-car-front-fill"></i> 在了解药物是否会让您嗜睡之前，<strong>切勿</strong>饮酒或驾驶。
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-scissors"></i> 如需半剂量</h2>
+        <div class="fear-card" style="background: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);">
+            <strong>✂️ 对角剪开</strong>
+            <p>如果医生指示使用半剂量，请沿对角线剪开贴片。<strong>切勿</strong>沿着现有的直线剪开。</p>
+            <img src="2.jpg" alt="Cut Diagonally" class="card-img" style="border-radius: 4px; padding: 2px;">
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-trash3-fill"></i> 安全丢弃</h2>
+        <div class="danger-alert">
+            <strong>⚠️ 儿童与宠物危险</strong><br>
+            使用过的贴片仍含有药物，若被误食或粘在皮肤上可能<strong>致死</strong>。
+        </div>
+        <ol style="padding-left: 20px;">
+            <li>将用过的贴片对折（粘性面朝内）。</li>
+            <li>放回原包装袋中。</li>
+            <li>丢弃在儿童无法触及的垃圾桶内。</li>
+        </ol>
+    </div>
+
+    <div class="section" style="border-left: 5px solid #e74c3c;">
+        <h2 style="color: #c0392b;">副作用与求助</h2>
+        <p><strong>常见:</strong> 嗜睡、恶心、便秘、皮肤过敏、头晕。</p>
+        <div style="background: #fff5f5; padding: 15px; border-radius: 8px; margin-top: 10px;">
+            <strong style="color: #c0392b;">🚑 如有以下情况请立即就医:</strong>
+            <ul style="margin-top: 5px; color: #333;">
+                <li>呼吸缓慢或浅短。</li>
+                <li>极度嗜睡或意识混乱。</li>
+                <li>无法叫醒或有服药过量的迹象。</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-pain" onclick="generateAndPrintPDF('fentanyl-guide-ch.pdf')">
+            <i class="bi bi-printer-fill"></i> 打印 PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 分享指南</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="text-align: center; color: #666;">扫描保存至手机</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header pain-theme">
+            <h1>芬太尼贴片</h1>
+            <p>患者使用指南</p>
+        </div>
+
+        <div class="print-item warning-box" style="display: block;">
+            <strong>🔥 重要: 热源与安全</strong>
+            <p style="font-size: 14px;">避免热源（热水澡、热敷垫）。<br>
+            远离儿童/宠物。使用过的贴片可能致死。</p>
+        </div>
+
+        <div class="print-item">
+            <div class="print-content">
+                <strong>1. 粘贴部位</strong>
+                <p>胸部、大腿或手臂（皮肤干燥、无毛）。剪短毛发，<strong>切勿</strong>剃刮。</p>
+                <div style="text-align: center; margin-top: 5px;">
+                    <img src="1.jpg" style="height: 100px; width: auto;" alt="Placement">
+                </div>
+            </div>
+        </div>
+
+        <div class="print-item">
+            <div class="print-content">
+                <strong>2. 使用方法</strong>
+                <ol style="margin: 5px 0 0 15px;">
+                    <li>撕开包装，撕下一半保护膜。</li>
+                    <li>贴在皮肤上，撕下剩余保护膜。</li>
+                    <li>用力按压<strong>30秒</strong>。</li>
+                    <li>洗手。每<strong>72小时</strong>更换一次。</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="print-item">
+            <div class="print-content">
+                <strong>3. 如需半剂量（遵医嘱）</strong>
+                <p>请<strong>对角剪开</strong>，<strong>切勿</strong>沿现有直线剪开。</p>
+                <div style="text-align: center; margin-top: 5px;">
+                    <img src="2.jpg" style="height: 80px; width: auto;" alt="Cut Diagonal">
+                </div>
+            </div>
+        </div>
+
+        <div class="print-side-effect-en">
+            <strong>副作用与警告</strong>
+            <p style="margin-top: 4px;">
+                <strong>常见:</strong> 嗜睡、恶心、便秘、头晕。<br>
+                <strong>紧急:</strong> 若出现呼吸缓慢、严重嗜睡、意识混乱或过量迹象，请联系医生。
+            </p>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+  
+</body>
+</html>

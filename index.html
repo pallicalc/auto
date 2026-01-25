@@ -1,0 +1,249 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Palliative Care Calculators | Clinical Pharmacist</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" defer></script>
+    
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <div class="header-content">
+                <div class="logo" role="img" aria-label="Syringe PalliCalc logo">💉 PalliCalc</div>
+                <div id="user-info" class="user-info">
+                    <button id="login-btn" class="login-btn" aria-label="Login to access calculators">🔐 Login</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero fade-in-up">
+            <h1>Clinically Verified Palliative Calculators</h1>
+            <p class="hospital-badge" role="img" aria-label="Hospital developed badge">🏥 Developed by clinical palliative pharmacist + multidisciplinary team at Malaysia state government hospital</p>
+        </section>
+
+        <div id="action-buttons" class="action-buttons">
+            <button class="btn btn-primary" id="register-btn">
+                <span class="trial-icon" role="img" aria-label="Celebration icon">🎉</span>
+                <i class="bi bi-person-plus" aria-hidden="true"></i> Free Pro Member Registration
+            </button>
+            <button class="btn btn-demo" id="demo-btn" aria-label="Try opioid calculator demo">
+                <i class="bi bi-calculator" aria-hidden="true"></i> Try Opioid Calculator Demo
+            </button>
+        </div>
+
+        <div id="tools-section" class="tools-section">
+            <h2 id="tools-title"
+                style="text-align:center;font-size:24px;font-weight:700;color:#1e293b;margin-bottom:20px;"
+                aria-label="Tools available">
+                🛠️ Tools Available
+            </h2>
+
+            <a href="all-calculators.html" class="tool-btn" aria-label="All calculators page">
+                <span class="tool-icon" role="img" aria-label="Pill icon">💊</span>
+                <span>All calculators
+                    <span id="user-tier-badge" class="vip-badge" style="display:none;">PRO</span>
+                </span>
+            </a>
+
+            <a href="patient-education.html" class="tool-btn" aria-label="Patient information pamphlets">
+                <span class="tool-icon" role="img" aria-label="Information sheets icon">📄</span>
+                <span>Patient information pamphlets</span>
+            </a>
+
+            <a href="healthcare-guidelines.html" class="tool-btn" aria-label="Healthcare guidelines">
+                <span class="tool-icon" role="img" aria-label="Guidelines icon">📘</span>
+                <span>Healthcare guidelines</span>
+            </a>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-number" id="total-users" aria-live="polite">0</div>
+                <div class="info-label">Total Users</div>
+            </div>
+            <div class="info-card">
+                <div class="info-number" id="total-institutions" aria-live="polite">0</div>
+                <div class="info-label">Total Institutions</div>
+            </div>
+            <div class="info-card">
+                <div class="version-badge">v1.0 Beta</div>
+                <div class="info-label">Launched Dec 2025</div>
+            </div>
+            <div class="info-card">
+                <a href="app.html" class="btn" style="font-size:14px;padding:12px;" aria-label="Open PalliCalc App">
+                    <i class="bi bi-phone-fill" aria-hidden="true"></i> Open App
+                </a>
+            </div>
+        </div>
+
+        <section id="features-section" class="features fade-in-up">
+            <h2 class="section-title" id="section-title">What You'll Get</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="bi bi-calculator feature-icon" aria-hidden="true"></i>
+                    <h3 class="feature-title">Calculators & Customization</h3>
+                    <p class="feature-desc">Verified Opioid, Benzodiazepine & Infusion tools.</p>
+                    <p class="feature-desc" style="font-weight:600; color:#007bff; margin-top:8px;">PRO: Edit conversion ratios to match local protocols.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <i class="bi bi-journal-medical feature-icon" aria-hidden="true"></i>
+                    <h3 class="feature-title">Clinical & Patient Resources</h3>
+                    <p class="feature-desc">Evidence-based healthcare guidelines.</p>
+                    <p class="feature-desc">Printable, multilingual patient education pamphlets.</p>
+                    <p class="feature-desc" style="font-weight:600; color:#007bff; margin-top:8px;">New: Add personalized institution details to pamphlet footer.</p>
+                </div>
+
+                <div class="feature-card">
+                    <i class="bi bi-gem feature-icon" aria-hidden="true"></i>
+                    <h3 class="feature-title">Pro Exclusives</h3>
+                    <p class="feature-desc">Save custom settings & export results.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="team fade-in-up">
+            <div class="team-header">
+                <h2 class="team-title">✅ Clinically Verified Content</h2>
+                <p class="team-subtitle">Content and calculators validated by multidisciplinary team following Malaysian MOH guidelines</p>
+            </div>
+            <div class="team-grid">
+                <div class="team-member">
+                    <div class="team-avatar" role="img" aria-label="Clinical pharmacist avatar">💊</div>
+                    <div class="team-role">Clinical Pharmacist</div>
+                    <div class="team-name">Developer</div>
+                    <div class="team-desc">10+ years experience. Built all content and calculators.</div>
+                </div>
+                <div class="team-member">
+                    <div class="team-avatar" role="img" aria-label="Palliative consultant doctor icon">
+                        <i class="bi bi-file-medical" aria-hidden="true"></i>
+                    </div>
+                    <div class="team-role">Palliative Consultants and MOs</div>
+                    <div class="team-name">Clinical Oversight</div>
+                    <div class="team-desc">Calculator validation & guideline review.</div>
+                </div>
+                <div class="team-member">
+                    <div class="team-avatar" role="img" aria-label="Frontline medical team avatar">🩺</div>
+                    <div class="team-role">Frontline Team</div>
+                    <div class="team-name">Practical Testing</div>
+                    <div class="team-desc">Daily clinical workflow validation in state hospital.</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="coming-soon fade-in-up">
+            <div class="coming-header">
+                <h2 class="coming-title">🔥 Coming Soon</h2>
+                <p class="coming-subtitle">Pro members get priority access</p>
+            </div>
+            <div class="coming-grid">
+                <div class="coming-item">
+                    <i class="bi bi-tools coming-icon" aria-hidden="true"></i>
+                    <div class="coming-name">New Calculators</div>
+                    <div class="coming-desc">Corticosteroid Converter & Prognostic Index</div>
+                    <div class="coming-status">Q2 2026</div>
+                </div>
+                <div class="coming-item">
+                    <i class="bi bi-journal-text coming-icon" aria-hidden="true"></i>
+                    <div class="coming-name">Content Updates</div>
+                    <div class="coming-desc">Continuous expansion of Guidelines & Patient Pamphlets</div>
+                    <div class="coming-status">Ongoing</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="feedback fade-in-up">
+            <div class="feedback-header">
+                <h2 class="feedback-title">💬 Help Us Improve</h2>
+                <p class="feedback-subtitle">Pro feedback shapes future tools</p>
+            </div>
+            <form class="feedback-form" id="feedback-form">
+                <div class="form-group">
+                    <label class="form-label" for="feedback-text">Your Feedback</label>
+                    <textarea id="feedback-text" class="form-input form-textarea" placeholder="What features would you like? Calculator suggestions?" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="feedback-email">Email (optional)</label>
+                    <input type="email" id="feedback-email" class="form-input" placeholder="your@email.com">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Send Feedback</button>
+            </form>
+        </section>
+        
+        <footer class="legal-footer">
+            <div class="container">
+                <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
+                <div class="author-info">
+                    <span class="author-name">Author: Alison Chai</span>
+                    <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
+                </div>
+                <p class="legal-warning">For professional use only. Verify all results.</p>
+            </div>
+        </footer>
+    </main>
+
+    <div id="login-modal" class="login-modal" role="dialog" aria-labelledby="login-title" aria-modal="true">
+        <div class="login-content">
+            <span class="login-close" id="login-close" aria-label="Close login modal">&times;</span>
+            <h2 class="login-title" id="login-title">🔐 Login to PalliCalc</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label class="form-label" for="login-email">Email Address</label>
+                    <input type="email" id="login-email" class="form-input" required autocomplete="email" aria-required="true">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="login-password">Password</label>
+                    <input type="password" id="login-password" class="form-input" required autocomplete="current-password" aria-required="true">
+                </div>
+                <div id="login-error-msg" style="display:none; background-color: #fee2e2; color: #dc2626; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; text-align: center; border: 1px solid #fca5a5;"></div>
+                <button type="submit" class="login-btn-submit">Login Securely</button>
+                <div class="forgot-password">
+                    <a href="forgot-password.html">Forgot Password?</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="disclaimer-modal" class="login-modal" role="dialog" aria-labelledby="disclaimer-title" aria-modal="true">
+        <div class="login-content">
+            <span class="login-close" id="disclaimer-close" aria-label="Close disclaimer">&times;</span>
+            <h2 class="login-title" id="disclaimer-title">⚠️ PalliCalc Disclaimer</h2>
+            <div style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
+                <p><strong>This calculator is for educational purposes only.</strong> It does not replace clinical judgment or individualized patient assessment (age, body mass, liver/kidney function, medications, psychological status, treatment goals).</p>
+                <ul style="margin: 12px 0; padding-left: 20px; font-size: 14px;">
+                    <li>Provides general opioid dose conversions - not tailored to specific pain conditions</li>
+                    <li>Does not advise on initiation, tapering, drug interactions, side effects, or special populations</li>
+                    <li>Long-term opioid therapy for chronic non-cancer pain is controversial - consult guidelines</li>
+                    <li>Methadone, fentanyl lozenges, and neuraxial opioids excluded (complex pharmacokinetics)</li>
+                </ul>
+                <p><strong>Liability:</strong> Developer not responsible for errors, omissions, or outcomes. Always use clinical judgment and consult institutional protocols.</p>
+            </div>
+            <label style="display: block; margin: 20px 0 12px 0; font-size: 16px; font-weight: 600; color: #334155; text-align: center;">
+                <input type="checkbox" id="disclaimer-agree" style="margin-right: 8px; transform: scale(1.2);"> 
+                I have read, understand, and agree to the disclaimer
+            </label>
+            <button id="disclaimer-proceed" class="login-btn-submit" disabled style="background: #94a3b8;">I Agree & Proceed</button>
+            <p style="font-size: 12px; color: #64748b; text-align: center; margin-top: 12px;">
+                <a href="http://pallicalc.netlify.app" target="_blank">Terms</a> | 
+                <a href="http://pallicalc.netlify.app" target="_blank">Privacy</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

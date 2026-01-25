@@ -1,0 +1,229 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pain Management Protocol | Patient Guide</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #1565c0; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Generating PDF...</div>
+        <div style="font-size: 13px; color: #888; margin-top: 5px;">Processing content...</div>
+    </div>
+
+    <div class="header header-pain">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1><i class="bi bi-heart-pulse-fill"></i> Pain Management</h1>
+        <p>Guide for Palliative Care Patients & Carers</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link pain-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> Back
+        </div>
+        <div class="nav-link pain-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> Share
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-person-arms-up"></i> Types of Pain</h2>
+        <div class="fear-grid">
+            <div class="fear-card pain-card-nociceptive">
+                <i class="bi bi-bandaid-fill card-icon-large"></i>
+                <strong>Nociceptive Pain</strong>
+                <p>Common 'normal' pain from tissues (bone, muscle, organs). Feels aching, throbbing, or sharp.</p>
+                <p style="margin-top:5px; font-weight:bold; background:rgba(0,0,0,0.1); padding:5px; border-radius:5px;">Gold Standard: Morphine</p>
+            </div>
+            <div class="fear-card pain-card-neuro">
+                <i class="bi bi-lightning-fill card-icon-large"></i>
+                <strong>Neuropathic Pain</strong>
+                <p>Nerve pain from damage. Feels burning, shooting, tingling, or electric shocks.</p>
+                <p style="margin-top:5px; font-weight:bold; background:rgba(0,0,0,0.1); padding:5px; border-radius:5px;">Treatment: Amitriptyline, Gabapentin, Pregabalin, etc. </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-capsule"></i> Medication Guide</h2>
+        <p>Take morphine regularly. Use breakthrough (PRN) doses <strong>before pain starts</strong> or prior to procedures (e.g., dressing changes).</p>
+        <p style="margin-top:10px;"><strong>Bowel Care:</strong> Use laxatives daily (senna + lactulose) to prevent constipation.</p>
+        
+        <div class="side-effect">
+            <strong><i class="bi bi-exclamation-triangle-fill"></i> Side Effects to Watch</strong>
+            <p>Worsening nausea, severe drowsiness, confusion, very slow breathing, hallucinations, or no bowel motion >3 days.</p>
+            <p style="margin-top:8px; font-weight:bold;">Inform palliative team immediately.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-stars"></i> Non-Drug Methods</h2>
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-number">1</div>
+                <div class="rule-content">
+                    <strong>Positioning</strong>
+                    <p>Use pillows to gently change position often to help rest easier.</p>
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">2</div>
+                <div class="rule-content">
+                    <strong>Touch & Temperature</strong>
+                    <p>Warm packs, gentle massage, or heat/cold packs (test temp first).</p>
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">3</div>
+                <div class="rule-content">
+                    <strong>Distraction</strong>
+                    <p>Deep breathing, music, or looking at family photos.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-journal-medical"></i> Pain Diary</h2>
+        <p>Recording helps doctors adjust medication. Record every episode.</p>
+        
+        <div class="diary-table">
+            <table>
+                <tr>
+                    <th>Date/Time</th>
+                    <th>Pain Score</th>
+                    <th>Location</th>
+                    <th>Trigger/Helped?</th>
+                </tr>
+                <tr>
+                    <td>14/1 9AM</td>
+                    <td>7</td>
+                    <td>Back</td>
+                    <td>Resting pain. Improved to 2 after meds.</td>
+                </tr>
+                <tr>
+                    <td>14/1 2PM</td>
+                    <td>6</td>
+                    <td>Leg</td>
+                    <td>Walking. Improved to 1 after meds.</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-telephone-fill"></i> Contact Palliative Team</h2>
+        <ul style="padding-left:20px; color:#555;">
+            <li>Pain score >7 despite PRN doses</li>
+            <li>New shooting/burning pains</li>
+            <li>Severe side effects</li>
+            <li>Patient distressed/unable to rest</li>
+        </ul>
+        <div style="background:#ffebee; color:#c62828; padding:10px; border-radius:8px; margin-top:15px; text-align:center; font-weight:bold;">
+            Emergency: Breathing stops - Call 999
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-pain" onclick="generateAndPrintPDF('pain-protocol-eng.pdf')">
+            <i class="bi bi-printer-fill"></i> Print PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Share Protocol</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="text-align: center; color: #666;">Scan QR code to view on mobile</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header pain-theme">
+            <h1 class="pain-theme">Pain Management Protocol</h1>
+            <p>Patient & Carer Guide</p>
+        </div>
+
+        <h2>Types of Pain</h2>
+        <p><strong>Nociceptive:</strong> Aching, throbbing (bone/muscle). Treated with Morphine.</p>
+        <p><strong>Neuropathic:</strong> Burning, shooting, electric shocks. Treatment: Amitriptyline, Gabapentin, Pregabalin, etc. </p>
+
+        <h2>Medication Instructions</h2>
+        <ul>
+            <li>Take morphine regularly. Use PRN doses <strong>before</strong> pain becomes severe.</li>
+            <li>Maintain bowel hygiene (Laxatives).</li>
+            <li>Ensure good oral absorption (sips of water, upright).</li>
+        </ul>
+
+        <div class="warning-box">
+            <strong>Side Effects to Watch:</strong> Severe drowsiness, confusion, hallucinations, or no bowel motion for 3 days.<br>
+            <strong>Action:</strong> Inform palliative team immediately.
+        </div>
+
+        <h2>Non-Drug Methods</h2>
+        <ul>
+            <li>Positioning with pillows.</li>
+            <li>Warm/Cold packs (careful of temp).</li>
+            <li>Deep breathing and distraction.</li>
+        </ul>
+
+        <h2>Pain Diary Template</h2>
+        <p>Please record episodes to show the doctor.</p>
+        <table style="width:100%; border:1px solid #ccc; border-collapse: collapse;">
+            <thead>
+                <tr style="background:#eee;">
+                    <th style="border:1px solid #ccc; padding:8px;">Date/Time</th>
+                    <th style="border:1px solid #ccc; padding:8px;">Pain Score</th>
+                    <th style="border:1px solid #ccc; padding:8px;">Location</th>
+                    <th style="border:1px solid #ccc; padding:8px;">Trigger / Action Taken</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border:1px solid #ccc; padding:15px;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #ccc; padding:15px;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #ccc; padding:15px;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>When to Contact Palliative Team</h2>
+        <p>If pain is >7 despite meds, new symptoms appear, or patient is distressed.</p>
+        <p style="color:red; font-weight:bold; margin-top:10px;">Emergency: Breathing stops - Call 999</p>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

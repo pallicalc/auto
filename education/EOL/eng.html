@@ -1,0 +1,284 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-of-Life Symptom Management | Patient Guide</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+
+    <style>
+        /* --- EOL SPECIFIC STYLES (Overrides & Layouts not in global CSS) --- */
+        
+        /* Step Badge (The purple circles with numbers) */
+        .section-header {
+            display: flex; align-items: center; margin-bottom: 15px; 
+            border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;
+        }
+        .step-badge {
+            background: #764ba2; color: white; width: 32px; height: 32px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 16px; margin-right: 12px;
+        }
+        .med-title { font-size: 18px; font-weight: 700; color: #444; }
+
+        /* 2 Icons Per Line Grid */
+        .med-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; /* Exact 50/50 split */
+            gap: 12px; 
+            margin-bottom: 15px;
+        }
+        .med-icon-full {
+            width: 100%;       
+            height: auto;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background: white;
+            display: block;
+        }
+
+        /* Instruction Boxes */
+        .instruction-box {
+            background: #f8f9fa; border-radius: 12px; padding: 15px; font-size: 14px;
+            border-left: 4px solid #764ba2;
+        }
+        .instruction-box ul { padding-left: 20px; margin: 0; }
+        .instruction-box li { margin-bottom: 8px; }
+        .instruction-box li:last-child { margin-bottom: 0; }
+        .highlight { font-weight: bold; color: #764ba2; background: rgba(118, 75, 162, 0.1); padding: 0 4px; border-radius: 4px; }
+
+        /* --- PDF PRINT STYLES (Specific to EOL Layout) --- */
+        #print-area {
+            position: absolute; top: -9999px; left: -9999px;
+            width: 794px; background: white; color: black; padding: 40px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box;
+        }
+        #print-area .print-header { border-bottom: 2px solid #764ba2; padding-bottom: 15px; margin-bottom: 20px; }
+        #print-area h1 { color: #764ba2; font-size: 24px; margin: 0; }
+        #print-area .print-row { display: flex; border-bottom: 1px solid #ddd; padding: 15px 0; page-break-inside: avoid; }
+        
+        /* Custom Columns for EOL PDF */
+        #print-area .col-id { width: 40px; font-weight: bold; font-size: 20px; color: #764ba2; padding-top: 10px; }
+        #print-area .col-med { width: 160px; padding: 0 10px; text-align: center; } 
+        #print-area .col-instr { flex: 1; padding: 0 15px; font-size: 14px; color: #333; }
+        #print-area .col-symp { width: 160px; padding: 0 10px; text-align: center; }
+        
+        #print-area .print-img-full { width: 100%; height: auto; display: block; margin-bottom: 5px; border-radius: 6px; }
+        #print-area ul { margin: 0; padding-left: 15px; }
+        #print-area li { margin-bottom: 6px; }
+    </style>
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #764ba2; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Generating PDF...</div>
+    </div>
+
+    <div class="header header-eol">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info"><h3 id="inst-name-display"></h3><p id="inst-contact-display"></p></div>
+        </div>
+        <h1>🕊️ End-of-Life Symptoms</h1>
+        <p>Home Care Medication Protocol</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link eol-theme" onclick="window.history.back()"><i class="bi bi-arrow-left"></i> Back</div>
+        <div class="nav-link eol-theme" onclick="showQR()"><i class="bi bi-share-fill"></i> Share</div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <div class="step-badge">1</div>
+            <div class="med-title">Morphine</div>
+        </div>
+        <div class="med-grid">
+            <img src="1a.jpg" class="med-icon-full" alt="Morphine">
+            <img src="1b.jpg" class="med-icon-full" alt="Pain/Dyspnea">
+        </div>
+        <div class="instruction-box">
+            <ul>
+                <li>Morphine Injection <span class="highlight">_____ mg</span>(<span class="highlight">_____ ml</span>) or Morphine Buccal <span class="highlight">_____ mg</span> (<span class="highlight">_____ ml</span>), when necessary.</li>
+                <li>Repeat every <span class="highlight">1 hour</span> if not relieved.</li>
+                <li>If 3 consecutive doses are needed within 1 hour, <strong>inform your palliative care team</strong>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <div class="step-badge">2</div>
+            <div class="med-title">Haloperidol</div>
+        </div>
+        <div class="med-grid">
+            <img src="2a.jpg" class="med-icon-full" alt="Haloperidol">
+            <img src="2b.jpg" class="med-icon-full" alt="Nausea/Agitation">
+        </div>
+        <div class="instruction-box">
+            <ul>
+                <li>Haloperidol Injection <span class="highlight">_____ mg</span> (<span class="highlight">_____ ml</span>) or Haloperidol Buccal <span class="highlight">_____ mg</span> (<span class="highlight">_____ tab</span>).</li>
+                <li><span class="highlight">_____ times</span> every <span class="highlight">_____ hours</span> + PRN (when necessary).</li>
+                <li>Repeat every <span class="highlight">1 hour</span> if not relieved.</li>
+                <li>If 3 consecutive doses are needed, <strong>inform your palliative care team</strong>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <div class="step-badge">3</div>
+            <div class="med-title">Buscopan</div>
+        </div>
+        <div class="med-grid">
+            <img src="3a.jpg" class="med-icon-full" alt="Buscopan">
+            <img src="3b.jpg" class="med-icon-full" alt="Secretions">
+        </div>
+        <div class="instruction-box">
+            <ul>
+                <li>Buscopan Injection <span class="highlight">_____ mg</span> (<span class="highlight">_____ mL</span>).</li>
+                <li><span class="highlight">_____ times</span> every <span class="highlight">_____ hours</span> + PRN (when necessary).</li>
+                <li>Repeat every <span class="highlight">1 hour</span> if not relieved.</li>
+                <li>If 3 consecutive doses are needed, <strong>inform your palliative care team</strong>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <div class="step-badge">4</div>
+            <div class="med-title">Seizure/Agitation</div>
+        </div>
+        <div class="med-grid">
+            <img src="4a.jpg" class="med-icon-full" alt="Midazolam">
+            <img src="4b.jpg" class="med-icon-full" alt="Seizure">
+        </div>
+        <div class="instruction-box">
+            <ul>
+                <li>Midazolam Buccal <span class="highlight">_____ mg</span> (<span class="highlight">_____ ml</span>) or Lorazepam Buccal <span class="highlight">_____ mg</span>(<span class="highlight">_____ tab</span>) via syringe.</li>
+                <li>Repeat every <span class="highlight">_____ min</span> if not relieved.</li>
+                <li>If 3 consecutive doses are needed every <span class="highlight">_____ min</span>, <strong>inform your palliative care team</strong>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <div class="step-badge">5</div>
+            <div class="med-title">Paracetamol Suppository</div>
+        </div>
+        <div class="med-grid">
+            <img src="5a.jpg" class="med-icon-full" alt="Paracetamol Suppository">
+            <img src="5b.jpg" class="med-icon-full" alt="Fever & Shivering">
+        </div>
+        <div class="instruction-box">
+            <ul>
+                <li>Insert Paracetamol Suppository <span class="highlight">_____ mg</span> via rectum.</li>
+                <li>Repeat every <span class="highlight">_____ hours</span> if fever or shivering persists.</li>
+                <li>If 3 consecutive doses are needed, <strong>inform your palliative care team</strong>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-eol" onclick="generateAndPrintPDF('EOL-guide-eng.pdf')">
+            <i class="bi bi-printer-fill"></i> Print Protocol
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Share Protocol</h3>
+            <div id="qrcode-wrapper-safe"><div id="qrcode"></div></div>
+            <p style="text-align: center; color: #666;">Scan QR code to view on mobile</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header">
+            <h1>End-of-Life Symptom Management</h1>
+            <p>Home Care Medication Protocol</p>
+        </div>
+
+        <div class="print-row">
+            <div class="col-id">①</div>
+            <div class="col-med"><img src="1a.jpg" class="print-img-full"></div>
+            <div class="col-instr">
+                <ul>
+                    <li>Morphine Injection _____ mg(_____ ml) or Morphine Buccal _____ mg (_____ ml), when necessary.</li>
+                    <li>Repeat every 1 hour if not relieved.</li>
+                    <li>If 3 doses needed in 1 hour, inform palliative team.</li>
+                </ul>
+            </div>
+            <div class="col-symp"><img src="1b.jpg" class="print-img-full"></div>
+        </div>
+
+        <div class="print-row">
+            <div class="col-id">②</div>
+            <div class="col-med"><img src="2a.jpg" class="print-img-full"></div>
+            <div class="col-instr">
+                <ul>
+                    <li>Haloperidol Injection _____ mg (_____ ml) or Haloperidol Buccal _____ mg (_____ tab).</li>
+                    <li>_____ times every _____ hours + PRN.</li>
+                    <li>Repeat every 1 hour if not relieved.</li>
+                    <li>If 3 doses needed, inform palliative team.</li>
+                </ul>
+            </div>
+            <div class="col-symp"><img src="2b.jpg" class="print-img-full"></div>
+        </div>
+
+        <div class="print-row">
+            <div class="col-id">③</div>
+            <div class="col-med"><img src="3a.jpg" class="print-img-full"></div>
+            <div class="col-instr">
+                <ul>
+                    <li>Buscopan Injection _____ mg (_____ mL).</li>
+                    <li>_____ times every _____ hours + PRN.</li>
+                    <li>Repeat every 1 hour if not relieved.</li>
+                    <li>If 3 doses needed, inform palliative team.</li>
+                </ul>
+            </div>
+            <div class="col-symp"><img src="3b.jpg" class="print-img-full"></div>
+        </div>
+
+        <div class="print-row">
+            <div class="col-id">④</div>
+            <div class="col-med"><img src="4a.jpg" class="print-img-full"></div>
+            <div class="col-instr">
+                <ul>
+                    <li>Midazolam Buccal _____ mg (_____ ml) or Lorazepam Buccal _____ mg(_____ tab).</li>
+                    <li>Repeat every _____ min if not relieved.</li>
+                    <li>If 3 doses needed, inform palliative team.</li>
+                </ul>
+            </div>
+            <div class="col-symp"><img src="4b.jpg" class="print-img-full"></div>
+        </div>
+
+        <div class="print-row" style="border-bottom:none;">
+            <div class="col-id">⑤</div>
+            <div class="col-med"><img src="5a.jpg" class="print-img-full"></div>
+            <div class="col-instr">
+                <ul>
+                    <li>Insert Paracetamol Suppository _____ mg via rectum.</li>
+                    <li>Repeat every _____ hours if fever/shivering persists.</li>
+                    <li>If 3 doses needed, inform palliative team.</li>
+                </ul>
+            </div>
+            <div class="col-symp"><img src="5b.jpg" class="print-img-full"></div>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

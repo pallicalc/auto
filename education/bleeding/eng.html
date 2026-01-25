@@ -1,0 +1,172 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bleeding Management Protocol | Patient Guide</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #007bff; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Generating PDF...</div>
+        <div style="font-size: 13px; color: #888; margin-top: 5px;">Processing image & Adding Footer</div>
+    </div>
+
+    <div class="header header-bleeding">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>🩸 Bleeding Management</h1>
+        <p>Palliative Bleeding Management Protocol</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link red-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> Back
+        </div>
+        <div class="nav-link red-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> Share
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-droplet-half"></i> Understanding Bleeding</h2>
+        <div class="side-effect">
+            <strong>What is it?</strong>
+            <p>Bleeding can happen from the mouth, nose, skin wounds, tumour sites, lungs, stomach or bowel in advanced illness.</p>
+            <p style="margin-top:8px;">It may be minor and slow, or sudden and heavy. Management aims to reduce distress, maintain comfort, and respect the person’s priorities.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-clipboard-heart-fill"></i> Immediate Actions</h2>
+        <div class="fear-grid">
+            <div class="fear-card">
+                <strong>1. Stay Calm & Be There</strong>
+                <p>Stay with the patient. Reassure them using a calm voice and touch. The priority is to simply be there.</p>
+            </div>
+            <div class="fear-card">
+                <strong>2. Use Dark Towels</strong>
+                <p>Use dark towels to disguise the visibility of blood and reduce distress for everyone present.</p>
+                <img src="dark-towel.png" alt="Dark Towel" class="card-img" onerror="this.style.display='none'">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-capsule-pill"></i> Medication Protocol</h2>
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-number">1</div>
+                <div class="rule-content">
+                    <strong>Administer Sedation</strong>
+                    <div class="dose-badge">Buccal Midazolam / Lorazepam</div>
+                    <p>Administer buccal Midazolam or Buccal Lorazepam to keep the patient calm.</p>
+                    <img src="1.jpg" alt="Midazolam" class="card-img">
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">2</div>
+                <div class="rule-content">
+                    <strong>For Breathlessness</strong>
+                    <div class="dose-badge">Morphine / Opioid</div>
+                    <p>If the patient feels breathless, give the prescribed dose of as-needed morphine/opioid.</p>
+                    <img src="2.jpg" alt="Morphine" class="card-img">
+                </div>
+            </div>
+            <div class="rule-card" style="border-left-color: #e74c3c;">
+                <div class="rule-number" style="background: #e74c3c;"><i class="bi bi-telephone-fill"></i></div>
+                <div class="rule-content">
+                    <strong>Seek Help</strong>
+                    <p>Contact your palliative care team in charge.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-pdf" onclick="generateAndPrintPDF('bleeding-protocol-eng.pdf')">
+            <i class="bi bi-printer-fill"></i> Print PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Share Protocol</h3>
+            
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+
+            <p style="text-align: center; color: #666;">Scan QR code to view on mobile</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header red-theme">
+            <h1 class="red-theme">Palliative Bleeding Management</h1>
+            <p>Patient Care Guide</p>
+        </div>
+
+        <h2>General Principles</h2>
+        <div class="print-item warning-box">
+             <div class="print-content">
+                <strong>About Palliative Bleeding</strong>
+                <p>Bleeding can happen from the mouth, nose, skin wounds, tumour sites, or lungs. It may be minor or sudden. Management aims to reduce distress and maintain comfort.</p>
+            </div>
+        </div>
+
+        <div class="print-item">
+            <div class="print-content">
+                <strong>1. Stay Calm & Be There</strong>
+                <p>The priority is to stay with the patient. Reassure them using a calm voice and comforting touch.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="dark-towel.png" class="print-img" onerror="this.style.display='none'">
+            <div class="print-content">
+                <strong>2. Use Dark Towels</strong>
+                <p>Use dark towels to disguise the visibility of blood. This significantly reduces distress.</p>
+            </div>
+        </div>
+
+        <h2>Medication Protocol</h2>
+        <div class="print-item">
+            <img src="1.jpg" class="print-img">
+            <div class="print-content">
+                <strong>1. Administer Sedation</strong>
+                <p>Administer buccal Midazolam or Buccal Lorazepam to keep the patient calm.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="2.jpg" class="print-img">
+            <div class="print-content">
+                <strong>2. Treat Breathlessness</strong>
+                <p>If patient feels breathless, give the prescribed dose of as-needed morphine/opioid.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-content">
+                <strong style="color:red;">3. Seek Help</strong>
+                <p>Contact your palliative care team in charge.</p>
+            </div>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

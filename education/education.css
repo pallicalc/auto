@@ -1,0 +1,383 @@
+﻿/* --- education.css --- */
+/* VISUAL STYLING */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans SC', sans-serif; 
+    margin: 0; 
+    padding: 0; 
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    line-height: 1.6;
+    font-size: 16px;
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column; /* Necessary for sticky footer behavior */
+}
+
+/* NEW: Main Content Wrapper (Keeps content mobile-sized & centered) */
+.main-container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 16px 20px 16px; /* Bottom padding for floating buttons */
+    flex: 1 0 auto; /* Pushes footer to bottom if content is short */
+    width: 100%;
+}
+
+/* NEW: Standardized Screen-Wide Footer */
+.standard-footer {
+    width: 100%;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    padding: 30px 20px;
+    font-family: sans-serif;
+    font-size: 11px;
+    color: #6c757d;
+    flex-shrink: 0; /* Prevents footer from shrinking */
+    text-align: center;
+    margin-top: auto;
+}
+
+.footer-inner {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.footer-disclaimer {
+    border-top: 1px solid #e9ecef; 
+    margin-top: 15px; 
+    padding-top: 15px; 
+    font-style: italic; 
+    line-height: 1.5;
+}
+
+/* HEADER */
+.header { 
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+    color: white; 
+    padding: 24px 20px; 
+    border-radius: 0 0 24px 24px; 
+    margin-bottom: 24px; 
+    position: relative;
+    overflow: hidden;
+}
+
+/* --- THEME OVERRIDES --- */
+.header-bleeding { background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%) !important; }
+.header-buccal { background: linear-gradient(135deg, #0061f2 0%, #6900f2 100%) !important; }
+.header-delirium { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; }
+.header-eol { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; } 
+.header-eol-care { background: linear-gradient(135deg, #455a64 0%, #607d8b 100%) !important; }
+.header-mbo { background: linear-gradient(135deg, #0061f2 0%, #6900f2 100%) !important; }
+/* Pain Management Theme */
+.header-pain { background: linear-gradient(135deg, #1565c0 0%, #42a5f5 100%) !important; box-shadow: 0 4px 15px rgba(21, 101, 192, 0.2); }
+
+.inst-header-container {
+    display: none; /* Hidden by default */
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+}
+.inst-logo {
+    max-height: 50px;
+    max-width: 50px;
+    width: auto;
+    border-radius: 8px;
+    background: white;
+    padding: 2px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.inst-info h3 { font-size: 16px; font-weight: 700; margin: 0; line-height: 1.2; }
+.inst-info p { font-size: 13px; margin: 2px 0 0 0; opacity: 0.9; }
+
+.header h1 { font-size: 26px; font-weight: 700; margin: 0 0 10px 0; }
+.header p { font-size: 14px; opacity: 0.95; margin: 0; }
+
+.nav-bar { 
+    display: flex; justify-content: space-between; align-items: center; 
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
+    padding: 14px 20px; border-radius: 20px; margin-bottom: 28px; 
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+.nav-link { 
+    display: flex; align-items: center; gap: 8px; color: #4facfe; 
+    font-weight: 600; font-size: 15px; text-decoration: none; padding: 8px 12px; 
+    border-radius: 12px; transition: all 0.3s ease; cursor: pointer;
+}
+/* Theme specific nav links */
+.nav-link.red-theme { color: #ff4b2b; }
+.nav-link.buccal-theme { color: #0061f2; }
+.nav-link.delirium-theme { color: #764ba2; }
+.nav-link.eol-theme { color: #764ba2; }
+.nav-link.eol-care-theme { color: #455a64; }
+.nav-link.mbo-theme { color: #0061f2; }
+.nav-link.pain-theme { color: #1565c0; }
+
+.nav-link:active { background: rgba(0,0,0, 0.05); }
+
+/* Standard Section */
+.section { 
+    background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
+    padding: 28px 24px; margin-bottom: 24px; border-radius: 24px; 
+    box-shadow: 0 12px 40px rgba(0,0,0,0.08); border: 1px solid rgba(255,255,255,0.2);
+}
+.section h2 { 
+    font-size: 22px; font-weight: 700; margin: 0 0 20px 0; 
+    display: flex; align-items: center; gap: 12px; color: #2c3e50;
+}
+
+/* GENERAL SHARED STYLES */
+.card-img {
+    display: block; width: 100%; max-width: 160px; height: auto;
+    border-radius: 12px; margin: 12px auto 0 auto; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15); background: white; padding: 4px;
+}
+/* Card Icon Large (Used in Pain) */
+.card-icon-large {
+    display: block; text-align: center; font-size: 60px; color: rgba(255,255,255,0.9);
+    margin: 10px 0;
+}
+
+.fear-grid, .rules-grid { display: grid; gap: 16px; margin-top: 20px; }
+
+.fear-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white; padding: 20px; border-radius: 16px;
+}
+
+/* PAIN MANAGEMENT CARDS */
+.pain-card-nociceptive { 
+    background: linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%); /* Green */
+    color: white; padding: 20px; border-radius: 16px;
+}
+.pain-card-neuro { 
+    background: linear-gradient(135deg, #4527a0 0%, #7e57c2 100%); /* Purple */
+    color: white; padding: 20px; border-radius: 16px;
+}
+
+/* PAIN DIARY TABLE */
+.diary-table { overflow-x: auto; margin: 15px 0; border-radius: 10px; border: 1px solid #eee; }
+.diary-table table { width: 100%; border-collapse: collapse; min-width: 400px; }
+.diary-table th, .diary-table td { border: 1px solid #e0e0e0; padding: 10px; text-align: left; vertical-align: top; font-size: 14px; }
+.diary-table th { background: #eceff1; color: #37474f; font-weight: bold; white-space: nowrap; }
+.diary-table td { background: #fff; }
+.diary-table th:nth-child(2), .diary-table td:nth-child(2) { width: 10%; text-align: center; }
+
+
+.side-effect {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    padding: 20px; border-radius: 16px; border-left: 5px solid #ff8c42; margin-top: 20px;
+}
+.side-effect strong { color: #e74c3c; display: block; margin-bottom: 8px; font-size: 18px; }
+
+.rule-card {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    padding: 20px; border-radius: 16px; border-left: 5px solid #00b894;
+    display: flex; align-items: flex-start; gap: 16px;
+}
+.rule-number {
+    background: #00b894; color: white; width: 32px; height: 32px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px; flex-shrink: 0; margin-top: 2px;
+}
+.rule-content { flex: 1; }
+.dose-badge {
+    display: inline-block; background: rgba(255,255,255,0.8); color: #2d3436;
+    padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 13px;
+    margin: 8px 0; border: 1px solid rgba(0,0,0,0.1);
+}
+
+.action-buttons { 
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 16px; z-index: 100; padding: 12px;
+}
+.btn { 
+    padding: 16px 28px !important; border: none !important; border-radius: 50px !important; 
+    font-size: 16px !important; font-weight: 600 !important; cursor: pointer !important; 
+    display: flex !important; align-items: center !important; gap: 10px !important; 
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important; text-decoration: none !important;
+    backdrop-filter: blur(10px) !important; transition: all 0.3s ease !important;
+    min-height: 56px !important;
+}
+.btn-pdf { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%) !important; color: white !important; }
+/* Theme specific buttons */
+.btn-buccal { background: linear-gradient(135deg, #0061f2 0%, #6900f2 100%) !important; color: white !important; }
+.btn-delirium { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important; color: white !important; }
+.btn-eol { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important; color: white !important; }
+.btn-eol-care { background: #455a64 !important; color: white !important; }
+.btn-mbo { background: linear-gradient(135deg, #0061f2 0%, #6900f2 100%) !important; color: white !important; }
+.btn-pain { background: linear-gradient(135deg, #37474f 0%, #546e7a 100%) !important; color: white !important; }
+
+.btn:active { transform: translateY(-2px) !important; }
+
+/* QR Modal */
+.modal { 
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; padding: 20px;
+}
+.modal-content { 
+    background: white; padding: 32px; border-radius: 24px; max-width: 420px; width: 95%; 
+    max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+}
+.close { 
+    float: right; font-size: 32px; cursor: pointer; color: #999; 
+    font-weight: 300; margin-top: -8px; line-height: 1;
+}
+.close:active { color: #333; }
+
+#qrcode-wrapper-safe {
+    background-color: #ffffff !important;
+    border-radius: 16px;
+    padding: 20px;
+    margin: 20px auto;
+    text-align: center;
+    color-scheme: light only;
+    isolation: isolate;
+}
+#qrcode {
+    display: inline-block;
+    background-color: #ffffff !important;
+    padding: 10px;
+    border-radius: 8px;
+}
+#qrcode img, #qrcode canvas {
+    display: block;
+    background-color: #ffffff !important;
+    border: 8px solid #ffffff !important; 
+}
+
+#pdf-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media print { body { display: none; } }
+.no-print { display: block !important; }
+
+/* --- PRINT AREA (A4 TEMPLATE) --- */
+#print-area {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    width: 794px; /* A4 width */
+    background: white;
+    color: black;
+    padding: 40px;
+    font-family: 'Helvetica Neue', Helvetica, 'Noto Sans SC', Arial, sans-serif;
+    background-color: #ffffff; 
+    opacity: 1;
+    box-sizing: border-box;
+}
+#print-area .print-header {
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+/* Theme Print Headers */
+#print-area .print-header.red-theme { border-bottom: 2px solid #ff4b2b; }
+#print-area .print-header.buccal-theme { border-bottom: 3px solid #0061f2; }
+#print-area .print-header.delirium-theme { border-bottom: 2px solid #764ba2; }
+#print-area .print-header.eol-theme { border-bottom: 2px solid #764ba2; }
+#print-area .print-header.eol-care-theme { border-bottom: 2px solid #455a64; }
+#print-area .print-header.mbo-theme { border-bottom: 2px solid #0061f2; }
+#print-area .print-header.pain-theme { border-bottom: 2px solid #1565c0; }
+
+#print-area h1 { color: #007bff; font-size: 24px; margin: 0; }
+#print-area h1.red-theme { color: #ff4b2b; }
+#print-area h1.buccal-theme { color: #0061f2; }
+#print-area h1.delirium-theme { color: #764ba2; }
+#print-area h1.eol-theme { color: #764ba2; }
+#print-area h1.eol-care-theme { color: #455a64; }
+#print-area h1.mbo-theme { color: #0061f2; }
+#print-area h1.pain-theme { color: #1565c0; }
+
+#print-area h2 { 
+    font-size: 18px; color: #333; border-bottom: 1px solid #eee; 
+    padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px;
+}
+
+#print-area .print-item {
+    display: flex; gap: 15px; margin-bottom: 15px; page-break-inside: avoid;
+    background: #f9f9f9; padding: 10px; border-radius: 8px;
+}
+#print-area .print-img { width: 80px; height: 80px; object-fit: contain; }
+#print-area .print-icon { font-size: 24px; color: #764ba2; width: 40px; text-align: center; padding-top: 5px; }
+#print-area .print-content { flex: 1; }
+
+/* ORIGINAL GLOBAL PRINT STYLE - Do not remove, but note that 
+   display: block will be overridden for p and li contexts below 
+*/
+#print-area strong { color: #000; font-size: 15px; display: block; margin-bottom: 4px; }
+
+#print-area p { margin: 0; font-size: 13px; color: #444; }
+#print-area .warning-box {
+    border: 1px solid #ffcccc; background: #fff5f5; padding: 10px; 
+    border-radius: 8px; color: #cc0000;
+}
+
+/* PAIN PRINT TABLE */
+#print-area table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+#print-area th, #print-area td { border: 1px solid #ccc; padding: 6px; }
+#print-area th { background: #f0f0f0; }
+#print-area th:nth-child(2), #print-area td:nth-child(2) { width: 10%; text-align: center; }
+
+/* =========================================
+   ADDITIONS FOR FENTANYL & PDF FIXES
+   ========================================= */
+
+/* FENTANYL / PAIN SPECIFIC STYLES */
+.warning-alert {
+    background-color: #fff3cd;
+    border-left: 5px solid #ffc107;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    color: #856404;
+}
+
+.danger-alert {
+    background-color: #f8d7da;
+    border-left: 5px solid #dc3545;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    color: #721c24;
+}
+
+.patch-img {
+    display: block; width: 100%; max-width: 250px; height: auto;
+    border-radius: 8px; margin: 10px auto; 
+    border: 1px solid #ddd;
+}
+
+.print-side-effect-en {
+    margin-top: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+}
+.print-side-effect-en p {
+    font-size: 12px !important;
+    line-height: 1.4;
+}
+
+/* PDF PRINT OVERRIDES (Critical for Layout) */
+
+/* 1. Force Strong tags to be inline for paragraphs/lists to prevent line breaks */
+#print-area p strong, 
+#print-area li strong,
+#print-area span strong {
+    display: inline !important;
+    font-size: inherit !important;
+    margin: 0 !important;
+    color: inherit;
+    font-weight: bold !important;
+}
+
+/* 2. Increase Font Sizes for readability */
+#print-area .print-content p,
+#print-area .print-content li {
+    font-size: 14px !important; 
+    line-height: 1.5;
+}

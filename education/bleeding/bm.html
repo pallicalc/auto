@@ -1,0 +1,172 @@
+﻿<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protokol Pengurusan Pendarahan | Panduan Pesakit</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #007bff; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Menjana PDF...</div>
+        <div style="font-size: 13px; color: #888; margin-top: 5px;">Memproses imej & Nota kaki...</div>
+    </div>
+
+    <div class="header header-bleeding">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>🩸 Pengurusan Pendarahan</h1>
+        <p>Protokol Pengurusan Pendarahan Paliatif</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link red-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> Kembali
+        </div>
+        <div class="nav-link red-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> Kongsi
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-droplet-half"></i> Memahami Pendarahan</h2>
+        <div class="side-effect">
+            <strong>Apakah itu?</strong>
+            <p>Pendarahan boleh berlaku dari mulut, hidung, luka kulit, tapak tumor, paru-paru, perut atau usus dalam penyakit lanjutan.</p>
+            <p style="margin-top:8px;">Ia mungkin kecil dan perlahan, atau tiba-tiba dan banyak. Pengurusan bertujuan mengurangkan kesusahan, mengekalkan keselesaan, dan menghormati keutamaan pesakit.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-clipboard-heart-fill"></i> Tindakan Segera</h2>
+        <div class="fear-grid">
+            <div class="fear-card">
+                <strong>1. Tenang & Ada Bersama</strong>
+                <p>Kekal bersama pesakit. Tenangkan mereka menggunakan suara dan sentuhan yang tenang. Keutamaan adalah untuk sekadar berada di sana.</p>
+            </div>
+            <div class="fear-card">
+                <strong>2. Guna Tuala Gelap</strong>
+                <p>Gunakan tuala berwarna gelap untuk menyembunyikan darah dan mengurangkan kegelisahan semua yang ada.</p>
+                <img src="dark-towel.png" alt="Tuala Gelap" class="card-img" onerror="this.style.display='none'">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-capsule-pill"></i> Protokol Ubat</h2>
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-number">1</div>
+                <div class="rule-content">
+                    <strong>Berikan Sedasi</strong>
+                    <div class="dose-badge">Midazolam / Lorazepam Bukal</div>
+                    <p>Berikan Midazolam atau Lorazepam bukal untuk menenangkan pesakit.</p>
+                    <img src="1.jpg" alt="Midazolam" class="card-img">
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">2</div>
+                <div class="rule-content">
+                    <strong>Untuk Sesak Nafas</strong>
+                    <div class="dose-badge">Morfin / Opioid</div>
+                    <p>Jika pesakit rasa sesak nafas, berikan dos morfin/opioid seperti yang dipreskripsi.</p>
+                    <img src="2.jpg" alt="Morfin" class="card-img">
+                </div>
+            </div>
+            <div class="rule-card" style="border-left-color: #e74c3c;">
+                <div class="rule-number" style="background: #e74c3c;"><i class="bi bi-telephone-fill"></i></div>
+                <div class="rule-content">
+                    <strong>Dapatkan Bantuan</strong>
+                    <p>Hubungi pasukan penjagaan paliatif yang bertugas.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-pdf" onclick="generateAndPrintPDF('bleeding-protocol-bm.pdf')">
+            <i class="bi bi-printer-fill"></i> Cetak PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Kongsi Protokol</h3>
+            
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+
+            <p style="text-align: center; color: #666;">Imbas kod QR untuk lihat di telefon bimbit</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header red-theme">
+            <h1 class="red-theme">Pengurusan Pendarahan Paliatif</h1>
+            <p>Panduan Penjagaan Pesakit</p>
+        </div>
+
+        <h2>Prinsip Umum</h2>
+        <div class="print-item warning-box">
+             <div class="print-content">
+                <strong>Mengenai Pendarahan Paliatif</strong>
+                <p>Pendarahan boleh berlaku dari mulut, hidung, luka kulit, tumor, atau paru-paru. Ia mungkin kecil atau tiba-tiba. Pengurusan bertujuan mengurangkan kesusahan dan mengekalkan keselesaan.</p>
+            </div>
+        </div>
+
+        <div class="print-item">
+            <div class="print-content">
+                <strong>1. Tenang & Ada Bersama</strong>
+                <p>Keutamaan adalah untuk kekal bersama pesakit. Tenangkan mereka dengan suara dan sentuhan yang lembut.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="dark-towel.png" class="print-img" onerror="this.style.display='none'">
+            <div class="print-content">
+                <strong>2. Guna Tuala Gelap</strong>
+                <p>Gunakan tuala berwarna gelap untuk menyembunyikan darah. Ini dapat mengurangkan kegelisahan dengan ketara.</p>
+            </div>
+        </div>
+
+        <h2>Protokol Ubat</h2>
+        <div class="print-item">
+            <img src="1.jpg" class="print-img">
+            <div class="print-content">
+                <strong>1. Berikan Sedasi</strong>
+                <p>Berikan Midazolam atau Lorazepam bukal untuk menenangkan pesakit.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="2.jpg" class="print-img">
+            <div class="print-content">
+                <strong>2. Rawat Sesak Nafas</strong>
+                <p>Jika pesakit sesak nafas, berikan dos morfin/opioid seperti yang dipreskripsi.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-content">
+                <strong style="color:red;">3. Dapatkan Bantuan</strong>
+                <p>Hubungi pasukan penjagaan paliatif yang bertugas.</p>
+            </div>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

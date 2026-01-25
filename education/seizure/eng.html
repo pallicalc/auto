@@ -1,0 +1,193 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seizure Management Protocol | Patient Guide</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #007bff; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Generating PDF...</div>
+        <div style="font-size: 13px; color: #888; margin-top: 5px;">Processing image & Adding Footer</div>
+    </div>
+
+    <div class="header">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>⚡ Seizure Management</h1>
+        <p>Step-by-step guide for managing seizure episodes</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> Back
+        </div>
+        <div class="nav-link" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> Share
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-stopwatch-fill"></i> Immediate Actions</h2>
+        <div class="fear-grid">
+            <div class="fear-card">
+                <strong>1. Keep Calm & Note Time</strong>
+                <p>During the episode, stay calm. Take note of when the seizure started.</p>
+                <img src="seizure.png" alt="seizure" class="card-img">
+            </div>
+            <div class="fear-card">
+                <strong>2. Position Sideways</strong>
+                <p>Turn the patient to their side (recovery position) to help breathing.</p>
+                <img src="sideway.png" alt="sideway" class="card-img">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-shield-exclamation"></i> Safety Warning</h2>
+        <div class="side-effect">
+            <strong>DO NOT put items in mouth</strong>
+            <p>Never place fingers, spoons, or objects into the mouth.</p>
+            <img src="Xmouth.png" alt="Xmouth" class="card-img">
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-capsule-pill"></i> Medication Protocol</h2>
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-number">1</div>
+                <div class="rule-content">
+                    <strong>Administer 1st Dose</strong>
+                    <div class="dose-badge">Midazolam 1ml(5mg)/Lorazepam 1mg</div>
+                    <p>Give immediately via syringe into the cheek (buccal). If seizures persist, inform your palliative care team in charge.</p>
+                    <img src="buccal.png" alt="buccal" class="card-img">
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">2</div>
+                <div class="rule-content">
+                    <strong>After 10 Minutes</strong>
+                    <p>If fitting continues after 10 mins:</p>
+                    <div class="dose-badge">2nd Dose: Midazolam 1ml(5mg)/Lorazepam 1mg</div>
+                    <img src="10mins.png" alt="10mins" class="card-img">
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">3</div>
+                <div class="rule-content">
+                    <strong>After Next 10 Mins (20 Total)</strong>
+                    <p>If fitting persists:</p>
+                    <div class="dose-badge">3rd Dose: Midazolam 1ml(5mg)/Lorazepam 1mg</div>
+                    <p style="color:red; font-weight:bold;">Call Ambulance Immediately</p>
+                    <img src="10mins.png" alt="10mins" class="card-img">
+                </div>
+            </div>
+            <div class="rule-card" style="border-left-color: #6c5ce7;">
+                <div class="rule-number" style="background: #6c5ce7;"><i class="bi bi-pencil-fill"></i></div>
+                <div class="rule-content">
+                    <strong>Record & Inform</strong>
+                    <p>Always record the duration of the seizure, the time, and the doses administered. Inform the doctor.</p>
+                    <img src="clock.png" alt="clock" class="card-img">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-pdf" onclick="generateAndPrintPDF('seizure-protocol-eng.pdf')">
+            <i class="bi bi-printer-fill"></i> Print PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Share Protocol</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="text-align: center; color: #666;">Scan QR code to view on mobile</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header">
+            <h1>Seizure Management Protocol</h1>
+            <p>Patient Care Guide</p>
+        </div>
+
+        <h2>Immediate Actions</h2>
+        <div class="print-item">
+            <img src="seizure.png" class="print-img">
+            <div class="print-content">
+                <strong>1. Keep Calm & Note Time</strong>
+                <p>During the episode, stay calm. Take note of when the seizure started.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="sideway.png" class="print-img">
+            <div class="print-content">
+                <strong>2. Position Sideways</strong>
+                <p>Turn the patient to their side (recovery position) to help breathing.</p>
+            </div>
+        </div>
+
+        <h2>Safety Warning</h2>
+        <div class="print-item warning-box">
+            <img src="Xmouth.png" class="print-img">
+            <div class="print-content">
+                <strong style="color:#cc0000;">DO NOT put items in mouth</strong>
+                <p>Never place fingers, spoons, or objects into the mouth.</p>
+            </div>
+        </div>
+
+        <h2>Medication Protocol (Buccal Midazolam)</h2>
+        <div class="print-item">
+            <img src="buccal.png" class="print-img">
+            <div class="print-content">
+                <strong>1. Administer 1st Dose</strong>
+                <p>Midazolam 1ml(5mg)/Lorazepam 1mg via cheek. If seizures persist, inform your palliative care team.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="10mins.png" class="print-img">
+            <div class="print-content">
+                <strong>2. After 10 Minutes</strong>
+                <p>If fitting continues: 2nd Dose Midazolam 1ml(5mg).</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="10mins.png" class="print-img">
+            <div class="print-content">
+                <strong>3. After Next 10 Mins (20 Total)</strong>
+                <p>If fitting persists: 3rd Dose. CALL AMBULANCE IMMEDIATELY.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="clock.png" class="print-img">
+            <div class="print-content">
+                <strong>4. Record & Inform</strong>
+                <p>Record duration, time, and doses. Inform doctor.</p>
+            </div>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

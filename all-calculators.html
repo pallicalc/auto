@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>All Calculators | PalliCalc</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" defer></script>
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <div class="header-content">
+                <div class="logo">💉 PalliCalc</div>
+                <a href="index.html" class="back-btn" aria-label="Back to homepage">
+                    <i class="bi bi-arrow-left"></i> Home
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero fade-in-up">
+            <h1>All Calculators</h1>
+            <p class="hero-subtitle">Ready-to-use clinical calculators verified by the palliative care team.</p>
+        </section>
+
+        <h2 class="section-title fade-in-up">✅ Available Calculators</h2>
+        
+<div class="tools-section visible fade-in-up" style="display: grid;"> 
+    
+    <a href="calculators/Opioid.html" class="tool-btn" aria-label="Opioid conversion calculator">
+        <span class="tool-icon">💊</span>
+        <span>Opioid Conversion Calculator</span>
+    </a>
+    
+    <a href="calculators/Benzodiazepine.html" class="tool-btn" aria-label="Benzodiazepine equivalence calculator">
+        <span class="tool-icon">🧠</span>
+        <span>Benzodiazepine Calculator</span>
+    </a>
+    
+    <a href="calculators/Infusion-dose.html" class="tool-btn" aria-label="Infusion dose calculator">
+        <span class="tool-icon">💉</span>
+        <span>Infusion Dose Calculator</span>
+    </a>
+    
+    <a href="calculators/infusion-volume.html" class="tool-btn" aria-label="Syringe driver preparation calculator">
+        <span class="tool-icon">💧</span>
+        <span>Syringe Driver Preparation</span>
+    </a>
+</div>
+
+        <section class="coming-soon fade-in-up">
+            <h2 class="section-title" style="color:#92400e; margin-top:0;">🔥 In Development</h2>
+            <div class="coming-grid">
+                <div class="coming-item">
+                    <i class="bi bi-lungs coming-icon" aria-hidden="true"></i>
+                    <div class="coming-name">Corticosteroid Converter</div>
+                    <div class="coming-status">Coming Soon</div>
+                </div>
+                <div class="coming-item">
+                    <i class="bi bi-clipboard-data coming-icon" aria-hidden="true"></i>
+                    <div class="coming-name">Palliative Prognostic Index</div>
+                    <div class="coming-status">Planned</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="feedback-cta fade-in-up">
+            <p>Need a specific tool that isn't listed here?</p>
+            <a href="index.html#feedback-form" class="feedback-link">
+                Suggest a Calculator in Feedback <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        <footer class="legal-footer">
+            <div class="container">
+                <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
+                <div class="author-info">
+                    <span class="author-name">Author: Alison Chai</span>
+                    <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
+                </div>
+                <p class="legal-warning">For professional use only. Verify all results.</p>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

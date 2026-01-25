@@ -1,0 +1,181 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infusion Dose Calculator | Total Daily Dose</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <link rel="stylesheet" href="calculator.css">
+</head>
+<body>
+    <nav class="navbar-main">
+        <a href="../all-calculators.html" class="navbar-link">
+            <i class="bi bi-house-door"></i> Back to All Calculators
+        </a>
+        <a href="../guides/infusion-dose.html" class="navbar-link">Infusion Dose Guide</a>
+    </nav>
+
+    <div id="calcPage">
+        <h2>Infusion Pump Dose Calculator</h2>
+        <fieldset>
+            <legend>Enter Pump Contents</legend>
+            <label for="morphineAmount">Amount of Morphine in pump (mg)</label>
+            <input type="number" id="morphineAmount" placeholder="Enter morphine amount" step="any" min="0">
+
+            <label for="fentanylAmount">Amount of Fentanyl in pump (mcg)</label>
+            <input type="number" id="fentanylAmount" placeholder="Enter fentanyl amount" step="any" min="0">
+
+            <label for="hyoscineAmount">Amount of Hyoscine in pump (mg)</label>
+            <input type="number" id="hyoscineAmount" placeholder="Enter hyoscine amount" step="any" min="0">
+
+            <label for="midazolamAmount">Amount of Midazolam in pump (mg)</label>
+            <input type="number" id="midazolamAmount" placeholder="Enter midazolam amount" step="any" min="0">
+
+            <label for="levomepromazineAmount">Amount of Levomepromazine in pump (mg)</label>
+            <input type="number" id="levomepromazineAmount" placeholder="Enter levomepromazine amount" step="any" min="0">
+        </fieldset>
+
+        <fieldset>
+            <legend>Pump Settings</legend>
+            <label for="totalVolume" class="bold-label">Total volume in pump (ml)</label>
+            <input type="number" id="totalVolume" placeholder="Enter total volume (drug + diluent)" step="any" min="0">
+
+            <label for="infusionRate" class="bold-label">Infusion rate (ml/hr)</label>
+            <input type="number" id="infusionRate" placeholder="Enter infusion rate" step="any" min="0">
+        </fieldset>
+
+        <button id="calculateBtn" class="btn btn-primary" onclick="calculateDose()">Calculate Dose over 24 hrs and per hour</button>
+
+        <div id="resultBox" class="result-box" style="display: none;"></div>
+
+        <button id="clearBtn" class="btn btn-danger" style="margin-top: 8px; padding: 8px;" onclick="clearCalculator()">Clear Calculator</button>
+    </div>
+
+    <script>
+        function calculateDose() {
+            const morphineAmount = parseFloat(document.getElementById('morphineAmount').value) || 0;
+            const fentanylAmount = parseFloat(document.getElementById('fentanylAmount').value) || 0;
+            const hyoscineAmount = parseFloat(document.getElementById('hyoscineAmount').value) || 0;
+            const midazolamAmount = parseFloat(document.getElementById('midazolamAmount').value) || 0;
+            const levomepromazineAmount = parseFloat(document.getElementById('levomepromazineAmount').value) || 0;
+            const totalVolume = parseFloat(document.getElementById('totalVolume').value) || 0;
+            const infusionRate = parseFloat(document.getElementById('infusionRate').value) || 0;
+
+            if (totalVolume <= 0 || infusionRate <= 0) {
+                document.getElementById('resultBox').innerText = 'Please enter positive values for total volume and infusion rate.';
+                document.getElementById('resultBox').style.display = 'block';
+                return;
+            }
+
+            // Concentrations per ml
+            const morphineConc = morphineAmount / totalVolume;
+            const fentanylConc = fentanylAmount / totalVolume; // mcg/ml
+            const hyoscineConc = hyoscineAmount / totalVolume;
+            const midazolamConc = midazolamAmount / totalVolume;
+            const levomepromazineConc = levomepromazineAmount / totalVolume;
+
+            // Calculate hourly dose for each drug
+            const morphineDosePerHr = morphineConc * infusionRate;
+            const fentanylDosePerHr = fentanylConc * infusionRate;
+            const hyoscineDosePerHr = hyoscineConc * infusionRate;
+            const midazolamDosePerHr = midazolamConc * infusionRate;
+            const levomepromazineDosePerHr = levomepromazineConc * infusionRate;
+
+            // Calculate how many hours the pump will actually run before empty
+            const hoursPumpLasts = totalVolume / infusionRate;
+
+            // Warning if pump doesn't last 24 hours
+            let warningMessage = '';
+            if (hoursPumpLasts < 24) {
+                warningMessage = `Warning: Pump runs out after ${hoursPumpLasts.toFixed(2)} hours and should be replaced to maintain infusion over 24 hours.`;
+            }
+
+            // Calculate dose over 24 hours (assuming immediate replacement of pump)
+            const morphineDose24h = morphineDosePerHr * 24;
+            const fentanylDose24h = fentanylDosePerHr * 24;
+            const hyoscineDose24h = hyoscineDosePerHr * 24;
+            const midazolamDose24h = midazolamDosePerHr * 24;
+            const levomepromazineDose24h = levomepromazineDosePerHr * 24;
+
+            // Build result HTML
+            let resultHtml = '';
+            if (warningMessage) {
+                resultHtml += `<p class="warning">${warningMessage}</p>`;
+            }
+
+            resultHtml += `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>Dose over 24 hours</th>
+                            <th>Dose per hour</th>
+                            <th>Units</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Morphine</td>
+                            <td>${morphineDose24h.toFixed(2)}</td>
+                            <td>${morphineDosePerHr.toFixed(2)}</td>
+                            <td>mg</td>
+                        </tr>
+                        <tr>
+                            <td>Fentanyl</td>
+                            <td>${fentanylDose24h.toFixed(2)}</td>
+                            <td>${fentanylDosePerHr.toFixed(2)}</td>
+                            <td>mcg</td>
+                        </tr>
+                        <tr>
+                            <td>Hyoscine</td>
+                            <td>${hyoscineDose24h.toFixed(2)}</td>
+                            <td>${hyoscineDosePerHr.toFixed(2)}</td>
+                            <td>mg</td>
+                        </tr>
+                        <tr>
+                            <td>Midazolam</td>
+                            <td>${midazolamDose24h.toFixed(2)}</td>
+                            <td>${midazolamDosePerHr.toFixed(2)}</td>
+                            <td>mg</td>
+                        </tr>
+                        <tr>
+                            <td>Levomepromazine</td>
+                            <td>${levomepromazineDose24h.toFixed(2)}</td>
+                            <td>${levomepromazineDosePerHr.toFixed(2)}</td>
+                            <td>mg</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="note">
+                    Assumes continuous infusion with immediate pump replacement if needed. Monitor patient and adjust as clinically appropriate.
+                    <a href="../guides/infusion-dose-guide.html" class="info-icon" data-tooltip="Infusion Dose Calculation" aria-label="Infusion dose details" title="View calculation method">
+                        <i class="bi bi-info-circle"></i>
+                    </a>
+                </div>
+            `;
+
+            const resultDiv = document.getElementById('resultBox');
+            resultDiv.innerHTML = resultHtml;
+            resultDiv.style.display = 'block';
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function clearCalculator() {
+            document.querySelectorAll('input[type="number"]').forEach(input => input.value = '');
+            document.getElementById('resultBox').style.display = 'none';
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('calcPage').style.display = 'block';
+        });
+    </script>
+<footer style="max-width: 480px; margin: 30px auto 0; padding: 20px; background-color: #f8f9fa; border-top: 1px solid #dee2e6; text-align: center; font-family: sans-serif; font-size: 11px; color: #6c757d; border-radius: 8px 8px 0 0;">
+    <p style="margin: 0 0 5px; font-weight: bold;">&copy; 2026 Alivioscript Solutions</p>
+    <p style="margin: 0 0 5px;">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+    <p style="margin: 0; color: #dc3545; font-weight: 600;">For professional use only. Verify all results.</p>
+</footer>
+</body>
+</html>

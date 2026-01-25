@@ -1,0 +1,208 @@
+﻿<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengurusan Sesak Nafas | Panduan Rumah</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #007bff; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Menjana PDF...</div>
+        <div style="font-size: 13px; color: #888; margin-top: 5px;">Memproses imej & Nota kaki...</div>
+    </div>
+
+    <div class="header">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>🫁 Pengurusan Sesak Nafas</h1>
+        <p>Panduan langkah demi langkah di rumah</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> Kembali
+        </div>
+        <div class="nav-link" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> Kongsi
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-person-check-fill"></i> Posisi & Pernafasan</h2>
+        <div class="fear-grid">
+            <div class="fear-card">
+                <strong>1. Posisi Selesa</strong>
+                <p>Letakkan pesakit dalam posisi yang selesa (biasanya duduk atau condong ke depan).</p>
+                <img src="1.jpg" alt="Sitting Position" class="card-img">
+            </div>
+            <div class="fear-card">
+                <strong>2. Teknik Pernafasan</strong>
+                <p>Jangan cemas. Tarik nafas (Kira 1,2). Muncungkan bibir seperti meniup straw. Hembus nafas (Kira 1,2,3,4).</p>
+                <img src="2.jpg" alt="Breathing Technique" class="card-img">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-wind"></i> Persekitaran</h2>
+        <div class="fear-grid">
+            <div class="env-card">
+                <strong>3. Pengudaraan</strong>
+                <p>Pastikan pengudaraan yang baik di sekeliling bilik atau kawasan pesakit. Buka tingkap.</p>
+                <img src="3.jpg" alt="Ventilation" class="card-img">
+            </div>
+            <div class="env-card">
+                <strong>4. Terapi Kipas</strong>
+                <p>Cuba gunakan kipas tangan atau kipas meja yang meniup perlahan ke arah muka pesakit.</p>
+                <img src="4.jpg" alt="Fan" class="card-img">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-lungs"></i> Terapi Oksigen</h2>
+        <div class="side-effect" style="border-left-color: #3498db; background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);">
+            <strong style="color: #0277bd;">5. Pemekat Oksigen</strong>
+            <p>Gunakan pemekat oksigen jika ada atau pernah dinasihatkan.</p>
+            <p style="font-size: 13px; margin-top:5px; font-style: italic;">*Nota: Bukan semua orang mendapat manfaat daripada terapi oksigen.</p>
+            <img src="5.jpg" alt="Oxygen Concentrator" class="card-img">
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-capsule-pill"></i> Ubat-ubatan</h2>
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-number">6</div>
+                <div class="rule-content">
+                    <strong>6. Beri Dos Pertama</strong>
+                    <div class="dose-badge">Aq Morphine (Cecair) ATAU Suntikan</div>
+                    <p>Jika sesak nafas berterusan, ambil Morfin mengikut dos yang ditetapkan. Catatkan masa.</p>
+                    <img src="6.jpg" alt="Medication" class="card-img">
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">7</div>
+                <div class="rule-content">
+                    <strong>7. Selepas 1 Jam</strong>
+                    <p>Jika simptom tidak lega selepas 1 jam:</p>
+                    <div class="dose-badge">Ambil dos ke-2 Aq Morphine</div>
+                    <p>Catatkan masa pengambilan.</p>
+                    <img src="7.jpg" alt="1 Hour Clock" class="card-img">
+                </div>
+            </div>
+            <div class="rule-card" style="border-left-color: #e74c3c; background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);">
+                <div class="rule-number" style="background: #e74c3c;">8</div>
+                <div class="rule-content">
+                    <strong>8. Selepas 1 Jam Lagi</strong>
+                    <p>Jika simptom masih tidak lega:</p>
+                    <div class="dose-badge">Ambil dos ke-3 Aq Morphine</div>
+                    <p>Catatkan masa dan segera <strong>maklumkan pasukan penjagaan paliatif anda</strong>.</p>
+                    <img src="7.jpg" alt="Urgent Action" class="card-img">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-pdf" onclick="generateAndPrintPDF('breathlessness-protocol-bm.pdf')">
+            <i class="bi bi-printer-fill"></i> Cetak PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Kongsi Protokol</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="text-align: center; color: #666;">Imbas untuk lihat di telefon</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header">
+            <h1>Protokol Pengurusan Sesak Nafas</h1>
+            <p>Arahan Penjagaan Di Rumah</p>
+        </div>
+
+        <h2>Langkah Bukan Farmakologi</h2>
+        <div class="print-item">
+            <img src="1.jpg" class="print-img">
+            <div class="print-content">
+                <strong>1. Posisi</strong>
+                <p>Letakkan pesakit dalam posisi yang selesa (biasanya duduk).</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="2.jpg" class="print-img">
+            <div class="print-content">
+                <strong>2. Pernafasan</strong>
+                <p>Jangan cemas. Tarik nafas (Kira 1,2). Muncungkan bibir. Hembus nafas (Kira 1,2,3,4).</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="3.jpg" class="print-img">
+            <div class="print-content">
+                <strong>3. Pengudaraan</strong>
+                <p>Pastikan pengudaraan yang baik di sekeliling bilik pesakit.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="4.jpg" class="print-img">
+            <div class="print-content">
+                <strong>4. Terapi Kipas</strong>
+                <p>Cuba gunakan kipas tangan atau meja yang menghala ke muka pesakit.</p>
+            </div>
+        </div>
+
+        <h2>Oksigen & Ubat-ubatan</h2>
+        <div class="print-item">
+            <img src="5.jpg" class="print-img">
+            <div class="print-content">
+                <strong>5. Pemekat Oksigen</strong>
+                <p>Gunakan jika ada. (Nota: Bukan semua orang mendapat manfaat).</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="6.jpg" class="print-img">
+            <div class="print-content">
+                <strong>6. Beri Dos Pertama</strong>
+                <p>Jika sesak nafas, ambil Morfin Cecair atau Suntikan. Catatkan masa.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="7.jpg" class="print-img">
+            <div class="print-content">
+                <strong>7. Selepas 1 Jam</strong>
+                <p>Jika tidak lega, ambil dos ke-2 Morfin. Catatkan masa.</p>
+            </div>
+        </div>
+        <div class="print-item warning-box">
+            <img src="7.jpg" class="print-img">
+            <div class="print-content">
+                <strong style="color:#cc0000;">8. Selepas 1 Jam Lagi</strong>
+                <p>Jika tidak lega, ambil dos ke-3. Maklumkan pasukan penjagaan paliatif anda dengan segera.</p>
+            </div>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

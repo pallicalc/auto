@@ -1,0 +1,327 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>临终关怀指南 | 患者手册</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+
+    <style>
+        /* --- EOL CARE SPECIFIC STYLES --- */
+        .header-eol-care { background: linear-gradient(135deg, #455a64 0%, #607d8b 100%) !important; }
+        .nav-link.eol-care-theme { color: #455a64; }
+        .btn-eol-care { background: #455a64 !important; color: white !important; }
+
+        .info-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 6px solid #ccc; }
+        .card-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .card-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
+        
+        /* Card Colors */
+        .card-sage { border-left-color: #66bb6a; } .card-sage .card-icon { background: #66bb6a; } .card-sage .card-title { color: #2e7d32; }
+        .card-sky { border-left-color: #29b6f6; } .card-sky .card-icon { background: #29b6f6; } .card-sky .card-title { color: #0277bd; }
+        .card-lavender { border-left-color: #ab47bc; } .card-lavender .card-icon { background: #ab47bc; } .card-lavender .card-title { color: #6a1b9a; }
+        .card-sand { border-left-color: #ffa726; } .card-sand .card-icon { background: #ffa726; } .card-sand .card-title { color: #ef6c00; }
+        .card-grey { border-left-color: #78909c; } .card-grey .card-icon { background: #78909c; } .card-grey .card-title { color: #455a64; }
+        .card-mauve { border-left-color: #ec407a; } .card-mauve .card-icon { background: #ec407a; } .card-mauve .card-title { color: #ad1457; }
+
+        .expect-box { background: #f9f9f9; padding: 10px; border-radius: 8px; font-size: 14px; margin-bottom: 10px; color: #555; font-style: italic; }
+        .action-list { padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 10px; }
+        .action-list ul { margin: 5px 0 0 0; padding-left: 20px; }
+        .med-box { border-top: 1px solid #eee; padding-top: 10px; font-size: 14px; color: #444; }
+        .med-box i { color: #ef5350; }
+
+        .med-method-card { background: white; padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; border: 1px solid #eee; }
+        .warning { background: #fff3e0; border: 1px solid #ffe0b2; color: #e65100; padding: 15px; border-radius: 12px; font-size: 14px; margin-top: 15px; }
+
+        /* PDF Styles */
+        #print-area { position: absolute; top: -9999px; left: -9999px; width: 794px; background: white; color: black; padding: 40px; font-family: "Microsoft YaHei", "Heiti SC", Arial, sans-serif; box-sizing: border-box; }
+        #print-area .print-header { border-bottom: 2px solid #455a64; padding-bottom: 15px; margin-bottom: 20px; }
+        #print-area h1 { color: #455a64; font-size: 24px; margin: 0; }
+        #print-area h2 { font-size: 16px; background: #eceff1; padding: 8px; color: #37474f; margin: 20px 0 10px 0; border-radius: 4px; }
+        
+        .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .print-card { border: 1px solid #eee; border-left: 4px solid #ccc; padding: 10px; border-radius: 6px; page-break-inside: avoid; background: #fff; }
+        .pc-title { font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #333; }
+        .pc-desc { font-style: italic; font-size: 11px; color: #666; margin-bottom: 6px; }
+        .print-card ul { margin: 0; padding-left: 15px; font-size: 11px; color: #444; }
+        .pc-med { margin-top: 6px; padding-top: 6px; border-top: 1px dashed #eee; font-size: 10px; color: #c62828; font-weight: bold; }
+        
+        .print-full-section { margin-top: 15px; padding: 10px; border: 1px solid #eee; border-radius: 6px; }
+        .print-warning { margin-top: 10px; font-size: 11px; color: #e65100; font-weight: bold; background: #fff3e0; padding: 5px; }
+    </style>
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #455a64; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">正在生成 PDF...</div>
+    </div>
+
+    <div class="header header-eol-care">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>面对生命的终结</h1>
+        <p>症状、护理与治疗指南</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link eol-care-theme" onclick="window.history.back()">
+            <i class="bi bi-chevron-left"></i> 返回
+        </div>
+        <div class="nav-link eol-care-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> 分享
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-heart-pulse"></i> 身体变化与护理</h2>
+        
+        <div class="info-card card-sage">
+            <div class="card-title">
+                <div class="card-icon"><i class="bi bi-cup-hot-fill"></i></div>
+                饮食与饮水
+            </div>
+            <p class="expect-box">对食物的兴趣减退。吞咽可能会变得困难或引起咳嗽。</p>
+            <div class="action-list" style="background: #e8f5e9;">
+                <strong style="color: #2e7d32;">护理建议：</strong>
+                <ul style="color: #1b5e20;">
+                    <li>提供少量水或碎冰屑。</li>
+                    <li>使用润唇膏滋润嘴唇。</li>
+                    <li>不要强迫进食；这是自然过程。</li>
+                </ul>
+            </div>
+            <div class="med-box">
+                <strong><i class="bi bi-capsule"></i> 医疗辅助：</strong>
+                <p>可使用药物缓解恶心或呕吐。</p>
+            </div>
+        </div>
+
+        <div class="info-card card-sky">
+            <div class="card-title">
+                <div class="card-icon"><i class="bi bi-lungs-fill"></i></div>
+                呼吸状况
+            </div>
+            <p class="expect-box">呼吸可能变浅、不规律（有停顿）或因喉咙分泌物而出现“咯咯”声。</p>
+            <div class="action-list" style="background: #e1f5fe;">
+                <strong style="color: #0277bd;">护理建议：</strong>
+                <ul style="color: #01579b;">
+                    <li>抬高床头（使用枕头）。</li>
+                    <li>使用风扇保持空气流通。</li>
+                    <li>“咯咯”声通常不痛；帮患者翻身通常有帮助。</li>
+                </ul>
+            </div>
+            <div class="med-box">
+                <strong><i class="bi bi-capsule"></i> 医疗辅助：</strong>
+                <p>阿片类药物（缓解呼吸困难）或抗胆碱能药物（减少分泌物）。</p>
+            </div>
+        </div>
+
+        <div class="info-card card-lavender">
+            <div class="card-title">
+                <div class="card-icon"><i class="bi bi-moon-stars-fill"></i></div>
+                精神与睡眠
+            </div>
+            <p class="expect-box">嗜睡、意识混乱或看到不存在的事物（谵妄）。可能会出现焦躁不安。</p>
+            <div class="action-list" style="background: #f3e5f5;">
+                <strong style="color: #6a1b9a;">护理建议：</strong>
+                <ul style="color: #4a148c;">
+                    <li>平静地说话；听觉是最后消失的感觉。</li>
+                    <li>保持房间安静，光线柔和。</li>
+                    <li>避免身体约束；握住他们的手。</li>
+                </ul>
+            </div>
+            <div class="med-box">
+                <strong><i class="bi bi-capsule"></i> 医疗辅助：</strong>
+                <p>医生可能会开镇静剂以减少焦躁和焦虑。</p>
+            </div>
+        </div>
+
+        <div class="info-card card-sand">
+            <div class="card-title">
+                <div class="card-icon"><i class="bi bi-thermometer-half"></i></div>
+                皮肤与体温
+            </div>
+            <p class="expect-box">手脚可能感觉冰冷、苍白或出现花斑。也可能发烧。</p>
+            <div class="action-list" style="background: #fff3e0;">
+                <strong style="color: #ef6c00;">护理建议：</strong>
+                <ul style="color: #e65100;">
+                    <li>使用柔软温暖的毯子。</li>
+                    <li>每隔几小时轻柔地协助翻身。</li>
+                    <li>涂抹润肤露保湿。</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="info-card card-grey">
+            <div class="card-title">
+                <div class="card-icon"><i class="bi bi-droplet-fill"></i></div>
+                排泄与肠道
+            </div>
+            <p class="expect-box">尿量减少且颜色变深。可能会出现尿失禁或便秘。</p>
+            <div class="action-list" style="background: #eceff1;">
+                <strong style="color: #455a64;">护理建议：</strong>
+                <ul style="color: #37474f;">
+                    <li>保持区域清洁；使用护理垫。</li>
+                    <li>保持卫生以确保舒适。</li>
+                </ul>
+            </div>
+             <div class="med-box">
+                <strong><i class="bi bi-capsule"></i> 医疗辅助：</strong>
+                <p>便秘可使用泻药；如有需要可使用导尿管。</p>
+            </div>
+        </div>
+
+        <div class="info-card card-mauve">
+            <div class="card-title">
+                <div class="card-icon"><i class="bi bi-bandaid-fill"></i></div>
+                疼痛管理
+            </div>
+            <p class="expect-box">疼痛可能会持续或加剧，表现为焦躁不安。</p>
+            <div class="action-list" style="background: #fce4ec;">
+                <strong style="color: #ad1457;">护理建议：</strong>
+                <ul style="color: #880e4f;">
+                    <li>观察面部表情（皱眉）或呻吟。</li>
+                    <li>根据指示给予额外剂量（PRN）。</li>
+                </ul>
+            </div>
+            <div class="med-box">
+                <strong><i class="bi bi-capsule"></i> 医疗辅助：</strong>
+                <p>由医生调整的常规止痛药（通过泵或贴片）。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-prescription2"></i> 药物管理</h2>
+        <p style="margin-bottom:15px;">药物用于缓解不适，并非为了加速死亡。</p>
+        
+        <div class="med-method-card">
+            <i class="bi bi-hdd-network-fill" style="color:#455a64; font-size:24px;"></i>
+            <div>
+                <strong>皮下注射泵 (Syringe Driver)</strong>
+                <p style="font-size:13px; color:#666;">通过皮下持续输注药物的小型电池泵。</p>
+            </div>
+        </div>
+        
+        <div class="med-method-card">
+            <i class="bi bi-patch-plus-fill" style="color:#455a64; font-size:24px;"></i>
+            <div>
+                <strong>贴片与口腔给药</strong>
+                <p style="font-size:13px; color:#666;">皮肤贴片（如芬太尼）或放置在脸颊内的药物，以便快速吸收。</p>
+            </div>
+        </div>
+
+        <div class="warning">
+            <strong><i class="bi bi-exclamation-circle-fill"></i> 重要提示：</strong>
+            请勿自行更改药物。务必遵循安宁疗护团队的计划。
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-flower1"></i> 离世之后</h2>
+        <div style="background:white; padding:20px; border-radius:12px; border:1px solid #eee;">
+            <h4 style="font-size:16px; margin-bottom:10px; color:#455a64;">离世后的时刻</h4>
+            <p style="font-size:14px; margin-bottom:15px; color:#555;">不必慌张。花时间陪伴您的亲人。静坐、祈祷或道别。</p>
+            
+            <h4 style="font-size:16px; margin-bottom:10px; color:#455a64;">后续步骤</h4>
+            <ul style="padding-left:20px; font-size:14px; color:#555;">
+                <li style="margin-bottom:5px;"><strong>拨打 999：</strong>通知死亡，以便医生进行确认。</li>
+                <li><strong>殡葬服务：</strong>在死亡确认后联系他们。</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-eol-care" onclick="generateAndPrintPDF('end-of-life-guide-cn.pdf')">
+            <i class="bi bi-printer-fill"></i> 保存 PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 分享指南</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="text-align: center; color: #666;">扫描二维码在手机上查看</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header eol-care-theme">
+            <h1 class="eol-care-theme">面对生命的终结</h1>
+            <p>患者与家属护理指南</p>
+        </div>
+
+        <h2>身体变化与护理</h2>
+        <div class="print-grid">
+            <div class="print-card card-sage">
+                <div class="pc-title">饮食与饮水</div>
+                <div class="pc-desc">兴趣减退。吞咽困难。</div>
+                <ul><li>提供少量水/碎冰。</li><li>使用润唇膏。</li><li>勿强迫进食。</li></ul>
+                <div class="pc-med">Rx: 止吐药物。</div>
+            </div>
+            <div class="print-card card-sky">
+                <div class="pc-title">呼吸状况</div>
+                <div class="pc-desc">变浅、不规律或有“咯咯”声。</div>
+                <ul><li>抬高床头/使用枕头。</li><li>风扇保持通风。</li><li>“咯咯”声通常不痛。</li></ul>
+                <div class="pc-med">Rx: 阿片类药物 / 抗分泌物药。</div>
+            </div>
+            <div class="print-card card-lavender">
+                <div class="pc-title">精神与睡眠</div>
+                <div class="pc-desc">嗜睡、困惑或焦躁。</div>
+                <ul><li>平静地说话。</li><li>光线柔和，环境安静。</li><li>避免身体约束。</li></ul>
+                <div class="pc-med">Rx: 镇静剂缓解焦躁。</div>
+            </div>
+            <div class="print-card card-sand">
+                <div class="pc-title">皮肤与体温</div>
+                <div class="pc-desc">手脚冰冷/苍白/花斑。</div>
+                <ul><li>使用温暖毯子。</li><li>轻柔协助翻身。</li><li>涂抹润肤露。</li></ul>
+            </div>
+            <div class="print-card card-grey">
+                <div class="pc-title">排泄与肠道</div>
+                <div class="pc-desc">失禁或便秘。</div>
+                <ul><li>保持清洁/使用护理垫。</li><li>维持卫生舒适。</li></ul>
+                <div class="pc-med">Rx: 泻药或导尿管。</div>
+            </div>
+            <div class="print-card card-mauve">
+                <div class="pc-title">疼痛管理</div>
+                <div class="pc-desc">面部表情痛苦或不安。</div>
+                <ul><li>观察非语言信号。</li><li>给予额外剂量 (PRN)。</li></ul>
+                <div class="pc-med">Rx: 常规止痛药。</div>
+            </div>
+        </div>
+
+        <div class="print-full-section">
+            <div class="pc-title">药物管理</div>
+            <p style="font-size:11px; color:#555; margin-bottom:8px;">药物用于缓解不适，并非为了加速死亡。</p>
+            <div style="margin-bottom:6px;"><strong style="font-size:11px; color:#333;">皮下注射泵 (Syringe Driver):</strong> <span style="font-size:11px; color:#666;">通过皮下持续输注药物的小型电池泵。</span></div>
+            <div style="margin-bottom:6px;"><strong style="font-size:11px; color:#333;">贴片与口腔给药:</strong> <span style="font-size:11px; color:#666;">皮肤贴片或脸颊内给药，快速吸收。</span></div>
+            <div class="print-warning"><strong>重要提示：</strong> 请勿自行更改药物。务必遵循安宁疗护团队的计划。</div>
+        </div>
+
+        <div class="print-full-section">
+            <div class="pc-title">离世之后</div>
+            <div style="margin-bottom:8px;"><strong style="font-size:11px; color:#455a64;">离世后的时刻:</strong> <span style="font-size:11px; color:#555;">不必慌张。花时间陪伴亲人。</span></div>
+            <strong style="font-size:11px; color:#455a64;">后续步骤:</strong>
+            <ul style="margin-top:4px;"><li><strong>拨打 999：</strong> 通知死亡，以便医生确认。</li><li><strong>殡葬服务：</strong> 确认死亡后联系。</li></ul>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

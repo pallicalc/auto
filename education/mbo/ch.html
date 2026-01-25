@@ -1,0 +1,271 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>恶性肠梗阻 | 患者指南</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+
+    <style>
+        /* --- 1. WEB VIEW STYLES --- */
+        .info-grid { display: grid; gap: 16px; margin-top: 20px; }
+        .info-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333; padding: 20px; border-radius: 16px;
+        }
+        .info-card strong { display: block; margin-bottom: 6px; font-size: 17px; color: #2c3e50; }
+
+        .step-card {
+            background: white;
+            padding: 20px; border-radius: 16px; border-left: 5px solid #0061f2;
+            display: flex; align-items: flex-start; gap: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 16px;
+        }
+        .step-number {
+            background: #0061f2; color: white; width: 32px; height: 32px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px; flex-shrink: 0; margin-top: 2px;
+        }
+        .step-content { flex: 1; }
+
+        .food-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .food-item {
+            background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 12px;
+        }
+        .food-title { font-weight: 700; color: #0061f2; font-size: 14px; margin-bottom: 5px; display: block; }
+        .food-list { margin: 0; padding-left: 15px; font-size: 13px; color: #555; }
+
+        /* --- 2. PRINT PDF STYLES --- */
+        #print-area {
+            position: absolute; top: -9999px; left: -9999px; width: 794px; /* A4 */
+            background: white; color: #333; padding: 40px; box-sizing: border-box;
+            /* Chinese Font Family */
+            font-family: "Microsoft YaHei", "Heiti SC", 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+        #print-area h1 { color: #0061f2; font-size: 26px; border-bottom: 2px solid #0061f2; padding-bottom: 10px; margin: 0 0 10px 0; }
+        #print-area h2 { font-size: 18px; color: #2c3e50; background: #f0f4f8; padding: 8px; border-radius: 4px; margin: 0 0 10px 0; }
+        
+        .print-box { border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .print-row { display: flex; gap: 20px; }
+        .print-col { flex: 1; }
+        .print-list { margin: 0; padding-left: 20px; font-size: 13px; color: #444; }
+        .print-list li { margin-bottom: 4px; }
+        
+        @media print { .step-number { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    </style>
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #0061f2; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">正在生成 PDF...</div>
+    </div>
+
+    <div class="header header-mbo">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>恶性肠梗阻 (MBO)</h1>
+        <p>自我护理指南</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link mbo-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> 返回
+        </div>
+        <div class="nav-link mbo-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> 分享
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-info-circle-fill"></i> 什么是 MBO?</h2>
+        <p style="font-size:15px; color:#444; margin-bottom: 12px; line-height:1.6;">
+            <strong>恶性肠梗阻 (MBO)</strong> 发生在肠道被堵塞时，通常由晚期癌症引起。这会阻止食物、液体和气体正常通过。
+        </p>
+        <p style="font-size:14px; color:#666; background-color: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
+            <i class="bi bi-lightbulb-fill" style="color: #f39c12;"></i> <strong>注意：</strong> 这可能是由肿瘤本身、便秘或先前手术留下的疤痕组织引起的。本指南帮助您在家中控制症状。
+        </p>
+        
+        <div class="info-grid">
+            <div class="info-card">
+                <strong><i class="bi bi-exclamation-diamond-fill"></i> 常见症状</strong>
+                <ul style="padding-left: 20px; margin: 0; font-size: 14px;">
+                    <li>腹痛 (绞痛)</li>
+                    <li>腹胀 (肚子肿胀)</li>
+                    <li>恶心和呕吐</li>
+                    <li>无法排气或排便</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-activity"></i> 当症状复发时</h2>
+        <p style="font-size:14px; margin-bottom:15px;">如果症状在家中复发，请遵循以下步骤：</p>
+
+        <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <strong>肠道休息 (禁食)</strong>
+                <p>停止固体食物 12-24 小时。如果口渴，可以喝少量清流质液体。这能让您的肠道休息。</p>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <strong>如果情况好转...</strong>
+                <p>逐渐恢复饮食：流质 -> 糊状食物 -> 软食 (如粥)。坚持<strong>低纤维饮食</strong>。</p>
+            </div>
+        </div>
+
+        <div class="step-card" style="border-left-color: #e74c3c;">
+            <div class="step-number" style="background: #e74c3c;">3</div>
+            <div class="step-content">
+                <strong>如果情况恶化...</strong>
+                <p>如果疼痛持续、呕吐不止或发烧，请<strong>立即联系您的医生或临终关怀护士</strong>。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-basket-fill"></i> 低纤维饮食</h2>
+        <p style="font-size:14px;">低纤维饮食产生的废物/体积较少，使您的肠道更容易处理。</p>
+        
+        <div class="food-grid">
+            <div class="food-item">
+                <span class="food-title">碳水化合物</span>
+                <ul class="food-list">
+                    <li>白面包</li>
+                    <li>白饭 / 粥</li>
+                    <li>去皮土豆</li>
+                </ul>
+            </div>
+            <div class="food-item">
+                <span class="food-title">蛋白质</span>
+                <ul class="food-list">
+                    <li>鱼</li>
+                    <li>鸡蛋 / 豆腐</li>
+                    <li>煮软的肉类</li>
+                    <li>牛奶 / 奶酪</li>
+                </ul>
+            </div>
+            <div class="food-item">
+                <span class="food-title">水果和蔬菜</span>
+                <ul class="food-list">
+                    <li>煮熟的胡萝卜/南瓜</li>
+                    <li>哈密瓜 / 木瓜</li>
+                    <li><strong>去皮去籽</strong></li>
+                </ul>
+            </div>
+            <div class="food-item">
+                <span class="food-title">避免食用</span>
+                <ul class="food-list">
+                    <li>全谷物 (糙米/全麦)</li>
+                    <li>生蔬菜 / 沙拉</li>
+                    <li>坚果和种子</li>
+                    <li>纤维多的食物</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-mbo" onclick="generateAndPrintPDF('mbo-ch.pdf')">
+            <i class="bi bi-printer-fill"></i> 打印 PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 分享指南</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="text-align: center; color: #666;">扫描二维码在手机上查看</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header">
+            <h1>恶性肠梗阻 (Malignant Bowel Obstruction)</h1>
+            <p>患者自我护理指南</p>
+        </div>
+
+        <div class="print-box">
+            <h2>什么是 MBO?</h2>
+            <p style="font-size:13px; color:#444;">恶性肠梗阻 (MBO) 发生在肠道被堵塞时，通常由晚期癌症引起。这阻止了食物、液体和气体正常通过。</p>
+        </div>
+
+        <div class="print-box">
+            <h2>常见症状</h2>
+            <ul class="print-list">
+                <li>腹痛 (绞痛)</li>
+                <li>腹胀 (肚子肿胀)</li>
+                <li>恶心 / 呕吐</li>
+                <li>无法排气或排便</li>
+            </ul>
+        </div>
+
+        <div class="print-box">
+            <h2>行动计划：当症状复发时</h2>
+            <div class="print-row">
+                <div class="print-col">
+                    <strong>1. 肠道休息</strong>
+                    <p style="font-size:13px; color:#555;">禁食 12-24 小时。如果口渴仅喝少量清流质。</p>
+                </div>
+                <div class="print-col">
+                    <strong>2. 恢复饮食</strong>
+                    <p style="font-size:13px; color:#555;">如果好转，开始流质 -> 糊状 -> 软食。仅限低纤维。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="print-box">
+            <h2>低纤维饮食指南</h2>
+            <div class="print-row">
+                <div class="print-col">
+                    <strong>允许的食物</strong>
+                    <ul class="print-list">
+                        <li>白饭，白面包</li>
+                        <li>鱼，鸡蛋，豆腐，软肉</li>
+                        <li>去皮土豆，煮熟的胡萝卜</li>
+                        <li>哈密瓜，木瓜，清果汁</li>
+                    </ul>
+                </div>
+                <div class="print-col">
+                    <strong>需要避免的食物</strong>
+                    <ul class="print-list">
+                        <li>全谷物，糙米</li>
+                        <li>生蔬菜，沙拉</li>
+                        <li>果皮，种子，坚果</li>
+                        <li>纤维多/坚硬的肉类</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div style="font-size:12px; color:#666; margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
+            <strong>医疗警报：</strong> 如果疼痛剧烈、持续呕吐或发烧，请立即寻求医疗帮助。
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>疼痛管理方案 | 患者指南</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #1565c0; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">正在生成 PDF...</div>
+        <div style="font-size: 13px; color: #888; margin-top: 5px;">正在处理内容...</div>
+    </div>
+
+    <div class="header header-pain">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1><i class="bi bi-heart-pulse-fill"></i> 疼痛管理</h1>
+        <p>舒缓护理患者与看护者指南</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link pain-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> 返回
+        </div>
+        <div class="nav-link pain-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> 分享
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-person-arms-up"></i> 疼痛类型</h2>
+        <div class="fear-grid">
+            <div class="fear-card pain-card-nociceptive">
+                <i class="bi bi-bandaid-fill card-icon-large"></i>
+                <strong>伤害感受性疼痛 (组织痛)</strong>
+                <p>常见的“普通”疼痛（来自骨骼、肌肉、器官）。感觉酸痛、搏动痛或锐痛。</p>
+                <p style="margin-top:5px; font-weight:bold; background:rgba(0,0,0,0.1); padding:5px; border-radius:5px;">黄金标准疗法：吗啡 (Morphine)</p>
+            </div>
+            <div class="fear-card pain-card-neuro">
+                <i class="bi bi-lightning-fill card-icon-large"></i>
+                <strong>神经性疼痛 (神经痛)</strong>
+                <p>因神经受损引起的疼痛。感觉灼烧、射击痛、刺痛或触电感。</p>
+                <p style="margin-top:5px; font-weight:bold; background:rgba(0,0,0,0.1); padding:5px; border-radius:5px;">治疗: Amitriptyline, Gabapentin, Pregabalin 等。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-capsule"></i> 用药指南</h2>
+        <p>定时服用吗啡。在<strong>疼痛开始前</strong>或进行护理程序（如换药、移动）前使用突破性（PRN）剂量。</p>
+        <p style="margin-top:10px;"><strong>肠道护理：</strong> 每天使用泻药（Senna + Lactulose）以预防便秘。</p>
+        
+        <div class="side-effect">
+            <strong><i class="bi bi-exclamation-triangle-fill"></i> 需留意的副作用</strong>
+            <p>恶心加重、严重嗜睡、意识混乱、呼吸非常缓慢、幻觉或超过3天无排便。</p>
+            <p style="margin-top:8px; font-weight:bold;">立即通知舒缓护理团队。</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-stars"></i> 非药物疗法</h2>
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-number">1</div>
+                <div class="rule-content">
+                    <strong>体位调整</strong>
+                    <p>使用枕头经常调整姿势，帮助休息更舒适。</p>
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">2</div>
+                <div class="rule-content">
+                    <strong>触觉与温度</strong>
+                    <p>热敷、轻柔按摩或冷敷（请先测试温度）。</p>
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">3</div>
+                <div class="rule-content">
+                    <strong>转移注意力</strong>
+                    <p>深呼吸、听音乐或看家庭照片。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-journal-medical"></i> 疼痛日记</h2>
+        <p>记录有助于医生调整药物。请记录每一次发作。</p>
+        
+        <div class="diary-table">
+            <table>
+                <tr>
+                    <th>日期/时间</th>
+                    <th>疼痛评分</th>
+                    <th>部位</th>
+                    <th>诱因/缓解?</th>
+                </tr>
+                <tr>
+                    <td>14/1 9AM</td>
+                    <td>7</td>
+                    <td>背部</td>
+                    <td>静息痛。服药后降至2分。</td>
+                </tr>
+                <tr>
+                    <td>14/1 2PM</td>
+                    <td>6</td>
+                    <td>腿部</td>
+                    <td>行走痛。服药后降至1分。</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-telephone-fill"></i> 联系团队</h2>
+        <ul style="padding-left:20px; color:#555;">
+            <li>服用PRN药物后疼痛评分仍 >7</li>
+            <li>新出现的射击痛或灼烧痛</li>
+            <li>严重的副作用</li>
+            <li>患者非常痛苦/无法休息</li>
+        </ul>
+        <div style="background:#ffebee; color:#c62828; padding:10px; border-radius:8px; margin-top:15px; text-align:center; font-weight:bold;">
+            紧急情况：呼吸停止 - 拨打 999
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-pain" onclick="generateAndPrintPDF('pain-protocol-cn.pdf')">
+            <i class="bi bi-printer-fill"></i> 打印 PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 分享方案</h3>
+            
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+
+            <p style="text-align: center; color: #666;">扫描二维码在手机上查看</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header pain-theme">
+            <h1 class="pain-theme">疼痛管理方案</h1>
+            <p>患者与看护者指南</p>
+        </div>
+
+        <h2>疼痛类型</h2>
+        <p><strong>伤害感受性疼痛：</strong> 酸痛、搏动痛（骨骼/肌肉）。治疗：吗啡。</p>
+        <p><strong>神经性疼痛：</strong> 灼烧、射击痛、触电感。治疗: Amitriptyline, Gabapentin, Pregabalin 等。</p>
+
+        <h2>用药指南</h2>
+        <ul>
+            <li>定时服用吗啡。在疼痛变得严重<strong>之前</strong>使用PRN剂量。</li>
+            <li>保持肠道通畅（服用泻药）。</li>
+            <li>确保口腔吸收良好（小口喝水，坐直）。</li>
+        </ul>
+
+        <div class="warning-box">
+            <strong>需留意的副作用：</strong> 严重嗜睡、意识混乱、幻觉或超过3天无排便。<br>
+            <strong>行动：</strong> 立即通知舒缓护理团队。
+        </div>
+
+        <h2>非药物疗法</h2>
+        <ul>
+            <li>使用枕头调整体位。</li>
+            <li>热敷/冷敷（注意温度）。</li>
+            <li>深呼吸和转移注意力。</li>
+        </ul>
+
+        <h2>疼痛日记</h2>
+        <p>请记录疼痛发作情况以供医生参考。</p>
+        <table style="width:100%; border:1px solid #ccc; border-collapse: collapse;">
+            <thead>
+                <tr style="background:#eee;">
+                    <th style="border:1px solid #ccc; padding:8px;">日期/时间</th>
+                    <th style="border:1px solid #ccc; padding:8px;">疼痛评分</th>
+                    <th style="border:1px solid #ccc; padding:8px;">部位</th>
+                    <th style="border:1px solid #ccc; padding:8px;">诱因 / 采取的行动</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border:1px solid #ccc; padding:15px;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #ccc; padding:15px;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #ccc; padding:15px;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                    <td style="border:1px solid #ccc;"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>何时联系团队</h2>
+        <p>如果服药后疼痛评分仍 >7，出现新症状，或患者非常痛苦。</p>
+        <p style="color:red; font-weight:bold; margin-top:10px;">紧急情况：呼吸停止 - 拨打 999</p>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

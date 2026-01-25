@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Infusion Calculation Guide</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<div class="main-container">
+
+    <nav class="nav-header">
+        <a href="../all-calculators.html" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Calculators
+        </a>
+    </nav>
+
+    <h1 class="guide-header-h1"><i class="bi bi-speedometer2"></i> Infusion Guide</h1>
+
+    <div class="disclaimer">
+        <strong>⚠️ Clinical Disclaimer:</strong> These formulas are for reference only. Always double-check pump settings, line concentrations, and patient parameters against institutional protocols before administration.
+    </div>
+
+    <div class="section-divider primary">
+        <h3>Part A: Checking Patient Dose</h3>
+        <p>Use this when checking a running pump to verify the drug amount received.</p>
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">1</span> Calculate Concentration</h2>
+    <div class="formula-box">
+        <p>Determine how much drug is in every milliliter of the syringe.</p>
+        <div class="formula">
+            Conc (mg/ml) = 
+            <span class="fraction">
+                <span class="top">Total Drug Amount (mg)</span>
+                <span class="bottom">Total Syringe Volume (ml)</span>
+            </span>
+        </div>
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">2</span> Calculate Hourly Dose</h2>
+    <div class="formula-box">
+        <p>Multiply the concentration by the current running rate.</p>
+        <div class="formula">
+            Dose/hr = Conc × Rate (ml/hr)
+        </div>
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">3</span> Calculate 24-Hour Dose</h2>
+    <div class="formula-box">
+        <p>Project the hourly dose over a full day.</p>
+        <div class="formula">
+            Dose/24hr = Dose/hr × 24
+        </div>
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">4</span> Duration Safety Check</h2>
+    <div class="formula-box">
+        <p>Ensure the remaining volume is sufficient for the intended time.</p>
+        <div class="formula">
+            Duration = 
+            <span class="fraction">
+                <span class="top">Total Volume (ml)</span>
+                <span class="bottom">Rate (ml/hr)</span>
+            </span>
+        </div>
+        
+        <div class="clinical-warning" style="margin-top: 20px;">
+            <span class="warning-title">⚠️ Duration Warning</span>
+            <p>If Duration < 24 hours, the pump will empty early. Anticipate a syringe change.</p>
+        </div>
+    </div>
+
+    <div class="section-divider success">
+        <h3>Part B: Preparing a Syringe</h3>
+        <p>Use this when mixing a new syringe to determine volumes and diluent needed.</p>
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">1</span> Calculate Drug Volumes</h2>
+    <div class="formula-box">
+        <p>Convert the required dose (mg) into volume (ml) using standard concentrations.</p>
+        <div class="formula">
+            Drug Vol (ml) = 
+            <span class="fraction">
+                <span class="top">Prescribed Dose</span>
+                <span class="bottom">Concentration</span>
+            </span>
+        </div>
+        
+        <p style="font-weight: bold; margin-top: 20px; text-align: center;">Common Concentrations</p>
+        <div class="table-wrapper">
+            <table class="guide-table">
+                <thead>
+                    <tr>
+                        <th>Drug</th>
+                        <th>Standard Conc.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Morphine</td><td>10 mg/ml</td></tr>
+                    <tr><td>Fentanyl</td><td>50 mcg/ml</td></tr>
+                    <tr><td>Hyoscine</td><td>20 mg/ml</td></tr>
+                    <tr><td>Midazolam</td><td>5 mg/ml (or 1mg/ml)</td></tr>
+                    <tr><td>Levomepromazine</td><td>25 mg/ml</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">2</span> Total Drug Volume</h2>
+    <div class="formula-box">
+        <p>Add the volume of every drug being added to the syringe.</p>
+        <div class="formula">
+            Total Drug Vol = Vol A + Vol B + Vol C...
+        </div>
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">3</span> Calculate Diluent</h2>
+    <div class="formula-box">
+        <p>Determine how much saline/water to add to reach the target syringe size.</p>
+        <div class="formula">
+            Diluent = Target Volume - Total Drug Vol
+        </div>
+        <div class="clinical-warning danger" style="margin-top: 20px;">
+            <span class="warning-title">⚠️ Volume Warning</span>
+            <p>If Total Drug Vol > Target Volume, you need a larger syringe or more concentrated drugs.</p>
+        </div>
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">4</span> Set Infusion Rate</h2>
+    <div class="formula-box">
+        <p>Calculate the rate to run the syringe over 24 hours.</p>
+        <div class="formula">
+            Rate (ml/hr) = 
+            <span class="fraction">
+                <span class="top">Target Volume (ml)</span>
+                <span class="bottom">24 hours</span>
+            </span>
+        </div>
+        <div class="example-box">
+            <strong>Example:</strong><br>
+            22ml Syringe ÷ 24hr ≈ <strong>0.92 ml/hr</strong>
+        </div>
+    </div>
+    
+    <nav style="margin-top: 30px;">
+        <a href="../healthcare-guidelines.html" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Healthcare Guidelines
+        </a>
+    </nav>
+
+    </div> <footer class="legal-footer">
+        <div class="container">
+            <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
+            <div class="author-info">
+                <span class="author-name">Author: Alison Chai</span>
+                <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
+            </div>
+            <p class="legal-warning">For professional use only. Verify all results.</p>
+        </div>
+    </footer>
+
+
+</body>
+</html>

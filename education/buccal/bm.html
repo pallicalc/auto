@@ -1,0 +1,163 @@
+﻿<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pemberian Buccal | Panduan Pesakit</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #0061f2; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Menjana PDF...</div>
+        <div style="font-size: 13px; color: #888; margin-top: 5px;">Memformat & Menambah Footer</div>
+    </div>
+
+    <div class="header header-buccal">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>💊 Pemberian Buccal</h1>
+        <p>Panduan Ubat Melalui Pipi</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link buccal-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> Kembali
+        </div>
+        <div class="nav-link buccal-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> Kongsi
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-clipboard-check-fill"></i> Persediaan</h2>
+        <div class="fear-grid">
+            <div class="fear-card">
+                <strong>Cecair & Tablet</strong>
+                <ul style="padding-left: 20px; margin-top: 5px; font-size: 14px;">
+                    <li style="margin-bottom: 4px;"><strong>Cecair:</strong> Gunakan picagari oral. JANGAN guna sudu.</li>
+                    <li style="margin-bottom: 4px;"><strong>Tablet:</strong> Keluarkan dari bungkusan dengan <strong>tangan kering</strong>.</li>
+                    <li style="margin-bottom: 4px;"><strong>Larutkan:</strong> Masukkan tablet dalam picagari 5ml, tambah 1ml air + 1ml udara, goncang.</li>
+                </ul>
+            </div>
+            
+            <div class="fear-card">
+                <strong>Ampul (Ubat Kaca)</strong>
+                <p style="font-size:14px;">Patahkan bahagian atas (arah menjauhi anda). Sedut ubat dengan jarum.</p>
+                <div style="background: #ffe5e5; color: #c0392b; padding: 8px; border-radius: 6px; margin-top:8px; font-weight:bold; font-size:13px;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> TANGGALKAN JARUM SEBELUM BERI
+                </div>
+                <img src="1.jpg" alt="Persediaan Ampul" class="card-img">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-person-check-fill"></i> Cara Pemberian</h2>
+        
+        <img src="2.jpg" alt="Pemberian Buccal" style="width:100%; border-radius:12px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+
+        <div class="rules-grid">
+            <div class="rule-card buccal-theme">
+                <div class="rule-number buccal-theme">1</div>
+                <div class="rule-content">
+                    <strong>Basuh Tangan</strong>
+                    <p>Basuh dan keringkan tangan dengan teliti sebelum dan selepas mengendalikan ubat.</p>
+                </div>
+            </div>
+
+            <div class="rule-card buccal-theme">
+                <div class="rule-number buccal-theme">2</div>
+                <div class="rule-content">
+                    <strong>Letak Ubat</strong>
+                    <p>Tarik sedikit pipi. Letakkan ubat (cecair atau tablet) <strong>di antara gusi dan pipi bahagian dalam</strong>.</p>
+                </div>
+            </div>
+
+            <div class="rule-card buccal-theme">
+                <div class="rule-number buccal-theme">3</div>
+                <div class="rule-content">
+                    <strong>Posisi</strong>
+                    <p>Pesakit perlu kekal tenang sehingga ubat diserap. Jika tidak boleh tahan, baringkan mengiring (pipi di bawah) dan letak ubat di pipi bawah.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-buccal" onclick="generateAndPrintPDF('buccal-guide-bm.pdf')">
+            <i class="bi bi-printer-fill"></i> Cetak PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Kongsi Panduan</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="text-align: center; color: #666;">Imbas kod QR untuk lihat di telefon</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header buccal-theme">
+            <h1 class="buccal-theme">Pemberian Ubat Buccal</h1>
+            <p>Panduan Penjagaan Di Rumah</p>
+        </div>
+
+        <h2>Persediaan</h2>
+        <div class="print-item">
+            <div class="print-content">
+                <strong>Cecair & Tablet</strong>
+                <p>Guna picagari oral (bukan sudu). Pegang tablet dengan tangan kering. Elakkan guna air panas untuk melarut.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="1.jpg" class="print-img">
+            <div class="print-content">
+                <strong>Ampul</strong>
+                <p>Patahkan ampul menjauhi anda. Sedut ubat dengan jarum.</p>
+                <strong style="color:#c0392b;">TANGGALKAN JARUM dari picagari.</strong>
+            </div>
+        </div>
+
+        <h2>Prosedur Pemberian</h2>
+        <div class="print-item">
+            <div class="print-content">
+                <strong>1. Bersihkan Tangan</strong>
+                <p>Basuh dan keringkan tangan sebelum mengendalikan ubat.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="2.jpg" class="print-img">
+            <div class="print-content">
+                <strong>2. Letak Ubat</strong>
+                <p>Tarik pipi. Letak ubat <strong>di antara gusi dan pipi dalam</strong>.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-content">
+                <strong>3. Posisi</strong>
+                <p>Kekal tenang sehingga diserap. Jika tidak boleh tahan, baring mengiring dengan pipi di bawah.</p>
+            </div>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+﻿/* Container Override for wider tables */
+.main-container {
+    max-width: 1100px !important; 
+    margin: 40px auto;
+}
+
+.header-bar {
+    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.content-area {
+    padding: 30px;
+}
+
+/* Table Specifics */
+.table-responsive {
+    margin-top: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    max-height: 65vh; 
+    overflow-y: auto;
+}
+
+/* Sticky Header */
+thead th { 
+    position: sticky; top: 0; z-index: 10; 
+    background-color: #f8f9fa !important; 
+    box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1); 
+}
+
+.new-row-bg {
+    background-color: #f0f8ff; /* Light blue for empty rows */
+}
+
+/* Loading Overlay */
+#loadingOverlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.9);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.rotate-hint { display: none; text-align: center; font-size: 11px; color: #d63384; margin-bottom: 5px; }
+
+/* --- MOBILE OPTIMIZATION --- */
+@media (max-width: 768px) {
+    body { padding-bottom: 0; }
+    .container.px-3 { padding-left: 0 !important; padding-right: 0 !important; max-width: 100%; }
+    .main-container { margin: 0; width: 100%; border-radius: 0; box-shadow: none; }
+
+    .header-bar { padding: 10px 15px; }
+    .header-bar h4 { font-size: 1.1rem; }
+    .content-area { padding: 10px 5px; } 
+
+    .table { font-size: 11px; margin-bottom: 0; }
+    .table th, .table td {
+        padding: 4px 2px !important;
+        white-space: nowrap; 
+    }
+    
+    .form-control-sm, .form-select-sm {
+        font-size: 11px !important;
+        padding: 2px 4px !important;
+        height: 28px;
+    }
+    
+    /* Specific Column Widths */
+    th:nth-child(1) { width: 30px !important; }
+    th:nth-child(2) { width: 55px !important; }
+    th:nth-child(4) { width: 50px !important; }
+
+    .rotate-hint { display: block; }
+}

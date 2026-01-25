@@ -1,0 +1,273 @@
+﻿<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Halangan Usus Malignan | Panduan Pesakit</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+
+    <style>
+        /* --- 1. WEB VIEW STYLES (Screen) --- */
+        .info-grid { display: grid; gap: 16px; margin-top: 20px; }
+        .info-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333; padding: 20px; border-radius: 16px;
+        }
+        .info-card strong { display: block; margin-bottom: 6px; font-size: 17px; color: #2c3e50; }
+
+        .step-card {
+            background: white;
+            padding: 20px; border-radius: 16px; border-left: 5px solid #0061f2;
+            display: flex; align-items: flex-start; gap: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 16px;
+        }
+        .step-number {
+            background: #0061f2; color: white; width: 32px; height: 32px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px; flex-shrink: 0; margin-top: 2px;
+        }
+        .step-content { flex: 1; }
+
+        .food-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .food-item {
+            background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 12px;
+        }
+        .food-title { font-weight: 700; color: #0061f2; font-size: 14px; margin-bottom: 5px; display: block; }
+        .food-list { margin: 0; padding-left: 15px; font-size: 13px; color: #555; }
+
+        /* --- 2. PRINT PDF STYLES (Restored for exact format) --- */
+        #print-area {
+            position: absolute; top: -9999px; left: -9999px; width: 794px; /* A4 */
+            background: white; color: #333; padding: 40px; box-sizing: border-box;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+        /* MBO Specific Print Colors */
+        #print-area h1 { color: #0061f2; font-size: 26px; border-bottom: 2px solid #0061f2; padding-bottom: 10px; margin: 0 0 10px 0; }
+        #print-area h2 { font-size: 18px; color: #2c3e50; background: #f0f4f8; padding: 8px; border-radius: 4px; margin: 0 0 10px 0; }
+        
+        /* Layout Boxes */
+        .print-box { border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .print-row { display: flex; gap: 20px; }
+        .print-col { flex: 1; }
+        .print-list { margin: 0; padding-left: 20px; font-size: 13px; color: #444; }
+        .print-list li { margin-bottom: 4px; }
+        
+        /* Fix for step numbers in print */
+        @media print { .step-number { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    </style>
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #0061f2; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Menjana PDF...</div>
+    </div>
+
+    <div class="header header-mbo">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>Halangan Usus Malignan (MBO)</h1>
+        <p>Panduan Penjagaan Diri</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link mbo-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> Kembali
+        </div>
+        <div class="nav-link mbo-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> Kongsi
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-info-circle-fill"></i> Apa itu MBO?</h2>
+        <p style="font-size:15px; color:#444; margin-bottom: 12px; line-height:1.6;">
+            <strong>Halangan Usus Malignan (MBO)</strong> berlaku apabila usus tersumbat, biasanya disebabkan oleh kanser tahap lanjut. Ini menghalang makanan, cecair, dan gas daripada melaluinya dengan normal.
+        </p>
+        <p style="font-size:14px; color:#666; background-color: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
+            <i class="bi bi-lightbulb-fill" style="color: #f39c12;"></i> <strong>Nota:</strong> Ia boleh disebabkan oleh tumor itu sendiri, sembelit, atau tisu parut akibat pembedahan terdahulu. Panduan ini membantu anda menguruskan gejala di rumah.
+        </p>
+        
+        <div class="info-grid">
+            <div class="info-card">
+                <strong><i class="bi bi-exclamation-diamond-fill"></i> Gejala Lazim</strong>
+                <ul style="padding-left: 20px; margin: 0; font-size: 14px;">
+                    <li>Sakit perut (Kram/Memulas)</li>
+                    <li>Perut kembung (Distensi)</li>
+                    <li>Loya & Muntah</li>
+                    <li>Tidak boleh buang angin atau air besar</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-activity"></i> Apabila Gejala Berulang</h2>
+        <p style="font-size:14px; margin-bottom:15px;">Jika gejala kembali semasa di rumah, ikut langkah ini:</p>
+
+        <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <strong>Rehatkan Usus (Berpuasa)</strong>
+                <p>Hentikan makanan pepejal selama 12-24 jam. Anda boleh minum sedikit cecair jernih jika dahaga. Ini memberi masa untuk usus berehat.</p>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <strong>Jika Semakin Pulih...</strong>
+                <p>Mulakan semula secara perlahan dengan cecair, kemudian makanan kisar, dan seterusnya makanan lembut (cth: bubur). Amalkan <strong>Diet Rendah Serat</strong>.</p>
+            </div>
+        </div>
+
+        <div class="step-card" style="border-left-color: #e74c3c;">
+            <div class="step-number" style="background: #e74c3c;">3</div>
+            <div class="step-content">
+                <strong>Jika Semakin Teruk...</strong>
+                <p>Jika sakit berterusan, muntah tidak berhenti, atau anda demam, <strong>hubungi doktor atau jururawat hospis dengan segera</strong>.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-basket-fill"></i> Diet Rendah Serat</h2>
+        <p style="font-size:14px;">Diet rendah serat menghasilkan kurang sisa/najis, menjadikannya lebih mudah untuk dikendalikan oleh usus anda.</p>
+        
+        <div class="food-grid">
+            <div class="food-item">
+                <span class="food-title">Karbohidrat</span>
+                <ul class="food-list">
+                    <li>Roti putih</li>
+                    <li>Nasi putih / Bubur</li>
+                    <li>Ubi kentang dikupas</li>
+                </ul>
+            </div>
+            <div class="food-item">
+                <span class="food-title">Protein</span>
+                <ul class="food-list">
+                    <li>Ikan</li>
+                    <li>Telur / Tauhu</li>
+                    <li>Daging dimasak lembut</li>
+                    <li>Susu / Keju</li>
+                </ul>
+            </div>
+            <div class="food-item">
+                <span class="food-title">Buah & Sayur</span>
+                <ul class="food-list">
+                    <li>Lobak merah/labu dimasak</li>
+                    <li>Tembikai / Betik</li>
+                    <li><strong>Tiada kulit atau biji</strong></li>
+                </ul>
+            </div>
+            <div class="food-item">
+                <span class="food-title">Elakkan</span>
+                <ul class="food-list">
+                    <li>Bijirin penuh (Whole grains)</li>
+                    <li>Sayur mentah / Ulam</li>
+                    <li>Kacang & Biji</li>
+                    <li>Makanan berserat tinggi</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-mbo" onclick="generateAndPrintPDF('mbo-bm.pdf')">
+            <i class="bi bi-printer-fill"></i> Cetak PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Kongsi Panduan</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="text-align: center; color: #666;">Imbas kod QR untuk lihat di telefon</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header">
+            <h1>Halangan Usus Malignan (MBO)</h1>
+            <p>Panduan Penjagaan Diri Pesakit</p>
+        </div>
+
+        <div class="print-box">
+            <h2>Apa itu MBO?</h2>
+            <p style="font-size:13px; color:#444;">Halangan Usus Malignan (MBO) berlaku apabila usus tersumbat, biasanya disebabkan oleh kanser tahap lanjut. Ini menghalang makanan, cecair, dan gas daripada melaluinya dengan normal.</p>
+        </div>
+
+        <div class="print-box">
+            <h2>Gejala Lazim</h2>
+            <ul class="print-list">
+                <li>Sakit Perut (Kram)</li>
+                <li>Perut Kembung (Distensi)</li>
+                <li>Muntah / Loya</li>
+                <li>Tidak boleh buang angin atau air besar</li>
+            </ul>
+        </div>
+
+        <div class="print-box">
+            <h2>Pelan Tindakan: Apabila gejala berulang</h2>
+            <div class="print-row">
+                <div class="print-col">
+                    <strong>1. Rehatkan Usus</strong>
+                    <p style="font-size:13px; color:#555;">Berpuasa 12-24 jam. Hanya sedikit air jika dahaga.</p>
+                </div>
+                <div class="print-col">
+                    <strong>2. Mula Makan Semula</strong>
+                    <p style="font-size:13px; color:#555;">Jika pulih, mula cecair -> kisar -> lembut. Rendah Serat sahaja.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="print-box">
+            <h2>Panduan Diet Rendah Serat</h2>
+            <div class="print-row">
+                <div class="print-col">
+                    <strong>Makanan Dibenarkan</strong>
+                    <ul class="print-list">
+                        <li>Nasi putih, roti putih</li>
+                        <li>Ikan, telur, tauhu, daging lembut</li>
+                        <li>Kentang dikupas, sayur dimasak empuk</li>
+                        <li>Tembikai, betik, jus tanpa serat</li>
+                    </ul>
+                </div>
+                <div class="print-col">
+                    <strong>Makanan Perlu Dielak</strong>
+                    <ul class="print-list">
+                        <li>Bijirin penuh, beras perang</li>
+                        <li>Sayur mentah, ulam-ulaman</li>
+                        <li>Kulit buah, biji, kekacang</li>
+                        <li>Daging liat / berserat</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div style="font-size:12px; color:#666; margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
+            <strong>Amaran Perubatan:</strong> Jika sakit teruk, muntah berterusan, atau demam, dapatkan bantuan perubatan segera.
+        </div>
+    </div>
+    
+</div><script src="../education.js"></script>
+</body>
+</html>

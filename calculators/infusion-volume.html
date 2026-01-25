@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infusion Volume Calculator | Total Drug Volume</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <link rel="stylesheet" href="calculator.css">
+</head>
+<body>
+    <nav class="navbar-main">
+        <a href="../all-calculators.html" class="navbar-link">
+            <i class="bi bi-house-door"></i> Back to All Calculators
+        </a>
+        <a href="../guides/infusion-dose.html" class="navbar-link">Infusion Dose Guide</a>
+    </nav>
+
+    <div id="calcPage">
+        <h2>Syringe Driver Preparation Calculator</h2>
+
+        <fieldset>
+            <legend>Enter 24hr Total Dose</legend>
+            <label for="morphineDose">Morphine dose (mg, 10 mg/ml)</label>
+            <input type="number" id="morphineDose" placeholder="Enter morphine dose" step="any" min="0">
+
+            <label for="fentanylDose">Fentanyl dose (mcg, 50 mcg/ml)</label>
+            <input type="number" id="fentanylDose" placeholder="Enter fentanyl dose" step="any" min="0">
+
+            <label for="hyoscineDose">Hyoscine dose (mg, 20 mg/ml)</label>
+            <input type="number" id="hyoscineDose" placeholder="Enter hyoscine dose" step="any" min="0">
+
+            <label for="midazolamDose">Midazolam dose (mg)</label>
+            <input type="number" id="midazolamDose" placeholder="Enter midazolam dose" step="any" min="0">
+            <select id="midazolamStrength" aria-label="Select midazolam strength">
+                <option value="5">5 mg/ml (default)</option>
+                <option value="1">1 mg/5 ml</option>
+            </select>
+
+            <label for="levomepromazineDose">Levomepromazine dose (mg, 25 mg/ml)</label>
+            <input type="number" id="levomepromazineDose" placeholder="Enter levomepromazine dose" step="any" min="0">
+        </fieldset>
+
+        <button id="calculateVolBtn" class="btn btn-primary" onclick="calculateDrugVolumes()">Calculate Total Drug Volume</button>
+
+        <div id="totalVolumeResult" class="result-box" style="display: none;"></div>
+
+        <fieldset id="dilutionSection" style="display: none; margin-top: 20px;">
+            <legend>Dilution Settings</legend>
+            <label for="dilutionVolume">Dilute up to volume (ml)</label>
+            <input type="number" id="dilutionVolume" placeholder="Enter total dilution volume" step="any" min="0">
+        </fieldset>
+
+        <button id="calculateRateBtn" class="btn btn-primary" onclick="calculateDiluentAndRate()" style="display: none;">Calculate Diluent Volume and Infusion Rate</button>
+
+        <div id="dilutionResult" class="result-box" style="display: none; margin-top: 15px;"></div>
+
+        <button id="clearBtn" class="btn btn-danger" style="margin-top: 8px; padding: 8px;" onclick="clearCalculator()">Clear Calculator</button>
+    </div>
+
+    <script>
+        let totalDrugVolume = 0;
+
+        function calculateDrugVolumes() {
+            const morphineDose = parseFloat(document.getElementById('morphineDose').value) || 0;
+            const fentanylDose = parseFloat(document.getElementById('fentanylDose').value) || 0;
+            const hyoscineDose = parseFloat(document.getElementById('hyoscineDose').value) || 0;
+            const midazolamDose = parseFloat(document.getElementById('midazolamDose').value) || 0;
+            const levomepromazineDose = parseFloat(document.getElementById('levomepromazineDose').value) || 0;
+            const midazolamStrength = parseFloat(document.getElementById('midazolamStrength').value) || 5;
+
+            const morphineConc = 10; // mg/ml
+            const fentanylConc = 50; // mcg/ml
+            const hyoscineConc = 20; // mg/ml
+            const levomepromazineConc = 25; // mg/ml
+
+            if (morphineDose < 0 || fentanylDose < 0 || hyoscineDose < 0 || midazolamDose < 0 || levomepromazineDose < 0) {
+                document.getElementById('totalVolumeResult').innerText = 'Dose values must be zero or positive.';
+                document.getElementById('totalVolumeResult').style.display = 'block';
+                document.getElementById('dilutionSection').style.display = 'none';
+                return;
+            }
+
+            const morphineVol = morphineDose / morphineConc;
+            const fentanylVol = fentanylDose / fentanylConc;
+            const hyoscineVol = hyoscineDose / hyoscineConc;
+            const midazolamVol = midazolamDose / midazolamStrength;
+            const levomepromazineVol = levomepromazineDose / levomepromazineConc;
+
+            totalDrugVolume = morphineVol + fentanylVol + hyoscineVol + midazolamVol + levomepromazineVol;
+
+            // Construct HTML table for result
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>Volume (ml)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Morphine</td><td>${morphineVol.toFixed(2)}</td></tr>
+                        <tr><td>Fentanyl</td><td>${fentanylVol.toFixed(2)}</td></tr>
+                        <tr><td>Hyoscine</td><td>${hyoscineVol.toFixed(2)}</td></tr>
+                        <tr><td>Midazolam</td><td>${midazolamVol.toFixed(2)}</td></tr>
+                        <tr><td>Levomepromazine</td><td>${levomepromazineVol.toFixed(2)}</td></tr>
+                        <tr style="font-weight: bold;"><td>Total Volume (ml)</td><td>${totalDrugVolume.toFixed(2)}</td></tr>
+                    </tbody>
+                </table>
+                <div class="note">
+                    Total drug volume required for 24hr doses.
+                    <a href="../guides/infusion-dose-guide.html" class="info-icon" data-tooltip="Volume Calculation" aria-label="Volume details" title="View calculation method">
+                        <i class="bi bi-info-circle"></i>
+                    </a>
+                </div>
+            `;
+
+            const resultDiv = document.getElementById('totalVolumeResult');
+            resultDiv.innerHTML = tableHTML;
+            resultDiv.style.display = 'block';
+            document.getElementById('dilutionSection').style.display = 'block';
+            document.getElementById('calculateRateBtn').style.display = 'block';
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function calculateDiluentAndRate() {
+            const dilutionVolume = parseFloat(document.getElementById('dilutionVolume').value) || 0;
+
+            if (dilutionVolume <= totalDrugVolume) {
+                document.getElementById('dilutionResult').innerText = `Dilution volume must be >= total drug volume ${totalDrugVolume.toFixed(2)} ml.`;
+                document.getElementById('dilutionResult').style.display = 'block';
+                return;
+            }
+
+            const diluentVol = dilutionVolume - totalDrugVolume;
+            const infusionRate = dilutionVolume / 24; // ml/hr for 24 hrs infusion
+
+            // Construct HTML table for diluent and rate
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Volume</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Diluent to add (ml)</td><td>${diluentVol.toFixed(2)}</td></tr>
+                        <tr><td>Recommended infusion rate</td><td>${infusionRate.toFixed(2)} ml/hr (over 24 hours)</td></tr>
+                    </tbody>
+                </table>
+                <div class="note">
+                    Add diluent to achieve total syringe volume, then infuse at calculated rate.
+                </div>
+            `;
+
+            const resultDiv = document.getElementById('dilutionResult');
+            resultDiv.innerHTML = tableHTML;
+            resultDiv.style.display = 'block';
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function clearCalculator() {
+            document.querySelectorAll('input[type="number"]').forEach(input => input.value = '');
+            document.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+            document.getElementById('totalVolumeResult').style.display = 'none';
+            document.getElementById('dilutionResult').style.display = 'none';
+            document.getElementById('dilutionSection').style.display = 'none';
+            document.getElementById('calculateRateBtn').style.display = 'none';
+            totalDrugVolume = 0;
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('calcPage').style.display = 'block';
+        });
+    </script>
+<footer style="max-width: 480px; margin: 30px auto 0; padding: 20px; background-color: #f8f9fa; border-top: 1px solid #dee2e6; text-align: center; font-family: sans-serif; font-size: 11px; color: #6c757d; border-radius: 8px 8px 0 0;">
+    <p style="margin: 0 0 5px; font-weight: bold;">&copy; 2026 Alivioscript Solutions</p>
+    <p style="margin: 0 0 5px;">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+    <p style="margin: 0; color: #dc3545; font-weight: 600;">For professional use only. Verify all results.</p>
+</footer>
+</body>
+</html>

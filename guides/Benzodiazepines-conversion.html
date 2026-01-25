@@ -1,0 +1,178 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Benzodiazepine Conversion Guide</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<div class="main-container">
+
+    <nav class="nav-header">
+        <a href="../all-calculators.html" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Calculators
+        </a>
+    </nav>
+
+    <h1 class="guide-header-h1"><i class="bi bi-capsule"></i> Benzodiazepine Guide</h1>
+
+    <div class="disclaimer">
+        <strong>Clinical Disclaimer:</strong> Unlike opioid equipotent dosing, benzodiazepine equivalence is much less evidence-based. Most estimates are based on expert opinion, uncited tables, and clinical practice. Clinical judgment is paramount.
+    </div>
+
+    <p>The list of benzodiazepines can be divided into 3 groups based on the <strong>duration of action</strong> and the <strong>speed of the onset</strong> of action. This calculator primarily uses duration to categorize medications.</p>
+
+    <h2 class="guide-header-h2"><span class="step-number">1</span> Convert Current Drug → Alprazolam Units</h2>
+    <div class="formula-box">
+        <p>If you are taking any medication other than Alprazolam, the calculator first standardizes the dose to <strong>Alprazolam Equivalent Units</strong>.</p>
+        <div class="formula">
+            <span>Alprazolam Units = </span>
+            <span class="fraction">
+                <span class="top">Current Dose</span>
+                <span class="bottom">Current Drug Factor</span>
+            </span>
+        </div>
+        <p>
+            <strong>Example:</strong> If taking Diazepam (Factor 15), divide your dose by 15.<br>
+            <em>Note: If you are already taking Alprazolam, your Factor is 1.</em>
+        </p>
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">2</span> Convert Units → Target Drug</h2>
+    <div class="formula-box">
+        <p>Multiply the standardized Alprazolam Units by the factor of the drug you want to switch to.</p>
+        <div class="formula">
+            Target Dose = Alprazolam Units × Target Drug Factor
+        </div>
+        <p>
+            <strong>Example:</strong> To switch to Lorazepam (Factor 2), multiply the result from Step 1 by 2.
+        </p>
+    </div>
+
+    <h2 class="guide-header-h2"><i class="bi bi-exclamation-triangle-fill"></i> Clinical Warnings & Limitations</h2>
+
+    <div class="clinical-warning">
+        <span class="warning-title">⚠️ Large Dosing Ranges</span>
+        <p>Due to discrepancies in the literature, many benzodiazepine conversions may have a potential conversion range that is extremely variable (e.g., by a factor of 10x or greater). These wide ranges highlight the lack of firm, evidence-based literature.</p>
+    </div>
+
+    <div class="clinical-warning">
+        <span class="warning-title">⚠️ Patient-Specific Factors</span>
+        <p>No equipotent conversion considers hepatic function, renal function, age, inter-patient metabolic variability, or drug interactions. Benzodiazepine metabolism can differ significantly; therefore, alterations in drug disposition will alter the relative potencies and durations.</p>
+    </div>
+
+    <div class="clinical-warning">
+        <span class="warning-title">⚠️ Varying Durations of Action</span>
+        <p>Due to differences in half-life, active metabolites, and drug accumulation, benzodiazepine conversions should account for single-dose versus multiple-dose situations. Currently, no conversion estimates capture this difference accurately.</p>
+    </div>
+
+    <div class="clinical-warning">
+        <span class="warning-title">⚠️ Lack of FDA Oversight</span>
+        <p>Unlike opioid conversions, the FDA does not require manufacturers to describe equivalent dose or potency of benzodiazepines within the package insert.</p>
+    </div>
+
+    <h2 class="guide-header-h2">Impact of Dosage Forms</h2>
+    <div class="formula-box" style="border-left: 4px solid var(--success-border);">
+        <p>Most published conversions are based on <strong>oral administration</strong>. Parenteral formulations may not use the same conversion ratio. Large variances in oral bioavailability highlight significant inter-patient variability:</p>
+        
+        <div class="table-wrapper">
+            <table class="guide-table">
+                <thead>
+                <tr>
+                    <th>Drug</th>
+                    <th>Bioavailability</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr><td>Midazolam</td><td>40% (range 35-75%)</td></tr>
+                <tr><td>Lorazepam</td><td>>90%</td></tr>
+                <tr><td>Diazepam</td><td>>90% (range 53-97%)</td></tr>
+                <tr><td>Phenobarbital</td><td>>90%</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <h2 class="guide-header-h2">Equivalence & Mode of Action Table</h2>
+    <p>We compare each benzodiazepine to <strong>Alprazolam (Factor 1)</strong>.</p>
+    
+    <div class="table-wrapper">
+        <table class="guide-table">
+            <thead>
+            <tr>
+                <th>Drug</th>
+                <th>Factor (vs Alprazolam)</th>
+                <th>Onset</th>
+                <th>Duration</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr><td>Alprazolam (Xanax)</td><td>1</td><td>30 min</td><td>6-20 h</td></tr>
+            <tr><td>Lorazepam (Ativan)</td><td>2</td><td>30-60 min</td><td>10-20 h</td></tr>
+            <tr><td>Bromazepam (Lexotan)</td><td>6</td><td>30m - 4h</td><td>10-20 h</td></tr>
+            <tr><td>Midazolam IV (Versed)</td><td>4</td><td>1-3 min</td><td>2-4 h</td></tr>
+            <tr><td>Midazolam PO</td><td>10</td><td>10-20 min</td><td>20m - 3h</td></tr>
+            <tr><td>Chlordiazepoxide</td><td>50</td><td>1.5 h</td><td>5-30 h</td></tr>
+            <tr><td>Clonazepam (Rivotril)</td><td>1</td><td>1 h</td><td>18-39 h</td></tr>
+            <tr><td>Clorazepate (Tranxene)</td><td>20</td><td>1 h</td><td>36-200 h</td></tr>
+            <tr><td>Diazepam (Valium)</td><td>15</td><td>30 min</td><td>20-50 h</td></tr>
+            <tr><td>Flurazepam (Dalmane)</td><td>30</td><td>1 h</td><td>12-100 h</td></tr>
+            <tr><td>Oxazepam (Serax)</td><td>30</td><td>3 h</td><td>3-21 h</td></tr>
+            <tr><td>Quazepam (Doral)</td><td>40</td><td>20-45 min</td><td>25-100 h</td></tr>
+            <tr><td>Temazepam (Restoril)</td><td>30</td><td>30-60 min</td><td>10-20 h</td></tr>
+            <tr><td>Triazolam (Halcion)</td><td>0.5</td><td>30 min</td><td>1.6-5.5 h</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="guide-header-h2">Example Calculation</h2>
+    <div class="example-box">
+        <strong>Switching from Diazepam 30mg to Lorazepam:</strong><br>
+        1. <strong>Divide</strong> current dose by current factor: 30mg / 15 = 2 (Alprazolam Units)<br>
+        2. <strong>Multiply</strong> by target factor: 2 × 2 = <strong>4mg Lorazepam</strong>
+    </div>
+
+    <div class="references">
+        <strong>References</strong>
+        <ol>
+            <li>Miller NS, Gold MS. Management of withdrawal syndromes and relapse prevention. Am Fam Physician. 1998.</li>
+            <li>Quan D. Chapter 177. Benzodiazepines. Tintinalli's Emergency Medicine. 7th ed. 2011.</li>
+            <li>Ng K, et al. Evaluation of an alcohol withdrawal protocol. Can J Hosp Pharm. 2011.</li>
+            <li>Sostmann HJ, et al. Dose equivalence of midazolam and triazolam. Eur J Clin Pharmacol. 1989.</li>
+            <li>Lieberman JA, Tasman A. Handbook of Psychiatric Drugs. 2006.</li>
+            <li>Ashton H. Benzodiazepines: How they work and how to withdraw; The Ashton Manual. 2002.</li>
+            <li>UK Clinical Guidelines on Drug Misuse and Dependence Update 2017.</li>
+            <li>Brett J, Murnion B. Management of benzodiazepine misuse and dependence. Aust Prescr. 2015.</li>
+            <li>Greenblatt DJ, et al. Effect of age, gender, and obesity on midazolam kinetics. Anesthesiology. 1984.</li>
+            <li>Pentikäinen PJ, et al. Pharmacokinetics of midazolam following IV and oral administration. J Clin Pharmacol. 1989.</li>
+            <li>Lorazepam [package insert]. Watson Laboratories; 2010.</li>
+            <li>Dhillon S, et al. Bioavailability of diazepam. Br J Clin Pharmacol. 1982.</li>
+            <li>Ochs HR, et al. Diazepam absorption. Dig Dis Sci. 1982.</li>
+            <li>Divoll M, et al. Absolute bioavailability of oral and intramuscular diazepam. Anesth Analg. 1983.</li>
+            <li>Nelson E, et al. Phenobarbital pharmacokinetics. J Clin Pharmacol. 1982.</li>
+        </ol>
+    </div>
+    
+    <nav style="margin-top: 30px;">
+        <a href="../healthcare-guidelines.html" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Healthcare Guidelines
+        </a>
+    </nav>
+
+    </div> <footer class="legal-footer">
+        <div class="container">
+            <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
+            <div class="author-info">
+                <span class="author-name">Author: Alison Chai</span>
+                <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
+            </div>
+            <p class="legal-warning">For professional use only. Verify all results.</p>
+        </div>
+    </footer>
+
+
+</body>
+</html>

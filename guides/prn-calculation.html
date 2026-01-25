@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PRN Opioid Dose Calculation Guide</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<div class="main-container">
+
+    <nav class="nav-header">
+        <a href="../all-calculators.html" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Calculators
+        </a>
+    </nav>
+
+    <h1 class="guide-header-h1"><i class="bi bi-file-earmark-text-fill"></i> PRN Opioid Dose Guide</h1>
+
+    <div class="disclaimer">
+        <strong>⚠️ Clinical Disclaimer:</strong> This explains PRN opioid calculations. Always use clinical judgment, consider patient factors, and follow institutional protocols.
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">1</span> Calculate Total Daily Oral Morphine Equivalent Dose (oMED)</h2>
+    <div class="formula-box">
+        <p>Convert <strong>all opioids</strong> used in last 24hrs (regular + additional/PRN) to PO morphine equivalents.</p>
+        <div class="formula">
+            Total oMED = Σ (Each Opioid Dose × Conversion Ratio)
+        </div>
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">2</span> Define PRN oMED Range</h2>
+    <div class="formula-box">
+        <p>Establish minimum and maximum PRN oMED based on total daily oMED:</p>
+        
+        <div class="formula">
+            PRN oMED Range = PRN oMED<sub>min</sub> to PRN oMED<sub>max</sub>
+        </div>
+        
+        <div class="formula">
+            <span>PRN oMED<sub>min</sub> = </span>
+            <span class="fraction">
+                <span class="top">oMED<sub>total</sub></span>
+                <span class="bottom">12</span>
+            </span>
+        </div>
+        
+        <div class="formula">
+            <span>PRN oMED<sub>max</sub> = </span>
+            <span class="fraction">
+                <span class="top">oMED<sub>total</sub></span>
+                <span class="bottom">6</span>
+            </span>
+        </div>
+    </div>
+
+    <h2 class="guide-header-h2"><span class="step-number">3</span> Calculate PRN Opioid Dose Range</h2>
+    <div class="formula-box">
+        <p>Convert the PRN oMED range to the desired opioid by dividing each boundary by the PRN opioid ratio:</p>
+        <div class="formula">
+            PRN Range =
+            <span class="fraction">
+                <span class="top">PRN oMED<sub>min</sub></span>
+                <span class="bottom">PRN Ratio</span>
+            </span>
+            to
+            <span class="fraction">
+                <span class="top">PRN oMED<sub>max</sub></span>
+                <span class="bottom">PRN Ratio</span>
+            </span>
+        </div>    
+    </div>
+
+    <h2 class="guide-header-h2">Worked Example</h2>
+    <div class="formula-box" style="border-left: 4px solid var(--secondary-color);">
+        <p><strong>Example inputs:</strong></p>
+        <ul>
+            <li>Patient: Fentanyl patch 50mcg/hr + 30mg SC Morphine (last 24hrs)</li>
+        </ul>
+        <hr style="border: 0; border-top: 1px solid #dee2e6; margin: 15px 0;">
+        
+        <p><strong>Step 1 – Total oMED:</strong><br>
+        Fentanyl patch: 50mcg/hr × 24hrs × 2.4 = 120mg PO morphine<br>
+        SC Morphine: 30mg × 2 = 60mg PO morphine<br>
+        <strong>Total = 180mg PO morphine oMED</strong></p>
+        
+        <p><strong>Step 2 – PRN oMED Range:</strong><br>
+        PRN min = 180/12 = <strong>15mg</strong><br>
+        PRN max = 180/6 = <strong>30mg</strong><br>
+        <strong>PRN Range: 15-30mg oMED</strong></p>
+        
+        <p><strong>Step 3 – Convert to PRN PO Oxycodone (ratio = 1.5):</strong><br>
+        SC Oxy min = 15/1.5 = <strong>10mg</strong><br>
+        SC Oxy max = 30/1.5 = <strong>20mg</strong><br>
+        <strong>Final PRN: 10-20mg PO Oxycodone</strong></p>
+    </div>
+
+    <h2 class="guide-header-h2">Clinical Warnings</h2>
+    <div class="clinical-warning">
+        <span class="warning-title">⚠️ Key Considerations</span>
+        <ul style="margin-bottom: 0;">
+            <li>TD patches (continuous delivery) cannot be used as PRN.</li>
+            <li>PRN = breakthrough pain only.</li>
+            <li>Adjust for patient response/tolerance.</li>
+            <li>Monitor efficacy + side effects.</li>
+            <li>Don't include incidental PRNs in total oMED.</li>
+        </ul>
+    </div>
+
+    <h2 class="guide-header-h2">Math Formulas Summary</h2>
+    <div class="formula-box">
+        <div class="formula">
+            PRN oMED<sub>min</sub> = <span class="fraction"><span class="top">oMED<sub>total</sub></span><span class="bottom">12</span></span>
+        </div>
+        <div class="formula">
+            PRN oMED<sub>max</sub> = <span class="fraction"><span class="top">oMED<sub>total</sub></span><span class="bottom">6</span></span>
+        </div>
+        <p style="text-align: center; margin-top: 15px; color: var(--text-muted); font-size: 0.9em;">
+            <em>R<sub>target</sub> = conversion ratio to target opioid/route</em>
+        </p>
+    </div>
+    
+    <nav style="margin-top: 30px;">
+        <a href="../healthcare-guidelines.html" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Healthcare Guidelines
+        </a>
+    </nav>
+
+    </div> <footer class="legal-footer">
+        <div class="container">
+            <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
+            <div class="author-info">
+                <span class="author-name">Author: Alison Chai</span>
+                <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
+            </div>
+            <p class="legal-warning">For professional use only. Verify all results.</p>
+        </div>
+    </footer>
+
+
+</body>
+</html>

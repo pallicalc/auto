@@ -1,0 +1,283 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>临终谵妄管理 | 患者指南</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+
+    <style>
+        /* --- DELIRIUM SPECIFIC STYLES --- */
+        .card-icon {
+            display: block; width: 100%; text-align: center;
+            font-size: 48px; color: rgba(255,255,255,0.9); margin: 10px 0;
+        }
+        .text-icon {
+            font-size: 40px; color: #764ba2; text-align: center; display: block; margin: 10px 0;
+        }
+        
+        .fear-grid, .rules-grid { display: grid; gap: 16px; margin-top: 20px; }
+        
+        .fear-card {
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+            color: white; padding: 20px; border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .fear-card strong { font-size: 17px; display: block; margin-bottom: 5px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        
+        .side-effect {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px; border-radius: 16px; border-left: 5px solid #ff8c42; margin-top: 20px;
+        }
+        .side-effect strong { color: #e74c3c; display: block; margin-bottom: 8px; font-size: 18px; }
+        
+        .rule-card {
+            background: white;
+            padding: 20px; border-radius: 16px; border-left: 5px solid #764ba2;
+            display: flex; align-items: flex-start; gap: 16px;
+        }
+        .rule-number {
+            background: #764ba2; color: white; width: 32px; height: 32px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px; flex-shrink: 0; margin-top: 2px;
+        }
+        .rule-content { flex: 1; }
+        
+        .med-images { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+        .med-img {
+            max-width: 140px; width: 48%; height: auto; 
+            border-radius: 8px; border: 1px solid #eee;
+            object-fit: contain; background: #fff;
+        }
+
+        /* PDF Styles */
+        #print-area {
+            position: absolute; top: -9999px; left: -9999px;
+            width: 794px; background: white; color: black; padding: 40px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box;
+        }
+        #print-area .print-header { border-bottom: 2px solid #764ba2; padding-bottom: 15px; margin-bottom: 20px; }
+        #print-area h1 { color: #764ba2; font-size: 24px; margin: 0; }
+        #print-area h2 { 
+            font-size: 18px; color: #333; border-bottom: 1px solid #eee; 
+            padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px;
+        }
+        #print-area .print-item {
+            display: flex; gap: 15px; margin-bottom: 15px; page-break-inside: avoid;
+            background: #f9f9f9; padding: 10px; border-radius: 8px;
+        }
+        #print-area .print-icon { font-size: 24px; color: #764ba2; width: 40px; text-align: center; padding-top: 5px; }
+        #print-area .print-content { flex: 1; }
+        #print-area strong { color: #000; font-size: 15px; display: block; margin-bottom: 4px; }
+        #print-area p { margin: 0; font-size: 13px; color: #444; }
+        #print-area .warning-box {
+            border: 1px solid #ffcccc; background: #fff5f5; padding: 10px; 
+            border-radius: 8px; color: #cc0000;
+        }
+    </style>
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #764ba2; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">正在生成 PDF...</div>
+    </div>
+
+    <div class="header header-delirium">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>🧠 临终谵妄</h1>
+        <p>管理与居家护理指南</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link delirium-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> 返回
+        </div>
+        <div class="nav-link delirium-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> 分享
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-question-circle-fill"></i> 什么是谵妄？</h2>
+        <div class="fear-grid">
+            <div class="fear-card">
+                <strong>意识混乱与不安</strong>
+                <p>大脑功能突然变化。分不清时间/地点，日夜颠倒，或情绪激动。</p>
+                <i class="bi bi-shuffle card-icon"></i>
+            </div>
+            <div class="fear-card">
+                <strong>幻觉</strong>
+                <p>看见或听见不存在的事物。对空抓挠。病人可能会感到害怕。</p>
+                <i class="bi bi-eye card-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-house-heart-fill"></i> 居家护理步骤</h2>
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-number">1</div>
+                <div class="rule-content">
+                    <strong>保持冷静</strong>
+                    <p>说话缓慢温柔。经常安抚病人。减少噪音和强光。</p>
+                    <i class="bi bi-chat-heart text-icon"></i>
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">2</div>
+                <div class="rule-content">
+                    <strong>协助定向</strong>
+                    <p>使用时钟、日历和熟悉的物品。温柔地提醒病人当前的时间和地点。</p>
+                    <i class="bi bi-calendar-date text-icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-clipboard-pulse"></i> 诱因与药物</h2>
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-number">3</div>
+                <div class="rule-content">
+                    <strong>检查诱因</strong>
+                    <p>病人是否<strong>疼痛</strong>？是否<strong>便秘</strong>？是否<strong>无法排尿</strong>？</p>
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">4</div>
+                <div class="rule-content">
+                    <strong>用药方案</strong>
+                    <div class="med-images">
+                        <img src="1.jpg" alt="Medication 1" class="med-img">
+                        <img src="2.jpg" alt="Medication 2" class="med-img">
+                    </div>
+                    <p>按医嘱给药（颊粘膜/皮下注射）。如有需要，每1小时重复一次。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-exclamation-triangle-fill"></i> 紧急求助</h2>
+        <div class="side-effect">
+            <strong>联系安宁疗护团队</strong>
+            <p>出现以下情况请立即致电：</p>
+            <ul style="margin-left: 20px; margin-top: 8px;">
+                <li>躁动/不安无法缓解。</li>
+                <li>有受伤或跌倒的风险。</li>
+                <li>病人发烧或呼吸困难。</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-delirium" onclick="generateAndPrintPDF('delirium-protocol-ch.pdf')">
+            <i class="bi bi-printer-fill"></i> 打印 PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 分享方案</h3>
+            <div id="qrcode-wrapper-safe"><div id="qrcode"></div></div>
+            <p style="text-align: center; color: #666;">扫描二维码在手机上查看</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header">
+            <h1>临终谵妄管理</h1>
+            <p>居家护理与症状指南</p>
+        </div>
+
+        <h2>定义与症状</h2>
+        <div class="print-item">
+            <div class="print-icon"><i class="bi bi-shuffle"></i></div>
+            <div class="print-content">
+                <strong>意识混乱与躁动</strong>
+                <p>大脑功能突然变化。不知道时间/地点，日夜颠倒，试图下床。</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-icon"><i class="bi bi-eye"></i></div>
+            <div class="print-content">
+                <strong>幻觉</strong>
+                <p>看见或听见不存在的事物。对空抓挠。表现出恐惧。</p>
+            </div>
+        </div>
+
+        <h2>护理步骤</h2>
+        <div class="print-item">
+            <div class="print-icon">1</div>
+            <div class="print-content">
+                <strong>保持冷静与安抚</strong>
+                <p>说话缓慢。减少噪音。使用柔和的灯光。</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-icon">2</div>
+            <div class="print-content">
+                <strong>协助定向</strong>
+                <p>使用熟悉的物品、时钟和日历来提醒病人周围环境。</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-icon">3</div>
+            <div class="print-content">
+                <strong>检查诱因</strong>
+                <p>检查是否疼痛、便秘或尿潴留。</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-icon">4</div>
+            <div class="print-content">
+                <strong>安全措施</strong>
+                <p>清理通道。如果情况不安全，请勿让病人独处。</p>
+            </div>
+        </div>
+
+        <h2>药物治疗</h2>
+        <div class="print-item">
+            <div class="print-icon">💊</div>
+            <div class="print-content">
+                <strong>按处方给药</strong>
+                <div style="display:flex; gap:10px; margin: 5px 0;">
+                    <img src="1.jpg" style="max-width: 100px; height:auto; display:block;">
+                    <img src="2.jpg" style="max-width: 100px; height:auto; display:block;">
+                </div>
+                <p>通过颊粘膜（Buccal）或皮下注射（Subcut）给药。如有需要，每1小时重复一次。</p>
+            </div>
+        </div>
+
+        <h2>紧急情况</h2>
+        <div class="print-item warning-box">
+            <div class="print-content">
+                <strong style="color:#cc0000;">如果出现以下情况，请联系安宁疗护团队：</strong>
+                <p>- 躁动/不安无法缓解。</p>
+                <p>- 对自己或他人有伤害风险。</p>
+                <p>- 新发烧或呼吸困难。</p>
+            </div>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>临终症状管理 | 患者指南</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+
+    <style>
+        /* --- EOL SPECIFIC STYLES --- */
+        .section-header {
+            display: flex; align-items: center; margin-bottom: 15px; 
+            border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;
+        }
+        .step-badge {
+            background: #764ba2; color: white; width: 32px; height: 32px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 16px; margin-right: 12px;
+        }
+        .med-title { font-size: 18px; font-weight: 700; color: #444; }
+
+        .med-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr;
+            gap: 12px; 
+            margin-bottom: 15px;
+        }
+        .med-icon-full {
+            width: 100%;       
+            height: auto;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background: white;
+            display: block;
+        }
+
+        .instruction-box {
+            background: #f8f9fa; border-radius: 12px; padding: 15px; font-size: 14px;
+            border-left: 4px solid #764ba2;
+        }
+        .instruction-box ul { padding-left: 20px; margin: 0; }
+        .instruction-box li { margin-bottom: 8px; }
+        .instruction-box li:last-child { margin-bottom: 0; }
+        .highlight { font-weight: bold; color: #764ba2; background: rgba(118, 75, 162, 0.1); padding: 0 4px; border-radius: 4px; }
+
+        /* --- PDF PRINT STYLES --- */
+        #print-area {
+            position: absolute; top: -9999px; left: -9999px;
+            width: 794px; background: white; color: black; padding: 40px;
+            font-family: 'Microsoft YaHei', 'Heiti SC', 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box;
+        }
+        #print-area .print-header { border-bottom: 2px solid #764ba2; padding-bottom: 15px; margin-bottom: 20px; }
+        #print-area h1 { color: #764ba2; font-size: 24px; margin: 0; }
+        #print-area .print-row { display: flex; border-bottom: 1px solid #ddd; padding: 15px 0; page-break-inside: avoid; }
+        
+        #print-area .col-id { width: 40px; font-weight: bold; font-size: 20px; color: #764ba2; padding-top: 10px; }
+        #print-area .col-med { width: 160px; padding: 0 10px; text-align: center; } 
+        #print-area .col-instr { flex: 1; padding: 0 15px; font-size: 14px; color: #333; }
+        #print-area .col-symp { width: 160px; padding: 0 10px; text-align: center; }
+        
+        #print-area .print-img-full { width: 100%; height: auto; display: block; margin-bottom: 5px; border-radius: 6px; }
+        #print-area ul { margin: 0; padding-left: 15px; }
+        #print-area li { margin-bottom: 6px; }
+    </style>
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #764ba2; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">正在生成 PDF...</div>
+    </div>
+
+    <div class="header header-eol">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info"><h3 id="inst-name-display"></h3><p id="inst-contact-display"></p></div>
+        </div>
+        <h1>🕊️ 临终症状管理</h1>
+        <p>居家护理与舒适管理</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link eol-theme" onclick="window.history.back()"><i class="bi bi-arrow-left"></i> 返回</div>
+        <div class="nav-link eol-theme" onclick="showQR()"><i class="bi bi-share-fill"></i> 分享</div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <div class="step-badge">1</div>
+            <div class="med-title">Morphine</div>
+        </div>
+        <div class="med-grid">
+            <img src="1a.jpg" class="med-icon-full" alt="Morphine">
+            <img src="1b.jpg" class="med-icon-full" alt="疼痛/呼吸困难">
+        </div>
+        <div class="instruction-box">
+            <ul>
+                <li>注射用 Morphine <span class="highlight">_____ mg</span>(<span class="highlight">_____ ml</span>) 或 颊黏膜 (Buccal) Morphine <span class="highlight">_____ mg</span> (<span class="highlight">_____ ml</span>)，必要时使用。</li>
+                <li>如果症状未缓解，每 <span class="highlight">1小时</span> 重复一次。</li>
+                <li>如果每小时连续需要使用3剂，请<strong>通知您的安宁疗护团队</strong>。</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <div class="step-badge">2</div>
+            <div class="med-title">Haloperidol</div>
+        </div>
+        <div class="med-grid">
+            <img src="2a.jpg" class="med-icon-full" alt="Haloperidol">
+            <img src="2b.jpg" class="med-icon-full" alt="恶心/躁动">
+        </div>
+        <div class="instruction-box">
+            <ul>
+                <li>注射用 Haloperidol <span class="highlight">_____ mg</span> (<span class="highlight">_____ ml</span>) 或 颊黏膜 (Buccal) Haloperidol <span class="highlight">_____ mg</span> (<span class="highlight">_____ 粒</span>)（使用针筒）。</li>
+                <li>每 <span class="highlight">_____ 小时</span> <span class="highlight">_____ 次</span> + 必要时 (PRN)。</li>
+                <li>如果症状未缓解，每 <span class="highlight">1小时</span> 重复一次。</li>
+                <li>如果连续需要使用3剂，请<strong>通知您的安宁疗护团队</strong>。</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <div class="step-badge">3</div>
+            <div class="med-title">Buscopan</div>
+        </div>
+        <div class="med-grid">
+            <img src="3a.jpg" class="med-icon-full" alt="Buscopan">
+            <img src="3b.jpg" class="med-icon-full" alt="分泌物">
+        </div>
+        <div class="instruction-box">
+            <ul>
+                <li>注射用 Buscopan <span class="highlight">_____ mg</span> (<span class="highlight">_____ mL</span>)。</li>
+                <li>每 <span class="highlight">_____ 小时</span> <span class="highlight">_____ 次</span> + 必要时 (PRN)。</li>
+                <li>如果症状未缓解，每 <span class="highlight">1小时</span> 重复一次。</li>
+                <li>如果连续需要使用3剂，请<strong>通知您的安宁疗护团队</strong>。</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <div class="step-badge">4</div>
+            <div class="med-title">癫痫发作/躁动</div>
+        </div>
+        <div class="med-grid">
+            <img src="4a.jpg" class="med-icon-full" alt="Midazolam">
+            <img src="4b.jpg" class="med-icon-full" alt="癫痫">
+        </div>
+        <div class="instruction-box">
+            <ul>
+                <li>颊黏膜 (Buccal) Midazolam <span class="highlight">_____ mg</span> (<span class="highlight">_____ ml</span>) 或 颊黏膜 (Buccal) Lorazepam <span class="highlight">_____ mg</span>(<span class="highlight">_____ 粒</span>)（使用针筒）。</li>
+                <li>如果症状未缓解，每 <span class="highlight">_____ 分钟</span> 重复一次。</li>
+                <li>如果每 <span class="highlight">_____ 分钟</span> 连续需要使用3剂，请<strong>通知您的安宁疗护团队</strong>。</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <div class="step-badge">5</div>
+            <div class="med-title">栓剂 Paracetamol</div>
+        </div>
+        <div class="med-grid">
+            <img src="5a.jpg" class="med-icon-full" alt="Suppository Paracetamol">
+            <img src="5b.jpg" class="med-icon-full" alt="发烧与寒战">
+        </div>
+        <div class="instruction-box">
+            <ul>
+                <li>将 Suppository Paracetamol <span class="highlight">_____ mg</span> 塞入肛门。</li>
+                <li>如果发烧、发冷或寒战持续，每 <span class="highlight">_____ 小时</span> 重复一次。</li>
+                <li>如果连续需要使用3剂，请<strong>通知您的安宁疗护团队</strong>。</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-eol" onclick="generateAndPrintPDF('EOL-guide-ch.pdf')">
+            <i class="bi bi-printer-fill"></i> 打印协议
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 分享协议</h3>
+            <div id="qrcode-wrapper-safe"><div id="qrcode"></div></div>
+            <p style="text-align: center; color: #666;">扫描二维码在手机上查看</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header">
+            <h1>临终症状管理</h1>
+            <p>居家护理用药协议</p>
+        </div>
+
+        <div class="print-row">
+            <div class="col-id">①</div>
+            <div class="col-med"><img src="1a.jpg" class="print-img-full"></div>
+            <div class="col-instr">
+                <ul>
+                    <li>注射用 Morphine _____ mg(_____ ml) 或 颊黏膜 (Buccal) Morphine _____ mg (_____ ml)，必要时。</li>
+                    <li>如果未缓解，每1小时重复一次。</li>
+                    <li>如果1小时内需要3剂，请通知安宁疗护团队。</li>
+                </ul>
+            </div>
+            <div class="col-symp"><img src="1b.jpg" class="print-img-full"></div>
+        </div>
+
+        <div class="print-row">
+            <div class="col-id">②</div>
+            <div class="col-med"><img src="2a.jpg" class="print-img-full"></div>
+            <div class="col-instr">
+                <ul>
+                    <li>注射用 Haloperidol _____ mg (_____ ml) 或 颊黏膜 (Buccal) Haloperidol _____ mg (_____ 粒)。</li>
+                    <li>每 _____ 小时 _____ 次 + 必要时 (PRN)。</li>
+                    <li>如果未缓解，每1小时重复一次。</li>
+                    <li>如果需要3剂，请通知安宁疗护团队。</li>
+                </ul>
+            </div>
+            <div class="col-symp"><img src="2b.jpg" class="print-img-full"></div>
+        </div>
+
+        <div class="print-row">
+            <div class="col-id">③</div>
+            <div class="col-med"><img src="3a.jpg" class="print-img-full"></div>
+            <div class="col-instr">
+                <ul>
+                    <li>注射用 Buscopan _____ mg (_____ mL)。</li>
+                    <li>每 _____ 小时 _____ 次 + 必要时 (PRN)。</li>
+                    <li>如果未缓解，每1小时重复一次。</li>
+                    <li>如果需要3剂，请通知安宁疗护团队。</li>
+                </ul>
+            </div>
+            <div class="col-symp"><img src="3b.jpg" class="print-img-full"></div>
+        </div>
+
+        <div class="print-row">
+            <div class="col-id">④</div>
+            <div class="col-med"><img src="4a.jpg" class="print-img-full"></div>
+            <div class="col-instr">
+                <ul>
+                    <li>颊黏膜 (Buccal) Midazolam _____ mg (_____ ml) 或 颊黏膜 (Buccal) Lorazepam _____ mg(_____ 粒)。</li>
+                    <li>如果未缓解，每 _____ 分钟重复一次。</li>
+                    <li>如果需要3剂，请通知安宁疗护团队。</li>
+                </ul>
+            </div>
+            <div class="col-symp"><img src="4b.jpg" class="print-img-full"></div>
+        </div>
+
+        <div class="print-row" style="border-bottom:none;">
+            <div class="col-id">⑤</div>
+            <div class="col-med"><img src="5a.jpg" class="print-img-full"></div>
+            <div class="col-instr">
+                <ul>
+                    <li>将 Supp. Paracetamol _____ mg 塞入肛门。</li>
+                    <li>如果发烧/寒战持续，每 _____ 小时重复一次。</li>
+                    <li>如果需要3剂，请通知安宁疗护团队。</li>
+                </ul>
+            </div>
+            <div class="col-symp"><img src="5b.jpg" class="print-img-full"></div>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

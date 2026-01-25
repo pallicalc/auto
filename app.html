@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PalliCalc App Dashboard</title>
+
+    <link rel="manifest" href="manifest.json">
+    
+    <meta name="mobile-web-app-capable" content="yes"> 
+    <meta name="apple-mobile-web-app-capable" content="yes"> 
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#007bff">
+
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="app-dashboard.js" defer></script>
+</head>
+<body class="app-dashboard">
+
+    <div id="locked-overlay">
+        <div style="font-size: 60px; margin-bottom: 20px;">🔒</div>
+        <h2 style="margin: 0 0 10px 0; color: #1e293b;">VIP Access Only</h2>
+        <p style="color: #64748b; margin-bottom: 30px;">This offline app is reserved for verified members.<br>Please log in via the main website.</p>
+        <a href="index.html" style="background: #007bff; color: white; padding: 14px 32px; text-decoration: none; border-radius: 30px; font-weight: 600;">Go to Login</a>
+    </div>
+
+    <div id="dashboard" class="container" style="display:none;">
+        <div class="app-header">
+            <div class="app-logo">💉 PalliCalc</div>
+            <div>
+                <button id="update-btn" class="nav-link" style="border:none; cursor:pointer; color: #0369a1; background: #e0f2fe;">
+                    <i class="bi bi-arrow-clockwise"></i> Update
+                </button>
+                <a href="#" onclick="logout()" class="nav-link">Exit</a>
+            </div>
+        </div>
+
+        <div class="install-card" id="install-section">
+            <h3 style="margin:0; font-size: 20px;">Install App</h3>
+            <p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">Save to phone for 100% offline access.</p>
+
+            <div id="msg-installed" class="instruction-box" style="background: rgba(255,255,255,0.2); border-color:white;">
+                ✅ <strong>App is Installed</strong><br>You are ready to use PalliCalc offline.
+            </div>
+            <div id="msg-ios-safari" class="instruction-box">
+                <i class="bi bi-apple browser-icon"></i> <strong>iPhone (Safari)</strong><br>
+                1. Tap <strong>Share</strong> <i class="bi bi-box-arrow-up"></i><br>
+                2. Scroll down & tap <strong>Add to Home Screen</strong> <i class="bi bi-plus-square"></i>
+            </div>
+            <div id="msg-ios-chrome" class="instruction-box">
+                ⚠️ <strong>Note:</strong> Installing works best in <strong>Safari</strong>.<br>Please open this link in Safari.
+            </div>
+            <div id="msg-android-chrome" class="instruction-box">
+                <i class="bi bi-android2 browser-icon"></i> <strong>Android (Chrome)</strong><br>
+                1. Tap <strong>3 Dots</strong> <i class="bi bi-three-dots-vertical"></i> (top right)<br>
+                2. Tap <strong>Install App</strong> or <strong>Add to Home Screen</strong>
+            </div>
+            <div id="msg-samsung" class="instruction-box">
+                <strong style="color: #fff;">Samsung Internet</strong><br>
+                1. Tap <strong>Menu</strong> <i class="bi bi-list"></i> (bottom right)<br>
+                2. Tap <strong>+ Add page to</strong><br>
+                3. Select <strong>App screen</strong> or <strong>Home screen</strong>
+            </div>
+            <div id="msg-firefox" class="instruction-box">
+                <strong style="color: #fff;">Firefox</strong><br>
+                1. Tap <strong>3 Dots</strong> <i class="bi bi-three-dots-vertical"></i> (bottom/top)<br>
+                2. Tap <strong>Install</strong>
+            </div>
+            <div id="msg-inapp" class="instruction-box" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,200,200,0.3);">
+                ⚠️ <strong>Browser Restricted</strong><br>
+                You are in an in-app browser (e.g. Facebook, Gmail).<br>
+                Tap <strong>3 Dots</strong> <i class="bi bi-three-dots"></i> → <strong>Open in Chrome/Safari</strong> to install.
+            </div>
+            <div id="msg-desktop" class="instruction-box">
+                <strong>Desktop / Laptop</strong><br>
+                Look for the <strong>Install Icon</strong> <i class="bi bi-download"></i> in your address bar (Chrome/Edge).
+            </div>
+        </div>
+
+        <div class="section-title">Clinical Calculators</div>
+        <div class="calc-grid">
+            <a href="calculators/Opioid.html" class="calc-card">
+                <div class="calc-icon">💊</div>
+                <div class="calc-info"><span class="calc-name">Opioid Conversion</span><span class="calc-desc">Rotation, PRN & Safety Limits</span></div>
+            </a>
+            
+            <a href="calculators/Benzodiazepine.html" class="calc-card">
+                <div class="calc-icon">🧠</div>
+                <div class="calc-info"><span class="calc-name">Benzodiazepine</span><span class="calc-desc">Equivalence & Conversion</span></div>
+            </a>
+
+            <a href="calculators/Infusion-dose.html" class="calc-card">
+                <div class="calc-icon">💉</div>
+                <div class="calc-info"><span class="calc-name">Infusion Dose</span><span class="calc-desc">Calculate mg/hr rates</span></div>
+            </a>
+            <a href="calculators/infusion-volume.html" class="calc-card">
+                <div class="calc-icon">💧</div>
+                <div class="calc-info"><span class="calc-name">Syringe Driver Preparation</span><span class="calc-desc">Total volume & dilution</span></div>
+            </a>
+        </div>
+
+        <div class="section-title">Guides & Resources</div>
+        <div class="guide-grid">
+            <a href="healthcare-guidelines.html" class="guide-card">
+                <span class="guide-icon">📘</span><span class="guide-name">Clinical<br>Guidelines</span>
+            </a>
+            <a href="patient-education.html" class="guide-card">
+                <span class="guide-icon">📄</span><span class="guide-name">Patient<br>Pamphlets</span>
+            </a>
+        </div>
+    </div>
+
+        <footer class="legal-footer">
+            <div class="container">
+                <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
+                <div class="author-info">
+                    <span class="author-name">Author: Alison Chai</span>
+                    <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
+                </div>
+                <p class="legal-warning">For professional use only. Verify all results.</p>
+            </div>
+        </footer>
+</body>
+</html>

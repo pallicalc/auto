@@ -1,0 +1,201 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patient Education | PalliCalc</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="style.css">
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="back-nav">
+            <a href="index.html" class="back-link"><i class="bi bi-arrow-left"></i> Back</a>
+        </div>
+
+        <div id="sourceBanner" class="source-banner"></div>
+
+        <div id="institutionHeader" class="institution-header" style="display: none;">
+            <div id="headerLogoContainer" class="logo-container"></div>
+            <div id="institutionName" class="institution-name"></div>
+            <div id="institutionContact" class="institution-contact"></div>
+        </div>
+
+        <div id="headerPlaceholder" class="header-placeholder">
+            <div style="font-size: 30px; margin-bottom: 10px;">🏥</div>
+            <div style="font-style: italic; opacity: 0.8;">Institution header will appear here</div>
+        </div>
+
+        <div id="settingsCallout" class="action-callout">
+            <h3>🏥 Setup Personal Header</h3>
+            <p><strong>Add Logos & Contact Info</strong><br>Customize pamphlets for your own practice.</p>
+            <button class="btn-action btn-settings" id="openSettingsBtn">
+                <i class="bi bi-gear-fill"></i> Setup Custom Settings
+            </button>
+        </div>
+
+        <div id="shareCallout" class="action-callout" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0); border-color: #22c55e;">
+            <h3>📱 Share with Patient</h3>
+            <p><strong>Auto-Generated QR Code</strong><br>Patient will see your institution's header automatically.</p>
+            <button class="btn-action btn-share" id="openShareBtn">
+                <i class="bi bi-qr-code"></i> Generate Patient QR
+            </button>
+        </div>
+
+        <h1>Patient Education Materials</h1>
+
+        <section class="pamphlets-available">
+            
+            <div class="pamphlet-section" data-pamphlet="opioids">
+                <div class="pamphlet-title">What are Opioids?</div>
+                <div class="pamphlet-subtitle">Myth busting Opioid Medications</div>
+                <div class="language-icons"></div>
+            </div>
+
+            <div class="pamphlet-section" data-pamphlet="EOL">
+                <div class="pamphlet-title">End of Life Symptoms Management</div>
+                <div class="pamphlet-subtitle">Guide for Comfort & Symptom Relief</div>
+                <div class="language-icons"></div>
+            </div>
+
+            <div class="pamphlet-section" data-pamphlet="subcutaneous">
+                <div class="pamphlet-title">Subcutaneous Medication Administration</div>
+                <div class="pamphlet-subtitle">Guide to Safe Injections</div>
+                <div class="language-icons"></div>
+            </div>
+            
+            <div class="pamphlet-section" data-pamphlet="buccal">
+                <div class="pamphlet-title">Buccal Medication Administration</div>
+                <div class="pamphlet-subtitle">Cheek Placement Instructions</div>
+                <div class="language-icons"></div>
+            </div>
+
+            <div class="pamphlet-section" data-pamphlet="seizure">
+                <div class="pamphlet-title">Seizure Management</div>
+                <div class="pamphlet-subtitle">Emergency Protocol Guide</div>
+                <div class="language-icons"></div>
+            </div>
+
+            <div class="pamphlet-section" data-pamphlet="bleeding">
+                <div class="pamphlet-title">Bleeding Management</div>
+                <div class="pamphlet-subtitle">Emergency Care & Precautions</div>
+                <div class="language-icons"></div>
+            </div>
+
+            <div class="pamphlet-section" data-pamphlet="breathlessness">
+                <div class="pamphlet-title">Breathlessness Management</div>
+                <div class="pamphlet-subtitle">Management Techniques</div>
+                <div class="language-icons"></div>
+            </div>
+
+            <div class="pamphlet-section" data-pamphlet="delirium">
+                <div class="pamphlet-title">Delirium Awareness</div>
+                <div class="pamphlet-subtitle">Information for Caregivers</div>
+                <div class="language-icons"></div>
+            </div>
+
+            <div class="pamphlet-section" data-pamphlet="mbo">
+                <div class="pamphlet-title">Bowel Obstruction (MBO)</div>
+                <div class="pamphlet-subtitle">Diet & Symptom Guide</div>
+                <div class="language-icons"></div>
+            </div>
+
+            <div class="pamphlet-section" data-pamphlet="pain">
+                <div class="pamphlet-title">Pain Management</div>
+                <div class="pamphlet-subtitle">Understanding Your Options</div>
+                <div class="language-icons"></div>
+            </div>
+            
+            <div class="pamphlet-section" data-pamphlet="td-fentanyl">
+                <div class="pamphlet-title">Fentanyl Patch Application</div>
+                <div class="pamphlet-subtitle">Guide to Safe Application</div>
+                <div class="language-icons"></div>
+            </div>
+
+            <div class="pamphlet-section" data-pamphlet="facing-EOL">
+                <div class="pamphlet-title">Facing End of Life</div>
+                <div class="pamphlet-subtitle">Caring for someone nearing the end of life</div>
+                <div class="language-icons"></div>
+            </div>
+
+        </section>
+
+    </div> <div id="settingsModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="margin:0; font-size: 18px;">🏥 Custom Header Settings</h2>
+                <button class="close-btn" id="closeSettingsBtn">&times;</button>
+            </div>
+            <p style="font-size:12px; color:#666; margin-bottom:15px;">Settings saved to this device only.</p>
+            
+            <form id="institutionForm">
+                <div class="form-group">
+                    <label>Logos (Select max 2)</label>
+                    <div class="logo-selection-area">
+                        <div class="logo-gallery" id="logoGallery"></div>
+                        <div class="custom-upload-box" id="uploadTrigger">
+                            <i class="bi bi-cloud-upload"></i> Upload Logo
+                            <input type="file" id="logoFileInput" accept="image/*" style="display: none;">
+                        </div>
+                        <div class="selected-logos-preview" id="selectedLogosPreview"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="institutionNameInput">Institution Name</label>
+                    <input type="text" id="institutionNameInput" required>
+                </div>
+                <div class="form-group">
+                    <label for="institutionContactInput">Contact Number</label>
+                    <input type="tel" id="institutionContactInput" required>
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>🔐 Login Password</label>
+                    <input type="password" id="loginPassword" required>
+                    <div class="password-error" id="passwordError">❌ Password incorrect.</div>
+                </div>
+                <button type="submit" class="btn-save" id="saveBtn">💾 Save Settings</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="shareModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="margin:0; font-size: 18px;">📱 Scan to View</h2>
+                <button class="close-btn" id="closeShareBtn">&times;</button>
+            </div>
+            <div class="qr-instruction">
+                Ask the patient to scan this code.<br>They will see the page with <strong>your</strong> institution's header.
+            </div>
+            
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+
+            <div style="margin-top:20px; font-size:11px; color:#999; word-break: break-all;">
+                Link: <span id="shareLink"></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="patient-education.js"></script>
+
+    <footer style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-top: 1px solid #dee2e6; text-align: center; font-size: 11px; color: #6c757d;">
+        <p style="margin: 0 0 5px; font-weight: bold;">&copy; 2026 Alivioscript Solutions</p>
+        <p style="margin: 0 0 10px;">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+        <div style="border-top: 1px solid #e9ecef; margin-top: 10px; padding-top: 10px;">
+            <p style="margin: 0; font-style: italic; line-height: 1.4;">
+                <strong>Disclaimer:</strong> This information is for educational purposes only and does not replace professional medical advice. Always consult your doctor or pharmacist for specific health concerns.
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

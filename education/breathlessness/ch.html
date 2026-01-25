@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>呼吸困难管理方案 | 居家指南</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #007bff; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">正在生成 PDF...</div>
+        <div style="font-size: 13px; color: #888; margin-top: 5px;">处理图像与页脚中...</div>
+    </div>
+
+    <div class="header">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>🫁 居家呼吸困难管理</h1>
+        <p>缓解气促症状的分步指南</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> 返回
+        </div>
+        <div class="nav-link" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> 分享
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-person-check-fill"></i> 姿势与呼吸</h2>
+        <div class="fear-grid">
+            <div class="fear-card">
+                <strong>1. 舒适体位</strong>
+                <p>协助患者采取舒适体位（通常为坐姿或前倾）。</p>
+                <img src="1.jpg" alt="Sitting Position" class="card-img">
+            </div>
+            <div class="fear-card">
+                <strong>2. 呼吸技巧</strong>
+                <p>不要焦虑。吸气(数1,2)，缩唇像吹吸管一样呼气(数1,2,3,4)。</p>
+                <img src="2.jpg" alt="Breathing Technique" class="card-img">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-wind"></i> 环境与通风</h2>
+        <div class="fear-grid">
+            <div class="env-card">
+                <strong>3. 保持通风</strong>
+                <p>打开门窗，确保患者房间或区域空气流通。</p>
+                <img src="3.jpg" alt="Ventilation" class="card-img">
+            </div>
+            <div class="env-card">
+                <strong>4. 风扇辅助</strong>
+                <p>使用手持或台式风扇，对着患者面部吹风以缓解气促感。</p>
+                <img src="4.jpg" alt="Fan" class="card-img">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-lungs"></i> 氧气治疗</h2>
+        <div class="side-effect" style="border-left-color: #3498db; background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);">
+            <strong style="color: #0277bd;">5. 制氧机使用</strong>
+            <p>如有医嘱或设备，请使用制氧机。</p>
+            <p style="font-size: 13px; margin-top:5px; font-style: italic;">*注意：并非所有人都受益于氧疗。</p>
+            <img src="5.jpg" alt="Oxygen Concentrator" class="card-img">
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-capsule-pill"></i> 用药方案</h2>
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-number">6</div>
+                <div class="rule-content">
+                    <strong>6. 给予第1剂</strong>
+                    <div class="dose-badge">吗啡口服液 (Aq Morphine) 或 注射吗啡</div>
+                    <p>如果气促持续，请按照处方剂量服用吗啡。请务必记录服药时间。</p>
+                    <img src="6.jpg" alt="Medication" class="card-img">
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">7</div>
+                <div class="rule-content">
+                    <strong>7. 1小时后</strong>
+                    <p>如果1小时后症状未缓解：</p>
+                    <div class="dose-badge">服用第2剂 吗啡</div>
+                    <p>并记录时间。</p>
+                    <img src="7.jpg" alt="1 Hour Clock" class="card-img">
+                </div>
+            </div>
+            <div class="rule-card" style="border-left-color: #e74c3c; background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);">
+                <div class="rule-number" style="background: #e74c3c;">8</div>
+                <div class="rule-content">
+                    <strong>8. 再过1小时后</strong>
+                    <p>如果症状仍未缓解：</p>
+                    <div class="dose-badge">服用第3剂 吗啡</div>
+                    <p>记录时间，并立即<strong>通知安宁疗护团队</strong>。</p>
+                    <img src="7.jpg" alt="Urgent Action" class="card-img">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-pdf" onclick="generateAndPrintPDF('breathlessness-protocol-cn.pdf')">
+            <i class="bi bi-printer-fill"></i> 打印 PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 分享方案</h3>
+            
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+
+            <p style="text-align: center; color: #666;">扫描二维码在手机上查看</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header">
+            <h1>居家呼吸困难管理方案</h1>
+            <p>Breathlessness Management Protocol at Home</p>
+        </div>
+
+        <h2>非药物措施 (Non-Pharmacological Measures)</h2>
+        <div class="print-item">
+            <img src="1.jpg" class="print-img">
+            <div class="print-content">
+                <strong>1. 舒适体位</strong>
+                <p>协助患者采取舒适体位（通常为坐姿或前倾）。</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="2.jpg" class="print-img">
+            <div class="print-content">
+                <strong>2. 呼吸技巧</strong>
+                <p>不要焦虑。吸气(数1,2)，缩唇像吹吸管一样呼气(数1,2,3,4)。</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="3.jpg" class="print-img">
+            <div class="print-content">
+                <strong>3. 保持通风</strong>
+                <p>打开门窗，确保房间空气流通。</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="4.jpg" class="print-img">
+            <div class="print-content">
+                <strong>4. 风扇辅助</strong>
+                <p>使用手持或台式风扇，对着患者面部吹风。</p>
+            </div>
+        </div>
+
+        <h2>氧气与药物 (Oxygen & Medication)</h2>
+        <div class="print-item">
+            <img src="5.jpg" class="print-img">
+            <div class="print-content">
+                <strong>5. 制氧机</strong>
+                <p>如有医嘱或设备，使用制氧机。（注：并非所有人都受益）。</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="6.jpg" class="print-img">
+            <div class="print-content">
+                <strong>6. 给予第1剂</strong>
+                <p>若气促持续，服用吗啡(Aq Morphine)或注射吗啡。记录时间。</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <img src="7.jpg" class="print-img">
+            <div class="print-content">
+                <strong>7. 1小时后</strong>
+                <p>若未缓解，服用第2剂吗啡，并记录时间。</p>
+            </div>
+        </div>
+        <div class="print-item warning-box">
+            <img src="7.jpg" class="print-img">
+            <div class="print-content">
+                <strong style="color:#cc0000;">8. 再过1小时后</strong>
+                <p>若仍未缓解，服用第3剂，记录时间并通知安宁疗护团队。</p>
+            </div>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

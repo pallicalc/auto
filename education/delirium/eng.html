@@ -1,0 +1,283 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Delirium Management | Patient Guide</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+
+    <style>
+        /* --- DELIRIUM SPECIFIC STYLES --- */
+        .card-icon {
+            display: block; width: 100%; text-align: center;
+            font-size: 48px; color: rgba(255,255,255,0.9); margin: 10px 0;
+        }
+        .text-icon {
+            font-size: 40px; color: #764ba2; text-align: center; display: block; margin: 10px 0;
+        }
+        
+        .fear-grid, .rules-grid { display: grid; gap: 16px; margin-top: 20px; }
+        
+        .fear-card {
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+            color: white; padding: 20px; border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .fear-card strong { font-size: 17px; display: block; margin-bottom: 5px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        
+        .side-effect {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px; border-radius: 16px; border-left: 5px solid #ff8c42; margin-top: 20px;
+        }
+        .side-effect strong { color: #e74c3c; display: block; margin-bottom: 8px; font-size: 18px; }
+        
+        .rule-card {
+            background: white;
+            padding: 20px; border-radius: 16px; border-left: 5px solid #764ba2;
+            display: flex; align-items: flex-start; gap: 16px;
+        }
+        .rule-number {
+            background: #764ba2; color: white; width: 32px; height: 32px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px; flex-shrink: 0; margin-top: 2px;
+        }
+        .rule-content { flex: 1; }
+        
+        .med-images { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+        .med-img {
+            max-width: 140px; width: 48%; height: auto; 
+            border-radius: 8px; border: 1px solid #eee;
+            object-fit: contain; background: #fff;
+        }
+
+        /* PDF Styles */
+        #print-area {
+            position: absolute; top: -9999px; left: -9999px;
+            width: 794px; background: white; color: black; padding: 40px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box;
+        }
+        #print-area .print-header { border-bottom: 2px solid #764ba2; padding-bottom: 15px; margin-bottom: 20px; }
+        #print-area h1 { color: #764ba2; font-size: 24px; margin: 0; }
+        #print-area h2 { 
+            font-size: 18px; color: #333; border-bottom: 1px solid #eee; 
+            padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px;
+        }
+        #print-area .print-item {
+            display: flex; gap: 15px; margin-bottom: 15px; page-break-inside: avoid;
+            background: #f9f9f9; padding: 10px; border-radius: 8px;
+        }
+        #print-area .print-icon { font-size: 24px; color: #764ba2; width: 40px; text-align: center; padding-top: 5px; }
+        #print-area .print-content { flex: 1; }
+        #print-area strong { color: #000; font-size: 15px; display: block; margin-bottom: 4px; }
+        #print-area p { margin: 0; font-size: 13px; color: #444; }
+        #print-area .warning-box {
+            border: 1px solid #ffcccc; background: #fff5f5; padding: 10px; 
+            border-radius: 8px; color: #cc0000;
+        }
+    </style>
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #764ba2; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Generating PDF...</div>
+    </div>
+
+    <div class="header header-delirium">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>🧠 Terminal Delirium</h1>
+        <p>Management & Home Care Guide</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link delirium-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> Back
+        </div>
+        <div class="nav-link delirium-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> Share
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-question-circle-fill"></i> What is Delirium?</h2>
+        <div class="fear-grid">
+            <div class="fear-card">
+                <strong>Confusion & Restlessness</strong>
+                <p>Sudden change in the brain. Not knowing time/place, mixing up day/night, or agitation.</p>
+                <i class="bi bi-shuffle card-icon"></i>
+            </div>
+            <div class="fear-card">
+                <strong>Hallucinations</strong>
+                <p>Seeing or hearing things not there. Picking at the air. Can be fearful for the patient.</p>
+                <i class="bi bi-eye card-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-house-heart-fill"></i> Home Care Steps</h2>
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-number">1</div>
+                <div class="rule-content">
+                    <strong>Keep Calm</strong>
+                    <p>Speak slowly and gently. Reassure frequently. Reduce noise and bright lights.</p>
+                    <i class="bi bi-chat-heart text-icon"></i>
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">2</div>
+                <div class="rule-content">
+                    <strong>Orientate</strong>
+                    <p>Use clocks, calendars, and familiar items. Gently remind the patient of the time and place.</p>
+                    <i class="bi bi-calendar-date text-icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-clipboard-pulse"></i> Triggers & Meds</h2>
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-number">3</div>
+                <div class="rule-content">
+                    <strong>Check Triggers</strong>
+                    <p>Is the patient in <strong>pain</strong>? Are they <strong>constipated</strong>? Are they unable to pass <strong>urine</strong>?</p>
+                </div>
+            </div>
+            <div class="rule-card">
+                <div class="rule-number">4</div>
+                <div class="rule-content">
+                    <strong>Medication Protocol</strong>
+                    <div class="med-images">
+                        <img src="1.jpg" alt="Medication 1" class="med-img">
+                        <img src="2.jpg" alt="Medication 2" class="med-img">
+                    </div>
+                    <p>Administer prescribed medication (Buccal/Subcut). Repeat every 1 hour if required.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-exclamation-triangle-fill"></i> Urgent Help</h2>
+        <div class="side-effect">
+            <strong>Contact Palliative Care Team</strong>
+            <p>Call immediately if:</p>
+            <ul style="margin-left: 20px; margin-top: 8px;">
+                <li>Restlessness/Agitation is not resolved.</li>
+                <li>There is a risk of harm or falls.</li>
+                <li>Patient develops fever or breathing issues.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-delirium" onclick="generateAndPrintPDF('delirium-protocol.pdf')">
+            <i class="bi bi-printer-fill"></i> Print Protocol
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Share Protocol</h3>
+            <div id="qrcode-wrapper-safe"><div id="qrcode"></div></div>
+            <p style="text-align: center; color: #666;">Scan QR code to view on mobile</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header">
+            <h1>Terminal Delirium Management</h1>
+            <p>Home Care & Symptom Guide</p>
+        </div>
+
+        <h2>Definition & Signs</h2>
+        <div class="print-item">
+            <div class="print-icon"><i class="bi bi-shuffle"></i></div>
+            <div class="print-content">
+                <strong>Confusion & Agitation</strong>
+                <p>Sudden brain change. Not knowing time/place, mixing day/night, climbing out of bed.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-icon"><i class="bi bi-eye"></i></div>
+            <div class="print-content">
+                <strong>Hallucinations</strong>
+                <p>Seeing/hearing things not there. Picking at air. Fearfulness.</p>
+            </div>
+        </div>
+
+        <h2>Care Steps</h2>
+        <div class="print-item">
+            <div class="print-icon">1</div>
+            <div class="print-content">
+                <strong>Calm & Reassure</strong>
+                <p>Speak slowly. Reduce noise. Use soft lights.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-icon">2</div>
+            <div class="print-content">
+                <strong>Orientate</strong>
+                <p>Use familiar items, clocks, and calendars to remind patient of surroundings.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-icon">3</div>
+            <div class="print-content">
+                <strong>Check Triggers</strong>
+                <p>Check for PAIN, CONSTIPATION, or URINE RETENTION.</p>
+            </div>
+        </div>
+        <div class="print-item">
+            <div class="print-icon">4</div>
+            <div class="print-content">
+                <strong>Safety</strong>
+                <p>Clear walkways. Do not leave alone if unsafe.</p>
+            </div>
+        </div>
+
+        <h2>Medication</h2>
+        <div class="print-item">
+            <div class="print-icon">💊</div>
+            <div class="print-content">
+                <strong>Administer as Prescribed</strong>
+                <div style="display:flex; gap:10px; margin: 5px 0;">
+                    <img src="1.jpg" style="max-width: 100px; height:auto; display:block;">
+                    <img src="2.jpg" style="max-width: 100px; height:auto; display:block;">
+                </div>
+                <p>Give medication via Buccal or Subcut route. Repeat every 1 hr if needed.</p>
+            </div>
+        </div>
+
+        <h2>Urgent</h2>
+        <div class="print-item warning-box">
+            <div class="print-content">
+                <strong style="color:#cc0000;">Contact Palliative Care Team If:</strong>
+                <p>- Agitation is unresolved.</p>
+                <p>- Risk of harm to self or others.</p>
+                <p>- New fever or distress.</p>
+            </div>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

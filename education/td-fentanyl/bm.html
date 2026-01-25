@@ -1,0 +1,203 @@
+﻿<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tampalan Fentanyl | Panduan Pesakit</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../education.css">
+</head>
+<body><div class="main-container">
+    <div id="pdf-loading">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px; border: 4px solid #1565c0; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite;"></div>
+        <div style="font-weight: bold; color: #555;">Menjana PDF...</div>
+        <div style="font-size: 13px; color: #888; margin-top: 5px;">Sedang memformat & menambah nota kaki</div>
+    </div>
+
+    <div class="header header-pain">
+        <div id="inst-header-container" class="inst-header-container">
+            <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+            <div class="inst-info">
+                <h3 id="inst-name-display"></h3>
+                <p id="inst-contact-display"></p>
+            </div>
+        </div>
+        <h1>🩹 Tampalan Fentanyl</h1>
+        <p>Panduan Penggunaan & Keselamatan</p>
+    </div>
+
+    <div class="nav-bar">
+        <div id="backBtn" class="nav-link pain-theme" onclick="window.history.back()">
+            <i class="bi bi-arrow-left"></i> Kembali
+        </div>
+        <div class="nav-link pain-theme" onclick="showQR()">
+            <i class="bi bi-share-fill"></i> Kongsi
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-geo-alt-fill"></i> Tempat Penampalan</h2>
+        <p style="margin-bottom: 15px;">Berfungsi meredakan sakit kronik (kanser). Tampal pada kulit yang rata di <strong>Dada, Paha, atau Lengan</strong>.</p>
+        
+        <img src="1.jpg" alt="Locations: Dada, Paha, Lengan" class="patch-img">
+        
+        <ul style="padding-left: 20px; margin-bottom: 20px;">
+            <li>Cuci kulit dengan air bersih sahaja (keringkan).</li>
+            <li><strong>JANGAN cukur bulu!</strong> Gunting bulu sehingga pendek jika perlu.</li>
+            <li>Elakkan sabun/minyak di kawasan tampalan.</li>
+        </ul>
+
+        <div class="warning-alert">
+            <strong>🔥 AMARAN HABA</strong><br>
+            Elakkan haba (mandi air panas, sauna, bantal pemanas) pada tempat tampalan kerana ia meningkatkan pembebasan ubat secara berlebihan.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-123"></i> Cara Penggunaan</h2>
+        <div class="rules-grid">
+            <div class="rule-card" style="border-left-color: #1565c0;">
+                <div class="rule-number" style="background: #1565c0;">1</div>
+                <div class="rule-content">
+                    <strong>Persediaan</strong>
+                    <p>Koyakkan paket. Lipat tampalan sedikit untuk mengeluarkan separuh pelapik. <strong>Jangan sentuh</strong> bahagian berpelekat.</p>
+                </div>
+            </div>
+
+            <div class="rule-card" style="border-left-color: #1565c0;">
+                <div class="rule-number" style="background: #1565c0;">2</div>
+                <div class="rule-content">
+                    <strong>Tampal</strong>
+                    <p>Lekat bahagian terdedah pada kulit. Tarik baki pelapik dan lekat seluruh tampalan. Tekan dengan tapak tangan selama <strong>30 saat</strong>.</p>
+                </div>
+            </div>
+
+            <div class="rule-card" style="border-left-color: #1565c0;">
+                <div class="rule-number" style="background: #1565c0;">3</div>
+                <div class="rule-content">
+                    <strong>Selepas Tampal</strong>
+                    <p>Basuh tangan segera. Tulis tarikh/masa pada tampalan. Tukar setiap <strong>72 jam (3 hari)</strong>.</p>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 15px; font-size: 14px; color: #555; text-align: center;">
+            <i class="bi bi-car-front-fill"></i> <strong>JANGAN</strong> minum arak atau memandu sehingga anda tahu kesan mengantuk ubat ini kepada anda.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-scissors"></i> Jika Perlu Dos Separuh</h2>
+        <div class="fear-card" style="background: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);">
+            <strong>✂️ Gunting MENYERONG</strong>
+            <p>Jika doktor arahkan dos separuh, gunting tampalan secara menyerong. <strong>JANGAN</strong> gunting mengikut garis lurus sedia ada.</p>
+            <img src="2.jpg" alt="Cut Diagonally" class="card-img" style="border-radius: 4px; padding: 2px;">
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="bi bi-trash3-fill"></i> Pembuangan Selamat</h2>
+        <div class="danger-alert">
+            <strong>⚠️ BAHAYA KANAK-KANAK & HAIWAN</strong><br>
+            Tampalan terpakai masih mengandungi ubat dan boleh membawa <strong>maut</strong> jika tertelan atau terlekat pada kulit mereka.
+        </div>
+        <ol style="padding-left: 20px;">
+            <li>Lipat dua tampalan terpakai (bahagian melekat di dalam).</li>
+            <li>Masukkan kembali ke dalam paket asal.</li>
+            <li>Buang di tempat yang tidak boleh dicapai oleh kanak-kanak.</li>
+        </ol>
+    </div>
+
+    <div class="section" style="border-left: 5px solid #e74c3c;">
+        <h2 style="color: #c0392b;">Side Effects & Help</h2>
+        <p><strong>Common:</strong> Drowsiness, nausea, constipation, skin irritation, dizziness.</p>
+        <div style="background: #fff5f5; padding: 15px; border-radius: 8px; margin-top: 10px;">
+            <strong style="color: #c0392b;">🚑 Seek Emergency Help If:</strong>
+            <ul style="margin-top: 5px; color: #333;">
+                <li>Slow or shallow breathing.</li>
+                <li>Severe drowsiness or confusion.</li>
+                <li>Inability to wake up or signs of overdose.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button class="btn btn-pain" onclick="generateAndPrintPDF('fentanyl-guide.pdf')">
+            <i class="bi bi-printer-fill"></i> Cetak PDF
+        </button>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeQR()">&times;</span>
+            <h3 style="margin: 0 0 20px 0;">📱 Kongsi Panduan</h3>
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+            <p style="text-align: center; color: #666;">Imbas untuk simpan di telefon</p>
+        </div>
+    </div>
+
+    <div id="print-area">
+        <div class="print-header pain-theme">
+            <h1>Tampalan Fentanyl</h1>
+            <p>Panduan Penggunaan Pesakit</p>
+        </div>
+
+        <div class="print-item warning-box" style="display: block;">
+            <strong>🔥 PENTING: Haba & Keselamatan</strong>
+            <p style="font-size: 14px;">Elakkan haba (mandi air panas, bantal pemanas) di tapak tampalan.<br>
+            Jauhkan daripada kanak-kanak/haiwan. Tampalan terpakai boleh membawa maut.</p>
+        </div>
+
+        <div class="print-item">
+            <div class="print-content">
+                <strong>1. Tempat Penampalan</strong>
+                <p>Dada, Paha, atau Lengan (Kulit bersih, kering, tidak berbulu). Gunting bulu, <strong>JANGAN</strong> cukur.</p>
+                <div style="text-align: center; margin-top: 5px;">
+                    <img src="1.jpg" style="height: 100px; width: auto;" alt="Placement">
+                </div>
+            </div>
+        </div>
+
+        <div class="print-item">
+            <div class="print-content">
+                <strong>2. Cara Menggunakan</strong>
+                <ol style="margin: 5px 0 0 15px;">
+                    <li>Buka paket, kopek separuh pelapik.</li>
+                    <li>Tampal pada kulit, tarik baki pelapik.</li>
+                    <li>Tekan rata selama <strong>30 saat</strong>.</li>
+                    <li>Basuh tangan. Tukar setiap <strong>72 jam</strong>.</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="print-item">
+            <div class="print-content">
+                <strong>3. Jika Dos Separuh (Arahan Doktor)</strong>
+                <p>Gunting secara <strong>MENYERONG</strong>, <strong>JANGAN</strong> gunting mengikut garis lurus sedia ada.</p>
+                <div style="text-align: center; margin-top: 5px;">
+                    <img src="2.jpg" style="height: 80px; width: auto;" alt="Cut Diagonal">
+                </div>
+            </div>
+        </div>
+
+        <div class="print-side-effect-en">
+            <strong>Side Effects & Warning</strong>
+            <p style="margin-top: 4px;">
+                <strong>Common:</strong> Drowsiness, nausea, constipation, dizziness.<br>
+                <strong>Emergency:</strong> Contact doctor for slow breathing, severe drowsiness, confusion, or overdose signs.
+            </p>
+        </div>
+    </div>
+
+</div><script src="../education.js"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Institution Admin | PalliCalc</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+
+  <link rel="stylesheet" href="../admin-style.css">
+
+  <link rel="stylesheet" href="institution.css">
+</head>
+<body>
+
+  <div id="loadingOverlay">
+    <div class="spinner-border text-primary mb-3" role="status"></div>
+    <h5 class="text-muted fw-bold">Verifying Admin Access...</h5>
+  </div>
+
+  <div class="container px-3">
+    <div class="card main-card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <h4 class="mb-0 fw-bold"><i class="bi bi-building-gear"></i> Institution Setup</h4>
+          <small class="opacity-75">Admin Configuration Panel</small>
+        </div>
+        <a href="../admin.html" class="btn btn-sm btn-outline-light">
+          <i class="bi bi-arrow-left"></i> Back
+        </a>
+      </div>
+
+      <div class="card-body p-4">
+        
+        <form id="instForm">
+          
+          <div class="mb-4">
+            <label class="form-label">Institution Logos (Max 2)</label>
+            <div class="text-muted small mb-2">
+              Select from presets or upload new. <br>
+              <span class="text-success"><i class="bi bi-check-circle"></i> <b>Hybrid Mode:</b> Presets load from Cloudflare (Free), Uploads from Firebase.</span>
+            </div>
+            
+            <div class="logo-gallery" id="logoGallery"></div>
+
+            <div class="logo-preview-area" id="logoContainer">
+              <div class="upload-box" id="uploadTrigger">
+                <i class="bi bi-cloud-arrow-up-fill fs-4"></i>
+                <span class="upload-text">UPLOAD</span>
+              </div>
+            </div>
+            
+            <input type="file" id="logoInput" accept="image/*" style="display: none;">
+            
+            <div id="processingIndicator" class="text-primary small fw-bold mt-2" style="display:none;">
+              <span class="spinner-border spinner-border-sm"></span> Processing image...
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="instName" class="form-label">Institution Name</label>
+            <input type="text" class="form-control" id="instName" placeholder="e.g. Hospital Kuala Lumpur" required>
+          </div>
+
+          <div class="mb-4">
+            <label for="instContact" class="form-label">Contact Number</label>
+            <input type="tel" class="form-control" id="instContact" placeholder="e.g. +60 3-2615 5555" required>
+          </div>
+
+          <hr class="my-4">
+
+          <div class="alert alert-light border">
+            <label class="form-label mb-2"><i class="bi bi-shield-lock"></i> Security Verification</label>
+            <input type="password" class="form-control mb-3" id="adminPassword" placeholder="Enter login password to save" required>
+            
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-2" id="saveBtn">
+              <i class="bi bi-save2"></i> Update Institution Details
+            </button>
+            
+            <div id="msgArea" class="alert alert-success mt-3 text-center" style="display:none;"></div>
+            <div id="errorArea" class="alert alert-danger mt-3 text-center" style="display:none;"></div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="institution.js"></script>
+
+</body>
+</html>
