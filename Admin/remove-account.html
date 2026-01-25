@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Management | PalliCalc</title>
+  
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  
+  <style>
+    body { background: #f5f7fa; min-height: 100vh; }
+    .user-card { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.2s; }
+    .user-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    .status-badge { font-size: 0.8rem; padding: 5px 10px; border-radius: 20px; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-light bg-white shadow-sm mb-4">
+    <div class="container">
+      <a href="../admin.html" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+      </a>
+      <span class="navbar-brand mb-0 h1">Staff Management</span>
+      <div style="width: 80px;"></div> </div>
+  </nav>
+
+  <div class="container" style="max-width: 800px;">
+    
+    <div class="alert alert-info border-0 shadow-sm mb-4">
+      <i class="bi bi-info-circle-fill me-2"></i>
+      <strong>How Deletion Works:</strong> Clicking "Request Removal" starts a <strong>14-day countdown</strong>. The user will be notified via email. You can revoke this request anytime before the countdown ends.
+    </div>
+
+    <div id="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-2 text-muted">Loading staff list...</p>
+    </div>
+
+    <div id="userList" class="row g-3">
+      </div>
+
+  </div>
+
+  <script>
+    // --- FIREBASE CONFIG (USE YOUR EXACT CONFIG) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
+        authDomain: "pallicalc-eabdc.firebaseapp.com",
+        projectId: "pallicalc-eabdc",
+        storageBucket: "pallicalc-eabdc.firebasestorage.app",
+        messagingSenderId: "347532270864",
+        appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // --- MAIN LOGIC ---
+    auth.onAuthStateChanged(async (adminUser) => {
+      if (!adminUser) {
+        window.location.href = '../index.html';
+        return;
+      }
+
+      // 1. Get Admin's Institution ID
+      const adminDoc = await db.collection('users').doc(adminUser.uid).get();
+      const institutionId = adminDoc.data().institutionId;
+      const institutionName = adminDoc.data().institutionName;
+
+      // 2. Load Staff Members
+      loadStaff(institutionId, adminUser.uid);
+    });
+
+    async function loadStaff(instId, myUid) {
+      const listDiv = document.getElementById('userList');
+      const loading = document.getElementById('loading');
+      
+      try {
+        const snapshot = await db.collection('users')
+          .where('institutionId', '==', instId)
+          .get();
+
+        loading.style.display = 'none';
+
+        if (snapshot.empty) {
+          listDiv.innerHTML = '<div class="col-12 text-center mt-5 text-muted">No other staff members found.</div>';
+          return;
+        }
+
+        let html = '';
+        snapshot.forEach(doc => {
+          const u = doc.data();
+          if (doc.id === myUid) return; // Don't list yourself
+
+          const isPending = u.deletionStatus === 'pending';
+          const scheduledDate = u.scheduledDeletionDate ? u.scheduledDeletionDate.toDate().toLocaleDateString() : '';
+
+          html += `
+          <div class="col-12">
+            <div class="user-card p-3 d-flex justify-content-between align-items-center ${isPending ? 'bg-light border border-danger' : ''}">
+              
+              <div class="d-flex align-items-center">
+                <div class="bg-${isPending ? 'secondary' : 'primary'} bg-opacity-10 p-3 rounded-circle me-3">
+                  <i class="bi bi-person-fill ${isPending ? 'text-secondary' : 'text-primary'} fs-4"></i>
+                </div>
+                <div>
+                  <h5 class="mb-0 ${isPending ? 'text-decoration-line-through text-muted' : ''}">${u.email}</h5>
+                  <small class="text-muted">Role: ${u.role || 'Member'}</small>
+                  ${isPending ? `<div class="text-danger small mt-1"><i class="bi bi-clock-history"></i> Scheduled for deletion: ${scheduledDate}</div>` : ''}
+                </div>
+              </div>
+
+              <div>
+                ${isPending 
+                  ? `<button onclick="revokeDeletion('${doc.id}')" class="btn btn-outline-success btn-sm">
+                       <i class="bi bi-arrow-counterclockwise"></i> Revoke
+                     </button>`
+                  : `<button onclick="requestDeletion('${doc.id}', '${u.email}')" class="btn btn-outline-danger btn-sm">
+                       <i class="bi bi-trash"></i> Remove
+                     </button>`
+                }
+              </div>
+
+            </div>
+          </div>`;
+        });
+
+        listDiv.innerHTML = html;
+
+      } catch (error) {
+        console.error(error);
+        loading.innerHTML = `<p class="text-danger">Error loading staff: ${error.message}</p>`;
+      }
+    }
+
+    // --- STEP 1: MARK FOR DEATH LOGIC ---
+    async function requestDeletion(userId, userEmail) {
+      if (!confirm(`Are you sure you want to remove ${userEmail}?\n\nThey will receive an email and have 14 days before their account is permanently deleted.`)) return;
+
+      try {
+        // Calculate 14 Days from Now
+        const fourteenDaysLater = new Date();
+        fourteenDaysLater.setDate(fourteenDaysLater.getDate() + 14);
+
+        await db.collection('users').doc(userId).update({
+          deletionStatus: "pending",
+          deletionRequestedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          scheduledDeletionDate: firebase.firestore.Timestamp.fromDate(fourteenDaysLater),
+          deletedBy: auth.currentUser.email
+        });
+
+        alert("Deletion requested. Email notification sent.");
+        location.reload(); // Refresh to show new status
+
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    }
+
+    // --- OPTIONAL: REVOKE LOGIC ---
+    async function revokeDeletion(userId) {
+      if (!confirm("Restore this user account?")) return;
+
+      try {
+        await db.collection('users').doc(userId).update({
+          deletionStatus: firebase.firestore.FieldValue.delete(),
+          scheduledDeletionDate: firebase.firestore.FieldValue.delete(),
+          deletionRequestedAt: firebase.firestore.FieldValue.delete(),
+          deletedBy: firebase.firestore.FieldValue.delete()
+        });
+
+        alert("User account restored.");
+        location.reload();
+
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
