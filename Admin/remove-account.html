@@ -14,9 +14,84 @@
   
   <style>
     body { background: #f5f7fa; min-height: 100vh; }
-    .user-card { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.2s; }
-    .user-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-    .status-badge { font-size: 0.8rem; padding: 5px 10px; border-radius: 20px; }
+    
+    /* Card Container */
+    .user-card { 
+        background: white; 
+        border-radius: 12px; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+        border: 1px solid transparent; 
+        transition: all 0.2s ease;
+        padding: 16px;
+        display: flex;
+        align-items: center; /* Vertically centers everything */
+        gap: 15px; /* Space between Icon, Text, and Button */
+    }
+
+    /* Pending State (Red Background) */
+    .user-card.pending {
+        background-color: #fff5f5; 
+        border-color: #f5c2c7;
+    }
+
+    /* Icon Circle */
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        color: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        flex-shrink: 0; /* Prevents icon from squishing */
+    }
+
+    .user-card.pending .user-avatar {
+        background-color: #f8d7da;
+        color: #dc3545;
+    }
+
+    /* Text Area */
+    .user-info {
+        flex-grow: 1; /* Takes up all available middle space */
+        min-width: 0; /* Allows text truncation */
+    }
+
+    .user-email {
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* Adds "..." if email is too long */
+    }
+    
+    .user-card.pending .user-email {
+        text-decoration: line-through;
+        color: #6c757d;
+    }
+
+    .user-role {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .deletion-notice {
+        font-size: 0.75rem;
+        color: #dc3545;
+        font-weight: 700;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Button Area */
+    .user-action {
+        flex-shrink: 0; /* Prevents button from squishing */
+    }
   </style>
 </head>
 <body>
@@ -26,15 +101,21 @@
       <a href="../admin.html" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left"></i> Back to Dashboard
       </a>
-      <span class="navbar-brand mb-0 h1">Staff Management</span>
-      <div style="width: 80px;"></div> </div>
+      <span class="navbar-brand mb-0 h1 mx-auto">Staff Management</span>
+      <div style="width: 80px;"></div> 
+    </div>
   </nav>
 
-  <div class="container" style="max-width: 800px;">
+  <div class="container" style="max-width: 700px;">
     
     <div class="alert alert-info border-0 shadow-sm mb-4">
-      <i class="bi bi-info-circle-fill me-2"></i>
-      <strong>How Deletion Works:</strong> Clicking "Request Removal" starts a <strong>14-day countdown</strong>. The user will be notified via email. You can revoke this request anytime before the countdown ends.
+      <div class="d-flex">
+          <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+          <div>
+              <strong>How Deletion Works:</strong><br>
+              Clicking "Remove" starts a <strong>14-day countdown</strong>. You can restore the account anytime before the date shown.
+          </div>
+      </div>
     </div>
 
     <div id="loading" class="text-center py-5">
@@ -42,13 +123,12 @@
       <p class="mt-2 text-muted">Loading staff list...</p>
     </div>
 
-    <div id="userList" class="row g-3">
-      </div>
+    <div id="userList" class="row g-3"></div>
 
   </div>
 
   <script>
-    // --- FIREBASE CONFIG (USE YOUR EXACT CONFIG) ---
+    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
         authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -57,7 +137,11 @@
         messagingSenderId: "347532270864",
         appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
     };
-    firebase.initializeApp(firebaseConfig);
+    
+    // Initialize
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const auth = firebase.auth();
     const db = firebase.firestore();
 
@@ -70,8 +154,9 @@
 
       // 1. Get Admin's Institution ID
       const adminDoc = await db.collection('users').doc(adminUser.uid).get();
+      if (!adminDoc.exists) return; 
+
       const institutionId = adminDoc.data().institutionId;
-      const institutionName = adminDoc.data().institutionName;
 
       // 2. Load Staff Members
       loadStaff(institutionId, adminUser.uid);
@@ -98,31 +183,37 @@
           const u = doc.data();
           if (doc.id === myUid) return; // Don't list yourself
 
-          const isPending = u.deletionStatus === 'pending';
-          const scheduledDate = u.scheduledDeletionDate ? u.scheduledDeletionDate.toDate().toLocaleDateString() : '';
+          // --- LOGIC: Check Grace Period ---
+          const isPending = !!u.gracePeriodEnd; 
+          const scheduledDate = u.gracePeriodEnd ? u.gracePeriodEnd.toDate().toLocaleDateString('en-GB') : '';
 
           html += `
           <div class="col-12">
-            <div class="user-card p-3 d-flex justify-content-between align-items-center ${isPending ? 'bg-light border border-danger' : ''}">
+            <div class="user-card ${isPending ? 'pending' : ''}">
               
-              <div class="d-flex align-items-center">
-                <div class="bg-${isPending ? 'secondary' : 'primary'} bg-opacity-10 p-3 rounded-circle me-3">
-                  <i class="bi bi-person-fill ${isPending ? 'text-secondary' : 'text-primary'} fs-4"></i>
-                </div>
-                <div>
-                  <h5 class="mb-0 ${isPending ? 'text-decoration-line-through text-muted' : ''}">${u.email}</h5>
-                  <small class="text-muted">Role: ${u.role || 'Member'}</small>
-                  ${isPending ? `<div class="text-danger small mt-1"><i class="bi bi-clock-history"></i> Scheduled for deletion: ${scheduledDate}</div>` : ''}
-                </div>
+              <div class="user-avatar">
+                <i class="bi bi-person-fill"></i>
               </div>
 
-              <div>
+              <div class="user-info">
+                <div class="user-email" title="${u.email}">${u.email}</div>
+                <div class="user-role">Role: ${u.role || 'Member'}</div>
+                
+                ${isPending ? `
+                    <div class="deletion-notice">
+                        <i class="bi bi-hourglass-split"></i> 
+                        Deletion Date: ${scheduledDate}
+                    </div>` 
+                : ''}
+              </div>
+
+              <div class="user-action">
                 ${isPending 
-                  ? `<button onclick="revokeDeletion('${doc.id}')" class="btn btn-outline-success btn-sm">
-                       <i class="bi bi-arrow-counterclockwise"></i> Revoke
+                  ? `<button onclick="revokeDeletion('${doc.id}')" class="btn btn-sm btn-success shadow-sm px-3 fw-bold">
+                       <i class="bi bi-arrow-counterclockwise me-1"></i> Restore
                      </button>`
-                  : `<button onclick="requestDeletion('${doc.id}', '${u.email}')" class="btn btn-outline-danger btn-sm">
-                       <i class="bi bi-trash"></i> Remove
+                  : `<button onclick="requestDeletion('${doc.id}', '${u.email}')" class="btn btn-sm btn-outline-danger px-3">
+                       <i class="bi bi-trash me-1"></i> Remove
                      </button>`
                 }
               </div>
@@ -139,38 +230,37 @@
       }
     }
 
-    // --- STEP 1: MARK FOR DEATH LOGIC ---
+    // --- MARK FOR DEATH LOGIC ---
     async function requestDeletion(userId, userEmail) {
       if (!confirm(`Are you sure you want to remove ${userEmail}?\n\nThey will receive an email and have 14 days before their account is permanently deleted.`)) return;
 
       try {
-        // Calculate 14 Days from Now
         const fourteenDaysLater = new Date();
         fourteenDaysLater.setDate(fourteenDaysLater.getDate() + 14);
 
         await db.collection('users').doc(userId).update({
           deletionStatus: "pending",
           deletionRequestedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          scheduledDeletionDate: firebase.firestore.Timestamp.fromDate(fourteenDaysLater),
+          gracePeriodEnd: firebase.firestore.Timestamp.fromDate(fourteenDaysLater),
           deletedBy: auth.currentUser.email
         });
 
         alert("Deletion requested. Email notification sent.");
-        location.reload(); // Refresh to show new status
+        location.reload(); 
 
       } catch (err) {
         alert("Error: " + err.message);
       }
     }
 
-    // --- OPTIONAL: REVOKE LOGIC ---
+    // --- REVOKE LOGIC ---
     async function revokeDeletion(userId) {
       if (!confirm("Restore this user account?")) return;
 
       try {
         await db.collection('users').doc(userId).update({
           deletionStatus: firebase.firestore.FieldValue.delete(),
-          scheduledDeletionDate: firebase.firestore.FieldValue.delete(),
+          gracePeriodEnd: firebase.firestore.FieldValue.delete(),
           deletionRequestedAt: firebase.firestore.FieldValue.delete(),
           deletedBy: firebase.firestore.FieldValue.delete()
         });
