@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const loginText = document.getElementById('loginText');
         const statusBar = document.getElementById('statusBar');
         
-        // NEW: Target the wrapper and feedback section separately
+        // Target the wrapper and feedback section
         const mainWrapper = document.getElementById('main-wrapper');
         const feedbackSection = document.getElementById('feedbackSection');
 
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loginMsg.classList.add('d-none');
         statusBar.classList.add('d-none');
         
-        // Hide the new main sections
+        // Hide the main sections
         if(mainWrapper) mainWrapper.classList.add('d-none');
         if(feedbackSection) feedbackSection.classList.add('d-none');
 
@@ -81,6 +81,19 @@ document.addEventListener('DOMContentLoaded', () => {
             // Reveal the Main Content and Feedback Section
             if(mainWrapper) mainWrapper.classList.remove('d-none');
             if(feedbackSection) feedbackSection.classList.remove('d-none');
+
+            // --- NEW LOGIC: BILLING CARD VISIBILITY ---
+            const email = user.email.toLowerCase();
+            const isGov = email.endsWith('.gov.my') || email.endsWith('.moh.gov.my');
+
+            // Only remove the 'd-none' class if they are NOT government
+            if (!isGov) {
+                const billingCard = document.getElementById('billingCard');
+                if (billingCard) {
+                    billingCard.classList.remove('d-none');
+                }
+            }
+            // ------------------------------------------
 
         } catch (error) {
             console.error('Auth check failed:', error);
