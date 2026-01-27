@@ -7,7 +7,6 @@
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
   <link rel="stylesheet" href="style.css">
 
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -52,6 +51,129 @@
             <option value="Singapore">Singapore</option>
             <option value="United Kingdom">United Kingdom</option>
             <option value="Australia">Australia</option>
+            <option value="New Zealand">New Zealand</option>
+            <option disabled>──────────</option>
+            <option value="Afghanistan">Afghanistan</option>
+            <option value="Albania">Albania</option>
+            <option value="Algeria">Algeria</option>
+            <option value="Andorra">Andorra</option>
+            <option value="Angola">Angola</option>
+            <option value="Argentina">Argentina</option>
+            <option value="Armenia">Armenia</option>
+            <option value="Austria">Austria</option>
+            <option value="Azerbaijan">Azerbaijan</option>
+            <option value="Bahrain">Bahrain</option>
+            <option value="Bangladesh">Bangladesh</option>
+            <option value="Barbados">Barbados</option>
+            <option value="Belarus">Belarus</option>
+            <option value="Belgium">Belgium</option>
+            <option value="Belize">Belize</option>
+            <option value="Benin">Benin</option>
+            <option value="Bhutan">Bhutan</option>
+            <option value="Bolivia">Bolivia</option>
+            <option value="Bosnia and Herzegovina">Bosnia and Herzegovina</option>
+            <option value="Botswana">Botswana</option>
+            <option value="Brazil">Brazil</option>
+            <option value="Brunei">Brunei</option>
+            <option value="Bulgaria">Bulgaria</option>
+            <option value="Cambodia">Cambodia</option>
+            <option value="Cameroon">Cameroon</option>
+            <option value="Canada">Canada</option>
+            <option value="Chile">Chile</option>
+            <option value="China">China</option>
+            <option value="Colombia">Colombia</option>
+            <option value="Costa Rica">Costa Rica</option>
+            <option value="Croatia">Croatia</option>
+            <option value="Cuba">Cuba</option>
+            <option value="Cyprus">Cyprus</option>
+            <option value="Czech Republic">Czech Republic</option>
+            <option value="Denmark">Denmark</option>
+            <option value="Egypt">Egypt</option>
+            <option value="Estonia">Estonia</option>
+            <option value="Ethiopia">Ethiopia</option>
+            <option value="Fiji">Fiji</option>
+            <option value="Finland">Finland</option>
+            <option value="France">France</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Germany">Germany</option>
+            <option value="Ghana">Ghana</option>
+            <option value="Greece">Greece</option>
+            <option value="Hong Kong">Hong Kong</option>
+            <option value="Hungary">Hungary</option>
+            <option value="Iceland">Iceland</option>
+            <option value="India">India</option>
+            <option value="Indonesia">Indonesia</option>
+            <option value="Iran">Iran</option>
+            <option value="Iraq">Iraq</option>
+            <option value="Ireland">Ireland</option>
+            <option value="Italy">Italy</option>
+            <option value="Jamaica">Jamaica</option>
+            <option value="Japan">Japan</option>
+            <option value="Jordan">Jordan</option>
+            <option value="Kazakhstan">Kazakhstan</option>
+            <option value="Kenya">Kenya</option>
+            <option value="Kuwait">Kuwait</option>
+            <option value="Laos">Laos</option>
+            <option value="Latvia">Latvia</option>
+            <option value="Lebanon">Lebanon</option>
+            <option value="Libya">Libya</option>
+            <option value="Lithuania">Lithuania</option>
+            <option value="Luxembourg">Luxembourg</option>
+            <option value="Macau">Macau</option>
+            <option value="Madagascar">Madagascar</option>
+            <option value="Maldives">Maldives</option>
+            <option value="Malta">Malta</option>
+            <option value="Mexico">Mexico</option>
+            <option value="Monaco">Monaco</option>
+            <option value="Mongolia">Mongolia</option>
+            <option value="Morocco">Morocco</option>
+            <option value="Myanmar">Myanmar</option>
+            <option value="Nepal">Nepal</option>
+            <option value="Netherlands">Netherlands</option>
+            <option value="Nigeria">Nigeria</option>
+            <option value="North Korea">North Korea</option>
+            <option value="Norway">Norway</option>
+            <option value="Oman">Oman</option>
+            <option value="Pakistan">Pakistan</option>
+            <option value="Palestine">Palestine</option>
+            <option value="Panama">Panama</option>
+            <option value="Papua New Guinea">Papua New Guinea</option>
+            <option value="Peru">Peru</option>
+            <option value="Philippines">Philippines</option>
+            <option value="Poland">Poland</option>
+            <option value="Portugal">Portugal</option>
+            <option value="Qatar">Qatar</option>
+            <option value="Romania">Romania</option>
+            <option value="Russia">Russia</option>
+            <option value="Rwanda">Rwanda</option>
+            <option value="Saudi Arabia">Saudi Arabia</option>
+            <option value="Serbia">Serbia</option>
+            <option value="Slovakia">Slovakia</option>
+            <option value="Slovenia">Slovenia</option>
+            <option value="South Africa">South Africa</option>
+            <option value="South Korea">South Korea</option>
+            <option value="Spain">Spain</option>
+            <option value="Sri Lanka">Sri Lanka</option>
+            <option value="Sudan">Sudan</option>
+            <option value="Sweden">Sweden</option>
+            <option value="Switzerland">Switzerland</option>
+            <option value="Syria">Syria</option>
+            <option value="Taiwan">Taiwan</option>
+            <option value="Tanzania">Tanzania</option>
+            <option value="Thailand">Thailand</option>
+            <option value="Tunisia">Tunisia</option>
+            <option value="Turkey">Turkey</option>
+            <option value="Uganda">Uganda</option>
+            <option value="Ukraine">Ukraine</option>
+            <option value="United Arab Emirates">United Arab Emirates</option>
+            <option value="United States">United States</option>
+            <option value="Uruguay">Uruguay</option>
+            <option value="Uzbekistan">Uzbekistan</option>
+            <option value="Venezuela">Venezuela</option>
+            <option value="Vietnam">Vietnam</option>
+            <option value="Yemen">Yemen</option>
+            <option value="Zambia">Zambia</option>
+            <option value="Zimbabwe">Zimbabwe</option>
             <option value="Other">Other</option>
           </select>
           <input id="country-other" type="text" class="form-input" style="margin-top:8px; display:none" placeholder="Specify country">
@@ -199,10 +321,12 @@
   <script>
     let auth, db;
 
+    // Helper to create safe IDs for new institutions
     function normalizeInstitutionName(name) {
       return name.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     }
 
+    // Initialize Firebase
     async function initFirebase() {
       if (typeof firebase === 'undefined') return;
       const config = {
@@ -230,20 +354,18 @@
         const countrySelect = document.getElementById('country');
         const instSelect = document.getElementById('institution-select');
         
-        // ✅ Modal Logic
+        // --- Modal Logic ---
         const infoBtn = document.getElementById('role-info-btn');
         const modal = document.getElementById('info-modal');
         const closeModal = document.getElementById('close-modal');
 
-        // Only show when clicked
         infoBtn.addEventListener('click', () => { modal.style.display = 'flex'; });
         closeModal.addEventListener('click', () => { modal.style.display = 'none'; });
-        
-        // Close on outside click
         modal.addEventListener('click', (e) => { 
             if (e.target === modal) modal.style.display = 'none'; 
         });
 
+        // --- Role & UI Logic ---
         function updateUI() {
             document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
             const selected = document.querySelector('input[name="role"]:checked');
@@ -259,12 +381,14 @@
 
         roleInputs.forEach(r => r.addEventListener('change', updateUI));
         
+        // --- Country & Institution Logic ---
         countrySelect.addEventListener('change', async () => {
             const isOther = countrySelect.value === 'Other';
             document.getElementById('country-other').style.display = isOther ? 'block' : 'none';
             document.getElementById('country-other').required = isOther;
 
             const country = isOther ? document.getElementById('country-other').value : countrySelect.value;
+            // Only load institutions if a standard country is picked to save reads
             if(country && country !== 'Other') {
                 await loadInstitutions(country);
             }
@@ -282,13 +406,14 @@
                 const snap = await db.collection('institutions').where('country', '==', country).orderBy('name').get();
                 instSelect.innerHTML = '<option value="">Select Institution</option>';
                 if(snap.empty) {
-                    instSelect.innerHTML += '<option disabled>No institutions found</option>';
+                    instSelect.innerHTML += '<option disabled>No institutions found in this country</option>';
                 } else {
                     snap.forEach(doc => { instSelect.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`; });
                 }
             } catch(e) { console.error(e); instSelect.innerHTML = '<option value="">Error loading list</option>'; }
         }
 
+        // --- SUBMIT LOGIC ---
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
@@ -310,6 +435,7 @@
                 if(password !== confirm) throw new Error("Passwords do not match");
                 if(password.length < 6) throw new Error("Password too short (min 6 chars)");
 
+                // 1. Create Authentication User
                 const cred = await auth.createUserWithEmailAndPassword(email, password);
                 const user = cred.user;
                 const uid = user.uid;
@@ -317,6 +443,7 @@
                 let instId = null;
                 let instName = null;
 
+                // 2. Handle Institution Logic
                 if (role === 'institutionAdmin') {
                   instName = document.getElementById('institution-name').value.trim();
                   if (!instName) throw new Error("Institution name is required.");
@@ -324,21 +451,37 @@
                   if (!instId) throw new Error("Institution name must contain letters or numbers.");
 
                   const instRef = db.collection('institutions').doc(instId);
+                  
+                  // Use Transaction to prevent duplicate institution names
                   await db.runTransaction(async (tx) => {
                     const snap = await tx.get(instRef);
                     if (snap.exists) throw new Error("Institution name already exists.");
-                    tx.set(instRef, { name: instName, country: country, adminUid: uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    
+                    // Create the Institution Document
+                    // NOTE: We do NOT set memberCount here. The Cloud Function will do it.
+                    tx.set(instRef, { 
+                        name: instName, 
+                        country: country, 
+                        adminUid: uid, 
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+                    });
                   });
+
                 } else if (role === 'institutionUser') {
                   instId = instSelect.value;
                   if (!instId) throw new Error("Please select an institution.");
+                  // NOTE: We do NOT increment memberCount here. The Cloud Function will do it.
                 }
 
+                // 3. Billing Logic
                 const isMoH = email.endsWith('@moh.gov.my');
                 let needsPaymentLater = !isMoH;
+                // MOH staff (non-admin) don't need payment logic
                 if(isMoH && role !== 'institutionAdmin') needsPaymentLater = false;
+                
                 const payMethod = (country === 'Malaysia') ? 'duitnow' : 'paypal';
 
+                // 4. Create User Document
                 await db.collection('users').doc(uid).set({
                     username: document.getElementById('username').value,
                     email: email,
@@ -346,7 +489,7 @@
                     country: country,
                     role: role,
                     isMoH: isMoH,
-                    billingStatus: 'trial-free-lifetime',
+                    billingStatus: 'trial-free-lifetime', // Default start status
                     futureBilling: needsPaymentLater,
                     paymentMethod: payMethod,
                     institutionId: instId,
@@ -355,6 +498,7 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
+                // 5. Success
                 await user.sendEmailVerification();
                 document.getElementById('registration-view').style.display = 'none';
                 document.getElementById('success-view').style.display = 'block';
