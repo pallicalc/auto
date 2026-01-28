@@ -176,6 +176,7 @@
   </div>
 
 <script>
+    // 🔥 FIREBASE CONFIGURATION
     const firebaseConfig = {
         apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
         authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -184,6 +185,8 @@
         messagingSenderId: "347532270864",
         appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
     };
+    
+    // Initialize Firebase
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
@@ -199,13 +202,13 @@
     auth.onAuthStateChanged(async (user) => {
         if (!user) return window.location.href = '../index.html';
 
-        // 🛡️ SAFETY NET START: try...catch block
         try {
             // 1. Fetch User Data
             const adminDoc = await db.collection('users').doc(user.uid).get();
-            if (!adminDoc.exists) throw new Error("User Profile not found. Please wait 10s and refresh.");
+            if (!adminDoc.exists) throw new Error("User Profile not found.");
             const adminData = adminDoc.data();
             
+            // Check MOH Status
             if (adminData.isMoH) { 
                 alert("MOH is free. Redirecting..."); 
                 window.location.href = '../admin.html'; 
@@ -214,15 +217,17 @@
 
             // 2. Fetch Institution Data
             const instId = adminData.institutionId;
-            if (!instId) throw new Error("User Profile missing 'institutionId'. Refresh page.");
+            if (!instId) throw new Error("Profile missing 'institutionId'. Refresh page.");
             
             const instDoc = await db.collection('institutions').doc(instId).get();
-            if (!instDoc.exists) throw new Error("Institution not found in database.");
+            if (!instDoc.exists) throw new Error("Institution not found.");
             const instData = instDoc.data();
 
-            // 3. Count Members (This might fail if Rules are old!)
-            const countSnap = await db.collection('users').where('institutionId', '==', instId).count().get();
-            const memberCount = countSnap.data().count;
+            // 3. Count Members (THE OLD RELIABLE METHOD)
+            // We download the list (snapshot) and check the size.
+            // This works perfectly for 0 to 1000 users.
+            const usersSnapshot = await db.collection('users').where('institutionId', '==', instId).get();
+            const memberCount = usersSnapshot.size; 
 
             // 4. Determine Country & Currency
             const country = adminData.country || "Malaysia";
@@ -257,19 +262,19 @@
                 document.getElementById('discountAmount').textContent = discountAmt.toFixed(2);
             }
 
+            // Handle Free Trial Message
             if (adminData.hasPaidOnce === false && discountPercent !== 100) {
                 total = 0;
                 document.getElementById('freeTrialMsg').classList.remove('d-none');
             }
 
-            // 7. Status & Penalty Logic
-            // Handle missing date safely
+            // 7. Dates & Status Logic
             let paidUntil = new Date();
-            if (adminData.subscriptionEnd) {
+            // Safety check for date
+            if (adminData.subscriptionEnd && typeof adminData.subscriptionEnd.toDate === 'function') {
                 paidUntil = adminData.subscriptionEnd.toDate();
             } else {
-                // Default to 1 year from now if missing
-                paidUntil.setFullYear(paidUntil.getFullYear() + 1);
+                paidUntil.setFullYear(paidUntil.getFullYear() + 1); // Default to +1 year if missing
             }
 
             const now = new Date();
@@ -305,6 +310,7 @@
             document.getElementById('paidUntilDate').textContent = paidUntil.toLocaleDateString('en-GB');
             document.getElementById('totalPrice').textContent = total.toFixed(2);
 
+            // Show Payment Method
             if (isMalaysia) {
                 document.getElementById('methodMalaysia').classList.remove('d-none');
                 document.getElementById('qrAmount').textContent = total.toFixed(2);
@@ -313,7 +319,7 @@
                 document.getElementById('stripeLink').href = STRIPE_LINKS[tierLevel];
             }
 
-            // SUCCESS: Unlock Screen
+            // 8. UNLOCK UI
             document.getElementById('loading').classList.add('d-none');
             document.getElementById('billingContent').classList.remove('d-none');
             
@@ -325,8 +331,7 @@
             }
 
         } catch (error) {
-            // 🚨 THIS IS THE CRITICAL FIX
-            // If rules block you, this Alert pops up!
+            console.error(error);
             alert("Error: " + error.message);
             document.getElementById('loading').innerHTML = `<p class="text-danger fw-bold">${error.message}</p>`;
         }
