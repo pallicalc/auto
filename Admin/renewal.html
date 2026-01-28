@@ -23,6 +23,8 @@
     .blur-overlay { filter: blur(4px); pointer-events: none; opacity: 0.6; }
     .lock-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; text-align: center; width: 80%; }
     
+
+
     /* FINANCIAL AID BOX STYLE */
     .aid-box { 
         background: #e3f2fd; 
@@ -173,7 +175,7 @@
     </div>
   </div>
 
-  <script>
+<script>
     const firebaseConfig = {
         apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
         authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -185,140 +187,164 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+    const functions = firebase.functions();
 
     // --- CONFIG ---
     const PRICES_MYR = { 1: 100, 2: 300, 3: 500 }; 
     const PENALTY_MYR = 50;
     const PRICES_USD = { 1: 25, 2: 75, 3: 125 }; 
     const PENALTY_USD = 15;
-    
-    // UPDATE THESE WITH YOUR REAL STRIPE LINKS LATER
     const STRIPE_LINKS = { 1: "https://buy.stripe.com/test_tier1", 2: "#", 3: "#" };
 
     auth.onAuthStateChanged(async (user) => {
         if (!user) return window.location.href = '../index.html';
-        
-        const adminDoc = await db.collection('users').doc(user.uid).get();
-        const adminData = adminDoc.data();
-        
-        if (adminData.isMoH) { alert("MOH is free."); window.location.href = '../admin.html'; return; }
 
-        const instId = adminData.institutionId;
-        const instDoc = await db.collection('institutions').doc(instId).get();
-        const instData = instDoc.data();
-        const countSnap = await db.collection('users').where('institutionId', '==', instId).count().get();
-        const memberCount = countSnap.data().count;
+        // 🛡️ SAFETY NET START: try...catch block
+        try {
+            // 1. Fetch User Data
+            const adminDoc = await db.collection('users').doc(user.uid).get();
+            if (!adminDoc.exists) throw new Error("User Profile not found. Please wait 10s and refresh.");
+            const adminData = adminDoc.data();
+            
+            if (adminData.isMoH) { 
+                alert("MOH is free. Redirecting..."); 
+                window.location.href = '../admin.html'; 
+                return; 
+            }
 
-        // 1. Determine Country
-        const country = adminData.country || "Malaysia";
-        const isMalaysia = (country.trim().toLowerCase() === "malaysia");
-        const symbol = isMalaysia ? "RM" : "USD";
-        document.getElementById('countryDisplay').textContent = country;
+            // 2. Fetch Institution Data
+            const instId = adminData.institutionId;
+            if (!instId) throw new Error("User Profile missing 'institutionId'. Refresh page.");
+            
+            const instDoc = await db.collection('institutions').doc(instId).get();
+            if (!instDoc.exists) throw new Error("Institution not found in database.");
+            const instData = instDoc.data();
 
-        // 2. Determine Tier
-        let basePrice = 0; let tierLevel = 1; let tierName = "";
-        if (memberCount <= 10) { tierLevel = 1; tierName = "Tier 1 (1-10)"; }
-        else if (memberCount <= 50) { tierLevel = 2; tierName = "Tier 2 (11-50)"; }
-        else { tierLevel = 3; tierName = "Enterprise"; }
+            // 3. Count Members (This might fail if Rules are old!)
+            const countSnap = await db.collection('users').where('institutionId', '==', instId).count().get();
+            const memberCount = countSnap.data().count;
 
-        const priceList = isMalaysia ? PRICES_MYR : PRICES_USD;
-        const penaltyFee = isMalaysia ? PENALTY_MYR : PENALTY_USD;
-        basePrice = priceList[tierLevel];
+            // 4. Determine Country & Currency
+            const country = adminData.country || "Malaysia";
+            const isMalaysia = (country.trim().toLowerCase() === "malaysia");
+            const symbol = isMalaysia ? "RM" : "USD";
+            document.getElementById('countryDisplay').textContent = country;
 
-        // 3. Discount Logic
-        let discountPercent = adminData.manualDiscount || 0;
-        let discountAmt = basePrice * (discountPercent / 100);
-        let total = basePrice - discountAmt;
+            // 5. Calculate Tier
+            let basePrice = 0; let tierLevel = 1; let tierName = "";
+            if (memberCount <= 10) { tierLevel = 1; tierName = "Tier 1 (1-10)"; }
+            else if (memberCount <= 50) { tierLevel = 2; tierName = "Tier 2 (11-50)"; }
+            else { tierLevel = 3; tierName = "Enterprise"; }
 
-        document.getElementById('instName').textContent = instData.name || "Institution";
-        document.getElementById('userCount').textContent = memberCount;
-        document.getElementById('tierName').textContent = tierName;
-        document.querySelectorAll('[id^="currencySymbol"]').forEach(el => el.textContent = symbol);
-        document.getElementById('basePrice').textContent = basePrice.toFixed(2);
-        
-        if (discountPercent > 0) {
-            document.getElementById('discountRow').classList.remove('d-none');
-            document.getElementById('discountPercent').textContent = discountPercent;
-            document.getElementById('discountAmount').textContent = discountAmt.toFixed(2);
-        }
+            const priceList = isMalaysia ? PRICES_MYR : PRICES_USD;
+            const penaltyFee = isMalaysia ? PENALTY_MYR : PENALTY_USD;
+            basePrice = priceList[tierLevel];
 
-        if (adminData.hasPaidOnce === false && discountPercent !== 100) {
-            total = 0;
-            document.getElementById('freeTrialMsg').classList.remove('d-none');
-        }
+            // 6. Discount Logic
+            let discountPercent = adminData.manualDiscount || 0;
+            let discountAmt = basePrice * (discountPercent / 100);
+            let total = basePrice - discountAmt;
 
-        // 4. Status & Penalty Logic
-        const paidUntil = adminData.subscriptionEnd ? adminData.subscriptionEnd.toDate() : new Date();
-        const now = new Date();
-        const paymentWindow = new Date(paidUntil); paymentWindow.setMonth(paymentWindow.getMonth() - 1);
-        const graceEnd = new Date(paidUntil); graceEnd.setMonth(graceEnd.getMonth() + 1);
+            document.getElementById('instName').textContent = instData.name || "Institution";
+            document.getElementById('userCount').textContent = memberCount;
+            document.getElementById('tierName').textContent = tierName;
+            document.querySelectorAll('[id^="currencySymbol"]').forEach(el => el.textContent = symbol);
+            document.getElementById('basePrice').textContent = basePrice.toFixed(2);
+            
+            if (discountPercent > 0) {
+                document.getElementById('discountRow').classList.remove('d-none');
+                document.getElementById('discountPercent').textContent = discountPercent;
+                document.getElementById('discountAmount').textContent = discountAmt.toFixed(2);
+            }
 
-        let lockPayment = false;
-        let statusHtml = "";
-        let lockTitle = "No Payment Needed";
-        let lockDesc = "Your subscription is active.";
+            if (adminData.hasPaidOnce === false && discountPercent !== 100) {
+                total = 0;
+                document.getElementById('freeTrialMsg').classList.remove('d-none');
+            }
 
-        // Logic Check:
-        if (adminData.paymentNeedsAudit === true) { 
-             // Shows YELLOW if they used the Trust System
-             statusHtml = '<span class="status-pending">Pending Verification</span>';
-             lockPayment = true;
-             lockTitle = "Payment Reported";
-             lockDesc = "Your receipt is being verified. You have full access.";
-        } else if (total === 0) {
-             statusHtml = '<span class="status-active">Free / Paid</span>';
-             lockPayment = true; 
-        } else if (now < paymentWindow) {
-             statusHtml = '<span class="status-active">Active</span>';
-             lockPayment = true;
-        } else if (now >= paymentWindow && now <= graceEnd) {
-             statusHtml = '<span class="status-due">Renewal Due</span>';
-        } else {
-             // SUSPENDED -> Add Penalty
-             statusHtml = '<span class="status-suspended">Suspended</span>';
-             document.getElementById('reactivationRow').classList.remove('d-none');
-             document.getElementById('penaltyPrice').textContent = penaltyFee.toFixed(2);
-             total += penaltyFee;
-        }
+            // 7. Status & Penalty Logic
+            // Handle missing date safely
+            let paidUntil = new Date();
+            if (adminData.subscriptionEnd) {
+                paidUntil = adminData.subscriptionEnd.toDate();
+            } else {
+                // Default to 1 year from now if missing
+                paidUntil.setFullYear(paidUntil.getFullYear() + 1);
+            }
 
-        document.getElementById('statusBadge').innerHTML = statusHtml;
-        document.getElementById('paidUntilDate').textContent = paidUntil.toLocaleDateString('en-GB');
-        document.getElementById('totalPrice').textContent = total.toFixed(2);
+            const now = new Date();
+            const paymentWindow = new Date(paidUntil); paymentWindow.setMonth(paymentWindow.getMonth() - 1);
+            const graceEnd = new Date(paidUntil); graceEnd.setMonth(graceEnd.getMonth() + 1);
 
-        // 5. Show Correct Payment Method
-        if (isMalaysia) {
-            document.getElementById('methodMalaysia').classList.remove('d-none');
-            document.getElementById('qrAmount').textContent = total.toFixed(2);
-        } else {
-            document.getElementById('methodInternational').classList.remove('d-none');
-            document.getElementById('stripeLink').href = STRIPE_LINKS[tierLevel];
-        }
+            let lockPayment = false;
+            let statusHtml = "";
+            let lockTitle = "No Payment Needed";
+            let lockDesc = "Your subscription is active.";
 
-        document.getElementById('loading').classList.add('d-none');
-        document.getElementById('billingContent').classList.remove('d-none');
-        
-        if (lockPayment) {
-            document.getElementById('paymentMethods').classList.add('blur-overlay');
-            document.getElementById('paymentLock').classList.remove('d-none');
-            document.getElementById('lockTitle').textContent = lockTitle;
-            document.getElementById('lockDesc').textContent = lockDesc;
+            if (adminData.paymentNeedsAudit === true) { 
+                 statusHtml = '<span class="status-pending">Pending Verification</span>';
+                 lockPayment = true;
+                 lockTitle = "Payment Reported";
+                 lockDesc = "Verifying receipt.";
+            } else if (total === 0) {
+                 statusHtml = '<span class="status-active">Free / Paid</span>';
+                 lockPayment = true; 
+            } else if (now < paymentWindow) {
+                 statusHtml = '<span class="status-active">Active</span>';
+                 lockPayment = true;
+            } else if (now >= paymentWindow && now <= graceEnd) {
+                 statusHtml = '<span class="status-due">Renewal Due</span>';
+            } else {
+                 statusHtml = '<span class="status-suspended">Suspended</span>';
+                 document.getElementById('reactivationRow').classList.remove('d-none');
+                 document.getElementById('penaltyPrice').textContent = penaltyFee.toFixed(2);
+                 total += penaltyFee;
+            }
+
+            document.getElementById('statusBadge').innerHTML = statusHtml;
+            document.getElementById('paidUntilDate').textContent = paidUntil.toLocaleDateString('en-GB');
+            document.getElementById('totalPrice').textContent = total.toFixed(2);
+
+            if (isMalaysia) {
+                document.getElementById('methodMalaysia').classList.remove('d-none');
+                document.getElementById('qrAmount').textContent = total.toFixed(2);
+            } else {
+                document.getElementById('methodInternational').classList.remove('d-none');
+                document.getElementById('stripeLink').href = STRIPE_LINKS[tierLevel];
+            }
+
+            // SUCCESS: Unlock Screen
+            document.getElementById('loading').classList.add('d-none');
+            document.getElementById('billingContent').classList.remove('d-none');
+            
+            if (lockPayment) {
+                document.getElementById('paymentMethods').classList.add('blur-overlay');
+                document.getElementById('paymentLock').classList.remove('d-none');
+                document.getElementById('lockTitle').textContent = lockTitle;
+                document.getElementById('lockDesc').textContent = lockDesc;
+            }
+
+        } catch (error) {
+            // 🚨 THIS IS THE CRITICAL FIX
+            // If rules block you, this Alert pops up!
+            alert("Error: " + error.message);
+            document.getElementById('loading').innerHTML = `<p class="text-danger fw-bold">${error.message}</p>`;
         }
     });
 
     function toggleQR() { document.getElementById('qrSection').classList.toggle('d-none'); }
 
-    // --- TRUST SYSTEM SUBMISSION ---
     async function reportPayment() {
         const refNo = document.getElementById('txnRefInput').value;
         const msg = document.getElementById('paymentMsg');
         const btn = document.getElementById('btnPaid');
 
         if (!refNo) {
-            alert("Please enter the Reference Number (Transaction ID) from your bank receipt.");
+            alert("Please enter the Reference Number.");
             return;
         }
 
-        if(!confirm("Confirm you have paid RM " + document.getElementById('totalPrice').textContent + "?\n\nAccess will be renewed for 1 year immediately.")) return;
+        if(!confirm("Confirm you have paid RM " + document.getElementById('totalPrice').textContent + "?")) return;
 
         btn.disabled = true;
         btn.textContent = "Verifying...";
@@ -328,7 +354,7 @@
             const result = await reportFn({ referenceNo: refNo });
             
             if (result.data.success) {
-                alert("Success! Your subscription has been renewed for 1 year.\n\nWe will audit the receipt ID: " + refNo);
+                alert("Success! Subscription renewed for 1 year.");
                 location.reload();
             }
         } catch (error) {
