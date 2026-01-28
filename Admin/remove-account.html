@@ -24,8 +24,8 @@
         transition: all 0.2s ease;
         padding: 16px;
         display: flex;
-        align-items: center; /* Vertically centers everything */
-        gap: 15px; /* Space between Icon, Text, and Button */
+        align-items: center; 
+        gap: 15px; 
     }
 
     /* Pending State (Red Background) */
@@ -45,7 +45,7 @@
         align-items: center;
         justify-content: center;
         font-size: 1.4rem;
-        flex-shrink: 0; /* Prevents icon from squishing */
+        flex-shrink: 0; 
     }
 
     .user-card.pending .user-avatar {
@@ -55,8 +55,8 @@
 
     /* Text Area */
     .user-info {
-        flex-grow: 1; /* Takes up all available middle space */
-        min-width: 0; /* Allows text truncation */
+        flex-grow: 1; 
+        min-width: 0; 
     }
 
     .user-email {
@@ -65,7 +65,7 @@
         margin-bottom: 2px;
         white-space: nowrap;
         overflow: hidden;
-        text-overflow: ellipsis; /* Adds "..." if email is too long */
+        text-overflow: ellipsis; 
     }
     
     .user-card.pending .user-email {
@@ -90,8 +90,12 @@
 
     /* Button Area */
     .user-action {
-        flex-shrink: 0; /* Prevents button from squishing */
+        flex-shrink: 0; 
     }
+    
+    /* New: Cache Info Text */
+    .cache-info { font-size: 0.8rem; color: #adb5bd; text-align: right; margin-bottom: 10px; }
+    .btn-sync { padding: 0; font-size: 0.8rem; text-decoration: none; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -118,6 +122,13 @@
       </div>
     </div>
 
+    <div class="cache-info">
+        <span id="lastUpdatedTime">Checking...</span>
+        <button onclick="fetchStaffFromCloud()" class="btn btn-link btn-sync ms-2">
+            <i class="bi bi-arrow-clockwise"></i> Sync List
+        </button>
+    </div>
+
     <div id="loading" class="text-center py-5">
       <div class="spinner-border text-primary" role="status"></div>
       <p class="mt-2 text-muted">Loading staff list...</p>
@@ -128,7 +139,6 @@
   </div>
 
   <script>
-    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
         authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -138,54 +148,103 @@
         appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
     };
     
-    // Initialize
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    let currentInstId = null;
+
     // --- MAIN LOGIC ---
     auth.onAuthStateChanged(async (adminUser) => {
-      if (!adminUser) {
-        window.location.href = '../index.html';
-        return;
-      }
+      if (!adminUser) return window.location.href = '../index.html';
 
-      // 1. Get Admin's Institution ID
       const adminDoc = await db.collection('users').doc(adminUser.uid).get();
       if (!adminDoc.exists) return; 
 
-      const institutionId = adminDoc.data().institutionId;
+      currentInstId = adminDoc.data().institutionId;
 
-      // 2. Load Staff Members
-      loadStaff(institutionId, adminUser.uid);
+      // START: Check Cache first!
+      loadStaffFromCache();
     });
 
-    async function loadStaff(instId, myUid) {
-      const listDiv = document.getElementById('userList');
+    // 1. TRY CACHE
+    function loadStaffFromCache() {
+        const cachedData = localStorage.getItem(`staff_${currentInstId}`);
+        const cachedTime = localStorage.getItem(`staffTime_${currentInstId}`);
+        const now = new Date().getTime();
+        const oneDay = 24 * 60 * 60 * 1000;
+
+        if (cachedData && cachedTime && (now - cachedTime < oneDay)) {
+            console.log("Loaded from Cache (0 Reads)");
+            renderList(JSON.parse(cachedData));
+            updateTimeLabel(parseInt(cachedTime));
+        } else {
+            console.log("Cache expired. Fetching...");
+            fetchStaffFromCloud();
+        }
+    }
+
+    // 2. FETCH CLOUD (Costs Reads)
+    async function fetchStaffFromCloud() {
       const loading = document.getElementById('loading');
+      const listDiv = document.getElementById('userList');
       
+      loading.style.display = 'block';
+      listDiv.innerHTML = '';
+
       try {
         const snapshot = await db.collection('users')
-          .where('institutionId', '==', instId)
+          .where('institutionId', '==', currentInstId)
           .get();
 
-        loading.style.display = 'none';
-
-        if (snapshot.empty) {
-          listDiv.innerHTML = '<div class="col-12 text-center mt-5 text-muted">No other staff members found.</div>';
-          return;
-        }
-
-        let html = '';
+        const staffArray = [];
         snapshot.forEach(doc => {
-          const u = doc.data();
-          if (doc.id === myUid) return; // Don't list yourself
+          if (doc.id === auth.currentUser.uid) return; 
+          
+          const data = doc.data();
+          data.uid = doc.id; // Store ID for logic
+          
+          // Fix Timestamps for JSON storage
+          if (data.gracePeriodEnd && data.gracePeriodEnd.toDate) {
+             data.gracePeriodEnd = data.gracePeriodEnd.toDate().toISOString();
+          }
+          staffArray.push(data);
+        });
 
-          // --- LOGIC: Check Grace Period ---
-          const isPending = !!u.gracePeriodEnd; 
-          const scheduledDate = u.gracePeriodEnd ? u.gracePeriodEnd.toDate().toLocaleDateString('en-GB') : '';
+        // Save to Cache
+        localStorage.setItem(`staff_${currentInstId}`, JSON.stringify(staffArray));
+        localStorage.setItem(`staffTime_${currentInstId}`, new Date().getTime());
+
+        renderList(staffArray);
+        updateTimeLabel(new Date().getTime());
+        
+      } catch (error) {
+        console.error(error);
+        listDiv.innerHTML = `<p class="text-danger text-center">Error loading staff.</p>`;
+      }
+      loading.style.display = 'none';
+    }
+
+    // 3. RENDER UI (Your Exact Design)
+    function renderList(staffArray) {
+      const listDiv = document.getElementById('userList');
+      
+      if (staffArray.length === 0) {
+          listDiv.innerHTML = '<div class="col-12 text-center mt-5 text-muted">No other staff members found.</div>';
+          document.getElementById('loading').style.display = 'none';
+          return;
+      }
+
+      let html = '';
+      staffArray.forEach(u => {
+          // Recreate Timestamp object if string (from cache)
+          const isPending = !!u.gracePeriodEnd;
+          let scheduledDate = '';
+          
+          if (isPending) {
+             const d = new Date(u.gracePeriodEnd);
+             scheduledDate = d.toLocaleDateString('en-GB');
+          }
 
           html += `
           <div class="col-12">
@@ -209,10 +268,10 @@
 
               <div class="user-action">
                 ${isPending 
-                  ? `<button onclick="revokeDeletion('${doc.id}')" class="btn btn-sm btn-success shadow-sm px-3 fw-bold">
+                  ? `<button onclick="revokeDeletion('${u.uid}')" class="btn btn-sm btn-success shadow-sm px-3 fw-bold">
                        <i class="bi bi-arrow-counterclockwise me-1"></i> Restore
                      </button>`
-                  : `<button onclick="requestDeletion('${doc.id}', '${u.email}')" class="btn btn-sm btn-outline-danger px-3">
+                  : `<button onclick="requestDeletion('${u.uid}', '${u.email}')" class="btn btn-sm btn-outline-danger px-3">
                        <i class="bi bi-trash me-1"></i> Remove
                      </button>`
                 }
@@ -220,19 +279,20 @@
 
             </div>
           </div>`;
-        });
-
-        listDiv.innerHTML = html;
-
-      } catch (error) {
-        console.error(error);
-        loading.innerHTML = `<p class="text-danger">Error loading staff: ${error.message}</p>`;
-      }
+      });
+      listDiv.innerHTML = html;
+      document.getElementById('loading').style.display = 'none';
     }
 
-    // --- MARK FOR DEATH LOGIC ---
+    function updateTimeLabel(ts) {
+        const date = new Date(ts);
+        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('lastUpdatedTime').innerText = `Last synced: Today ${timeStr}`;
+    }
+
+    // --- ACTIONS (Updated to refresh Cache instead of Reload) ---
     async function requestDeletion(userId, userEmail) {
-      if (!confirm(`Are you sure you want to remove ${userEmail}?\n\nThey will receive an email and have 14 days before their account is permanently deleted.`)) return;
+      if (!confirm(`Schedule removal for ${userEmail}?\n\nThey will receive an email and have 14 days.`)) return;
 
       try {
         const fourteenDaysLater = new Date();
@@ -245,15 +305,14 @@
           deletedBy: auth.currentUser.email
         });
 
-        alert("Deletion requested. Email notification sent.");
-        location.reload(); 
+        alert("Scheduled for deletion.");
+        fetchStaffFromCloud(); // Refresh list to update UI
 
       } catch (err) {
         alert("Error: " + err.message);
       }
     }
 
-    // --- REVOKE LOGIC ---
     async function revokeDeletion(userId) {
       if (!confirm("Restore this user account?")) return;
 
@@ -265,8 +324,8 @@
           deletedBy: firebase.firestore.FieldValue.delete()
         });
 
-        alert("User account restored.");
-        location.reload();
+        alert("Restored.");
+        fetchStaffFromCloud(); // Refresh list
 
       } catch (err) {
         alert("Error: " + err.message);
