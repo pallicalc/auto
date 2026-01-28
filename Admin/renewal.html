@@ -193,10 +193,10 @@
     const functions = firebase.functions();
 
     // --- CONFIG ---
-    const PRICES_MYR = { 1: 100, 2: 300, 3: 500 }; 
+    const PRICES_MYR = { 1: 200, 2: 500, 3: 1000 }; 
     const PENALTY_MYR = 50;
-    const PRICES_USD = { 1: 25, 2: 75, 3: 125 }; 
-    const PENALTY_USD = 15;
+    const PRICES_USD = { 1: 200, 2: 500, 3: 1000 }; 
+    const PENALTY_USD = 50;
     const STRIPE_LINKS = { 1: "https://buy.stripe.com/test_tier1", 2: "#", 3: "#" };
 
     auth.onAuthStateChanged(async (user) => {
