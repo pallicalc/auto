@@ -17,11 +17,20 @@
     body { background: #f5f7fa; min-height: 100vh; }
     .bill-card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 30px; }
     .status-active { color: #198754; font-weight: bold; }
+    .status-pending { color: #ffc107; font-weight: bold; } /* Yellow for Pending */
     .status-due { color: #fd7e14; font-weight: bold; }
     .status-suspended { color: #dc3545; font-weight: bold; }
     .blur-overlay { filter: blur(4px); pointer-events: none; opacity: 0.6; }
     .lock-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; text-align: center; width: 80%; }
-    .aid-box { background: #e3f2fd; border-left: 5px solid #2196f3; padding: 15px; margin-top: 20px; border-radius: 4px; }
+    
+    /* FINANCIAL AID BOX STYLE */
+    .aid-box { 
+        background: #e3f2fd; 
+        border-left: 5px solid #2196f3; 
+        padding: 15px; 
+        margin-top: 25px; 
+        border-radius: 4px; 
+    }
     .aid-box a { color: #0d6efd; text-decoration: none; font-weight: bold; }
     .aid-box a:hover { text-decoration: underline; }
   </style>
@@ -95,9 +104,9 @@
                 <div>
                    <strong>Financial Support Available</strong><br>
                    <small class="text-muted" style="line-height: 1.4; display:block; margin-bottom:5px;">
-                     NGOs and institutions with financial constraints can request a partial or full fee waiver.
+                     We support NGOs and institutions with financial constraints. Contact us for a partial or full fee waiver.
                    </small>
-                   <a href="mailto:support@pallicalc.com?subject=Financial Aid Request">Email support@pallicalc.com</a>
+                   <a href="mailto:support@pallicalc.com?subject=Financial Aid Request">Email support@pallicalc.com &rarr;</a>
                 </div>
              </div>
           </div>
@@ -177,10 +186,13 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // --- CONFIG ---
     const PRICES_MYR = { 1: 100, 2: 300, 3: 500 }; 
     const PENALTY_MYR = 50;
     const PRICES_USD = { 1: 25, 2: 75, 3: 125 }; 
     const PENALTY_USD = 15;
+    
+    // UPDATE THESE WITH YOUR REAL STRIPE LINKS LATER
     const STRIPE_LINKS = { 1: "https://buy.stripe.com/test_tier1", 2: "#", 3: "#" };
 
     auth.onAuthStateChanged(async (user) => {
@@ -197,11 +209,13 @@
         const countSnap = await db.collection('users').where('institutionId', '==', instId).count().get();
         const memberCount = countSnap.data().count;
 
+        // 1. Determine Country
         const country = adminData.country || "Malaysia";
         const isMalaysia = (country.trim().toLowerCase() === "malaysia");
         const symbol = isMalaysia ? "RM" : "USD";
         document.getElementById('countryDisplay').textContent = country;
 
+        // 2. Determine Tier
         let basePrice = 0; let tierLevel = 1; let tierName = "";
         if (memberCount <= 10) { tierLevel = 1; tierName = "Tier 1 (1-10)"; }
         else if (memberCount <= 50) { tierLevel = 2; tierName = "Tier 2 (11-50)"; }
@@ -211,6 +225,7 @@
         const penaltyFee = isMalaysia ? PENALTY_MYR : PENALTY_USD;
         basePrice = priceList[tierLevel];
 
+        // 3. Discount Logic
         let discountPercent = adminData.manualDiscount || 0;
         let discountAmt = basePrice * (discountPercent / 100);
         let total = basePrice - discountAmt;
@@ -232,6 +247,7 @@
             document.getElementById('freeTrialMsg').classList.remove('d-none');
         }
 
+        // 4. Status & Penalty Logic
         const paidUntil = adminData.subscriptionEnd ? adminData.subscriptionEnd.toDate() : new Date();
         const now = new Date();
         const paymentWindow = new Date(paidUntil); paymentWindow.setMonth(paymentWindow.getMonth() - 1);
@@ -242,7 +258,14 @@
         let lockTitle = "No Payment Needed";
         let lockDesc = "Your subscription is active.";
 
-        if (total === 0) {
+        // Logic Check:
+        if (adminData.paymentNeedsAudit === true) { 
+             // Shows YELLOW if they used the Trust System
+             statusHtml = '<span class="status-pending">Pending Verification</span>';
+             lockPayment = true;
+             lockTitle = "Payment Reported";
+             lockDesc = "Your receipt is being verified. You have full access.";
+        } else if (total === 0) {
              statusHtml = '<span class="status-active">Free / Paid</span>';
              lockPayment = true; 
         } else if (now < paymentWindow) {
@@ -251,6 +274,7 @@
         } else if (now >= paymentWindow && now <= graceEnd) {
              statusHtml = '<span class="status-due">Renewal Due</span>';
         } else {
+             // SUSPENDED -> Add Penalty
              statusHtml = '<span class="status-suspended">Suspended</span>';
              document.getElementById('reactivationRow').classList.remove('d-none');
              document.getElementById('penaltyPrice').textContent = penaltyFee.toFixed(2);
@@ -261,6 +285,7 @@
         document.getElementById('paidUntilDate').textContent = paidUntil.toLocaleDateString('en-GB');
         document.getElementById('totalPrice').textContent = total.toFixed(2);
 
+        // 5. Show Correct Payment Method
         if (isMalaysia) {
             document.getElementById('methodMalaysia').classList.remove('d-none');
             document.getElementById('qrAmount').textContent = total.toFixed(2);
@@ -282,14 +307,14 @@
 
     function toggleQR() { document.getElementById('qrSection').classList.toggle('d-none'); }
 
-    // --- TRUST SYSTEM: REPORT PAYMENT ---
+    // --- TRUST SYSTEM SUBMISSION ---
     async function reportPayment() {
         const refNo = document.getElementById('txnRefInput').value;
         const msg = document.getElementById('paymentMsg');
         const btn = document.getElementById('btnPaid');
 
         if (!refNo) {
-            alert("Please enter the Transaction or Receipt Reference Number.");
+            alert("Please enter the Reference Number (Transaction ID) from your bank receipt.");
             return;
         }
 
@@ -303,7 +328,7 @@
             const result = await reportFn({ referenceNo: refNo });
             
             if (result.data.success) {
-                alert("Success! Your subscription has been renewed for 1 year.\n\nAdmin will verify the receipt ID: " + refNo);
+                alert("Success! Your subscription has been renewed for 1 year.\n\nWe will audit the receipt ID: " + refNo);
                 location.reload();
             }
         } catch (error) {

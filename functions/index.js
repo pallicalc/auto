@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 
 // --- 2. HTTP APIs ---
 
-// 🔥 TRUST SYSTEM: INSTANT 1-YEAR RENEWAL
+// TRUST SYSTEM: INSTANT 1-YEAR RENEWAL
 exports.reportPayment = onRequest({ cors: true }, async (req, res) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'Missing Token' });
@@ -35,51 +35,37 @@ exports.reportPayment = onRequest({ cors: true }, async (req, res) => {
         const userDoc = await userRef.get();
         const userData = userDoc.data();
 
-        // 1. Calculate New Expiry (Add 1 Year)
         let currentEnd = userData.subscriptionEnd ? userData.subscriptionEnd.toDate() : new Date();
-        // If account was already expired, start the new year from TODAY.
         if (currentEnd < new Date()) currentEnd = new Date();
         
         const newSubscriptionEnd = new Date(currentEnd);
         newSubscriptionEnd.setFullYear(newSubscriptionEnd.getFullYear() + 1);
 
-        // 2. Update Database (Instant Access)
         await userRef.update({
-            billingStatus: 'active-trust-renewal', // Grants Green Status
+            billingStatus: 'active-trust-renewal', 
             subscriptionEnd: admin.firestore.Timestamp.fromDate(newSubscriptionEnd),
             lastPaymentRef: referenceNo,
             lastPaymentDate: admin.firestore.FieldValue.serverTimestamp(),
-            paymentNeedsAudit: true, // Flag for you to check later
-            hasPaidOnce: true // Ensures they don't get "First Year Free" logic again
+            paymentNeedsAudit: true, 
+            hasPaidOnce: true 
         });
 
-        // 3. Notify Admin (You)
         await transporter.sendMail({
             from: '"PalliCalc System" <pallicalc@gmail.com>',
-            to: "chai.alison@gmail.com", // YOUR EMAIL
+            to: "chai.alison@gmail.com", 
             subject: `💰 Payment Claimed: ${referenceNo}`,
-            html: `
-                <h3>Payment Claimed (Trust System)</h3>
-                <p><strong>User:</strong> ${userData.email}</p>
-                <p><strong>Ref No:</strong> ${referenceNo}</p>
-                <p><strong>Action:</strong> System automatically extended access for 1 year.</p>
-                <hr>
-                <p>Please verify this transaction in your Bank/Stripe dashboard when you have time.</p>
-            `
+            html: `<p>User ${userData.email} claimed payment (Ref: ${referenceNo}). System auto-renewed for 1 year.</p>`
         });
 
         res.status(200).json({ success: true, newDate: newSubscriptionEnd });
 
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+    } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 exports.requestTransferLink = onRequest({ cors: true }, async (req, res) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'Missing Token' });
     const idToken = authHeader.split('Bearer ')[1];
-
     try {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       const email = decodedToken.email;
@@ -95,9 +81,7 @@ exports.requestTransferLink = onRequest({ cors: true }, async (req, res) => {
       });
 
       res.status(200).json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
+    } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 exports.completeAdminTransfer = onRequest({ cors: true }, async (req, res) => {
@@ -135,18 +119,15 @@ exports.completeAdminTransfer = onRequest({ cors: true }, async (req, res) => {
 
       await admin.firestore().collection('users').doc(uid).update(updateData);
       res.status(200).json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
+    } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// --- 3. THE GRIM REAPER ---
+// --- 3. THE GRIM REAPER (Daily Checks) ---
 exports.checkGracePeriods = onSchedule("every 24 hours", async (event) => {
     const now = admin.firestore.Timestamp.now();
     const expiredUsersSnapshot = await admin.firestore().collection('users')
         .where('gracePeriodEnd', '<=', now)
         .get();
-
     const deletePromises = [];
     expiredUsersSnapshot.forEach(doc => deletePromises.push(admin.auth().deleteUser(doc.id)));
     await Promise.all(deletePromises);
@@ -155,7 +136,6 @@ exports.checkGracePeriods = onSchedule("every 24 hours", async (event) => {
 exports.notifyStaffRemoval = onDocumentUpdated("users/{userId}", async (event) => {
     const newData = event.data.after.data();
     const isNowScheduled = newData.gracePeriodEnd;
-
     if (isNowScheduled) {
         const dateString = isNowScheduled.toDate().toLocaleDateString("en-GB", { day: 'numeric', month: 'long', year: 'numeric' });
         try {
@@ -223,7 +203,6 @@ exports.onUserCreated = onDocumentCreated("users/{userId}", async (event) => {
     await batch.commit();
 });
 
-// --- 5. CLEANUP & BILLING NOTICES ---
 exports.onUserDeleted = v1.auth.user().onDelete(async (user) => {
     const userDoc = await admin.firestore().collection('users').doc(user.uid).get();
     if (userDoc.exists && userDoc.data().institutionId) {
@@ -241,42 +220,146 @@ exports.testEmailConnection = onRequest({ cors: true }, async (req, res) => {
     } catch (error) { res.status(500).send(`FAILED: ${error.message}`); }
 });
 
+// --- 5. AUTOMATED REMINDERS ---
+
+// A. Month 12: Warning 7 Days Before Expiry
 exports.checkSubscriptionExpiry = onSchedule("every 24 hours", async (event) => {
     const start = new Date(); start.setDate(start.getDate() + 7); start.setHours(0,0,0,0);
     const end = new Date(); end.setDate(end.getDate() + 7); end.setHours(23,59,59,999);
+    
     const snapshot = await admin.firestore().collection('users')
         .where('role', '==', 'institutionAdmin')
         .where('subscriptionEnd', '>=', admin.firestore.Timestamp.fromDate(start))
         .where('subscriptionEnd', '<=', admin.firestore.Timestamp.fromDate(end)).get();
+    
     snapshot.forEach(doc => {
-        transporter.sendMail({ from: 'pallicalc@gmail.com', to: doc.data().email, subject: 'Subscription Expiring', html: '<p>Renew via dashboard.</p>' });
+        transporter.sendMail({ 
+            from: '"PalliCalc Billing" <pallicalc@gmail.com>', 
+            to: doc.data().email, 
+            subject: 'Subscription Expiring in 7 Days', 
+            html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0; max-width: 600px;">
+                <h3 style="color: #333;">Subscription Renewal Reminder</h3>
+                <p>Your PalliCalc subscription is expiring in 7 days.</p>
+                <div style="background-color: #e3f2fd; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                    <strong>Financial Support</strong><br>
+                    <small>NGOs can email <a href="mailto:support@pallicalc.com">support@pallicalc.com</a> for waiver requests.</small>
+                </div>
+            </div>` 
+        });
     });
 });
 
+// B. Month 11: Invoice Ready (30 Days Before Expiry)
 exports.sendBillingNotice = onSchedule("every 24 hours", async (event) => {
     const now = new Date(); const target = new Date(); target.setDate(now.getDate() + 30); 
     const start = new Date(target.setHours(0,0,0,0)); const end = new Date(target.setHours(23,59,59,999));
+    
     const snapshot = await admin.firestore().collection('users')
         .where('role', '==', 'institutionAdmin')
         .where('subscriptionEnd', '>=', admin.firestore.Timestamp.fromDate(start))
         .where('subscriptionEnd', '<=', admin.firestore.Timestamp.fromDate(end)).get();
+    
     snapshot.forEach(doc => {
         if (doc.data().billingStatus !== 'trial-free-lifetime') {
-            transporter.sendMail({ from: 'pallicalc@gmail.com', to: doc.data().email, subject: 'Invoice Ready', html: '<p>Payment window open.</p>' });
+            transporter.sendMail({ 
+                from: '"PalliCalc Billing" <pallicalc@gmail.com>', 
+                to: doc.data().email, 
+                subject: 'Invoice Ready: Renewal Due in 30 Days', 
+                html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0; max-width: 600px;">
+                    <h3 style="color: #333;">Renewal Invoice Ready</h3>
+                    <p>Your subscription is due for renewal in 30 days. The payment window is open.</p>
+                    <div style="background-color: #e3f2fd; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                        <strong>Financial Support</strong><br>
+                        <small>NGOs can email <a href="mailto:support@pallicalc.com">support@pallicalc.com</a> for waiver requests.</small>
+                    </div>
+                </div>` 
+            });
         }
     });
 });
 
+// C. Month 13 (Minus 1 Week): Final Warning
+exports.checkGracePeriodWarning = onSchedule("every 24 hours", async (event) => {
+    const now = new Date(); const target = new Date(); target.setDate(now.getDate() - 23); 
+    const start = new Date(target.setHours(0,0,0,0)); const end = new Date(target.setHours(23,59,59,999));
+    
+    const snapshot = await admin.firestore().collection('users')
+        .where('role', '==', 'institutionAdmin')
+        .where('subscriptionEnd', '>=', admin.firestore.Timestamp.fromDate(start))
+        .where('subscriptionEnd', '<=', admin.firestore.Timestamp.fromDate(end))
+        .where('billingStatus', '!=', 'suspended')
+        .where('billingStatus', '!=', 'trial-free-lifetime').get();
+    
+    snapshot.forEach(doc => {
+        transporter.sendMail({ 
+            from: '"PalliCalc Billing" <pallicalc@gmail.com>', 
+            to: doc.data().email, 
+            subject: 'FINAL WARNING: Suspension in 7 Days', 
+            html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #d9534f; max-width: 600px;">
+                <h3 style="color: #d9534f;">Action Required Immediately</h3>
+                <p>Your account is 23 days overdue. You are in the final week of your grace period.</p>
+                <div style="background-color: #e3f2fd; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                    <strong>Financial Support</strong><br>
+                    <small>NGOs can email <a href="mailto:support@pallicalc.com">support@pallicalc.com</a> for waiver requests.</small>
+                </div>
+            </div>` 
+        });
+    });
+});
+
+// D. Month 13: Suspension Enforcer (WITH PENALTY EMAIL)
 exports.enforceSuspension = onSchedule("every 24 hours", async (event) => {
     const graceLimit = new Date(); graceLimit.setDate(graceLimit.getDate() - 30); 
+    
     const snapshot = await admin.firestore().collection('users')
         .where('role', '==', 'institutionAdmin')
         .where('subscriptionEnd', '<', admin.firestore.Timestamp.fromDate(graceLimit))
-        .where('billingStatus', '!=', 'suspended').get();
+        .where('billingStatus', '!=', 'suspended') // Only process if not already suspended
+        .get();
+        
     const batch = admin.firestore().batch();
+    
     snapshot.forEach(doc => {
+        const data = doc.data();
+        
+        // 1. Update Database Status
         batch.update(doc.ref, { billingStatus: 'suspended' });
-        if (doc.data().institutionId) batch.update(admin.firestore().collection('institutions').doc(doc.data().institutionId), { status: 'suspended' });
+        if (data.institutionId) {
+            batch.update(admin.firestore().collection('institutions').doc(data.institutionId), { status: 'suspended' });
+        }
+
+        // 2. Send "Suspended + Penalty" Email
+        transporter.sendMail({
+            from: '"PalliCalc Billing" <pallicalc@gmail.com>',
+            to: data.email,
+            subject: 'ACCOUNT SUSPENDED: Activation Fee Now Applies',
+            html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #d9534f; max-width: 600px;">
+                <div style="background-color: #d9534f; color: white; padding: 15px; text-align: center;">
+                    <h2 style="margin:0;">ACCOUNT SUSPENDED</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <p>Your 30-day renewal grace period has expired. Your institution's access has been blocked.</p>
+                    
+                    <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; margin: 20px 0; color: #721c24;">
+                        <strong>Penalty Applied:</strong><br>
+                        To reactivate your account, you must now pay the <strong>Annual Fee</strong> PLUS an <strong>Activation Penalty (RM 50 / $15 USD)</strong>.
+                    </div>
+
+                    <p>Please log in to your dashboard to make the full payment and restore access immediately.</p>
+
+                    <div style="background-color: #e3f2fd; padding: 15px; margin-top: 30px; border-radius: 5px; border-left: 4px solid #2196f3;">
+                        <strong>Financial Support Available</strong><br>
+                        <small style="color: #555;">We understand financial difficulties can happen. If you are an NGO or facing constraints, please email <a href="mailto:support@pallicalc.com">support@pallicalc.com</a> to request a fee waiver or penalty removal.</small>
+                    </div>
+                </div>
+            </div>
+            `
+        });
     });
+    
     await batch.commit();
 });
