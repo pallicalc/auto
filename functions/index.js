@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: "pallicalc@gmail.com",
-    pass: "iwsh izyr ledc tldk" // Your App Password
+    pass: "iwsh izyr ledc tldk" // ⚠️ SECURITY: Generate a NEW App Password if this one was exposed.
   }
 });
 
@@ -194,9 +194,9 @@ exports.onUserCreated = onDocumentCreated("users/{userId}", async (event) => {
                 
                 // LOGIC CHANGE: Coupon affects 'billingStatus' but NOT 'manualDiscount' for future.
                 if (discountPercent === 100) {
-                     // 100% OFF: Gives them a free first year, but keeps 'hasPaidOnce' as FALSE
-                     // This means next year they must pay (unless manually overridden by admin).
-                     billingStatus = 'active-first-year';
+                      // 100% OFF: Gives them a free first year, but keeps 'hasPaidOnce' as FALSE
+                      // This means next year they must pay (unless manually overridden by admin).
+                      billingStatus = 'active-first-year';
                 }
             }
         }
@@ -373,4 +373,47 @@ exports.enforceSuspension = onSchedule("every 24 hours", async (event) => {
     });
     
     await batch.commit();
+});
+
+// --- 6. STAFF NOTIFICATION SYSTEM (NEW) ---
+exports.sendSuspensionReminder = onCall(async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Login required.');
+    
+    const uid = request.auth.uid;
+    
+    // 1. Get the Staff User's Info
+    const userDoc = await admin.firestore().collection('users').doc(uid).get();
+    const userData = userDoc.data();
+    const instId = userData.institutionId;
+    
+    if (!instId) throw new HttpsError('failed-precondition', 'No institution found.');
+
+    // 2. Find the ONE Admin for this Institution
+    // We query the 'users' collection for the person who is 'institutionAdmin' + matches the institutionId
+    const adminQuery = await admin.firestore().collection('users')
+        .where('institutionId', '==', instId)
+        .where('role', '==', 'institutionAdmin')
+        .limit(1)
+        .get();
+
+    if (adminQuery.empty) throw new HttpsError('not-found', 'Admin email not found.');
+
+    const adminDoc = adminQuery.docs[0].data();
+    const adminEmail = adminDoc.email; 
+    const instName = adminDoc.institutionName || "your institution";
+
+    // 3. Send the Email
+    await transporter.sendMail({
+        from: '"PalliCalc System" <pallicalc@gmail.com>',
+        to: adminEmail,
+        subject: `🔴 Urgent: Staff Access Blocked for ${instName}`,
+        html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0;">
+            <h3 style="color: #d9534f;">Staff Access Interrupted</h3>
+            <p><strong>${userData.username || 'A staff member'}</strong> (${userData.email}) attempted to access PalliCalc but was locked out due to the account suspension.</p>
+            <p>Please log in to the <a href="https://pallicalc-eabdc.web.app/Admin/renewal.html">Admin Dashboard</a> to renew the subscription and restore access for your team.</p>
+        </div>`
+    });
+
+    return { success: true };
 });

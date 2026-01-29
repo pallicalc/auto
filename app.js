@@ -9,7 +9,7 @@ const firebaseConfig = {
   measurementId: "G-6G9C984F8E"
 };
 
-let firebaseApp, auth, db;
+let firebaseApp, auth, db, functions;
 let currentUser = null;
 let isVipUser = false;
 let counterTimeout;
@@ -20,6 +20,10 @@ window.addEventListener('load', async () => {
         firebaseApp = firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
         db = firebase.firestore();
+        // Initialize Functions if available, otherwise handle gracefully
+        if (firebase.functions) {
+            functions = firebase.functions();
+        }
         initApp();
     } catch (error) {
         console.error('Firebase init failed:', error);
@@ -176,7 +180,7 @@ async function checkAuthState(user) {
     }
 }
 
-// Helper to update UI elements (Shared between active and suspended states)
+// Helper to update UI elements
 function updateUIForLogin(userData, email, isSuspended) {
     const userInfo = document.getElementById('user-info');
     const vipBadge = document.getElementById('user-tier-badge');
@@ -206,7 +210,7 @@ function updateUIForLogin(userData, email, isSuspended) {
     if (actionBtns) actionBtns.classList.add('hidden');
     if (featureSection) featureSection.style.display = 'none';
     
-    // If not suspended, show tools normaly
+    // If not suspended, show tools normally
     if (!isSuspended) {
         if (toolsSection) toolsSection.classList.add('visible');
         if (toolsTitle) toolsTitle.textContent = '🛠️ Tools Available';
@@ -215,7 +219,7 @@ function updateUIForLogin(userData, email, isSuspended) {
     }
 }
 
-// 📢 NEW: Polite Suspension Notice
+// 📢 UPDATED: Polite Notice with "Notify Admin" Button
 function showSuspensionNotice(instName) {
     const toolsSection = document.getElementById('tools-section');
     if (toolsSection) {
@@ -224,11 +228,57 @@ function showSuspensionNotice(instName) {
                 <i class="bi bi-shield-lock"></i>
                 <h3>Access Temporarily Paused</h3>
                 <p>The premium features for <strong>${instName}</strong> are currently unavailable.</p>
-                <p class="note">Please contact your <strong>Institution Admin</strong> to renew the departmental subscription.</p>
-                <p style="font-size:12px; margin-top:10px; color:#94a3b8;">Standard demo tools remain accessible.</p>
+                
+                <div id="notify-action-area" style="margin-top: 20px;">
+                    <p class="note" style="margin-bottom: 15px;">
+                        Please contact your <strong>Institution Admin</strong> to renew the departmental subscription.
+                    </p>
+                    <button id="notify-admin-btn" class="btn btn-outline-danger" style="font-size: 14px; border-radius: 20px; padding: 8px 20px; cursor: pointer; background: #fff; border: 1px solid #dc3545; color: #dc3545;">
+                        <i class="bi bi-bell"></i> Send Reminder to Admin
+                    </button>
+                </div>
+                
+                <p style="font-size:12px; margin-top:20px; color:#94a3b8;">Standard demo tools remain accessible.</p>
             </div>
         `;
+        
         toolsSection.classList.add('visible');
+
+        // Add Click Listener for the Button
+        const btn = document.getElementById('notify-admin-btn');
+        if (btn) {
+            btn.addEventListener('click', async function() {
+                const originalText = btn.innerHTML;
+                
+                // A. Show Loading
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
+                btn.style.opacity = "0.7";
+                
+                try {
+                    // B. Call Backend
+                    if (!firebase.functions) throw new Error("Functions SDK not loaded");
+                    const sendReminder = firebase.functions().httpsCallable('sendSuspensionReminder');
+                    await sendReminder();
+                    
+                    // C. Success Message
+                    document.getElementById('notify-action-area').innerHTML = `
+                        <div style="color: #0f5132; background: #d1e7dd; padding: 15px; border-radius: 8px; margin-top: 10px; border: 1px solid #badbcc;">
+                            <i class="bi bi-check-circle-fill"></i> <strong>Reminder Sent!</strong><br>
+                            Your admin has been notified via email.
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error("Reminder Failed:", error);
+                    btn.innerHTML = '❌ Failed. Try again.';
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        btn.style.opacity = "1";
+                    }, 3000);
+                }
+            });
+        }
     }
 }
 
