@@ -1,7 +1,6 @@
 ﻿// ==========================================
 // PalliCalc Education Script - Final Unified Version
-// Includes: Race Condition Fix, Safari Crash Fix, Robust Fallbacks, & Branding Footer
-// UPDATED: Added Standardized Footer Injection
+// Includes: Suspension Logic, Race Condition Fix, Safari Crash Fix & Branding Footer
 // ==========================================
 
 // --- 1. FIREBASE CONFIGURATION ---
@@ -58,7 +57,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// --- NEW FUNCTION: INJECT STANDARDIZED FOOTER ---
+// --- INJECT STANDARDIZED FOOTER ---
 function injectStandardFooter() {
     const footerHTML = `
         <footer class="standard-footer">
@@ -73,11 +72,10 @@ function injectStandardFooter() {
             </div>
         </footer>
     `;
-    // Injects the footer as the very last element of the body
     document.body.insertAdjacentHTML('beforeend', footerHTML);
 }
 
-// --- EXISTING HEADER LOGIC ---
+// --- EXISTING HEADER LOGIC (UPDATED WITH SUSPENSION CHECK) ---
 async function loadInstitutionHeader() {
     if (!context.instId) return;
     try {
@@ -85,7 +83,17 @@ async function loadInstitutionHeader() {
         if (doc.exists) { 
             const data = doc.data();
             
-            // --- CACHE FOR OFFLINE ---
+            // 🛑 CRITICAL TWEAK: CHECK SUSPENSION STATUS
+            if (data.status === 'suspended') {
+                console.log("Institution suspended. Wiping branding data.");
+                // Wipe local cache so it doesn't show up offline later
+                localStorage.removeItem('cached_inst_' + context.instId);
+                localStorage.removeItem('institutionSettings');
+                // Return immediately so NO branding is rendered. Patient sees generic page.
+                return; 
+            }
+
+            // --- CACHE FOR OFFLINE (Only if Active) ---
             localStorage.setItem('cached_inst_' + context.instId, JSON.stringify(data));
             
             // Sync with general settings
@@ -100,6 +108,9 @@ async function loadInstitutionHeader() {
         }
     } catch (e) { 
         console.warn("Header Fetch Error (Switching to Offline Cache):", e);
+        // Fallback to cache ONLY if fetch fails (e.g. offline)
+        // If fetch failed due to permissions (Suspended), this might trigger.
+        // But app.js usually clears cache on login, so this is a safety net.
         const cached = localStorage.getItem('cached_inst_' + context.instId);
         if (cached) {
             renderHeader(JSON.parse(cached));
@@ -154,6 +165,17 @@ async function getFooterData() {
             const doc = await db.collection('institutions').doc(context.instId).get();
             if (doc.exists) {
                 const firebaseData = doc.data();
+                
+                // 🛑 PDF SECURITY: If Suspended, Return Generic Data
+                if (firebaseData.status === 'suspended') {
+                    console.log("Institution suspended. Generating generic PDF.");
+                    return {
+                        name: "PalliCalc Patient Education",
+                        contact: "",
+                        logos: [] 
+                    };
+                }
+
                 data = {
                     name: firebaseData.headerName || firebaseData.name,
                     contact: firebaseData.headerContact || firebaseData.contact,

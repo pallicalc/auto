@@ -50,6 +50,7 @@ const defaultFromPoMorphineRatios = {
   sciv_fentanyl: 10
 };
 
+// 🔥 PRODUCTION FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
   authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -66,7 +67,6 @@ const firebaseConfig = {
 function init() {
   console.log("Initializing Opioid Calc...");
   try {
-    // Show calculator UI immediately to prevent flash
     document.getElementById("calcPage").style.display = "block";
     document.getElementById("editPage").style.display = "none";
     document.body.style.overflow = "auto";
@@ -85,11 +85,14 @@ async function initFirebaseAuth() {
   auth = firebase.auth();
   db = firebase.firestore();
 
-db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
-    console.warn("Offline persistence error:", err.code);
-});
+  db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+      console.warn("Offline persistence error:", err.code);
+  });
+
   auth.onAuthStateChanged(async (user) => {
     if (!user) { window.location.href = "../index.html"; return; }
+    
+    // 🛑 EMAIL VERIFICATION CHECK
     if (!user.emailVerified) {
       alert("Please verify your email before using PalliCalc.");
       await auth.signOut();
@@ -97,19 +100,34 @@ db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
       return;
     }
 
-    const snap = await db.collection("users").doc(user.uid).get();
-    if (!snap.exists) {
-      await auth.signOut();
-      window.location.href = "../index.html";
-      return;
+    // 🛑 ROLE CHECK
+    try {
+      const snap = await db.collection("users").doc(user.uid).get();
+      if (!snap.exists) {
+        await auth.signOut();
+        window.location.href = "../index.html";
+        return;
+      }
+
+      const profile = snap.data();
+      
+      // Redirect Admins to Dashboard
+      if (profile.role === "institutionAdmin") { 
+          window.location.href = "../Admin.html"; 
+          return; 
+      }
+
+      window.PALLICALC_USER = { 
+          role: profile.role, 
+          institutionId: profile.institutionId || null,
+          billingStatus: profile.billingStatus
+      };
+      
+      await applyMemberRules();
+
+    } catch(e) {
+      console.error("Auth Init Error", e);
     }
-
-    const profile = snap.data();
-    if (profile.role === "institutionAdmin") { window.location.href = "../Admin.html"; return; }
-
-    window.PALLICALC_USER = { role: profile.role, institutionId: profile.institutionId || null };
-    
-    await applyMemberRules();
   });
 }
 
@@ -119,15 +137,32 @@ async function applyMemberRules() {
   if (editLink) editLink.style.display = "";
 
   if (role === "institutionUser") {
+    // 🛑 INSTITUTION USER LOGIC
+    // 1. Remove Personal Ratios (Cleanup)
     localStorage.removeItem("opioidTypes");
     localStorage.removeItem("opioidIncluded");
-    await loadRatiosFromFirebase();
+
+    // 2. Try to load Institution Ratios
+    // We check if app.js already cached them in 'palliCalc_customRatios'
+    const cachedRatios = localStorage.getItem('palliCalc_customRatios');
+    
+    if (cachedRatios) {
+        // A. Load from Local Cache (Synced by app.js)
+        console.log("Loading Cached Institution Ratios...");
+        const data = JSON.parse(cachedRatios);
+        applyInstitutionData(data);
+    } else {
+        // B. If no cache (e.g. fresh reload or suspended), try Fetching
+        // This will FAIL if suspended due to Security Rules
+        await loadRatiosFromFirebase();
+    }
   } else {
+    // ✅ PERSONAL USER LOGIC
     loadSavedRatios();
-    fillAllSelects(); // Ensure selects populate for Personal users
+    fillAllSelects(); 
   }
 
-  // Institutional Lock Logic
+  // Institutional Lock Logic (Prevent editing)
   if (role === "institutionUser") {
     const originalNavigateToEdit = window.navigateToEdit;
     window.navigateToEdit = function () {
@@ -135,6 +170,32 @@ async function applyMemberRules() {
       setTimeout(lockEditPageForInstitutionUser, 0);
     };
   }
+}
+
+// Helper to apply data to variables
+function applyInstitutionData(data) {
+    if (data.opioidTypes) {
+        opioidTypes = data.opioidTypes;
+        if (data.toPoMorphineRatios) {
+            toPoMorphineRatios = data.toPoMorphineRatios;
+            fromPoMorphineRatios = data.fromPoMorphineRatios;
+        } else {
+            toPoMorphineRatios = {};
+            fromPoMorphineRatios = {};
+            opioidTypes.forEach(op => {
+                toPoMorphineRatios[op.key] = op.ratio;
+                fromPoMorphineRatios[op.key] = 1 / op.ratio;
+            });
+        }
+        includedKeys = new Set(data.includedKeys || []);
+        fillAllSelects();
+        
+        const instName = localStorage.getItem('palliCalc_institutionName') || "Institution";
+        updateBanner("institution", true, data.updatedAt, instName);
+    } else {
+        loadHardcodedDefaults();
+        updateBanner("institution", false);
+    }
 }
 
 function updateBanner(userType, isCustom, timestamp = null, instName = null) {
@@ -149,15 +210,19 @@ function updateBanner(userType, isCustom, timestamp = null, instName = null) {
     }
   }
 
-  // EDITED SECTION BELOW: Added style="color: #198754; font-weight: bold;"
   if (userType === "personal") {
     html = isCustom 
       ? `<strong>Personal User:</strong> <span style="color: #198754; font-weight: bold;">Custom Ratios</span>${dateStr}` 
       : `<strong>Personal User:</strong> <span class="ratio-source-default">System Default Ratios</span>`;
   } else if (userType === "institution") {
-    html = isCustom 
-      ? `<strong>${instName || "Institution"}:</strong> <span style="color: #198754; font-weight: bold;">Custom Ratios</span>${dateStr}` 
-      : `<strong>${instName || "Institution"}:</strong> <span class="ratio-source-default">Default Ratios (Admin has not configured custom values)</span>`;
+    // 🛑 SUSPENSION VISUAL CHECK
+    if (instName === "Suspended") {
+        html = `<strong>Access Restricted:</strong> <span style="color: #dc3545; font-weight: bold;">System Default Ratios</span> (Contact Admin)`;
+    } else {
+        html = isCustom 
+        ? `<strong>${instName || "Institution"}:</strong> <span style="color: #198754; font-weight: bold;">Custom Ratios</span>${dateStr}` 
+        : `<strong>${instName || "Institution"}:</strong> <span class="ratio-source-default">Default Ratios (Admin has not configured custom values)</span>`;
+    }
   }
   
   banner.innerHTML = html;
@@ -165,40 +230,36 @@ function updateBanner(userType, isCustom, timestamp = null, instName = null) {
 }
 
 /* =========================================
-   DATA HANDLING
+   DATA HANDLING (UPDATED FOR SECURITY)
    ========================================= */
 async function loadRatiosFromFirebase() {
     try {
       const instId = window.PALLICALC_USER.institutionId;
       if (!instId) { loadHardcodedDefaults(); updateBanner("institution", false); return; }
 
+      // 🛑 SECURITY CHECK:
+      // If Institution is SUSPENDED, this .get() will fail due to Firestore Rules.
       const ref = await db.collection("opioidRatios").doc(instId).get();
 
       if (ref.exists) {
         const data = ref.data();
-        opioidTypes = data.opioidTypes;
-        
-        if (data.toPoMorphineRatios) {
-            toPoMorphineRatios = data.toPoMorphineRatios;
-            fromPoMorphineRatios = data.fromPoMorphineRatios;
-        } else {
-            toPoMorphineRatios = {};
-            fromPoMorphineRatios = {};
-            opioidTypes.forEach(op => {
-                toPoMorphineRatios[op.key] = op.ratio;
-                fromPoMorphineRatios[op.key] = 1 / op.ratio;
-            });
-        }
-        includedKeys = new Set(data.includedKeys);
-        fillAllSelects();
-        updateBanner("institution", true, data.updatedAt);
+        applyInstitutionData(data);
       } else {
+        // No custom data exists yet
         loadHardcodedDefaults();
         updateBanner("institution", false);
       }
     } catch (e) {
+      console.warn("Ratio Fetch Error (Likely Suspended):", e);
+      // 🛑 FALLBACK TO DEFAULTS
       loadHardcodedDefaults();
-      updateBanner("institution", false);
+      
+      // If permission denied (suspended), show alert in banner
+      if (e.code === 'permission-denied') {
+          updateBanner("institution", false, null, "Suspended");
+      } else {
+          updateBanner("institution", false);
+      }
     }
 }
 
@@ -246,7 +307,7 @@ function loadSavedRatios() {
 }
 
 /* =========================================
-   HELPER FUNCTIONS
+   HELPER FUNCTIONS (Standard)
    ========================================= */
 function prettifyKey(key) {
   return key.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
@@ -337,16 +398,13 @@ window.togglePrn = function() {
 };
 
 function lockEditPageForInstitutionUser() {
-  // 1. Clean up inputs
   document.getElementById("saveBtn")?.remove();
   document.getElementById("passInput")?.remove();
   document.getElementById("resetBtn")?.remove();
   document.querySelector('label[for="passInput"]')?.remove();
 
-  // 2. STOP if message already exists (Fixes the duplication bug)
   if (document.getElementById("inst-lock-msg")) return;
 
-  // 3. Create Message
   const info = document.createElement("div");
   info.id = "inst-lock-msg";
   info.className = "alert-box";
@@ -452,12 +510,6 @@ function fillAllSelects() {
     const key = findKey(route, name);
     if (unitSpan) unitSpan.textContent = formatUnit(key);
   }
-
-  // Bind Listeners (Remove old ones by cloning or just re-binding if safe)
-  // To be safe against multiple bindings, we can use 'onchange' direct property or just ensure this runs once/safely.
-  // Using direct onclick assignment in init is safer but here we use addEventListener inside fillAllSelects which is called multiple times.
-  // Fix: Assign functions to window and use onchange in HTML or cloneNode? 
-  // BETTER: Just assign events cleanly. 
   
   inputRoutes.forEach((routeId, idx) => {
     const routeEl = document.getElementById(routeId);
@@ -485,7 +537,6 @@ function fillAllSelects() {
   newOutRouteEl.addEventListener("change", () => fillNameSelects("outputRoute", "outputName"));
 
   fillRouteSelects(inputRoutes.concat(outputRoutes, prnRoutes));
-  // Initial fill logic end
 }
 
 // Global lookup functions
@@ -557,7 +608,6 @@ window.convert = function() {
     message += `<div class="note-title" style="color: orange;">⚠️ Codeine Max: 240mg/day.</div>`;
   }
 
-  // Absorption Warning
   const inputRoutes = [
     document.getElementById("inputRoute1")?.value.toUpperCase() || "",
     document.getElementById("inputRoute2")?.value.toUpperCase() || "",
@@ -568,7 +618,6 @@ window.convert = function() {
     message += `<div class="note">Note: do not include PRN oral doses in the total daily dose calculation if the patient has severe constipation or impaired oral absorption.</div>`;
   }
 
-  // Cross-Tolerance
   const primaryInputType = types[0];
   const isFentanylSwitch = (primaryInputType === "td_fentanyl_patch" && outputType === "sciv_fentanyl") || (primaryInputType === "sciv_fentanyl" && outputType === "td_fentanyl_patch");
   const primaryInputName = opioidTypes.find(op => op.key === primaryInputType)?.label || "";
@@ -641,7 +690,7 @@ window.clearCalculator = function() {
 };
 
 /* =========================================
-   EDIT & SAVE LOGIC
+   EDIT & SAVE LOGIC (Restricted for Institution)
    ========================================= */
 window.generateEditTable = function() {
   const tbody = document.getElementById("ratioTableBody");
