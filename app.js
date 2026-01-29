@@ -64,7 +64,7 @@ async function updateCounters() {
     }
 }
 
-// ✅ UPDATED: Auth state handler with SUSPENSION GATEKEEPER
+// ✅ UPDATED: Auth state handler with "Permission Denied" Handling
 async function checkAuthState(user) {
     currentUser = user;
     const userInfo = document.getElementById('user-info');
@@ -85,7 +85,7 @@ async function checkAuthState(user) {
             await auth.signOut();
             const errorDiv = document.getElementById('login-error-msg');
             if(errorDiv) {
-                errorDiv.textContent = "Please verify your email address before logging in. Check your inbox (and spam).";
+                errorDiv.textContent = "Please verify your email address before logging in.";
                 errorDiv.style.display = 'block';
             }
             openLoginModal();
@@ -103,28 +103,28 @@ async function checkAuthState(user) {
 
                 // 🛑 GATEKEEPER: Check if Institution is SUSPENDED
                 if (instId) {
-                    const instDoc = await db.collection('institutions').doc(instId).get();
-                    if (instDoc.exists && instDoc.data().status === 'suspended') {
+                    try {
+                        const instDoc = await db.collection('institutions').doc(instId).get();
                         
-                        // A. Wipe Premium Data Immediately
-                        localStorage.removeItem('palliCalc_customRatios');
-                        localStorage.removeItem('palliCalc_institutionName');
-
-                        // B. Handle Admin vs Staff
-                        if (userData.role === 'institutionAdmin') {
-                            console.log("Admin Suspended. Redirecting...");
-                            window.location.href = 'Admin/renewal.html';
+                        // Scenario A: We can read the doc, so we check the status manually
+                        if (instDoc.exists && instDoc.data().status === 'suspended') {
+                            handleSuspension(userData, instDoc.data().name);
+                            return;
+                        }
+                    } catch (err) {
+                        // Scenario B: The Security Rule BLOCKED us (Permission Denied)
+                        // This implies the status IS 'suspended' (because the rule forbids reading suspended docs for staff)
+                        if (err.code === 'permission-denied') {
+                            console.warn("Access denied to institution data. Assuming Suspended.");
+                            handleSuspension(userData, userData.institutionName || "your institution");
                             return;
                         } else {
-                            // Staff: Show polite lockout and STOP here
-                            updateUIForLogin(userData, user.email, true); // True = show logout button
-                            showSuspensionNotice(instDoc.data().name || "your institution");
-                            return; 
+                            console.error("Institution Fetch Error:", err); // Other errors
                         }
                     }
                 }
 
-                // 🟢 ACTIVE ACCOUNT LOGIC
+                // 🟢 ACTIVE ACCOUNT LOGIC (Only runs if we passed the Gatekeeper)
                 
                 // If Admin -> Go to Dashboard
                 if (userData.role === 'institutionAdmin') {
@@ -135,13 +135,18 @@ async function checkAuthState(user) {
 
                 // If Institution User -> Load Custom Ratios
                 if (userData.role === 'institutionUser' && instId) {
-                    const instDoc = await db.collection('institutions').doc(instId).get();
-                    if (instDoc.exists) {
-                        const instData = instDoc.data();
-                        if (instData.customRatios) {
-                            localStorage.setItem('palliCalc_customRatios', JSON.stringify(instData.customRatios));
-                            localStorage.setItem('palliCalc_institutionName', instData.name);
+                    try {
+                        // Re-fetch is safe here because we know it's not suspended
+                        const instDoc = await db.collection('institutions').doc(instId).get();
+                        if (instDoc.exists) {
+                            const instData = instDoc.data();
+                            if (instData.customRatios) {
+                                localStorage.setItem('palliCalc_customRatios', JSON.stringify(instData.customRatios));
+                                localStorage.setItem('palliCalc_institutionName', instData.name);
+                            }
                         }
+                    } catch (e) {
+                        console.log("Could not load custom ratios (minor error).");
                     }
                 } else {
                     localStorage.removeItem('palliCalc_customRatios');
@@ -180,42 +185,21 @@ async function checkAuthState(user) {
     }
 }
 
-// Helper to update UI elements
-function updateUIForLogin(userData, email, isSuspended) {
-    const userInfo = document.getElementById('user-info');
-    const vipBadge = document.getElementById('user-tier-badge');
-    const vipLock = document.getElementById('vip-lock-opioid');
-    const actionBtns = document.getElementById('action-buttons');
-    const toolsSection = document.getElementById('tools-section');
-    const featureSection = document.getElementById('features-section');
-    const toolsTitle = document.querySelector('#tools-section h2');
+// 🛡️ HELPER: Handle Suspension Logic (Wipe Data & Show UI)
+function handleSuspension(userData, instName) {
+    // 1. Wipe Premium Data
+    localStorage.removeItem('palliCalc_customRatios');
+    localStorage.removeItem('palliCalc_institutionName');
 
-    let displayName = userData.username || email.split('@')[0];
-    let welcomeText = `Welcome, ${displayName}`;
-    if (isVipUser) welcomeText += ' PRO';
-
-    if (userInfo) {
-        userInfo.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
-                <span class="welcome-text">${welcomeText}</span>
-                <button id="logout-btn" aria-label="Logout" style="width: 100%; padding: 6px 12px; font-size: 13px;">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                </button>
-            </div>`;
-    }
-    
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
-
-    if (actionBtns) actionBtns.classList.add('hidden');
-    if (featureSection) featureSection.style.display = 'none';
-    
-    // If not suspended, show tools normally
-    if (!isSuspended) {
-        if (toolsSection) toolsSection.classList.add('visible');
-        if (toolsTitle) toolsTitle.textContent = '🛠️ Tools Available';
-        if (vipBadge) vipBadge.style.display = isVipUser ? 'inline' : 'none';
-        if (vipLock) vipLock.style.display = isVipUser ? 'inline-block' : 'none';
+    // 2. Handle Admin vs Staff
+    if (userData.role === 'institutionAdmin') {
+        console.log("Admin Suspended. Redirecting...");
+        window.location.href = 'Admin/renewal.html';
+    } else {
+        // Staff: Show polite lockout
+        // We pass 'true' to updateUIForLogin so it shows the Logout button but hides tools
+        updateUIForLogin(userData, currentUser.email, true); 
+        showSuspensionNotice(instName);
     }
 }
 
