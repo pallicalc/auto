@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>IPOS Assessment (English) | PalliCalc</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+    :root {
+        --primary: #007bff;
+        --bg: #f8fafc;
+        --text: #334155;
+    }
+    
+    body {
+        font-family: 'Inter', sans-serif;
+        background: var(--bg);
+        margin: 0;
+        padding: 20px;
+        color: var(--text);
+    }
+
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 25px;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    /* HEADER */
+    .nav-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 15px;
+    }
+    
+    .back-btn {
+        text-decoration: none;
+        color: var(--primary);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.95rem;
+    }
+
+    h1 { margin: 0; font-size: 1.4rem; color: #1e293b; font-weight: 700; margin-left: auto; margin-right: auto; transform: translateX(-20px); }
+    
+    .subtitle {
+        background: #eff6ff;
+        color: #1e40af;
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        margin-bottom: 30px;
+        line-height: 1.5;
+        border-left: 4px solid #3b82f6;
+    }
+
+    /* QUESTIONS */
+    .question-block {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px dashed #e2e8f0;
+    }
+    
+    .q-label {
+        font-weight: 700;
+        font-size: 1.05rem;
+        margin-bottom: 15px;
+        display: block;
+        color: #0f172a;
+    }
+
+    /* SCALE (0-4) */
+    .scale-options {
+        display: flex;
+        justify-content: space-between;
+        gap: 4px;
+    }
+    
+    .scale-opt {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+    
+    .scale-opt input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 100%;
+        width: 100%;
+        z-index: 2;
+    }
+    
+    .scale-opt label {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 60px;
+        background: #f1f5f9;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+
+    .scale-desc {
+        font-size: 0.65rem;
+        font-weight: 400;
+        margin-top: 2px;
+        line-height: 1;
+    }
+
+    /* Checked State */
+    .scale-opt input:checked + label {
+        background: #e0f2fe;
+        border-color: #007bff;
+        color: #007bff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0,123,255,0.15);
+    }
+
+    /* SUBMIT BUTTON */
+    .btn-submit {
+        width: 100%;
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        padding: 18px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 12px;
+        cursor: pointer;
+        margin-top: 10px;
+        box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+        transition: transform 0.2s;
+    }
+    
+    .btn-submit:active { transform: scale(0.98); }
+    .btn-submit:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
+
+    /* RESULTS & LOADING */
+    #qr-result {
+        display: none;
+        margin-top: 30px;
+        text-align: center;
+        background: #f0fdf4;
+        padding: 30px 20px;
+        border-radius: 16px;
+        border: 2px solid #22c55e;
+        animation: fadeIn 0.5s ease;
+    }
+    
+    #loadingOverlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(255,255,255,0.95); z-index: 9999;
+        display: flex; flex-direction: column;
+        justify-content: center; align-items: center;
+    }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+    <div id="loadingOverlay">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem; border: 4px solid #e2e8f0; border-top-color: #007bff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <div style="color: #64748b; font-weight: 600;">Loading Assessment...</div>
+    </div>
+    <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+
+    <div class="container">
+        <div class="nav-header">
+            <a href="../../diagnostic.html" class="back-btn" id="backBtn"><i class="bi bi-arrow-left"></i> Back</a>
+            <h1>IPOS Assessment</h1>
+        </div>
+
+        <div class="subtitle">
+            <i class="bi bi-info-circle-fill" style="margin-right: 6px;"></i>
+            Please select the number that best describes how you have been feeling over the <strong>past 3 days</strong>.
+        </div>
+
+        <form id="iposForm">
+            
+            <div id="questionsContainer"></div>
+
+            <button type="button" class="btn-submit" id="generateBtn" onclick="generateBridgeQR()">
+                Generate QR Code
+            </button>
+        </form>
+
+        <div id="qr-result">
+            <h3 style="margin: 0 0 15px 0; color: #15803d;"><i class="bi bi-check-circle-fill"></i> Assessment Complete</h3>
+            <p style="margin: 0 0 20px 0; color: #166534; font-size: 0.9rem;">Show this code to your doctor to save the results.</p>
+            
+            <div id="qrcode" style="display:flex; justify-content:center; background: white; padding: 15px; border-radius: 10px; width: fit-content; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
+        </div>
+    </div>
+
+<script>
+    // --- 1. CONFIG & DATA ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
+        authDomain: "pallicalc-eabdc.firebaseapp.com",
+        projectId: "pallicalc-eabdc",
+        storageBucket: "pallicalc-eabdc.firebasestorage.app",
+        messagingSenderId: "347532270864",
+        appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // The Questions
+    const questions = [
+        "1. Have you been affected by Pain?",
+        "2. Have you been affected by Shortness of Breath?",
+        "3. Have you been affected by Weakness or Lack of Energy?",
+        "4. Have you been affected by Nausea?",
+        "5. Have you been affected by Vomiting?",
+        "6. Have you been affected by Poor Appetite?",
+        "7. Have you been affected by Constipation?",
+        "8. Have you been feeling Anxious or Worried?",
+        "9. Have your family or friends been anxious or worried about you?",
+        "10. Have you been feeling Depressed?"
+    ];
+
+    let institutionGoogleLink = null;
+    let institutionId = null;
+
+    // --- 2. INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', async () => {
+        renderQuestions();
+        
+        // Get 'ref' from URL (e.g., ?ref=hospital-kl)
+        const params = new URLSearchParams(window.location.search);
+        institutionId = params.get('ref');
+
+        // Update Back Button to keep the ref
+        if(institutionId) {
+            document.getElementById('backBtn').href = `../../diagnostic.html?ref=${institutionId}`;
+        }
+
+        if (institutionId) {
+            await fetchConfig(institutionId);
+        } else {
+            // Fallback for testing without a link
+            document.getElementById('loadingOverlay').style.display = 'none';
+            console.warn("No Institution ID provided in URL.");
+        }
+    });
+
+    // --- 3. FETCH CONFIG FROM FIREBASE ---
+    async function fetchConfig(id) {
+        try {
+            const doc = await db.collection('institutions').doc(id).get();
+            if (doc.exists) {
+                const data = doc.data();
+                // We are looking for diagnosticLinks.ipos
+                if (data.diagnosticLinks && data.diagnosticLinks.ipos) {
+                    institutionGoogleLink = data.diagnosticLinks.ipos;
+                } else {
+                    console.warn("Institution has no IPOS link configured.");
+                }
+            }
+        } catch (e) {
+            console.error("Error fetching config:", e);
+        } finally {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+    }
+
+    // --- 4. RENDER UI ---
+    function renderQuestions() {
+        const container = document.getElementById('questionsContainer');
+        let html = '';
+
+        questions.forEach((q, index) => {
+            const qNum = index + 1;
+            html += `
+                <div class="question-block" data-id="Q${qNum}">
+                    <span class="q-label">${q}</span>
+                    <div class="scale-options">
+                        ${renderOption(qNum, 0, "Not at all")}
+                        ${renderOption(qNum, 1, "Slightly")}
+                        ${renderOption(qNum, 2, "Moderately")}
+                        ${renderOption(qNum, 3, "Severely")}
+                        ${renderOption(qNum, 4, "Overwhel.")}
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function renderOption(qNum, val, desc) {
+        // Only show description for 0 and 4 to save space on mobile
+        const showDesc = (val === 0 || val === 4) ? `<span class="scale-desc">${desc}</span>` : `<span class="scale-desc">&nbsp;</span>`;
+        return `
+            <div class="scale-opt">
+                <input type="radio" name="Q${qNum}" value="${val}" id="q${qNum}_${val}">
+                <label for="q${qNum}_${val}">
+                    ${val}
+                    ${showDesc}
+                </label>
+            </div>
+        `;
+    }
+
+    // --- 5. GENERATE QR LOGIC ---
+    function generateBridgeQR() {
+        // 1. Validation: Check if Google Link exists
+        if (!institutionGoogleLink) {
+            alert("⚠️ System Error: This institution has not configured the IPOS link yet.\nPlease contact the administrator.");
+            return;
+        }
+
+        // 2. Gather Data
+        let answers = {};
+        for (let i = 1; i <= 10; i++) {
+            const selected = document.querySelector(`input[name="Q${i}"]:checked`);
+            // Default to 0 if skipped? Or force selection? Let's default to 0 to prevent errors.
+            answers[`Q${i}`] = selected ? selected.value : "0"; 
+        }
+
+        // 3. Magic Replacement
+        try {
+            let finalUrl = institutionGoogleLink;
+            
+            // Replace MAGIC_Q1 ... MAGIC_Q10
+            for (let i = 1; i <= 10; i++) {
+                finalUrl = finalUrl.replace(`MAGIC_Q${i}`, answers[`Q${i}`]);
+            }
+            
+            // Replace MAGIC_ID with empty string (Doctor fills it)
+            finalUrl = finalUrl.replace('MAGIC_ID', ""); 
+
+            // 4. Render QR
+            const qrDiv = document.getElementById("qrcode");
+            qrDiv.innerHTML = "";
+            new QRCode(qrDiv, {
+                text: finalUrl,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            // 5. Show Result
+            document.getElementById('qr-result').style.display = 'block';
+            document.getElementById('generateBtn').style.display = 'none'; // Hide button after generating
+            
+            // Scroll to bottom
+            setTimeout(() => {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }, 100);
+
+        } catch (e) {
+            console.error(e);
+            alert("Error generating QR code. Please check the console.");
+        }
+    }
+</script>
+
+</body>
+</html>

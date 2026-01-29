@@ -16,7 +16,7 @@
   <script src="admin.js" defer></script>
 
   <style>
-    /* Layout Fixes for Sticky Footer */
+    /* Sticky Footer Layout */
     body {
         display: flex;
         flex-direction: column;
@@ -54,6 +54,11 @@
         transform: translateY(-5px);
         box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
     }
+
+    /* Custom Color for Diagnostic Card */
+    .bg-purple-soft { background-color: #f3e8ff!important; }
+    .text-purple { color: #6f42c1!important; }
+    .border-purple { border-left: 5px solid #6f42c1; }
   </style>
 </head>
 <body>
@@ -82,7 +87,7 @@
 
   <div id="main-wrapper" class="d-none"> 
     
-    <div class="container py-5 mt-5">
+    <div class="container py-5 mt-4">
       <div class="row justify-content-center">
         <div class="col-lg-8 col-xl-6">
           
@@ -101,6 +106,19 @@
                 <p class="text-muted mb-0 small">Edit & save opioid conversion ratios</p>
               </div>
               <i class="bi bi-arrow-right ms-auto fs-4 text-muted"></i>
+            </div>
+          </a>
+
+          <a href="Admin/diagnostics-setup.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-block text-dark border-purple">
+            <div class="d-flex align-items-center">
+              <div class="bg-purple-soft p-3 rounded-circle me-4">
+                <i class="bi bi-clipboard-pulse text-purple fs-3"></i>
+              </div>
+              <div>
+                <h3 class="mb-1 h4 text-purple">Diagnostic Tools</h3>
+                <p class="text-muted mb-0 small">Configure Google Form links (IPOS, HADS)</p>
+              </div>
+              <i class="bi bi-arrow-right ms-auto fs-4 text-purple"></i>
             </div>
           </a>
 

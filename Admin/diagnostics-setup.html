@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnostic Tools Setup</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+  <link rel="stylesheet" href="../admin-style.css">
+
+  <style>
+    /* Page Specific Styles matching Opioid-ratio look */
+    body { background-color: #f8f9fa; }
+    
+    .main-container {
+      max-width: 900px;
+      margin: 30px auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+
+    .header-bar {
+      background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%); /* Purple Theme for Diagnostics */
+      padding: 20px 25px;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .content-area { padding: 30px; }
+
+    .tool-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: all 0.2s;
+    }
+    
+    .tool-card:hover {
+      border-color: #bfa5e9;
+      box-shadow: 0 4px 12px rgba(111, 66, 193, 0.05);
+    }
+
+    .magic-badge {
+      background-color: #f3e8ff;
+      color: #6f42c1;
+      border: 1px solid #d8b4fe;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-family: monospace;
+      margin-right: 5px;
+    }
+
+    #loadingOverlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255,255,255,0.9); z-index: 9999;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loadingOverlay">
+    <div class="spinner-border text-primary mb-3" role="status"></div>
+    <div class="text-muted fw-bold">Loading Configuration...</div>
+  </div>
+
+  <div class="container px-3">
+    <div class="main-container">
+      
+      <div class="header-bar">
+        <div>
+          <h4 class="mb-0 fw-bold"><i class="bi bi-clipboard-pulse"></i> Diagnostic Configuration</h4>
+          <small class="opacity-75">Link your Google Forms here</small>
+        </div>
+        <a href="../Admin.html" class="btn btn-outline-light btn-sm">
+          <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+      </div>
+
+      <div class="content-area">
+        
+        <div class="alert alert-info shadow-sm mb-4">
+          <h5><i class="bi bi-info-circle-fill"></i> Setup Instructions:</h5>
+          <ol class="mb-0 ps-3 small">
+            <li>Create a Google Form for the tool.</li>
+            <li>Click "Get Pre-filled Link" (three dots menu).</li>
+            <li>Fill the fields with the <strong>Magic Codes</strong> shown below (e.g., MAGIC_ID).</li>
+            <li>Click "Get Link" and paste it into the boxes below.</li>
+          </ol>
+        </div>
+
+        <form id="configForm">
+          
+          <div class="tool-card">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
+                <i class="bi bi-journal-medical text-primary fs-4"></i>
+              </div>
+              <div>
+                <h5 class="mb-0 fw-bold text-primary">IPOS</h5>
+                <small class="text-muted">Integrated Palliative care Outcome Scale</small>
+              </div>
+            </div>
+            
+            <div class="mb-2">
+              <label class="form-label fw-bold small text-secondary">Google Form Pre-filled Link</label>
+              <input type="url" class="form-control" id="link_ipos" placeholder="https://docs.google.com/forms/..." required>
+            </div>
+            
+            <div class="bg-light p-2 rounded border">
+              <small class="text-muted d-block mb-1 fw-bold">Required Magic Codes:</small>
+              <div>
+                <span class="magic-badge">MAGIC_ID</span>
+                <span class="magic-badge">MAGIC_Q1</span>
+                <span class="magic-badge">MAGIC_Q2</span>
+                <span class="text-muted small ms-1">... up to MAGIC_Q10</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-card">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-warning bg-opacity-10 p-2 rounded-circle me-3">
+                <i class="bi bi-emoji-frown text-warning fs-4"></i>
+              </div>
+              <div>
+                <h5 class="mb-0 fw-bold text-warning" style="color:#b45309!important">HADS</h5>
+                <small class="text-muted">Hospital Anxiety and Depression Scale</small>
+              </div>
+            </div>
+            
+            <div class="mb-2">
+              <label class="form-label fw-bold small text-secondary">Google Form Pre-filled Link</label>
+              <input type="url" class="form-control" id="link_hads" placeholder="https://docs.google.com/forms/..." required>
+            </div>
+            
+            <div class="bg-light p-2 rounded border">
+              <small class="text-muted d-block mb-1 fw-bold">Required Magic Codes:</small>
+              <div>
+                <span class="magic-badge">MAGIC_ID</span>
+                <span class="magic-badge">MAGIC_A</span>
+                <span class="magic-badge">MAGIC_D</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-card">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-danger bg-opacity-10 p-2 rounded-circle me-3">
+                <i class="bi bi-thermometer-half text-danger fs-4"></i>
+              </div>
+              <div>
+                <h5 class="mb-0 fw-bold text-danger">Distress Thermometer</h5>
+                <small class="text-muted">Rapid screening tool</small>
+              </div>
+            </div>
+            
+            <div class="mb-2">
+              <label class="form-label fw-bold small text-secondary">Google Form Pre-filled Link</label>
+              <input type="url" class="form-control" id="link_distress" placeholder="https://docs.google.com/forms/..." required>
+            </div>
+            
+            <div class="bg-light p-2 rounded border">
+              <small class="text-muted d-block mb-1 fw-bold">Required Magic Codes:</small>
+              <div>
+                <span class="magic-badge">MAGIC_ID</span>
+                <span class="magic-badge">MAGIC_SCORE</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <div class="card bg-light border-0">
+            <div class="card-body">
+              <label for="confirmPassword" class="form-label fw-bold">
+                <i class="bi bi-lock-fill"></i> Verify Identity to Save
+              </label>
+              <div class="input-group mb-3">
+                <input type="password" class="form-control" id="confirmPassword" placeholder="Enter your login password" required>
+                <button class="btn btn-primary px-4 fw-bold" type="submit" id="saveBtn" style="background-color: #6f42c1; border-color: #6f42c1;">
+                  <i class="bi bi-save"></i> Save Links
+                </button>
+              </div>
+              <div id="msgArea" class="alert alert-success mt-2" style="display:none;"></div>
+              <div id="errorArea" class="alert alert-danger mt-2" style="display:none;"></div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ================= FIREBASE CONFIG ================= */
+    const firebaseConfig = {
+      apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
+      authDomain: "pallicalc-eabdc.firebaseapp.com",
+      projectId: "pallicalc-eabdc",
+      storageBucket: "pallicalc-eabdc.firebasestorage.app",
+      messagingSenderId: "347532270864",
+      appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentInstitutionId = null;
+
+    /* ================= INIT & LISTENERS ================= */
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('configForm').addEventListener('submit', saveLinks);
+    });
+
+    /* ================= AUTH CHECK ================= */
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        window.location.href = "../index.html";
+        return;
+      }
+      try {
+        const snap = await db.collection("users").doc(user.uid).get();
+        if (!snap.exists || snap.data().role !== "institutionAdmin") {
+          alert("Access Denied.");
+          window.location.href = "../index.html";
+          return;
+        }
+        currentInstitutionId = snap.data().institutionId;
+        await loadLinksFromFirebase();
+        document.getElementById("loadingOverlay").style.display = "none";
+      } catch (e) {
+        console.error(e);
+        alert("Error loading profile: " + e.message);
+      }
+    });
+
+    /* ================= LOAD DATA ================= */
+    async function loadLinksFromFirebase() {
+      try {
+        const doc = await db.collection("institutions").doc(currentInstitutionId).get();
+        if (doc.exists) {
+            const data = doc.data().diagnosticLinks || {};
+            if(data.ipos) document.getElementById('link_ipos').value = data.ipos;
+            if(data.hads) document.getElementById('link_hads').value = data.hads;
+            if(data.distress) document.getElementById('link_distress').value = data.distress;
+        }
+      } catch (e) {
+        console.error("Load Failed:", e);
+        showErr("Failed to load existing links.");
+      }
+    }
+
+    /* ================= SAVE LOGIC ================= */
+    async function saveLinks(e) {
+      e.preventDefault();
+      
+      const password = document.getElementById("confirmPassword").value;
+      const btn = document.getElementById("saveBtn");
+      const msgArea = document.getElementById("msgArea");
+      const errorArea = document.getElementById("errorArea");
+      
+      msgArea.style.display = "none";
+      errorArea.style.display = "none";
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+
+      try {
+        // 1. Re-authenticate
+        const user = auth.currentUser;
+        const cred = firebase.auth.EmailAuthProvider.credential(user.email, password);
+        await user.reauthenticateWithCredential(cred);
+
+        // 2. Gather Data
+        const links = {
+            ipos: document.getElementById('link_ipos').value.trim(),
+            hads: document.getElementById('link_hads').value.trim(),
+            distress: document.getElementById('link_distress').value.trim()
+        };
+
+        // 3. Save to Firebase
+        await db.collection("institutions").doc(currentInstitutionId).set({
+            diagnosticLinks: links
+        }, { merge: true });
+
+        // 4. Success UI
+        msgArea.textContent = "Success! Links saved securely.";
+        msgArea.style.display = "block";
+        document.getElementById("confirmPassword").value = "";
+
+      } catch (err) {
+        console.error(err);
+        let errorMsg = err.message;
+        if (err.code === 'auth/wrong-password') {
+          errorMsg = "Incorrect password. Please try again.";
+        }
+        errorArea.textContent = "Error: " + errorMsg;
+        errorArea.style.display = "block";
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-save"></i> Save Links';
+      }
+    }
+
+    function showErr(txt) {
+      const el = document.getElementById("errorArea");
+      el.textContent = txt;
+      el.style.display = "block";
+    }
+  </script>
+
+</body>
+</html>
