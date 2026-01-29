@@ -18,6 +18,7 @@ const defaultBenzoTypes = [
   { key: "diazepam", label: "Diazepam", route: "PO", equiv: 15, onset: "30 min", duration: "20-50 h" }
 ];
 
+// 🔥 PRODUCTION FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
   authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -33,7 +34,7 @@ const firebaseConfig = {
    ========================================= */
 function init() {
   try {
-    // FIX: Show calculator UI immediately to prevent flash/delay
+    // Show calculator UI immediately to prevent flash/delay
     document.getElementById("calcPage").style.display = "block";
     document.getElementById("editPage").style.display = "none";
     
@@ -50,12 +51,14 @@ async function initFirebaseAuth() {
   auth = firebase.auth();
   db = firebase.firestore();
  
-db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
-    console.warn("Offline persistence error:", err.code);
-});
+  db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+      console.warn("Offline persistence error:", err.code);
+  });
  
   auth.onAuthStateChanged(async (user) => {
     if (!user) { window.location.href = "../index.html"; return; } 
+    
+    // 🛑 EMAIL VERIFICATION CHECK
     if (!user.emailVerified) { 
         alert("Please verify your email before using PalliCalc.");
         await auth.signOut();
@@ -63,6 +66,7 @@ db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
         return; 
     }
     
+    // 🛑 ROLE CHECK
     const snap = await db.collection("users").doc(user.uid).get();
     if (!snap.exists) { 
         await auth.signOut();
@@ -71,7 +75,12 @@ db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
     }
     
     const profile = snap.data();
-    if (profile.role === "institutionAdmin") { window.location.href = "../Admin.html"; return; }
+    
+    // Redirect Admins to Dashboard
+    if (profile.role === "institutionAdmin") { 
+        window.location.href = "../Admin.html"; 
+        return; 
+    }
     
     window.PALLICALC_USER = { role: profile.role, institutionId: profile.institutionId || null };
     
@@ -83,12 +92,19 @@ db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
 
 async function applyMemberRules() {
   const role = window.PALLICALC_USER.role;
+  const editLink = document.getElementById("toEditLink");
+  if (editLink) editLink.style.display = "";
   
   if (role === "institutionUser") {
+    // 🛑 INSTITUTION USER LOGIC
+    // 1. Remove Personal Ratios (Cleanup)
     localStorage.removeItem("benzoTypes");
     localStorage.removeItem("benzoIncluded");
+    
+    // 2. Fetch Ratios (Will fail if Suspended)
     await loadRatiosFromFirebase();
   } else {
+    // ✅ PERSONAL USER LOGIC
      loadSavedData(); 
   }
   
@@ -109,23 +125,37 @@ function updateBanner(userType, isCustom, timestamp = null, instName = null) {
     const dateObj = (timestamp && typeof timestamp.toDate === 'function') ? timestamp.toDate() : new Date(timestamp);
     if (!isNaN(dateObj)) dateStr = ` (Saved: ${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})`;
   }
+
   if (userType === "personal") {
-    html = isCustom ? `<strong>Personal User:</strong> <span style="color:#198754; font-weight:bold;">Custom Ratios</span>${dateStr}` : `<strong>Personal User:</strong> <span style="color:#6c757d; font-style:italic;">Default Ratios</span>`;
+    html = isCustom 
+        ? `<strong>Personal User:</strong> <span style="color:#198754; font-weight:bold;">Custom Ratios</span>${dateStr}` 
+        : `<strong>Personal User:</strong> <span style="color:#6c757d; font-style:italic;">Default Ratios</span>`;
   } else if (userType === "institution") {
-    html = isCustom ? `<strong>${instName || "Institution"}:</strong> <span style="color:#198754; font-weight:bold;">Custom Ratios</span>${dateStr}` : `<strong>${instName || "Institution"}:</strong> <span style="color:#6c757d; font-style:italic;">Default Ratios</span>`;
+    // 🛑 SUSPENSION VISUAL CHECK
+    if (instName === "Suspended") {
+        html = `<strong>Access Restricted:</strong> <span style="color: #dc3545; font-weight: bold;">System Default Ratios</span> (Contact Admin)`;
+    } else {
+        html = isCustom 
+            ? `<strong>${instName || "Institution"}:</strong> <span style="color:#198754; font-weight:bold;">Custom Ratios</span>${dateStr}` 
+            : `<strong>${instName || "Institution"}:</strong> <span style="color:#6c757d; font-style:italic;">Default Ratios</span>`;
+    }
   }
   banner.innerHTML = html;
   banner.style.display = "block";
 }
 
 /* =========================================
-   DATA LOADING
+   DATA LOADING (UPDATED FOR SECURITY)
    ========================================= */
 async function loadRatiosFromFirebase() {
     try {
       const instId = window.PALLICALC_USER.institutionId;
       if (!instId) { loadHardcodedDefaults(); updateBanner("institution", false); return; }
+      
+      // 🛑 SECURITY CHECK:
+      // If Institution is SUSPENDED, this .get() will fail due to Firestore Rules.
       const ref = await db.collection("benzoRatios").doc(instId).get();
+      
       if (ref.exists) {
         const data = ref.data();
         benzoTypes = data.benzoTypes || [];
@@ -133,10 +163,22 @@ async function loadRatiosFromFirebase() {
         fillAllSelects();
         updateBanner("institution", true, data.updatedAt);
       } else {
+        // No custom data exists yet
         loadHardcodedDefaults();
         updateBanner("institution", false);
       }
-    } catch (e) { loadHardcodedDefaults(); updateBanner("institution", false); }
+    } catch (e) { 
+      console.warn("Benzo Fetch Error (Likely Suspended):", e);
+      // 🛑 FALLBACK TO DEFAULTS
+      loadHardcodedDefaults(); 
+      
+      if (e.code === 'permission-denied') {
+          // Explicitly show suspension state in banner
+          updateBanner("institution", false, null, "Suspended");
+      } else {
+          updateBanner("institution", false);
+      }
+    }
 }
 
 function loadHardcodedDefaults() {
