@@ -375,7 +375,7 @@ exports.enforceSuspension = onSchedule("every 24 hours", async (event) => {
     await batch.commit();
 });
 
-// --- 6. STAFF NOTIFICATION SYSTEM (NEW) ---
+// --- 6. STAFF NOTIFICATION SYSTEM (Professional & Equitable) ---
 exports.sendSuspensionReminder = onCall(async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Login required.');
     
@@ -389,7 +389,6 @@ exports.sendSuspensionReminder = onCall(async (request) => {
     if (!instId) throw new HttpsError('failed-precondition', 'No institution found.');
 
     // 2. Find the ONE Admin for this Institution
-    // We query the 'users' collection for the person who is 'institutionAdmin' + matches the institutionId
     const adminQuery = await admin.firestore().collection('users')
         .where('institutionId', '==', instId)
         .where('role', '==', 'institutionAdmin')
@@ -404,15 +403,64 @@ exports.sendSuspensionReminder = onCall(async (request) => {
 
     // 3. Send the Email
     await transporter.sendMail({
-        from: '"PalliCalc System" <pallicalc@gmail.com>',
+        from: '"PalliCalc Support" <pallicalc@gmail.com>',
         to: adminEmail,
-        subject: `🔴 Urgent: Staff Access Blocked for ${instName}`,
+        subject: `Service Update: Staff Access for ${instName}`,
+        
         html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0;">
-            <h3 style="color: #d9534f;">Staff Access Interrupted</h3>
-            <p><strong>${userData.username || 'A staff member'}</strong> (${userData.email}) attempted to access PalliCalc but was locked out due to the account suspension.</p>
-            <p>Please log in to the <a href="https://pallicalc-eabdc.web.app/Admin/renewal.html">Admin Dashboard</a> to renew the subscription and restore access for your team.</p>
-        </div>`
+        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
+            
+            <div style="background-color: #f8f9fa; padding: 20px; border-bottom: 1px solid #e9ecef;">
+                <h2 style="color: #343a40; margin: 0; font-size: 20px;">Service Update</h2>
+            </div>
+
+            <div style="padding: 30px;">
+                <p style="font-size: 16px; color: #333; line-height: 1.6;">
+                    <strong>Dear Admin,</strong>
+                </p>
+                <p style="font-size: 16px; color: #555; line-height: 1.6;">
+                    We are writing to let you know that a member of your clinical team recently attempted to access PalliCalc's institutional features, but access is currently paused due to the subscription status.
+                </p>
+                
+                <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 15px; margin: 20px 0;">
+                    <p style="margin: 0; color: #777; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Access Attempt By</p>
+                    <p style="margin: 5px 0 0 0; font-size: 16px; font-weight: 600; color: #333;">
+                        ${userData.username || 'Staff Member'} 
+                        <span style="font-weight: normal; color: #777; font-size: 14px;">(${userData.email})</span>
+                    </p>
+                </div>
+
+                <div style="background-color: #e7f5ff; border-left: 4px solid #0d6efd; padding: 15px; margin: 25px 0;">
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: #0d6efd; font-size: 15px;">
+                        Commitment to Equitable Access
+                    </p>
+                    <p style="margin: 0; font-size: 14px; color: #495057; line-height: 1.5;">
+                        PalliCalc is dedicated to supporting health institutions, non-profits, and hospices globally regardless of financial capacity. 
+                        <strong>Full and partial subsidies are available</strong> for institutions facing budget constraints.
+                    </p>
+                </div>
+
+                <p style="font-size: 16px; color: #555; line-height: 1.6;">
+                    To restore access, you may renew the subscription via the dashboard, or contact us directly to discuss a fee waiver.
+                </p>
+
+                <div style="margin-top: 30px; text-align: left;">
+                    <a href="https://pallicalc-eabdc.web.app/Admin/renewal.html" 
+                       style="display: inline-block; background-color: #343a40; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: 500; font-size: 14px; margin-right: 10px;">
+                       View Account Status
+                    </a>
+                    <a href="mailto:support@pallicalc.com?subject=Subsidy Request for ${instName}" 
+                       style="display: inline-block; color: #0d6efd; padding: 10px 0; text-decoration: none; font-weight: 500; font-size: 14px;">
+                       Contact Support for Assistance &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <div style="background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #adb5bd; border-top: 1px solid #e9ecef;">
+                <p style="margin: 0;">&copy; 2026 Alivioscript Solutions.</p>
+            </div>
+        </div>
+        `
     });
 
     return { success: true };

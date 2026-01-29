@@ -219,32 +219,37 @@ function updateUIForLogin(userData, email, isSuspended) {
     }
 }
 
-// 📢 UPDATED: Polite Notice with "Notify Admin" Button
+// 📢 UPDATED: Gentle "Service Update" Notice
 function showSuspensionNotice(instName) {
     const toolsSection = document.getElementById('tools-section');
     if (toolsSection) {
         toolsSection.innerHTML = `
-            <div class="suspended-alert-card">
-                <i class="bi bi-shield-lock"></i>
-                <h3>Access Temporarily Paused</h3>
-                <p>The premium features for <strong>${instName}</strong> are currently unavailable.</p>
+            <div class="suspended-alert-card" style="border: 1px solid #e2e8f0; background: #f8fafc;">
+                <i class="bi bi-info-circle" style="color: #64748b; font-size: 2.5rem;"></i>
+                <h3 style="color: #334155; margin-top: 10px;">Service Update</h3>
+                
+                <p style="color: #475569;">
+                    The customized protocols for <strong>${instName}</strong> are currently paused.
+                </p>
                 
                 <div id="notify-action-area" style="margin-top: 20px;">
-                    <p class="note" style="margin-bottom: 15px;">
-                        Please contact your <strong>Institution Admin</strong> to renew the departmental subscription.
+                    <p class="note" style="margin-bottom: 15px; color: #475569; font-size: 14px;">
+                        Please ask your <strong>Team Lead</strong> to check the account status to restore features.
                     </p>
-                    <button id="notify-admin-btn" class="btn btn-outline-danger" style="font-size: 14px; border-radius: 20px; padding: 8px 20px; cursor: pointer; background: #fff; border: 1px solid #dc3545; color: #dc3545;">
-                        <i class="bi bi-bell"></i> Send Reminder to Admin
+                    <button id="notify-admin-btn" class="btn btn-outline-secondary" style="font-size: 13px; border-radius: 20px; padding: 8px 20px; cursor: pointer; background: #fff; border: 1px solid #94a3b8; color: #475569;">
+                        <i class="bi bi-envelope"></i> Notify Admin
                     </button>
                 </div>
                 
-                <p style="font-size:12px; margin-top:20px; color:#94a3b8;">Standard demo tools remain accessible.</p>
+                <div style="margin-top: 20px; font-size: 13px; color: #0f5132; background: #f0fdf4; padding: 8px; border-radius: 6px; display: inline-block;">
+                    <i class="bi bi-check-circle"></i> Standard PalliCalc tools remain active.
+                </div>
             </div>
         `;
         
         toolsSection.classList.add('visible');
 
-        // Add Click Listener for the Button
+        // Add Click Listener
         const btn = document.getElementById('notify-admin-btn');
         if (btn) {
             btn.addEventListener('click', async function() {
@@ -253,7 +258,6 @@ function showSuspensionNotice(instName) {
                 // A. Show Loading
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
-                btn.style.opacity = "0.7";
                 
                 try {
                     // B. Call Backend
@@ -261,11 +265,11 @@ function showSuspensionNotice(instName) {
                     const sendReminder = firebase.functions().httpsCallable('sendSuspensionReminder');
                     await sendReminder();
                     
-                    // C. Success Message
+                    // C. Success Message (Neutral & Calm)
                     document.getElementById('notify-action-area').innerHTML = `
-                        <div style="color: #0f5132; background: #d1e7dd; padding: 15px; border-radius: 8px; margin-top: 10px; border: 1px solid #badbcc;">
-                            <i class="bi bi-check-circle-fill"></i> <strong>Reminder Sent!</strong><br>
-                            Your admin has been notified via email.
+                        <div style="color: #475569; background: #f1f5f9; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                            <i class="bi bi-send-check"></i> <strong>Notification Sent</strong><br>
+                            Your admin has been updated.
                         </div>
                     `;
                 } catch (error) {
@@ -274,14 +278,12 @@ function showSuspensionNotice(instName) {
                     setTimeout(() => {
                         btn.disabled = false;
                         btn.innerHTML = originalText;
-                        btn.style.opacity = "1";
                     }, 3000);
                 }
             });
         }
     }
 }
-
 // Handle logout
 async function handleLogout() {
     try {
