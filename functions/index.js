@@ -107,7 +107,7 @@ exports.completeAdminTransfer = onRequest({ cors: true }, async (req, res) => {
           updateData.isMoH = true;
           updateData.billingStatus = 'trial-free-lifetime';
           updateData.futureBilling = false;
-          updateData.currency = 'MYR'; // Default Gov to MYR
+          updateData.currency = 'MYR'; 
       } else {
           updateData.isMoH = false;
           updateData.billingStatus = 'active-first-year'; 
@@ -158,7 +158,7 @@ exports.notifyStaffRemoval = onDocumentUpdated("users/{userId}", async (event) =
     }
 });
 
-// --- 4. COUNTER & COUPONS (Updated with Country Logic) ---
+// --- 4. COUNTER & COUPONS (Updated: One-Time Use Logic) ---
 exports.onUserCreated = onDocumentCreated("users/{userId}", async (event) => {
     const newData = event.data.data();
     const userId = event.params.userId;
@@ -175,7 +175,8 @@ exports.onUserCreated = onDocumentCreated("users/{userId}", async (event) => {
         let subEnd = new Date();
         subEnd.setFullYear(subEnd.getFullYear() + 1);
         let subEndTimestamp = admin.firestore.Timestamp.fromDate(subEnd);
-        let manualDiscount = 0; 
+        let manualDiscount = 0; // Default: No permanent discount
+        let hasPaidOnce = false; 
 
         // Detect Currency based on Country
         const country = newData.country ? newData.country.trim().toLowerCase() : "malaysia";
@@ -185,13 +186,17 @@ exports.onUserCreated = onDocumentCreated("users/{userId}", async (event) => {
             const codeClean = newData.promoCode.toUpperCase().trim();
             const couponRef = admin.firestore().collection('coupons').doc(codeClean);
             const couponDoc = await couponRef.get();
+            
             if (couponDoc.exists && couponDoc.data().usedCount < couponDoc.data().maxUses) {
                 batch.update(couponRef, { usedCount: admin.firestore.FieldValue.increment(1) });
-                manualDiscount = couponDoc.data().discountPercent;
-                if (manualDiscount === 100) {
-                    billingStatus = 'trial-free-lifetime';
-                    futureBilling = false;
-                    subEndTimestamp = null; 
+                
+                const discountPercent = couponDoc.data().discountPercent;
+                
+                // LOGIC CHANGE: Coupon affects 'billingStatus' but NOT 'manualDiscount' for future.
+                if (discountPercent === 100) {
+                     // 100% OFF: Gives them a free first year, but keeps 'hasPaidOnce' as FALSE
+                     // This means next year they must pay (unless manually overridden by admin).
+                     billingStatus = 'active-first-year';
                 }
             }
         }
@@ -199,7 +204,8 @@ exports.onUserCreated = onDocumentCreated("users/{userId}", async (event) => {
         if (newData.isMoH === true) {
              batch.update(userRef, { billingStatus: 'trial-free-lifetime', futureBilling: false, currency: "MYR" });
         } else {
-            const updates = { billingStatus, futureBilling, hasPaidOnce: false, manualDiscount, currency };
+            // Apply updates. Note: manualDiscount stays 0 unless Admin changes it manually later.
+            const updates = { billingStatus, futureBilling, hasPaidOnce, manualDiscount, currency };
             if (subEndTimestamp) updates.subscriptionEnd = subEndTimestamp;
             batch.update(userRef, updates);
         }
