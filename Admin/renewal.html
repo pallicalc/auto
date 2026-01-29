@@ -1,182 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Subscription Renewal | PalliCalc</title>
-  
-  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-functions-compat.js"></script>
-  
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  
-  <style>
-    body { background: #f5f7fa; min-height: 100vh; }
-    .bill-card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 30px; }
-    .status-active { color: #198754; font-weight: bold; }
-    .status-pending { color: #ffc107; font-weight: bold; } /* Yellow for Pending */
-    .status-due { color: #fd7e14; font-weight: bold; }
-    .status-suspended { color: #dc3545; font-weight: bold; }
-    .blur-overlay { filter: blur(4px); pointer-events: none; opacity: 0.6; }
-    .lock-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; text-align: center; width: 80%; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Management | PalliCalc Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-functions-compat.js"></script>
     
-
-
-    /* FINANCIAL AID BOX STYLE */
-    .aid-box { 
-        background: #e3f2fd; 
-        border-left: 5px solid #2196f3; 
-        padding: 15px; 
-        margin-top: 25px; 
-        border-radius: 4px; 
-    }
-    .aid-box a { color: #0d6efd; text-decoration: none; font-weight: bold; }
-    .aid-box a:hover { text-decoration: underline; }
-  </style>
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border: none; border-radius: 12px; }
+        .status-active { color: #198754; font-weight: bold; background: #d1e7dd; padding: 4px 10px; border-radius: 20px; font-size: 0.9em; }
+        .status-due { color: #fd7e14; font-weight: bold; background: #ffecb5; padding: 4px 10px; border-radius: 20px; font-size: 0.9em; }
+        .status-pending { color: #0dcaf0; font-weight: bold; background: #cff4fc; padding: 4px 10px; border-radius: 20px; font-size: 0.9em; }
+        .status-suspended { color: #dc3545; font-weight: bold; background: #f8d7da; padding: 4px 10px; border-radius: 20px; font-size: 0.9em; }
+        .payment-lock { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 10; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); border-radius: 12px; }
+    </style>
 </head>
 <body>
 
-  <nav class="navbar navbar-light bg-white shadow-sm mb-5">
-    <div class="container">
-      <a href="../admin.html" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i> Dashboard
-      </a>
-      <span class="navbar-brand mb-0 h1 mx-auto">Subscription Renewal</span>
-      <div style="width: 80px;"></div>
-    </div>
-  </nav>
-
-  <div class="container" style="max-width: 900px;">
-
-    <div id="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status"></div>
-      <p class="mt-2 text-muted">Analyzing account...</p>
-    </div>
-
-    <div id="billingContent" class="row d-none">
-      
-      <div class="col-lg-7 mb-4">
-        <div class="bill-card h-100">
-          <h4 class="mb-4"><i class="bi bi-receipt me-2"></i>Renewal Invoice</h4>
-          
-          <div class="mb-4 border-bottom pb-3">
-            <h5 id="instName">Loading...</h5>
-            <div class="d-flex justify-content-between mt-2"><span>Country:</span> <strong id="countryDisplay">-</strong></div>
-            <div class="d-flex justify-content-between mt-1"><span>Status:</span> <span id="statusBadge">Checking...</span></div>
-            <div class="d-flex justify-content-between mt-1"><span>Paid Until:</span> <strong id="paidUntilDate">-</strong></div>
-          </div>
-
-          <div class="mb-3">
-            <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded">
-              <span>Active Staff Members:</span> <strong id="userCount">0</strong>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-primary">Subscription & Billing</h2>
+                <a href="../admin.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
             </div>
-          </div>
 
-          <table class="table table-borderless">
-            <tbody>
-              <tr>
-                <td>Annual Base Fee (<span id="tierName">Tier 1</span>)</td>
-                <td class="text-end"><span id="currencySymbol">RM</span> <span id="basePrice">0.00</span></td>
-              </tr>
-              <tr id="discountRow" class="text-success d-none">
-                <td><i class="bi bi-tag-fill me-1"></i>Discount (<span id="discountPercent">0</span>%)</td>
-                <td class="text-end">- <span id="currencySymbolDisc">RM</span> <span id="discountAmount">0.00</span></td>
-              </tr>
-              <tr id="reactivationRow" class="text-danger d-none">
-                <td>Reactivation Penalty</td>
-                <td class="text-end"><span id="currencySymbolPen">RM</span> <span id="penaltyPrice">50.00</span></td>
-              </tr>
-              <tr class="border-top">
-                <td class="pt-3 fw-bold">Total Due</td>
-                <td class="pt-3 text-end fw-bold fs-5"><span id="currencySymbolTotal">RM</span> <span id="totalPrice">0.00</span></td>
-              </tr>
-            </tbody>
-          </table>
-          
-          <div id="freeTrialMsg" class="alert alert-success d-none">
-            <i class="bi bi-gift-fill me-2"></i> <strong>First Year Free!</strong>
-          </div>
-
-          <div class="aid-box">
-             <div class="d-flex">
-                <i class="bi bi-info-circle-fill text-primary me-3 fs-4"></i>
-                <div>
-                   <strong>Financial Support Available</strong><br>
-                   <small class="text-muted" style="line-height: 1.4; display:block; margin-bottom:5px;">
-                     We support NGOs and institutions with financial constraints. Contact us for a partial or full fee waiver.
-                   </small>
-                   <a href="mailto:support@pallicalc.com?subject=Financial Aid Request">Email support@pallicalc.com &rarr;</a>
-                </div>
-             </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg-5 mb-4 position-relative">
-        
-        <div id="paymentLock" class="d-none">
-            <div class="lock-message bg-white p-4 shadow rounded border">
-                <i class="bi bi-check-circle-fill text-success fs-1 mb-2"></i>
-                <h5 id="lockTitle">No Payment Needed</h5>
-                <p id="lockDesc" class="text-muted small mb-0">Subscription active.</p>
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 text-muted">Loading subscription details...</p>
             </div>
-        </div>
 
-        <div id="paymentMethods" class="bill-card h-100">
-          <h5 class="mb-4">Select Payment Method</h5>
-          
-          <div id="methodMalaysia" class="d-none">
-              <div class="d-grid gap-3">
-                <button onclick="toggleQR()" class="btn btn-outline-primary py-3 text-start">
-                  <div class="d-flex align-items-center">
-                    <i class="bi bi-qr-code-scan fs-3 me-3"></i>
-                    <div><div class="fw-bold">DuitNow QR</div><small class="text-muted">Instant Transfer</small></div>
-                  </div>
-                </button>
-                <div id="qrSection" class="bg-light p-3 rounded text-center d-none">
-                    <p class="small text-muted mb-2">Scan or Transfer <strong>RM <span id="qrAmount">0.00</span></strong></p>
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" style="width:120px; opacity:0.5;" class="mb-2">
-                    <div class="small fw-bold">Public Bank: 1234567890</div>
+            <div id="billingContent" class="d-none">
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="card-title fw-bold mb-1" id="instName">Loading...</h5>
+                                <p class="text-muted mb-2 small">
+                                    Region: <span id="countryDisplay" class="fw-bold">...</span> | 
+                                    Staff Count: <span id="userCount">0</span>
+                                </p>
+                                <div class="mb-2">
+                                    Status: <span id="statusBadge">Checking...</span>
+                                </div>
+                                <p class="mb-0 small">Valid Until: <strong id="paidUntilDate">...</strong></p>
+                            </div>
+                            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                <div class="bg-light p-3 rounded text-center border">
+                                    <small class="text-muted d-block text-uppercase">Total Due</small>
+                                    <h3 class="fw-bold text-primary mb-0"><span id="currencySymbol1">RM</span> <span id="totalPrice">0.00</span></h3>
+                                    <small id="tierName" class="text-muted d-block mt-1">Tier Calculation</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info d-flex align-items-center mt-3 shadow-sm" role="alert" style="border-left: 5px solid #0d6efd; background-color: #f0f8ff;">
+                            <div class="me-3">
+                                <i class="bi bi-heart-pulse-fill fs-3 text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="alert-heading fw-bold mb-1">Commitment to Equitable Access</h6>
+                                <p class="mb-0 small text-secondary">
+                                    PalliCalc is dedicated to supporting health institutions, non-profits, and hospices globally. 
+                                    Full and partial subsidies are available for eligible institutions. 
+                                    <a href="mailto:support@pallicalc.com" class="fw-bold text-decoration-none" style="color: #0d6efd;">Contact us for assistance &rarr;</a>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div id="discountRow" class="alert alert-success d-none mt-2 small">
+                            <strong>Discount Applied:</strong> A <span id="discountPercent">0</span>% manual waiver has been applied (-<span id="currencySymbol2">RM</span> <span id="discountAmount">0</span>).
+                        </div>
+                        <div id="freeTrialMsg" class="alert alert-success d-none mt-2 small">
+                            <strong>First Year Free:</strong> As a new institution, your first year is on us. No payment required.
+                        </div>
+
+                    </div>
                 </div>
-              </div>
-          </div>
 
-          <div id="methodInternational" class="d-none">
-              <div class="d-grid gap-3">
-                <div class="alert alert-secondary border-0 small"><i class="bi bi-globe me-1"></i> International (USD)</div>
-                <a href="#" id="stripeLink" target="_blank" class="btn btn-outline-dark py-3 text-start">
-                  <div class="d-flex align-items-center">
-                    <i class="bi bi-credit-card-2-front fs-3 me-3"></i>
-                    <div><div class="fw-bold">Pay with Card (Stripe)</div><small class="text-muted">Secure Payment</small></div>
-                  </div>
-                </a>
-              </div>
-          </div>
+                <div class="card shadow-sm mb-4 position-relative">
+                    
+                    <div id="paymentLock" class="payment-lock d-none">
+                        <div class="text-center bg-white p-4 shadow rounded border">
+                            <i class="bi bi-check-circle-fill text-success fs-1 mb-2"></i>
+                            <h5 class="fw-bold">Subscription Active</h5>
+                            <p class="text-muted small mb-0">No payment is required at this time.</p>
+                        </div>
+                    </div>
 
-          <div class="mt-4 pt-3 border-top">
-             <label class="form-label small fw-bold text-muted">Confirm Payment</label>
-             <input type="text" id="txnRefInput" class="form-control mb-2" placeholder="Transaction / Receipt Ref No.">
-             
-             <button id="btnPaid" onclick="reportPayment()" class="btn btn-success w-100 fw-bold">
-                <i class="bi bi-check-circle me-1"></i> I Have Paid
-             </button>
-             <small class="text-muted d-block mt-2 text-center" style="font-size: 0.75rem;">
-                 System will grant 1-year access immediately.<br>Admin will verify receipt later.
-             </small>
-             <small id="paymentMsg" class="text-danger d-block mt-2 text-center"></small>
-          </div>
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Renew Subscription</h5>
+                        
+                        <div class="row g-4">
+                            <div class="col-md-6 border-end">
+                                <p class="text-muted small">To ensure uninterrupted access for all your staff, please renew your annual plan.</p>
+                                <ul class="list-unstyled small text-secondary">
+                                    <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Unlimited Staff Access</li>
+                                    <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Full Calculator Suite</li>
+                                    <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Patient PDF Generation</li>
+                                    <li class="mb-2"><i class="bi bi-shield-check text-primary me-2"></i>Secure Data Protection</li>
+                                </ul>
+                                <div class="mt-3 p-2 bg-light rounded small">
+                                    <strong>Base Price:</strong> <span id="currencySymbol3">RM</span> <span id="basePrice">0.00</span> / year
+                                </div>
+                            </div>
 
-        </div>
-      </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold mb-3">Select Payment Method</h6>
 
+                                <div id="methodMalaysia" class="d-none text-center">
+                                    <div class="alert alert-light border">
+                                        <img src="https://via.placeholder.com/200x200?text=QR+Code+Placeholder" alt="DuitNow QR" class="img-fluid mb-2" style="max-width: 180px; border-radius: 8px;">
+                                        <p class="mb-0 fw-bold">Scan to Pay <span id="qrAmount">RM 0.00</span></p>
+                                        <small class="text-muted d-block mt-1">Or transfer to:<br><strong>Public Bank 123456789</strong><br>(PalliCalc Services)</small>
+                                    </div>
+                                </div>
+
+                                <div id="methodInternational" class="d-none text-center">
+                                    <p class="text-muted mb-3 small">Secure credit/debit card payment via Stripe.</p>
+                                    <a id="stripePayBtn" href="#" target="_blank" class="btn btn-primary w-100 py-2 mb-3">
+                                        <i class="bi bi-credit-card-2-front me-2"></i> Pay via Card
+                                    </a>
+                                    <div class="alert alert-warning small py-1">
+                                        <i class="bi bi-info-circle me-1"></i> <strong>Important:</strong> After payment, you must copy the <strong>Receipt Number</strong> from your email and paste it below to activate.
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="row align-items-end">
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold small">Transaction Reference / Receipt No.</label>
+                                <input type="text" id="txnRefInput" class="form-control" placeholder="e.g. 20240128-TXN-1234 or Stripe Receipt #">
+                                <div class="form-text small">Enter the Ref No. from your bank receipt or Stripe email.</div>
+                            </div>
+                            <div class="col-md-4 mt-3 mt-md-0">
+                                <button id="btnPaid" class="btn btn-success w-100 fw-bold" onclick="reportPayment()">
+                                    <i class="bi bi-lock-fill me-2"></i> Confirm Renewal
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div> </div>
     </div>
-  </div>
+</div>
 
 <script>
-    // 🔥 FIREBASE CONFIGURATION
+    // 🔥 FIREBASE CONFIGURATION (Keep your existing config keys)
     const firebaseConfig = {
         apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
         authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -186,18 +170,26 @@
         appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
     };
     
-    // Initialize Firebase
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-    const functions = firebase.functions();
 
-    // --- CONFIG ---
+    // --- 💰 PRICING CONFIGURATION (Updated) ---
+    
+    // 1. MALAYSIA PRICING (MYR)
     const PRICES_MYR = { 1: 200, 2: 500, 3: 1000 }; 
     const PENALTY_MYR = 50;
+
+    // 2. INTERNATIONAL PRICING (USD)
     const PRICES_USD = { 1: 200, 2: 500, 3: 1000 }; 
     const PENALTY_USD = 50;
-    const STRIPE_LINKS = { 1: "https://buy.stripe.com/test_tier1", 2: "#", 3: "#" };
+
+    // 3. STRIPE LINKS (Placeholders - Update these later!)
+    const STRIPE_LINKS = { 
+        1: "https://buy.stripe.com/test_tier1", 
+        2: "https://buy.stripe.com/test_tier2", 
+        3: "https://buy.stripe.com/test_tier3" 
+    };
 
     auth.onAuthStateChanged(async (user) => {
         if (!user) return window.location.href = '../index.html';
@@ -208,53 +200,70 @@
             if (!adminDoc.exists) throw new Error("User Profile not found.");
             const adminData = adminDoc.data();
             
-            // Check MOH Status
+            // MOH Security Gate
             if (adminData.isMoH) { 
                 alert("MOH is free. Redirecting..."); 
                 window.location.href = '../admin.html'; 
                 return; 
             }
 
-            // 2. Fetch Institution Data
+            // 2. Fetch Institution & Count Members
             const instId = adminData.institutionId;
-            if (!instId) throw new Error("Profile missing 'institutionId'. Refresh page.");
-            
             const instDoc = await db.collection('institutions').doc(instId).get();
-            if (!instDoc.exists) throw new Error("Institution not found.");
             const instData = instDoc.data();
 
-            // 3. Count Members (THE OLD RELIABLE METHOD)
-            // We download the list (snapshot) and check the size.
-            // This works perfectly for 0 to 1000 users.
+            // Count staff using .size
             const usersSnapshot = await db.collection('users').where('institutionId', '==', instId).get();
             const memberCount = usersSnapshot.size; 
 
-            // 4. Determine Country & Currency
+            // 3. Detect Country & Set Currency
             const country = adminData.country || "Malaysia";
             const isMalaysia = (country.trim().toLowerCase() === "malaysia");
             const symbol = isMalaysia ? "RM" : "USD";
+            
             document.getElementById('countryDisplay').textContent = country;
+            // Update all currency symbols on page
+            document.getElementById('currencySymbol1').textContent = symbol;
+            document.getElementById('currencySymbol2').textContent = symbol;
+            document.getElementById('currencySymbol3').textContent = symbol;
 
-            // 5. Calculate Tier
-            let basePrice = 0; let tierLevel = 1; let tierName = "";
-            if (memberCount <= 10) { tierLevel = 1; tierName = "Tier 1 (1-10)"; }
-            else if (memberCount <= 50) { tierLevel = 2; tierName = "Tier 2 (11-50)"; }
-            else { tierLevel = 3; tierName = "Enterprise"; }
+            // 4. Calculate Tier & Base Price
+            let tierLevel = 1; let tierName = "";
+            if (memberCount <= 10) { tierLevel = 1; tierName = "Tier 1 (1-10 Staff)"; }
+            else if (memberCount <= 50) { tierLevel = 2; tierName = "Tier 2 (11-50 Staff)"; }
+            else { tierLevel = 3; tierName = "Enterprise (50+ Staff)"; }
 
             const priceList = isMalaysia ? PRICES_MYR : PRICES_USD;
             const penaltyFee = isMalaysia ? PENALTY_MYR : PENALTY_USD;
-            basePrice = priceList[tierLevel];
+            let basePrice = priceList[tierLevel];
 
-            // 6. Discount Logic
+            // 5. Discount, Free Trial & Penalty Logic
             let discountPercent = adminData.manualDiscount || 0;
             let discountAmt = basePrice * (discountPercent / 100);
             let total = basePrice - discountAmt;
+            let isSuspended = (adminData.billingStatus === 'suspended');
 
+            // Penalty Logic (+50 if suspended)
+            if (isSuspended) {
+                total += penaltyFee;
+                const penaltyAlert = document.createElement('div');
+                penaltyAlert.className = 'alert alert-danger mt-2 small shadow-sm';
+                penaltyAlert.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Account Suspended:</strong> A reactivation penalty of ${symbol} ${penaltyFee} has been added.`;
+                document.getElementById('statusBadge').parentElement.appendChild(penaltyAlert);
+            }
+
+            // Free Trial Logic
+            if (!isSuspended && adminData.hasPaidOnce === false && discountPercent !== 100) {
+                total = 0;
+                document.getElementById('freeTrialMsg').classList.remove('d-none');
+            }
+
+            // 6. UI Updates
             document.getElementById('instName').textContent = instData.name || "Institution";
             document.getElementById('userCount').textContent = memberCount;
             document.getElementById('tierName').textContent = tierName;
-            document.querySelectorAll('[id^="currencySymbol"]').forEach(el => el.textContent = symbol);
             document.getElementById('basePrice').textContent = basePrice.toFixed(2);
+            document.getElementById('totalPrice').textContent = total.toFixed(2);
             
             if (discountPercent > 0) {
                 document.getElementById('discountRow').classList.remove('d-none');
@@ -262,112 +271,91 @@
                 document.getElementById('discountAmount').textContent = discountAmt.toFixed(2);
             }
 
-            // Handle Free Trial Message
-            if (adminData.hasPaidOnce === false && discountPercent !== 100) {
-                total = 0;
-                document.getElementById('freeTrialMsg').classList.remove('d-none');
-            }
-
-            // 7. Dates & Status Logic
+            // 7. Status & Dates
             let paidUntil = new Date();
-            // Safety check for date
             if (adminData.subscriptionEnd && typeof adminData.subscriptionEnd.toDate === 'function') {
                 paidUntil = adminData.subscriptionEnd.toDate();
             } else {
-                paidUntil.setFullYear(paidUntil.getFullYear() + 1); // Default to +1 year if missing
+                paidUntil.setFullYear(paidUntil.getFullYear() + 1);
             }
+            document.getElementById('paidUntilDate').textContent = paidUntil.toLocaleDateString('en-GB');
 
             const now = new Date();
-            const paymentWindow = new Date(paidUntil); paymentWindow.setMonth(paymentWindow.getMonth() - 1);
-            const graceEnd = new Date(paidUntil); graceEnd.setMonth(graceEnd.getMonth() + 1);
-
+            const paymentWindow = new Date(paidUntil); 
+            paymentWindow.setMonth(paymentWindow.getMonth() - 1); // 1 month before expiry
+            
             let lockPayment = false;
             let statusHtml = "";
-            let lockTitle = "No Payment Needed";
-            let lockDesc = "Your subscription is active.";
-
+            
             if (adminData.paymentNeedsAudit === true) { 
                  statusHtml = '<span class="status-pending">Pending Verification</span>';
                  lockPayment = true;
-                 lockTitle = "Payment Reported";
-                 lockDesc = "Verifying receipt.";
+            } else if (isSuspended) {
+                 statusHtml = '<span class="status-suspended">Suspended</span>';
+                 lockPayment = false; // Allow payment to reactivate
             } else if (total === 0) {
-                 statusHtml = '<span class="status-active">Free / Paid</span>';
+                 statusHtml = '<span class="status-active">Active (Trial)</span>';
                  lockPayment = true; 
             } else if (now < paymentWindow) {
                  statusHtml = '<span class="status-active">Active</span>';
                  lockPayment = true;
-            } else if (now >= paymentWindow && now <= graceEnd) {
-                 statusHtml = '<span class="status-due">Renewal Due</span>';
             } else {
-                 statusHtml = '<span class="status-suspended">Suspended</span>';
-                 document.getElementById('reactivationRow').classList.remove('d-none');
-                 document.getElementById('penaltyPrice').textContent = penaltyFee.toFixed(2);
-                 total += penaltyFee;
+                 statusHtml = '<span class="status-due">Renewal Due</span>';
             }
-
+            
             document.getElementById('statusBadge').innerHTML = statusHtml;
-            document.getElementById('paidUntilDate').textContent = paidUntil.toLocaleDateString('en-GB');
-            document.getElementById('totalPrice').textContent = total.toFixed(2);
 
-            // Show Payment Method
+            // 8. TOGGLE PAYMENT METHOD (Malaysia vs International)
             if (isMalaysia) {
                 document.getElementById('methodMalaysia').classList.remove('d-none');
-                document.getElementById('qrAmount').textContent = total.toFixed(2);
+                document.getElementById('qrAmount').textContent = "RM " + total.toFixed(2);
             } else {
                 document.getElementById('methodInternational').classList.remove('d-none');
-                document.getElementById('stripeLink').href = STRIPE_LINKS[tierLevel];
+                const stripeBtn = document.getElementById('stripePayBtn');
+                stripeBtn.href = STRIPE_LINKS[tierLevel];
+                stripeBtn.textContent = `Pay ${symbol} ${total.toFixed(2)} via Card`;
             }
 
-            // 8. UNLOCK UI
+            // Unlock Page
             document.getElementById('loading').classList.add('d-none');
             document.getElementById('billingContent').classList.remove('d-none');
             
             if (lockPayment) {
-                document.getElementById('paymentMethods').classList.add('blur-overlay');
                 document.getElementById('paymentLock').classList.remove('d-none');
-                document.getElementById('lockTitle').textContent = lockTitle;
-                document.getElementById('lockDesc').textContent = lockDesc;
             }
 
         } catch (error) {
             console.error(error);
-            alert("Error: " + error.message);
-            document.getElementById('loading').innerHTML = `<p class="text-danger fw-bold">${error.message}</p>`;
+            alert("Error loading data: " + error.message);
         }
     });
 
-    function toggleQR() { document.getElementById('qrSection').classList.toggle('d-none'); }
-
+    // 9. Payment Submission Function
     async function reportPayment() {
         const refNo = document.getElementById('txnRefInput').value;
-        const msg = document.getElementById('paymentMsg');
         const btn = document.getElementById('btnPaid');
 
-        if (!refNo) {
-            alert("Please enter the Reference Number.");
-            return;
-        }
-
-        if(!confirm("Confirm you have paid RM " + document.getElementById('totalPrice').textContent + "?")) return;
+        if (!refNo) return alert("Please enter the Reference Number.");
+        if(!confirm("Confirm payment details?")) return;
 
         btn.disabled = true;
-        btn.textContent = "Verifying...";
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Verifying...';
 
         try {
             const reportFn = firebase.functions().httpsCallable('reportPayment');
             const result = await reportFn({ referenceNo: refNo });
-            
             if (result.data.success) {
                 alert("Success! Subscription renewed for 1 year.");
                 location.reload();
             }
         } catch (error) {
-            msg.textContent = error.message;
+            console.error(error);
+            alert("Error: " + error.message);
             btn.disabled = false;
-            btn.textContent = "Try Again";
+            btn.textContent = "Confirm Renewal";
         }
     }
-  </script>
+</script>
+
 </body>
 </html>
