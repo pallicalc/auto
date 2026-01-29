@@ -1047,3 +1047,39 @@ h2 {
         gap: 0px; 
     }
 }
+/* Suspension Notice Styling */
+.suspended-alert-card {
+    background: #fffafa;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    margin: 20px auto;
+    max-width: 500px;
+}
+
+.suspended-alert-card i {
+    font-size: 3rem;
+    color: #ef4444;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.suspended-alert-card h3 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.suspended-alert-card p {
+    color: #475569;
+    line-height: 1.5;
+}
+
+.suspended-alert-card .note {
+    background: #ffffff;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-weight: 500;
+    border: 1px dashed #cbd5e0;
+}

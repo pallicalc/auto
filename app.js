@@ -26,7 +26,6 @@ window.addEventListener('load', async () => {
     }
 });
 
-// ✅ UPDATED initApp() WITH DISCLAIMER HANDLERS
 function initApp() {
     updateCounters();
     setInterval(() => debounceCounters(), 30000);
@@ -41,12 +40,11 @@ function debounceCounters() {
     counterTimeout = setTimeout(updateCounters, 500);
 }
 
-// ✅ REPLACEMENT FUNCTION: Counts ALL users and institutions
+// Counts ALL users and institutions
 async function updateCounters() {
     if (!db) return;
     
     try {
-        // Method: Get the "snapshot" size
         const usersSnap = await db.collection('users').get();
         document.getElementById('total-users').textContent = usersSnap.size;
 
@@ -57,18 +55,17 @@ async function updateCounters() {
 
     } catch(e) {
         console.error('Counter Error:', e);
-        // If it fails, show "-"
         document.getElementById('total-users').textContent = "-";
         document.getElementById('total-institutions').textContent = "-";
     }
 }
 
-// ✅ UPDATED: Auth state handler with SECURITY VERIFICATION
+// ✅ UPDATED: Auth state handler with SUSPENSION GATEKEEPER
 async function checkAuthState(user) {
     currentUser = user;
     const userInfo = document.getElementById('user-info');
     
-    // Define elements
+    // UI Elements
     const vipBadge = document.getElementById('user-tier-badge');
     const vipLock = document.getElementById('vip-lock-opioid');
     const actionBtns = document.getElementById('action-buttons');
@@ -92,24 +89,49 @@ async function checkAuthState(user) {
         }
 
         try {
-            // 1. Get User Profile from Firestore
+            // 1. Get User Profile
             const userDoc = await db.collection('users').doc(user.uid).get();
             let userData = {};
             
             if (userDoc.exists) {
                 userData = userDoc.data();
+                const instId = userData.institutionId;
+
+                // 🛑 GATEKEEPER: Check if Institution is SUSPENDED
+                if (instId) {
+                    const instDoc = await db.collection('institutions').doc(instId).get();
+                    if (instDoc.exists && instDoc.data().status === 'suspended') {
+                        
+                        // A. Wipe Premium Data Immediately
+                        localStorage.removeItem('palliCalc_customRatios');
+                        localStorage.removeItem('palliCalc_institutionName');
+
+                        // B. Handle Admin vs Staff
+                        if (userData.role === 'institutionAdmin') {
+                            console.log("Admin Suspended. Redirecting...");
+                            window.location.href = 'Admin/renewal.html';
+                            return;
+                        } else {
+                            // Staff: Show polite lockout and STOP here
+                            updateUIForLogin(userData, user.email, true); // True = show logout button
+                            showSuspensionNotice(instDoc.data().name || "your institution");
+                            return; 
+                        }
+                    }
+                }
+
+                // 🟢 ACTIVE ACCOUNT LOGIC
                 
-                // 🛑 CHECK 1: IS THIS AN ADMIN?
+                // If Admin -> Go to Dashboard
                 if (userData.role === 'institutionAdmin') {
                     console.log("Admin detected. Redirecting to Dashboard...");
                     window.location.href = 'Admin.html';
                     return;
                 }
 
-                // 🏥 CHECK 2: IS THIS AN INSTITUTION USER?
-                if (userData.role === 'institutionUser' && userData.institutionId) {
-                    console.log("Institution User detected. Loading custom protocols...");
-                    const instDoc = await db.collection('institutions').doc(userData.institutionId).get();
+                // If Institution User -> Load Custom Ratios
+                if (userData.role === 'institutionUser' && instId) {
+                    const instDoc = await db.collection('institutions').doc(instId).get();
                     if (instDoc.exists) {
                         const instData = instDoc.data();
                         if (instData.customRatios) {
@@ -122,34 +144,11 @@ async function checkAuthState(user) {
                     localStorage.removeItem('palliCalc_institutionName');
                 }
 
-                isVipUser = userData.tier === 'vip' || userData.registeredDuringBeta === true || userData.role === 'institutionUser';
+                isVipUser = userData.billingStatus === 'trial-free-lifetime' || userData.billingStatus === 'active-first-year' || userData.role === 'institutionUser';
             }
 
-            // --- UI UPDATES ---
-            let displayName = userData.username || user.email.split('@')[0];
-            let welcomeText = `Welcome, ${displayName}`;
-            if (isVipUser) welcomeText += ' PRO';
-            
-            if (userInfo) {
-                userInfo.innerHTML = `
-                    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
-                        <span class="welcome-text">${welcomeText}</span>
-                        <button id="logout-btn" aria-label="Logout" style="width: 100%; padding: 6px 12px; font-size: 13px;">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </button>
-                    </div>`;
-            }
-            
-            const logoutBtn = document.getElementById('logout-btn');
-            if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
-            
-            if (actionBtns) actionBtns.classList.add('hidden');
-            if (toolsSection) toolsSection.classList.add('visible');
-            if (featureSection) featureSection.style.display = 'none';
-            if (toolsTitle) toolsTitle.textContent = '🛠️ Tools Available';
-            
-            if (vipBadge) vipBadge.style.display = isVipUser ? 'inline' : 'none';
-            if (vipLock) vipLock.style.display = isVipUser ? 'inline-block' : 'none';
+            // Update UI for successful login
+            updateUIForLogin(userData, user.email, false);
             
         } catch(e) {
             console.error('Error fetching profile:', e);
@@ -177,7 +176,63 @@ async function checkAuthState(user) {
     }
 }
 
-// ✅ NEW: Handle logout
+// Helper to update UI elements (Shared between active and suspended states)
+function updateUIForLogin(userData, email, isSuspended) {
+    const userInfo = document.getElementById('user-info');
+    const vipBadge = document.getElementById('user-tier-badge');
+    const vipLock = document.getElementById('vip-lock-opioid');
+    const actionBtns = document.getElementById('action-buttons');
+    const toolsSection = document.getElementById('tools-section');
+    const featureSection = document.getElementById('features-section');
+    const toolsTitle = document.querySelector('#tools-section h2');
+
+    let displayName = userData.username || email.split('@')[0];
+    let welcomeText = `Welcome, ${displayName}`;
+    if (isVipUser) welcomeText += ' PRO';
+
+    if (userInfo) {
+        userInfo.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+                <span class="welcome-text">${welcomeText}</span>
+                <button id="logout-btn" aria-label="Logout" style="width: 100%; padding: 6px 12px; font-size: 13px;">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+            </div>`;
+    }
+    
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+
+    if (actionBtns) actionBtns.classList.add('hidden');
+    if (featureSection) featureSection.style.display = 'none';
+    
+    // If not suspended, show tools normaly
+    if (!isSuspended) {
+        if (toolsSection) toolsSection.classList.add('visible');
+        if (toolsTitle) toolsTitle.textContent = '🛠️ Tools Available';
+        if (vipBadge) vipBadge.style.display = isVipUser ? 'inline' : 'none';
+        if (vipLock) vipLock.style.display = isVipUser ? 'inline-block' : 'none';
+    }
+}
+
+// 📢 NEW: Polite Suspension Notice
+function showSuspensionNotice(instName) {
+    const toolsSection = document.getElementById('tools-section');
+    if (toolsSection) {
+        toolsSection.innerHTML = `
+            <div class="suspended-alert-card">
+                <i class="bi bi-shield-lock"></i>
+                <h3>Access Temporarily Paused</h3>
+                <p>The premium features for <strong>${instName}</strong> are currently unavailable.</p>
+                <p class="note">Please contact your <strong>Institution Admin</strong> to renew the departmental subscription.</p>
+                <p style="font-size:12px; margin-top:10px; color:#94a3b8;">Standard demo tools remain accessible.</p>
+            </div>
+        `;
+        toolsSection.classList.add('visible');
+    }
+}
+
+// Handle logout
 async function handleLogout() {
     try {
         await auth.signOut();
@@ -283,7 +338,7 @@ function setupEventListeners() {
     });
 }
 
-// ✅ DISCLAIMER MODAL HANDLERS
+// DISCLAIMER MODAL HANDLERS
 function setupDisclaimerHandlers() {
     const disclaimerModal = document.getElementById('disclaimer-modal');
     const disclaimerAgree = document.getElementById('disclaimer-agree');
@@ -311,13 +366,12 @@ function setupDisclaimerHandlers() {
         showDisclaimer('register');
     });
 
-disclaimerProceed.addEventListener('click', function() {
+    disclaimerProceed.addEventListener('click', function() {
         if (!disclaimerAgree.checked) return;
         const action = disclaimerProceed.dataset.action;
         closeDisclaimer();
         
         if (action === 'demo') {
-            // ✅ UPDATE THIS LINE: Add 'calculators/' before the filename
             window.location.href = 'calculators/demo-opioid.html'; 
         } else if (action === 'register') {
             window.location.href = 'register.html';
