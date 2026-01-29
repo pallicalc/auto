@@ -20,7 +20,7 @@ window.addEventListener('load', async () => {
         firebaseApp = firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
         db = firebase.firestore();
-        // Initialize Functions if available, otherwise handle gracefully
+        // Initialize Functions if available (safeguard)
         if (firebase.functions) {
             functions = firebase.functions();
         }
@@ -47,16 +47,13 @@ function debounceCounters() {
 // Counts ALL users and institutions
 async function updateCounters() {
     if (!db) return;
-    
     try {
+        // Because rules allow 'list', this works even if specific docs are blocked
         const usersSnap = await db.collection('users').get();
         document.getElementById('total-users').textContent = usersSnap.size;
 
         const instSnap = await db.collection('institutions').get();
         document.getElementById('total-institutions').textContent = instSnap.size;
-
-        console.log("Counters updated:", usersSnap.size, instSnap.size);
-
     } catch(e) {
         console.error('Counter Error:', e);
         document.getElementById('total-users').textContent = "-";
@@ -64,12 +61,12 @@ async function updateCounters() {
     }
 }
 
-// ✅ UPDATED: Auth state handler with "Permission Denied" Handling
+// ✅ ROBUST AUTH HANDLER (The Gatekeeper)
 async function checkAuthState(user) {
     currentUser = user;
-    const userInfo = document.getElementById('user-info');
     
     // UI Elements
+    const userInfo = document.getElementById('user-info');
     const vipBadge = document.getElementById('user-tier-badge');
     const vipLock = document.getElementById('vip-lock-opioid');
     const actionBtns = document.getElementById('action-buttons');
@@ -77,23 +74,22 @@ async function checkAuthState(user) {
     const featureSection = document.getElementById('features-section');
     const toolsTitle = document.querySelector('#tools-section h2');
     const featureTitle = document.querySelector('#features-section h2');
-    
+
     if (user) {
-        // 🛑 SECURITY CHECK: IS EMAIL VERIFIED?
+        // 1. Email Verification Check
         if (!user.emailVerified) {
-            console.log("User email not verified. Logging out.");
             await auth.signOut();
-            const errorDiv = document.getElementById('login-error-msg');
-            if(errorDiv) {
-                errorDiv.textContent = "Please verify your email address before logging in.";
-                errorDiv.style.display = 'block';
-            }
             openLoginModal();
+            const errDiv = document.getElementById('login-error-msg');
+            if(errDiv) {
+                errDiv.textContent = "Please verify your email first.";
+                errDiv.style.display = 'block';
+            }
             return;
         }
 
         try {
-            // 1. Get User Profile
+            // 2. Get User Profile
             const userDoc = await db.collection('users').doc(user.uid).get();
             let userData = {};
             
@@ -101,66 +97,55 @@ async function checkAuthState(user) {
                 userData = userDoc.data();
                 const instId = userData.institutionId;
 
-                // 🛑 GATEKEEPER: Check if Institution is SUSPENDED
+                // 🛑 GATEKEEPER LOGIC (Crucial Fix)
                 if (instId) {
                     try {
+                        // Attempt to read the institution document
                         const instDoc = await db.collection('institutions').doc(instId).get();
                         
-                        // Scenario A: We can read the doc, so we check the status manually
+                        // Check A: Read succeeded, check status field manually
                         if (instDoc.exists && instDoc.data().status === 'suspended') {
                             handleSuspension(userData, instDoc.data().name);
-                            return;
+                            return; // STOP: Do not load tools
                         }
-                    } catch (err) {
-                        // Scenario B: The Security Rule BLOCKED us (Permission Denied)
-                        // This implies the status IS 'suspended' (because the rule forbids reading suspended docs for staff)
-                        if (err.code === 'permission-denied') {
-                            console.warn("Access denied to institution data. Assuming Suspended.");
-                            handleSuspension(userData, userData.institutionName || "your institution");
-                            return;
-                        } else {
-                            console.error("Institution Fetch Error:", err); // Other errors
-                        }
-                    }
-                }
-
-                // 🟢 ACTIVE ACCOUNT LOGIC (Only runs if we passed the Gatekeeper)
-                
-                // If Admin -> Go to Dashboard
-                if (userData.role === 'institutionAdmin') {
-                    console.log("Admin detected. Redirecting to Dashboard...");
-                    window.location.href = 'Admin.html';
-                    return;
-                }
-
-                // If Institution User -> Load Custom Ratios
-                if (userData.role === 'institutionUser' && instId) {
-                    try {
-                        // Re-fetch is safe here because we know it's not suspended
-                        const instDoc = await db.collection('institutions').doc(instId).get();
-                        if (instDoc.exists) {
+                        
+                        // ✅ ACTIVE: Load Custom Ratios for Staff
+                        if (userData.role === 'institutionUser' && instDoc.exists) {
                             const instData = instDoc.data();
                             if (instData.customRatios) {
                                 localStorage.setItem('palliCalc_customRatios', JSON.stringify(instData.customRatios));
                                 localStorage.setItem('palliCalc_institutionName', instData.name);
                             }
                         }
-                    } catch (e) {
-                        console.log("Could not load custom ratios (minor error).");
+
+                    } catch (err) {
+                        // Check B: Read FAILED (Security Rules blocked it)
+                        // This implies the institution IS suspended because rules block 'get' on suspended docs
+                        console.warn("Institution Blocked (Suspended):", err);
+                        handleSuspension(userData, userData.institutionName || "your institution");
+                        return; // STOP: Do not load tools
                     }
-                } else {
-                    localStorage.removeItem('palliCalc_customRatios');
-                    localStorage.removeItem('palliCalc_institutionName');
                 }
 
-                isVipUser = userData.billingStatus === 'trial-free-lifetime' || userData.billingStatus === 'active-first-year' || userData.role === 'institutionUser';
+                // 🟢 ACTIVE ACCOUNT (Proceed if not suspended)
+                
+                // If Admin -> Redirect to Dashboard
+                if (userData.role === 'institutionAdmin') {
+                    window.location.href = 'Admin.html';
+                    return;
+                }
+
+                // Determine VIP Status
+                isVipUser = userData.billingStatus === 'trial-free-lifetime' || 
+                            userData.billingStatus === 'active-first-year' || 
+                            userData.role === 'institutionUser';
             }
 
-            // Update UI for successful login
+            // Update UI for Active User
             updateUIForLogin(userData, user.email, false);
             
         } catch(e) {
-            console.error('Error fetching profile:', e);
+            console.error('Profile Load Error:', e);
         }
         
     } else {
@@ -168,15 +153,23 @@ async function checkAuthState(user) {
         localStorage.removeItem('palliCalc_customRatios');
         localStorage.removeItem('palliCalc_institutionName');
 
-        if (userInfo) {
-            userInfo.innerHTML = '<button id="login-btn" class="login-btn" aria-label="Login to access tools">🔐 Login</button>';
-        }
+        if (userInfo) userInfo.innerHTML = '<button id="login-btn" class="login-btn">🔐 Login</button>';
         
         if (actionBtns) actionBtns.classList.remove('hidden');
-        if (toolsSection) toolsSection.classList.remove('visible');
-        if (featureSection) featureSection.style.display = '';
-        if (featureTitle) featureTitle.textContent = "What You'll Get";
         
+        if (toolsSection) {
+            toolsSection.classList.remove('visible');
+            toolsSection.style.display = ''; // Reset CSS
+            toolsSection.innerHTML = `
+                <h2 style="text-align:center;font-size:24px;font-weight:700;color:#1e293b;margin-bottom:20px;">
+                    🛠️ Tools Available
+                </h2>
+                `;
+            // Note: Ideally, you should restore the original HTML of tools-section here if it was modified
+            // For now, reloading the page on logout is the cleanest way to reset the DOM
+        }
+
+        if (featureSection) featureSection.style.display = '';
         if (vipBadge) vipBadge.style.display = 'none';
         if (vipLock) vipLock.style.display = 'none';
 
@@ -185,41 +178,79 @@ async function checkAuthState(user) {
     }
 }
 
-// 🛡️ HELPER: Handle Suspension Logic (Wipe Data & Show UI)
+
+
+// 🛡️ HELPER: Handle Suspension (The "Lockout")
 function handleSuspension(userData, instName) {
-    // 1. Wipe Premium Data
+    // 1. Wipe Data
     localStorage.removeItem('palliCalc_customRatios');
     localStorage.removeItem('palliCalc_institutionName');
 
-    // 2. Handle Admin vs Staff
+    // 2. Admin Redirect
     if (userData.role === 'institutionAdmin') {
-        console.log("Admin Suspended. Redirecting...");
         window.location.href = 'Admin/renewal.html';
-    } else {
-        // Staff: Show polite lockout
-        // We pass 'true' to updateUIForLogin so it shows the Logout button but hides tools
-        updateUIForLogin(userData, currentUser.email, true); 
-        showSuspensionNotice(instName);
+        return;
+    }
+
+    // 3. Staff Notice (Stay on page, show alert)
+    updateUIForLogin(userData, currentUser.email, true); 
+    showSuspensionNotice(instName);
+}
+
+// Helper: Update UI Elements
+function updateUIForLogin(userData, email, isSuspended) {
+    const userInfo = document.getElementById('user-info');
+    const vipBadge = document.getElementById('user-tier-badge');
+    const vipLock = document.getElementById('vip-lock-opioid');
+    const actionBtns = document.getElementById('action-buttons');
+    const toolsSection = document.getElementById('tools-section');
+    const featureSection = document.getElementById('features-section');
+    const toolsTitle = document.querySelector('#tools-section h2');
+
+    let displayName = userData.username || email.split('@')[0];
+    let welcomeText = `Welcome, ${displayName}`;
+    if (isVipUser) welcomeText += ' PRO';
+
+    if (userInfo) {
+        userInfo.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+                <span class="welcome-text">${welcomeText}</span>
+                <button id="logout-btn" style="width: 100%; padding: 6px 12px; font-size: 13px;">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+            </div>`;
+        document.getElementById('logout-btn').addEventListener('click', handleLogout);
+    }
+
+    if (actionBtns) actionBtns.classList.add('hidden');
+    if (featureSection) featureSection.style.display = 'none';
+    
+    // Only show standard tools if NOT suspended
+    if (!isSuspended) {
+        if (toolsSection) {
+            toolsSection.classList.add('visible');
+            toolsSection.style.display = 'block'; 
+        }
+        if (toolsTitle) toolsTitle.textContent = '🛠️ Tools Available';
+        if (vipBadge) vipBadge.style.display = isVipUser ? 'inline' : 'none';
+        if (vipLock) vipLock.style.display = isVipUser ? 'inline-block' : 'none';
     }
 }
 
-// 📢 UPDATED: Gentle "Service Update" Notice
+// 📢 SHOW NOTICE (With forced visibility)
 function showSuspensionNotice(instName) {
     const toolsSection = document.getElementById('tools-section');
     if (toolsSection) {
+        // Inject the Alert Card
         toolsSection.innerHTML = `
-            <div class="suspended-alert-card" style="border: 1px solid #e2e8f0; background: #f8fafc;">
-                <i class="bi bi-info-circle" style="color: #64748b; font-size: 2.5rem;"></i>
-                <h3 style="color: #334155; margin-top: 10px;">Service Update</h3>
-                
-                <p style="color: #475569;">
-                    The customized protocols for <strong>${instName}</strong> are currently paused.
+            <div class="suspended-alert-card" style="border: 1px solid #e2e8f0; background: #fffafa; padding: 2rem; text-align: center; border-radius: 12px; margin: 20px auto;">
+                <i class="bi bi-shield-lock" style="color: #ef4444; font-size: 2.5rem; display:block; margin-bottom:1rem;"></i>
+                <h3 style="color: #1e293b; margin-bottom: 0.5rem;">Service Temporarily Paused</h3>
+                <p style="color: #475569; margin-bottom: 15px;">
+                    The premium features for <strong>${instName}</strong> are currently unavailable.
                 </p>
                 
                 <div id="notify-action-area" style="margin-top: 20px;">
-                    <p class="note" style="margin-bottom: 15px; color: #475569; font-size: 14px;">
-                        Please ask your <strong>Team Lead</strong> to check the account status to restore features.
-                    </p>
                     <button id="notify-admin-btn" class="btn btn-outline-secondary" style="font-size: 13px; border-radius: 20px; padding: 8px 20px; cursor: pointer; background: #fff; border: 1px solid #94a3b8; color: #475569;">
                         <i class="bi bi-envelope"></i> Notify Admin
                     </button>
@@ -232,24 +263,21 @@ function showSuspensionNotice(instName) {
         `;
         
         toolsSection.classList.add('visible');
+        toolsSection.style.display = 'block'; // FORCE VISIBILITY to override any hidden state
 
-        // Add Click Listener
+        // Add Click Listener for Notify Button
         const btn = document.getElementById('notify-admin-btn');
         if (btn) {
             btn.addEventListener('click', async function() {
                 const originalText = btn.innerHTML;
-                
-                // A. Show Loading
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
                 
                 try {
-                    // B. Call Backend
                     if (!firebase.functions) throw new Error("Functions SDK not loaded");
                     const sendReminder = firebase.functions().httpsCallable('sendSuspensionReminder');
                     await sendReminder();
                     
-                    // C. Success Message (Neutral & Calm)
                     document.getElementById('notify-action-area').innerHTML = `
                         <div style="color: #475569; background: #f1f5f9; padding: 15px; border-radius: 8px; margin-top: 10px;">
                             <i class="bi bi-send-check"></i> <strong>Notification Sent</strong><br>
@@ -268,19 +296,19 @@ function showSuspensionNotice(instName) {
         }
     }
 }
+
 // Handle logout
 async function handleLogout() {
     try {
         await auth.signOut();
         localStorage.removeItem('palliCalcLoginPassword');
-        console.log('Logged out successfully');
+        window.location.reload(); // Refresh to clean state
     } catch (error) {
         console.error('Logout error:', error);
-        auth.signOut();
     }
 }
 
-// Event listeners
+// Event listeners setup
 function setupEventListeners() {
     const loginForm = document.getElementById('login-form');
     const errorMsgDiv = document.getElementById('login-error-msg'); 
@@ -304,30 +332,13 @@ function setupEventListeners() {
                 closeLoginModal();
             } catch (error) {
                 console.error("Login Error:", error.code);
-                let userMessage = "An unexpected error occurred. Please try again.";
-                
-                switch (error.code) {
-                    case 'auth/invalid-credential':
-                    case 'auth/user-not-found':
-                    case 'auth/wrong-password':
-                        userMessage = "Incorrect email or password.";
-                        break;
-                    case 'auth/invalid-email':
-                        userMessage = "Invalid email address format.";
-                        break;
-                    case 'auth/too-many-requests':
-                        userMessage = "Too many failed attempts. Try again later.";
-                        break;
-                    case 'auth/user-disabled':
-                        userMessage = "This account has been disabled.";
-                        break;
+                let userMessage = "Login failed. Please check credentials.";
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+                     userMessage = "Incorrect email or password.";
                 }
-
                 if (errorMsgDiv) {
                     errorMsgDiv.textContent = userMessage;
                     errorMsgDiv.style.display = 'block';
-                } else {
-                    alert(userMessage);
                 }
             } finally {
                 submitBtn.disabled = false;
@@ -336,41 +347,11 @@ function setupEventListeners() {
         });
     }
 
-    const feedbackForm = document.getElementById('feedback-form');
-    if (feedbackForm) {
-        feedbackForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!db) {
-                alert('Feedback saved locally. Email: support@pallicalc.com');
-                return;
-            }
-            const feedback = document.getElementById('feedback-text').value.trim();
-            const email = document.getElementById('feedback-email').value.trim();
-            
-            try {
-                await db.collection('feedback').add({
-                    feedback: feedback,
-                    email: email || 'anonymous',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    userId: currentUser?.uid || null,
-                    isVip: isVipUser
-                });
-                alert('✅ Thank you for your feedback!');
-                feedbackForm.reset();
-            } catch(e) {
-                alert('Feedback saved locally. Email: support@pallicalc.com');
-            }
-        });
-    }
-
+    // Modal Triggers
     document.addEventListener('click', function(e) {
         if (e.target.matches('#login-btn, #login-btn *')) openLoginModal();
         if (e.target.matches('#login-close, .login-close *')) closeLoginModal();
         if (e.target.matches('#login-modal')) closeLoginModal();
-    });
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeLoginModal();
     });
 }
 
@@ -391,14 +372,12 @@ function setupDisclaimerHandlers() {
     });
 
     demoBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         showDisclaimer('demo');
     });
 
     registerBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         showDisclaimer('register');
     });
 
@@ -406,12 +385,8 @@ function setupDisclaimerHandlers() {
         if (!disclaimerAgree.checked) return;
         const action = disclaimerProceed.dataset.action;
         closeDisclaimer();
-        
-        if (action === 'demo') {
-            window.location.href = 'calculators/demo-opioid.html'; 
-        } else if (action === 'register') {
-            window.location.href = 'register.html';
-        }
+        if (action === 'demo') window.location.href = 'calculators/demo-opioid.html'; 
+        else if (action === 'register') window.location.href = 'register.html';
     });
 
     disclaimerClose.addEventListener('click', closeDisclaimer);
@@ -421,31 +396,16 @@ function setupDisclaimerHandlers() {
 }
 
 function showDisclaimer(action) {
-    const disclaimerModal = document.getElementById('disclaimer-modal');
-    const disclaimerProceed = document.getElementById('disclaimer-proceed');
-    const disclaimerAgree = document.getElementById('disclaimer-agree');
-    
-    disclaimerModal.style.display = 'flex';
-    disclaimerProceed.dataset.action = action;
-    disclaimerAgree.checked = false;
-    disclaimerProceed.disabled = true;
-    disclaimerProceed.style.background = '#94a3b8';
-    disclaimerAgree.focus();
+    const d = document.getElementById('disclaimer-modal');
+    const p = document.getElementById('disclaimer-proceed');
+    const a = document.getElementById('disclaimer-agree');
+    d.style.display = 'flex';
+    p.dataset.action = action;
+    a.checked = false;
+    p.disabled = true;
+    p.style.background = '#94a3b8';
 }
 
-function closeDisclaimer() {
-    document.getElementById('disclaimer-modal').style.display = 'none';
-}
-
-function openLoginModal() {
-    document.getElementById('login-modal').style.display = 'flex';
-    document.getElementById('login-email').focus();
-}
-
-function closeLoginModal() {
-    document.getElementById('login-modal').style.display = 'none';
-    document.getElementById('login-form').reset();
-    
-    const errorDiv = document.getElementById('login-error-msg');
-    if(errorDiv) errorDiv.style.display = 'none';
-}
+function closeDisclaimer() { document.getElementById('disclaimer-modal').style.display = 'none'; }
+function openLoginModal() { document.getElementById('login-modal').style.display = 'flex'; }
+function closeLoginModal() { document.getElementById('login-modal').style.display = 'none'; }
