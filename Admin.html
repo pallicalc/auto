@@ -17,48 +17,18 @@
 
   <style>
     /* Sticky Footer Layout */
-    body {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        margin: 0;
-    }
-
-    #main-wrapper {
-        flex: 1;
-        width: 100%;
-    }
-
-    .feedback-section {
-        background-color: #e9ecef;
-        border-top: 1px solid #dee2e6;
-        padding: 50px 0;
-        width: 100%;
-    }
-
-    .footer-section {
-        background-color: #f8f9fa;
-        border-top: 1px solid #dcdcdc;
-        padding: 20px 0;
-        width: 100%;
-        margin-top: 0;
-    }
-    
-    .admin-card {
-        transition: transform 0.2s;
-        border: none;
-        cursor: pointer;
-    }
-    .admin-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-    }
-
-    /* Custom Color for Diagnostic Card */
+    body { display: flex; flex-direction: column; min-height: 100vh; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); margin: 0; }
+    #main-wrapper { flex: 1; width: 100%; }
+    .feedback-section { background-color: #e9ecef; border-top: 1px solid #dee2e6; padding: 50px 0; width: 100%; }
+    .footer-section { background-color: #f8f9fa; border-top: 1px solid #dcdcdc; padding: 20px 0; width: 100%; margin-top: 0; }
+    .admin-card { transition: transform 0.2s; border: none; cursor: pointer; }
+    .admin-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
     .bg-purple-soft { background-color: #f3e8ff!important; }
     .text-purple { color: #6f42c1!important; }
     .border-purple { border-left: 5px solid #6f42c1; }
+    
+    /* Super Admin Card Style */
+    .border-super { border-left: 5px solid #0d6efd; background: #f0f8ff; }
   </style>
 </head>
 <body>
@@ -177,6 +147,19 @@
             <div id="transferStatus" class="small mt-2"></div>
           </div>
 
+          <a id="superAdminCard" href="Admin/internal-audit.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-none text-dark border-super">
+            <div class="d-flex align-items-center">
+              <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-4">
+                <i class="bi bi-shield-lock-fill text-primary fs-3"></i>
+              </div>
+              <div>
+                <h3 class="mb-1 h4 text-primary">Internal Audit</h3>
+                <p class="text-muted mb-0 small">Verify Payments & Manage Pricing</p>
+              </div>
+              <i class="bi bi-arrow-right ms-auto fs-4 text-primary"></i>
+            </div>
+          </a>
+
         </div>
       </div>
     </div>
@@ -227,6 +210,31 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    // --- SUPER ADMIN VISIBILITY LOGIC ---
+    // Place this script at the bottom of admin.html (or inside admin.js if you prefer)
+    
+    // 1. Define your Super Admin Email(s)
+    const SUPER_ADMINS = [
+        "alison.chai@moh.gov.my", 
+        "your.personal.email@gmail.com" // Add backup email if needed
+    ];
+
+    // 2. Check Auth State
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            // Check if current user is in the Super Admin list
+            if (SUPER_ADMINS.includes(user.email.toLowerCase())) {
+                const card = document.getElementById('superAdminCard');
+                if (card) {
+                    card.classList.remove('d-none'); // Show the card
+                    card.classList.add('d-block');
+                }
+            }
+        }
+    });
+  </script>
 
 </body>
 </html>
