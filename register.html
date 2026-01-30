@@ -413,7 +413,7 @@
     // --- FETCH LIVE PRICES FROM FIREBASE ---
     async function fetchLivePrices() {
         try {
-            const doc = await db.collection('settings').doc('registration').get();
+            const doc = await db.collection('setting').doc('registration').get();
             if (doc.exists) {
                 LIVE_REG_PRICES = doc.data();
                 console.log("Live Prices Loaded");

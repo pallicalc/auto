@@ -180,7 +180,7 @@
     // --- NEW FETCH FUNCTION ---
     async function fetchLivePrices() {
         try {
-            const doc = await db.collection('settings').doc('renewal').get();
+            const doc = await db.collection('setting').doc('renewal').get();
             if (doc.exists) {
                 LIVE_RENEWAL_PRICES = doc.data();
                 console.log("Prices loaded from Firestore");
