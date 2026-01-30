@@ -156,35 +156,51 @@
     const auth = firebase.auth();
 
     // ==========================================
-    // 1. MASTER PRICE CONTROL CENTER
+    // 1. LIVE PRICING CONTROL
     // ==========================================
-    const PALLICALC_PRICES = {
-        private: { 
-            renewal_tiers: {
-                tier1: 200,  // 1 - 10 staff
-                tier2: 500,  // 11 - 50 staff
-                tier3: 1000  // 51+ staff
-            },
-            premium_annual_renewal: 500 
+    // Default Fallbacks (Freezes logic if DB fails)
+    let LIVE_RENEWAL_PRICES = {
+        malaysia: { 
+            tier1: 200, tier2: 500, tier3: 1000, premium_annual: 500 
+        },
+        international: { 
+            tier1: 200, tier2: 500, tier3: 1000, premium_annual: 500 
         }
     };
 
     // --- STATE ---
     let state = {
         basePrice: 0,
-        premiumPrice: PALLICALC_PRICES.private.premium_annual_renewal,
+        premiumPrice: 0,
         currentExpiry: new Date(),
         newExpiry: new Date(),
         currency: 'RM',
-        manualDiscount: 0 // <--- THIS WAS MISSING IN YOUR SNIPPET
+        manualDiscount: 0 
     };
+
+    // Fetch live prices from settings/renewal
+    async function fetchLivePrices() {
+        try {
+            const doc = await db.collection('settings').doc('renewal').get();
+            if (doc.exists) {
+                LIVE_RENEWAL_PRICES = doc.data();
+                console.log("Renewal Prices Loaded from DB");
+            }
+        } catch(e) {
+            console.error("Using default pricing due to fetch error:", e);
+        }
+    }
 
     // --- INITIALIZATION ---
     auth.onAuthStateChanged(async user => {
         if (!user) return window.location.href = '../index.html';
 
         try {
-            const userDoc = await db.collection('users').doc(user.uid).get();
+            // 1. Parallel Fetch: User Data & Pricing
+            const userDocPromise = db.collection('users').doc(user.uid).get();
+            const pricesPromise = fetchLivePrices();
+            
+            const [userDoc] = await Promise.all([userDocPromise, pricesPromise]);
             const userData = userDoc.data();
 
             if (userData.isMoH) {
@@ -193,22 +209,29 @@
                 return;
             }
 
-            // 1. FETCH DISCOUNT (ADDED BACK)
-            state.manualDiscount = userData.manualDiscount || 0;
-
-            // 2. Staff Count
+            // 2. Fetch Staff Count
             const staffSnap = await db.collection('users').where('institutionId', '==', userData.institutionId || 'none').get();
             const count = staffSnap.size || 1;
 
-            // 3. Currency & Tier
+            // 3. Determine Region & Prices
             const isMY = (userData.country === 'Malaysia');
             state.currency = isMY ? 'RM' : 'USD';
+            const geo = isMY ? 'malaysia' : 'international';
             
-            if (count <= 10) state.basePrice = PALLICALC_PRICES.private.renewal_tiers.tier1;
-            else if (count <= 50) state.basePrice = PALLICALC_PRICES.private.renewal_tiers.tier2;
-            else state.basePrice = PALLICALC_PRICES.private.renewal_tiers.tier3;
+            // Get correct price map from loaded data
+            // Fallback to international if specific country key missing
+            const prices = LIVE_RENEWAL_PRICES[geo] || LIVE_RENEWAL_PRICES['international'];
+            
+            // Set Base Price by Tier
+            if (count <= 10) state.basePrice = prices.tier1;
+            else if (count <= 50) state.basePrice = prices.tier2;
+            else state.basePrice = prices.tier3;
 
-            // 4. Dates
+            // Set Premium Price
+            state.premiumPrice = prices.premium_annual;
+
+            // 4. Other State Setup
+            state.manualDiscount = userData.manualDiscount || 0;
             if (userData.subscriptionEnd) state.currentExpiry = userData.subscriptionEnd.toDate();
             else state.currentExpiry = new Date();
 
@@ -221,13 +244,13 @@
             document.getElementById('basePriceDisplay').textContent = state.basePrice;
             document.getElementById('premiumPriceDisplay').textContent = state.premiumPrice;
 
-            // 6. SHOW DISCOUNT (ADDED BACK)
+            // Show Discount Badge
             if (state.manualDiscount > 0) {
                 document.getElementById('discountRow').classList.remove('d-none');
                 document.getElementById('discountDisplay').textContent = state.manualDiscount;
             }
 
-            // 7. Expiry Badge
+            // Expiry Badge
             const now = new Date();
             const badge = document.getElementById('currentExpiryBadge');
             badge.textContent = state.currentExpiry.toLocaleDateString('en-GB');
@@ -239,7 +262,6 @@
                 badge.innerHTML += ' <span class="ms-1">(Expired)</span>';
             }
 
-            // 8. Premium Checkbox
             document.getElementById('premiumToggle').checked = userData.isPremium;
 
             calculateTotals(); 
@@ -248,11 +270,11 @@
 
         } catch (e) {
             console.error(e);
-            alert("Error loading subscription data.");
+            alert("Error loading data: " + e.message);
         }
     });
 
-    // --- CALCULATION LOGIC ---
+    // --- LOGIC ---
     function togglePremium() {
         const chk = document.getElementById('premiumToggle');
         chk.checked = !chk.checked;
@@ -265,7 +287,7 @@
         // 1. Subtotal
         let subtotal = state.basePrice + (wantsPremium ? state.premiumPrice : 0);
 
-        // 2. APPLY DISCOUNT (ADDED BACK)
+        // 2. Discount
         let discountAmt = 0;
         if (state.manualDiscount > 0) {
             discountAmt = subtotal * (state.manualDiscount / 100);
@@ -276,7 +298,7 @@
         // 3. UI
         document.getElementById('totalDisplay').textContent = total.toFixed(2);
         
-        // Zero Payment Msg
+        // Zero Pay Logic
         const msg = document.getElementById('zeroPayMsg');
         if (total === 0) msg.style.display = 'block';
         else msg.style.display = 'none';
@@ -286,7 +308,7 @@
         if (wantsPremium) box.classList.add('selected');
         else box.classList.remove('selected');
 
-        // Date Math
+        // Date Logic
         const now = new Date();
         let baseDate = (state.currentExpiry > now) ? state.currentExpiry : now;
         let nextDate = new Date(baseDate.getTime());
@@ -302,7 +324,6 @@
         const wantsPremium = document.getElementById('premiumToggle').checked;
         const total = parseFloat(document.getElementById('totalDisplay').textContent);
         
-        // Validate
         if (total > 0 && !ref) return alert("Please enter your payment reference number.");
         if (total === 0 && !ref) return alert("Please enter 'WAIVER' or 'PROMO' in the reference box.");
 
@@ -310,7 +331,7 @@
 
         const btn = document.getElementById('btnSubmit');
         btn.disabled = true;
-        btn.innerText = "Extending Subscription...";
+        btn.innerText = "Processing...";
 
         try {
             const uid = auth.currentUser.uid;

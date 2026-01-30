@@ -7,6 +7,7 @@
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="style.css">
 
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -14,52 +15,108 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
   <style>
-    /* Pricing Box Styles */
+    /* --- PAGE LAYOUT ADJUSTMENTS --- */
+    .auth-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 40px 20px;
+        background-color: #f1f5f9; /* Soft gray background */
+    }
+
+    /* The White Card */
+    .auth-card {
+        background: white;
+        width: 100%;
+        max-width: 500px;
+        padding: 32px;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        margin-bottom: 24px; /* Space between card and footer */
+    }
+
+    /* The Footer (Now Outside) */
+    .legal-footer {
+        text-align: center;
+        color: #64748b;
+        font-size: 0.8rem;
+        width: 100%;
+        max-width: 500px;
+    }
+    .legal-footer p { margin: 4px 0; }
+    .legal-warning { color: #94a3b8; font-size: 0.75rem; margin-top: 8px; }
+
+    /* --- PRICING BOX STYLES --- */
     .pricing-box {
         background: #f8fafc;
         border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 20px;
-        margin-top: 10px;
-        font-size: 0.9rem;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
     }
+    
     .pricing-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 12px;
+        margin-bottom: 15px;
         color: #334155;
         font-weight: 600;
     }
+
     .total-badge {
         background: #0ea5e9;
         color: white;
-        padding: 6px 12px;
-        border-radius: 20px;
+        padding: 6px 14px;
+        border-radius: 50px;
         font-weight: 600;
         font-size: 0.95rem;
+        box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
     }
+
     .premium-toggle-label {
         display: flex;
         align-items: center;
         cursor: pointer;
         color: #0f172a;
         font-weight: 600;
+        font-size: 0.95rem;
         margin-bottom: 8px;
+        padding: 8px;
+        border-radius: 6px;
+        transition: background 0.2s;
     }
-    .premium-toggle-label input { margin-right: 10px; transform: scale(1.2); }
+    .premium-toggle-label:hover { background: #e2e8f0; }
+    .premium-toggle-label input { margin-right: 12px; transform: scale(1.3); accent-color: #0ea5e9; }
     
-    .perks-list { margin: 5px 0 15px 25px; font-size: 0.85rem; color: #64748b; list-style: none; padding: 0; }
-    .perks-list li { margin-bottom: 4px; }
-    .perks-list i { color: #10b981; margin-right: 6px; }
+    .perks-list { margin: 0 0 15px 32px; font-size: 0.85rem; color: #64748b; list-style: none; padding: 0; }
+    .perks-list li { margin-bottom: 6px; display: flex; align-items: center; }
+    .perks-list i { color: #10b981; margin-right: 8px; font-size: 1rem; }
 
     .doc-buttons { display: flex; gap: 10px; margin-top: 15px; margin-bottom: 15px; }
     .btn-small-outline {
-        flex: 1; padding: 8px; border: 1px solid #cbd5e1; background: white; 
-        border-radius: 6px; cursor: pointer; color: #475569; font-size: 0.8rem;
+        flex: 1; 
+        padding: 10px; 
+        border: 1px solid #cbd5e1; 
+        background: white; 
+        border-radius: 8px; 
+        cursor: pointer; 
+        color: #475569; 
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
     }
-    .btn-small-outline:hover { border-color: #0ea5e9; color: #0ea5e9; }
+    .btn-small-outline:hover { 
+        border-color: #0ea5e9; 
+        color: #0ea5e9; 
+        background: #f0f9ff;
+    }
   </style>
 </head>
 <body class="auth-body">
@@ -185,17 +242,18 @@
             <div id="premium-options" style="display:none;">
                 <label class="premium-toggle-label">
                     <input type="checkbox" id="wantsPremium">
-                    <span><i class="bi bi-stars" style="color:#eab308"></i> Enable Premium Data Bridge</span>
+                    <span>Enable Premium Data Bridge</span>
+                    <i class="bi bi-stars ms-2" style="color:#eab308; margin-left:8px;"></i>
                 </label>
                 <ul class="perks-list">
                     <li><i class="bi bi-check-circle-fill"></i> QR Code Data Transfer</li>
                     <li><i class="bi bi-check-circle-fill"></i> Auto-Sync to Google Sheets</li>
                 </ul>
-                <hr style="border:0; border-top:1px solid #e2e8f0; margin: 10px 0;">
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin: 15px 0;">
             </div>
 
             <div class="pricing-header">
-                <span id="paymentFrequency" style="font-size:0.8rem; color:#64748b">Verification Fee</span>
+                <span id="paymentFrequency" style="font-size:0.85rem; color:#64748b">Verification Fee</span>
                 <span class="total-badge"><span id="currencySymbol">RM</span> <span id="totalDisplay">0</span></span>
             </div>
 
@@ -207,12 +265,12 @@
 
                 <label class="form-label">Payment Reference / Receipt No.</label>
                 <input id="paymentRef" type="text" class="form-input" placeholder="Paste DuitNow / Stripe Ref">
-                <p style="font-size:0.75rem; color:#059669; margin-top:5px;">
-                    <i class="bi bi-shield-check"></i> Instant access granted upon submission.
+                <p style="font-size:0.75rem; color:#059669; margin-top:5px; display:flex; align-items:center;">
+                    <i class="bi bi-shield-check" style="margin-right:5px;"></i> Instant access granted upon submission.
                 </p>
 
-                <div style="margin-top:10px;">
-                    <label style="font-size:0.8rem; display:flex; align-items:center; cursor:pointer;">
+                <div style="margin-top:15px; padding-top:10px; border-top:1px dashed #cbd5e1;">
+                    <label style="font-size:0.8rem; display:flex; align-items:center; cursor:pointer; color:#475569;">
                         <input type="checkbox" id="requestEInvoice" style="margin-right:8px;">
                         Request Official LHDN e-Invoice (Sent in 30 days)
                     </label>
@@ -249,12 +307,6 @@
       <div style="margin-top: 24px; text-align: center; font-size: 13px; color: #64748b;">
         Already have an account? <a href="index.html" style="color: #0ea5e9; text-decoration: none; font-weight: 500;">Log in</a>
       </div>
-      
-      <div class="legal-footer">
-        <p><strong>&copy; 2026 Alivioscript Solutions</strong></p>
-        <p>Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
-        <p class="legal-warning">For professional use only. Verify all results.</p>
-      </div>
 
     </div>
 
@@ -275,6 +327,12 @@
       </a>
     </div>
 
+  </div>
+  
+  <div class="legal-footer">
+    <p><strong>&copy; 2026 Alivioscript Solutions</strong></p>
+    <p>Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+    <p class="legal-warning">For professional use only. Verify all results clinically.</p>
   </div>
 
   <div class="modal-overlay" id="info-modal">
@@ -316,14 +374,22 @@
   <script>
     let auth, db;
 
-    // --- 1. MASTER PRICE CONTROL ---
-    // Note: Set registration to 0 initially as per your request, 
-    // but the code is ready for you to change it to 50 later.
-    const PALLICALC_PRICES = {
-        personal: { registration: 0 }, 
-        institutionUser: { registration: 0 },
-        moh: { registration_basic: 0, premium_upgrade_one_time: 500 },
-        private: { reg_fixed_fee: 500, premium_fixed_fee: 500 }
+    // --- 1. DYNAMIC PRICE OBJECT ---
+    // This will be populated from Firebase. 
+    // Default 0s allow "Free Launch" mode even if DB fails.
+    let LIVE_REG_PRICES = {
+        malaysia: { 
+            personal: 0, 
+            institutionUser: 0, 
+            admin_reg: 0, 
+            admin_premium: 500 
+        },
+        international: { 
+            personal: 0, 
+            institutionUser: 0, 
+            admin_reg: 0, 
+            admin_premium: 500 
+        }
     };
 
     function normalizeInstitutionName(name) {
@@ -332,6 +398,7 @@
 
     async function initFirebase() {
       if (typeof firebase === 'undefined') return;
+      // YOUR CONFIG
       const config = {
           apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
           authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -344,8 +411,26 @@
       } catch(e) { console.error(e); }
     }
 
+    // --- FETCH LIVE PRICES FROM FIREBASE ---
+    async function fetchLivePrices() {
+        try {
+            const doc = await db.collection('settings').doc('registration').get();
+            if (doc.exists) {
+                LIVE_REG_PRICES = doc.data();
+                console.log("Live Prices Loaded");
+                // Refresh UI with new prices
+                updateUI();
+            }
+        } catch(e) {
+            console.error("Using default/free pricing. DB fetch error:", e);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
         await initFirebase();
+        
+        // Fetch prices immediately
+        await fetchLivePrices();
         
         const form = document.getElementById('register-form');
         const roleInputs = document.querySelectorAll('input[name="role"]');
@@ -375,7 +460,13 @@
             const isMoH = email.endsWith('@moh.gov.my');
             
             // Check if Country uses RM or USD
+            // Note: If 'Select country...' is active, default to Malaysia logic (RM)
             const isMalaysia = (country === 'Malaysia' || country === 'Select country...'); 
+            const geo = isMalaysia ? 'malaysia' : 'international';
+            
+            // Get correct price map from loaded data
+            // Fallback to 'international' if specific geo key is missing in DB for some reason
+            const prices = LIVE_REG_PRICES[geo] || LIVE_REG_PRICES['international'];
 
             // Show/Hide Inst Fields
             document.getElementById('inst-user-section').style.display = role === 'institutionUser' ? 'block' : 'none';
@@ -395,16 +486,15 @@
             let total = 0;
             currencySpan.textContent = isMalaysia ? 'RM' : 'USD';
 
-            // Universal MOH Logic for Personal/InstUser (Admin is handled separately below)
-            // MOH users have NO registration fee for Personal/InstUser accounts
+            // Universal MOH Logic: MOH users have NO registration fee for Personal/InstUser
             if (role === 'personal') {
-                total = isMoH ? 0 : PALLICALC_PRICES.personal.registration;
+                total = isMoH ? 0 : prices.personal;
                 pricingBox.style.display = total > 0 ? 'block' : 'none';
                 premOptions.style.display = 'none';
                 freqLabel.textContent = "One-time Account Activation";
             } 
             else if (role === 'institutionUser') {
-                total = isMoH ? 0 : PALLICALC_PRICES.institutionUser.registration;
+                total = isMoH ? 0 : prices.institutionUser;
                 pricingBox.style.display = total > 0 ? 'block' : 'none';
                 premOptions.style.display = 'none';
                 freqLabel.textContent = "One-time Account Activation";
@@ -414,10 +504,12 @@
                 premOptions.style.display = 'block';
 
                 if (isMoH) {
-                    total = premiumToggle.checked ? PALLICALC_PRICES.moh.premium_upgrade_one_time : 0;
+                    // MOH Admin: Reg is 0, only pay if Premium selected
+                    total = premiumToggle.checked ? prices.admin_premium : 0;
                     freqLabel.textContent = "Lifetime Activation (MOH Special)";
                 } else {
-                    total = PALLICALC_PRICES.private.reg_fixed_fee + (premiumToggle.checked ? PALLICALC_PRICES.private.premium_fixed_fee : 0);
+                    // Private Admin: Reg Fee + Premium Fee
+                    total = prices.admin_reg + (premiumToggle.checked ? prices.admin_premium : 0);
                     freqLabel.textContent = premiumToggle.checked ? "Registration + Premium Bridge" : "Registration Fee Only";
                 }
             }
@@ -454,7 +546,7 @@
             const country = isOther ? document.getElementById('country-other').value : countrySelect.value;
             if(country && country !== 'Other') await loadInstitutions(country);
             
-            updateUI(); // Re-run pricing to check currency
+            updateUI(); // Re-run pricing to check currency & geo
         });
 
         async function loadInstitutions(country) {
@@ -505,7 +597,7 @@
                 if(password !== confirm) throw new Error("Passwords do not match");
                 if(password.length < 6) throw new Error("Password too short");
 
-                // Trust Check: Unique Ref (Only if paying)
+                // Trust Check
                 if (total > 0) {
                     if (!paymentRef) throw new Error("Please enter Payment Reference Number.");
                     const dupeCheck = await db.collection('users').where('paymentReference', '==', paymentRef).get();
@@ -551,6 +643,11 @@
                     if(!instId) throw new Error("Please select an institution.");
                 }
 
+                // Billing Status Logic
+                let billStatus = 'trial-free-lifetime';
+                if (role === 'institutionAdmin' && !isMoH && total === 0) billStatus = 'active-first-year'; // Special case for pure trial if no money
+                if (total > 0) billStatus = 'active';
+
                 // Save User
                 await db.collection('users').doc(uid).set({
                     username: document.getElementById('username').value,
@@ -562,7 +659,7 @@
                     
                     // Trust & Billing
                     isPremium: isPremium,
-                    billingStatus: (total > 0) ? 'active' : 'trial-free-lifetime',
+                    billingStatus: billStatus,
                     trustStatus: total > 0 ? 'pending-verification' : 'verified',
                     paymentReference: paymentRef || "N/A",
                     requestEInvoice: document.getElementById('requestEInvoice').checked,
