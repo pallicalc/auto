@@ -14,7 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
   <style>
-    /* Additions for the Pricing/Trust Section to match your style */
+    /* Additions for the Pricing Section to fit your theme */
     .pricing-box {
         background: #f8fafc;
         border: 1px solid #e2e8f0;
@@ -22,50 +22,44 @@
         padding: 16px;
         margin-bottom: 20px;
         margin-top: 10px;
+        font-size: 0.9rem;
     }
     .pricing-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 12px;
+        color: #334155;
+        font-weight: 600;
     }
-    .total-display {
+    .total-badge {
         background: #0ea5e9;
         color: white;
-        padding: 8px 12px;
-        border-radius: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
         font-weight: 600;
-        text-align: center;
-        margin-bottom: 15px;
+        font-size: 0.95rem;
     }
-    .perks-list {
-        list-style: none;
-        padding: 0;
-        margin: 0 0 15px 0;
-        font-size: 0.85rem;
-        color: #64748b;
-    }
-    .perks-list li { margin-bottom: 6px; }
-    .perks-list i { color: #10b981; margin-right: 8px; }
-    
-    .doc-btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
-    .btn-outline {
-        flex: 1;
-        padding: 8px;
-        background: white;
-        border: 1px solid #cbd5e1;
-        border-radius: 6px;
-        font-size: 0.8rem;
+    .premium-toggle-label {
+        display: flex;
+        align-items: center;
         cursor: pointer;
-        color: #475569;
-        transition: 0.2s;
+        color: #0f172a;
+        font-weight: 600;
+        margin-bottom: 8px;
     }
-    .btn-outline:hover { border-color: #0ea5e9; color: #0ea5e9; }
+    .premium-toggle-label input { margin-right: 10px; transform: scale(1.2); }
+    
+    .perks-list { margin: 5px 0 15px 25px; font-size: 0.85rem; color: #64748b; list-style: none; padding: 0; }
+    .perks-list li { margin-bottom: 4px; }
+    .perks-list i { color: #10b981; margin-right: 6px; }
 
-    /* Custom Checkbox for Premium */
-    .premium-toggle { display: flex; align-items: center; cursor: pointer; margin-bottom: 10px; }
-    .premium-toggle input { margin-right: 10px; transform: scale(1.2); }
-    .premium-label { font-weight: 600; color: #0f172a; }
+    .doc-buttons { display: flex; gap: 10px; margin-top: 15px; margin-bottom: 15px; }
+    .btn-small-outline {
+        flex: 1; padding: 8px; border: 1px solid #cbd5e1; background: white; 
+        border-radius: 6px; cursor: pointer; color: #475569; font-size: 0.8rem;
+    }
+    .btn-small-outline:hover { border-color: #0ea5e9; color: #0ea5e9; }
   </style>
 </head>
 <body class="auth-body">
@@ -74,7 +68,7 @@
     <div id="registration-view">
       <div class="auth-header">
         <h1 class="auth-title">Create Account</h1>
-        <p class="auth-subtitle">Join PalliCalc for clinical palliative tools.</p>
+        <p class="auth-subtitle">Join PalliCalc for free lifetime access.</p>
       </div>
 
       <form id="register-form">
@@ -92,6 +86,7 @@
             <option value="Medical Officer">Medical Officer</option>
             <option value="Consultant Specialist">Consultant Specialist</option>
             <option value="Staff Nurse">Staff Nurse</option>
+            <option value="Medical Assistant">Medical Assistant</option>
             <option value="Other">Other</option>
           </select>
           <input id="occupation-other" type="text" class="form-input" style="margin-top:8px; display:none" placeholder="Specify role">
@@ -105,6 +100,12 @@
             <option value="Singapore">Singapore</option>
             <option value="United Kingdom">United Kingdom</option>
             <option value="Australia">Australia</option>
+            <option value="New Zealand">New Zealand</option>
+            <option disabled>──────────</option>
+            <option value="Indonesia">Indonesia</option>
+            <option value="Philippines">Philippines</option>
+            <option value="Thailand">Thailand</option>
+            <option value="United States">United States</option>
             <option value="Other">Other</option>
           </select>
           <input id="country-other" type="text" class="form-input" style="margin-top:8px; display:none" placeholder="Specify country">
@@ -121,73 +122,70 @@
               <input type="radio" name="role" value="personal" checked style="margin-top:4px">
               <div class="role-content">
                 <strong>Personal</strong>
-                <span>Individual use.</span>
+                <span>For individual use on your own device</span>
               </div>
             </label>
 
             <label class="role-card">
               <input type="radio" name="role" value="institutionUser" style="margin-top:4px">
               <div class="role-content">
-                <strong>Inst. User</strong>
-                <span>Join existing team.</span>
+                <strong>Institution User</strong>
+                <span>Join an existing team (view shared protocols)</span>
               </div>
             </label>
 
             <label class="role-card">
               <input type="radio" name="role" value="institutionAdmin" style="margin-top:4px">
               <div class="role-content">
-                <strong>Inst. Admin</strong>
-                <span>Create new team.</span>
+                <strong>Institution Admin</strong>
+                <span>Create a new team & manage protocols</span>
               </div>
             </label>
 
           </div>
         </div>
 
-        <div id="inst-user-section" class="institution-section" style="display:none;">
+        <div id="inst-user-section" class="institution-section">
           <label class="form-label">Select Institution</label>
           <select id="institution-select" class="form-input">
             <option value="">Select country first...</option>
           </select>
         </div>
 
-        <div id="inst-admin-section" class="institution-section" style="display:none;">
-          <label class="form-label">New Institution Name</label>
-          <input id="institution-name" type="text" class="form-input" placeholder="e.g. HKLPalliative Unit">
+        <div id="inst-admin-section" class="institution-section">
+          <label class="form-label">Institution Name</label>
+          <input id="institution-name" type="text" class="form-input" placeholder="e.g. Hospital Kuala Lumpur Palliative Unit">
         </div>
 
         <div id="pricing-section" class="pricing-box" style="display:none;">
             
             <div id="premium-options" style="display:none;">
-                <label class="premium-toggle">
+                <label class="premium-toggle-label">
                     <input type="checkbox" id="wantsPremium">
-                    <span class="premium-label"><i class="bi bi-stars" style="color:#eab308"></i> Enable Premium Data Bridge</span>
+                    <span><i class="bi bi-stars" style="color:#eab308"></i> Enable Premium Data Bridge</span>
                 </label>
                 <ul class="perks-list">
                     <li><i class="bi bi-check-circle-fill"></i> QR Code Data Transfer</li>
                     <li><i class="bi bi-check-circle-fill"></i> Auto-Sync to Google Sheets</li>
                 </ul>
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin: 10px 0;">
             </div>
 
-            <div class="total-display">
-                Verification Total: <span id="currencySymbol">RM</span> <span id="totalDisplay">0</span>
-                <div style="font-size:0.75rem; opacity:0.9" id="paymentFrequency">One-time</div>
+            <div class="pricing-header">
+                <span id="paymentFrequency" style="font-size:0.8rem; color:#64748b">Verification Fee</span>
+                <span class="total-badge"><span id="currencySymbol">RM</span> <span id="totalDisplay">0</span></span>
             </div>
 
             <div id="payment-input-container" style="display:none;">
-                <div class="doc-btn-group">
-                    <button type="button" class="btn-outline" onclick="generateInvoice()">
-                        <i class="bi bi-file-text"></i> Invoice
-                    </button>
-                    <button type="button" class="btn-outline" onclick="generateInstantReceipt()">
-                        <i class="bi bi-printer"></i> Receipt
-                    </button>
+                <div class="doc-buttons">
+                    <button type="button" class="btn-small-outline" onclick="generateInvoice()"><i class="bi bi-file-text"></i> Invoice</button>
+                    <button type="button" class="btn-small-outline" onclick="generateInstantReceipt()"><i class="bi bi-printer"></i> Receipt</button>
                 </div>
 
                 <label class="form-label">Payment Reference / Receipt No.</label>
                 <input id="paymentRef" type="text" class="form-input" placeholder="Paste DuitNow / Stripe Ref">
                 <p style="font-size:0.75rem; color:#059669; margin-top:5px;">
-                    <i class="bi bi-shield-lock-fill"></i> Instant access granted upon submission.
+                    <i class="bi bi-shield-check"></i> Instant access granted upon submission.
                 </p>
 
                 <div style="margin-top:10px;">
@@ -216,8 +214,8 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Promo Code <span style="font-weight:400; color:#94a3b8">(Optional)</span></label>
-          <input id="promo-code" type="text" class="form-input" placeholder="e.g. BETAMOH2026">
+          <label class="form-label">Promo / Event Code <span style="font-weight:400; color:#94a3b8">(Optional)</span></label>
+          <input id="promo-code" type="text" class="form-input" placeholder="e.g. CONF2026">
         </div>
 
         <button type="submit" id="submit-btn" class="btn-primary">Create Account</button>
@@ -231,7 +229,8 @@
       
       <div class="legal-footer">
         <p><strong>&copy; 2026 Alivioscript Solutions</strong></p>
-        <p>Author: Alison Chai, RPh (M'sia): 9093</p>
+        <p>Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+        <p class="legal-warning">For professional use only. Verify all results.</p>
       </div>
 
     </div>
@@ -245,7 +244,12 @@
         We've sent a verification link to <br>
         <span id="display-email" class="email-display"></span>
       </p>
-      <a href="index.html" class="btn-primary" style="display:block; text-decoration:none; text-align:center;">Back to Login</a>
+      <p style="font-size:13px; color:#64748b; background:#f1f5f9; padding:10px; border-radius:8px; margin-bottom: 24px;">
+        <i class="bi bi-clock-history"></i> Please verify within <strong>24 hours</strong> to fully activate your account.
+      </p>
+      <a href="index.html" class="btn-primary" style="display:block; text-decoration:none; text-align:center;">
+        Back to Login
+      </a>
     </div>
 
   </div>
@@ -256,17 +260,32 @@
         <div class="modal-title">Account Types Explained</div>
         <button class="modal-close" id="close-modal">&times;</button>
       </div>
+      
       <div class="role-explainer">
         <h4><i class="bi bi-person"></i> Personal</h4>
-        <p>Best for private practice. <br><strong>Price:</strong> Free (or small one-time fee).</p>
+        <p>
+          Best for private practice. You set your own custom calculator ratios. 
+          <br><strong>Price:</strong> Free Forever.
+        </p>
       </div>
+
       <div class="role-explainer">
-        <h4><i class="bi bi-building-check"></i> Institution User</h4>
-        <p>Join a hospital team. <br><strong>Price:</strong> Free.</p>
+        <h4>
+            <i class="bi bi-building-check"></i> Institution User 
+            <span class="role-badge badge-rec">Recommended</span>
+        </h4>
+        <p>
+          Best for hospital teams. You use standardized protocols set by your Admin.
+          <br><strong>Price:</strong> Free Forever.
+        </p>
       </div>
+
       <div class="role-explainer">
         <h4><i class="bi bi-person-gear"></i> Institution Admin</h4>
-        <p>Create a team & manage data. <br><strong>Price:</strong> Verification Fee + Optional Premium.</p>
+        <p>
+          For the Team Lead. You manage the team subscription and protocols. 
+          <br><strong>Price:</strong> 1st Year Free, then annual fee (unless waived).
+        </p>
       </div>
     </div>
   </div>
@@ -276,17 +295,9 @@
 
     // --- 1. MASTER PRICE CONTROL ---
     const PALLICALC_PRICES = {
-        personal: { 
-            registration: 0  // <--- Change to 50 later to charge personal users
-        },
-        moh: { 
-            registration_basic: 0, 
-            premium_upgrade_one_time: 500 
-        },
-        private: { 
-            reg_fixed_fee: 500,
-            premium_fixed_fee: 500
-        }
+        personal: { registration: 0 }, // Change to 50 later if needed
+        moh: { registration_basic: 0, premium_upgrade_one_time: 500 },
+        private: { reg_fixed_fee: 500, premium_fixed_fee: 500 }
     };
 
     function normalizeInstitutionName(name) {
@@ -295,6 +306,7 @@
 
     async function initFirebase() {
       if (typeof firebase === 'undefined') return;
+      // YOUR CONFIG
       const config = {
           apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
           authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -311,6 +323,7 @@
         await initFirebase();
         
         const form = document.getElementById('register-form');
+        const roleInputs = document.querySelectorAll('input[name="role"]');
         const countrySelect = document.getElementById('country');
         const instSelect = document.getElementById('institution-select');
         const emailInput = document.getElementById('email');
@@ -324,9 +337,9 @@
         if(closeModal) closeModal.addEventListener('click', () => { modal.style.display = 'none'; });
         if(modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
 
-        // --- 2. PRICING & UI LOGIC ---
+        // --- 2. UI & PRICING LOGIC ---
         function updateUI() {
-            // Style Role Cards
+            // Role Card Styling
             document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
             const selected = document.querySelector('input[name="role"]:checked');
             if(selected) selected.closest('.role-card').classList.add('selected');
@@ -335,16 +348,17 @@
             const country = countrySelect.value;
             const email = emailInput.value.trim().toLowerCase();
             const isMoH = email.endsWith('@moh.gov.my');
-            const isMalaysia = (country === 'Malaysia' || country === 'Select country...'); // Default RM
+            // Default to RM if Malaysia or not selected yet, else USD
+            const isMalaysia = (country === 'Malaysia' || country === 'Select country...'); 
 
-            // 1. Show/Hide Form Sections
+            // Show/Hide Inst Fields
             document.getElementById('inst-user-section').style.display = role === 'institutionUser' ? 'block' : 'none';
             document.getElementById('inst-admin-section').style.display = role === 'institutionAdmin' ? 'block' : 'none';
             
             instSelect.required = (role === 'institutionUser');
             document.getElementById('institution-name').required = (role === 'institutionAdmin');
 
-            // 2. Pricing Logic
+            // --- PRICING CALCULATION ---
             const pricingBox = document.getElementById('pricing-section');
             const premOptions = document.getElementById('premium-options');
             const payInputs = document.getElementById('payment-input-container');
@@ -362,8 +376,7 @@
                 freqLabel.textContent = "One-time Account Activation";
             } 
             else if (role === 'institutionUser') {
-                // Always free
-                pricingBox.style.display = 'none';
+                pricingBox.style.display = 'none'; // One-time Account Activation
                 total = 0;
             } 
             else if (role === 'institutionAdmin') {
@@ -371,20 +384,17 @@
                 premOptions.style.display = 'block';
 
                 if (isMoH) {
-                    // MOH Logic
                     total = premiumToggle.checked ? PALLICALC_PRICES.moh.premium_upgrade_one_time : 0;
                     freqLabel.textContent = "Lifetime Activation (MOH Special)";
                 } else {
-                    // Private Logic
                     total = PALLICALC_PRICES.private.reg_fixed_fee + (premiumToggle.checked ? PALLICALC_PRICES.private.premium_fixed_fee : 0);
                     freqLabel.textContent = premiumToggle.checked ? "Registration + Premium Bridge" : "Registration Fee Only";
                 }
             }
 
-            // Update Text
             totalSpan.textContent = total;
 
-            // Show Payment Inputs only if Cost > 0
+            // Only show payment inputs if money is involved
             if (total > 0) {
                 payInputs.style.display = 'block';
             } else {
@@ -392,25 +402,29 @@
             }
         }
 
-        // Event Listeners
-        document.querySelectorAll('input[name="role"]').forEach(r => r.addEventListener('change', updateUI));
+        // Listeners
+        roleInputs.forEach(r => r.addEventListener('change', updateUI));
         countrySelect.addEventListener('change', updateUI);
         emailInput.addEventListener('input', updateUI);
         premiumToggle.addEventListener('change', updateUI);
 
-        // Country Load Logic (Original)
-        countrySelect.addEventListener('change', async () => {
-            const isOther = countrySelect.value === 'Other';
-            document.getElementById('country-other').style.display = isOther ? 'block' : 'none';
-            document.getElementById('country-other').required = isOther;
-            const country = isOther ? document.getElementById('country-other').value : countrySelect.value;
-            if(country && country !== 'Other') await loadInstitutions(country);
-        });
-
+        // Occupation Other Logic
         document.getElementById('occupation').addEventListener('change', (e) => {
             const isOther = e.target.value === 'Other';
             document.getElementById('occupation-other').style.display = isOther ? 'block' : 'none';
             document.getElementById('occupation-other').required = isOther;
+        });
+
+        // Country Load Logic (Yours + Other)
+        countrySelect.addEventListener('change', async () => {
+            const isOther = countrySelect.value === 'Other';
+            document.getElementById('country-other').style.display = isOther ? 'block' : 'none';
+            document.getElementById('country-other').required = isOther;
+            
+            const country = isOther ? document.getElementById('country-other').value : countrySelect.value;
+            if(country && country !== 'Other') await loadInstitutions(country);
+            
+            updateUI(); // Re-run pricing to check currency
         });
 
         async function loadInstitutions(country) {
@@ -418,14 +432,20 @@
             try {
                 const snap = await db.collection('institutions').where('country', '==', country).get();
                 instSelect.innerHTML = '<option value="">Select Institution</option>';
-                if(snap.empty) instSelect.innerHTML += '<option disabled>No institutions found</option>';
-                else {
+                if(snap.empty) {
+                    instSelect.innerHTML += '<option disabled>No institutions found</option>';
+                } else {
                     let docs = [];
                     snap.forEach(doc => docs.push({ id: doc.id, name: doc.data().name }));
                     docs.sort((a, b) => a.name.localeCompare(b.name));
-                    docs.forEach(inst => instSelect.innerHTML += `<option value="${inst.id}">${inst.name}</option>`);
+                    docs.forEach(inst => {
+                        instSelect.innerHTML += `<option value="${inst.id}">${inst.name}</option>`;
+                    });
                 }
-            } catch(e) { instSelect.innerHTML = '<option value="">Error loading list</option>'; }
+            } catch(e) { 
+                console.error(e); 
+                instSelect.innerHTML = '<option value="">Error loading list</option>'; 
+            }
         }
 
         // --- 3. SUBMIT LOGIC ---
@@ -443,16 +463,19 @@
                 const password = document.getElementById('password').value;
                 const confirm = document.getElementById('confirm-password').value;
                 const role = document.querySelector('input[name="role"]:checked').value;
+                
+                // Handle Country
                 const countryVal = countrySelect.value;
                 const country = countryVal === 'Other' ? document.getElementById('country-other').value : countryVal;
                 
+                // Handle Pricing / Trust
                 const total = parseInt(document.getElementById('totalDisplay').textContent);
                 const paymentRef = document.getElementById('paymentRef').value.trim();
 
                 if(password !== confirm) throw new Error("Passwords do not match");
                 if(password.length < 6) throw new Error("Password too short");
 
-                // Unique Ref Check (Trust System)
+                // Trust Check: Unique Ref
                 if (total > 0) {
                     if (!paymentRef) throw new Error("Please enter Payment Reference Number.");
                     const dupeCheck = await db.collection('users').where('paymentReference', '==', paymentRef).get();
@@ -465,10 +488,11 @@
 
                 // Flags
                 const isMoH = email.endsWith('@moh.gov.my');
+                const promo = document.getElementById('promo-code').value.trim().toUpperCase();
                 let isPremium = false;
                 let manualDiscount = 0;
-                const promo = document.getElementById('promo-code').value.trim().toUpperCase();
 
+                // Beta/Waiver Logic
                 if (isMoH && promo === 'BETAMOH2026') {
                     manualDiscount = 100;
                     isPremium = true;
@@ -476,25 +500,32 @@
                     isPremium = true;
                 }
 
-                // Inst Logic
+                // Institution Logic
                 let instId = null;
                 let instName = null;
 
                 if (role === 'institutionAdmin') {
                     instName = document.getElementById('institution-name').value.trim();
+                    if(!instName) throw new Error("Institution Name Required");
                     instId = normalizeInstitutionName(instName);
-                    // Create Inst Doc
+                    
                     const instRef = db.collection('institutions').doc(instId);
                     await db.runTransaction(async (tx) => {
                         const snap = await tx.get(instRef);
-                        if (snap.exists) throw new Error("Institution name exists.");
+                        if (snap.exists) throw new Error("Institution name already exists.");
                         tx.set(instRef, { name: instName, country: country, adminUid: uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                     });
+
                 } else if (role === 'institutionUser') {
                     instId = instSelect.value;
+                    if(!instId) throw new Error("Please select an institution.");
                 }
 
-                // Create User Doc
+                // Billing Status Logic (Based on your original)
+                let billStatus = 'trial';
+                if (role === 'institutionAdmin' && !isMoH) billStatus = 'active-first-year';
+
+                // Save User
                 await db.collection('users').doc(uid).set({
                     username: document.getElementById('username').value,
                     email: email,
@@ -505,13 +536,12 @@
                     
                     // Trust & Billing
                     isPremium: isPremium,
-                    billingStatus: 'active', // Instant Access
+                    billingStatus: (total > 0) ? 'active' : billStatus, // If paid, force active
                     trustStatus: total > 0 ? 'pending-verification' : 'verified',
                     paymentReference: paymentRef || "N/A",
                     requestEInvoice: document.getElementById('requestEInvoice').checked,
                     manualDiscount: manualDiscount,
                     promoCode: promo,
-                    hasPaidOnce: total > 0, // Flag for future logic
                     subscriptionEnd: (!isMoH && role === 'institutionAdmin') ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)) : null,
 
                     institutionId: instId,
@@ -526,7 +556,9 @@
 
             } catch(error) {
                 console.error(error);
-                msg.textContent = error.message;
+                let text = error.message;
+                if(error.code === 'auth/email-already-in-use') text = "Email already registered.";
+                msg.textContent = text;
                 msg.style.display = 'block';
                 btn.disabled = false;
                 btn.textContent = 'Create Account';
@@ -539,7 +571,7 @@
         };
         window.generateInstantReceipt = function() {
             const ref = document.getElementById('paymentRef').value || "PENDING";
-            printDoc("INSTANT RECEIPT", `Payment Ref: ${ref}`, "Pro-forma receipt based on trust reference.");
+            printDoc("INSTANT RECEIPT", `Payment Ref: ${ref}`, "Pro-forma receipt.");
         };
 
         function printDoc(title, payInfo, note) {
@@ -565,7 +597,7 @@
             win.document.close();
         }
 
-        updateUI(); // Init
+        updateUI(); // Run once on load
     });
   </script>
 </body>
