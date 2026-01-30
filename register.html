@@ -14,7 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
   <style>
-    /* Additions for the Pricing Section to fit your theme */
+    /* Pricing Box Styles */
     .pricing-box {
         background: #f8fafc;
         border: 1px solid #e2e8f0;
@@ -68,7 +68,7 @@
     <div id="registration-view">
       <div class="auth-header">
         <h1 class="auth-title">Create Account</h1>
-        <p class="auth-subtitle">Join PalliCalc for free lifetime access.</p>
+        <p class="auth-subtitle">Join PalliCalc for professional clinical tools.</p>
       </div>
 
       <form id="register-form">
@@ -96,16 +96,39 @@
           <label class="form-label">Country</label>
           <select id="country" class="form-input" required>
             <option value="">Select country...</option>
-            <option value="Malaysia">Malaysia</option>
-            <option value="Singapore">Singapore</option>
-            <option value="United Kingdom">United Kingdom</option>
-            <option value="Australia">Australia</option>
-            <option value="New Zealand">New Zealand</option>
-            <option disabled>──────────</option>
-            <option value="Indonesia">Indonesia</option>
-            <option value="Philippines">Philippines</option>
-            <option value="Thailand">Thailand</option>
-            <option value="United States">United States</option>
+            
+            <optgroup label="Southeast Asia">
+                <option value="Malaysia">Malaysia</option>
+                <option value="Singapore">Singapore</option>
+                <option value="Brunei">Brunei</option>
+                <option value="Indonesia">Indonesia</option>
+                <option value="Philippines">Philippines</option>
+                <option value="Thailand">Thailand</option>
+                <option value="Vietnam">Vietnam</option>
+            </optgroup>
+
+            <optgroup label="Oceania">
+                <option value="Australia">Australia</option>
+                <option value="New Zealand">New Zealand</option>
+            </optgroup>
+
+            <optgroup label="Europe">
+                <option value="United Kingdom">United Kingdom</option>
+                <option value="Ireland">Ireland</option>
+            </optgroup>
+
+            <optgroup label="Americas">
+                <option value="United States">United States</option>
+                <option value="Canada">Canada</option>
+            </optgroup>
+
+            <optgroup label="Asia (Others)">
+                <option value="Hong Kong">Hong Kong</option>
+                <option value="India">India</option>
+                <option value="Japan">Japan</option>
+                <option value="China">China</option>
+            </optgroup>
+
             <option value="Other">Other</option>
           </select>
           <input id="country-other" type="text" class="form-input" style="margin-top:8px; display:none" placeholder="Specify country">
@@ -122,23 +145,23 @@
               <input type="radio" name="role" value="personal" checked style="margin-top:4px">
               <div class="role-content">
                 <strong>Personal</strong>
-                <span>For individual use on your own device</span>
+                <span>Individual use only.</span>
               </div>
             </label>
 
             <label class="role-card">
               <input type="radio" name="role" value="institutionUser" style="margin-top:4px">
               <div class="role-content">
-                <strong>Institution User</strong>
-                <span>Join an existing team (view shared protocols)</span>
+                <strong>Inst. User</strong>
+                <span>Join existing team.</span>
               </div>
             </label>
 
             <label class="role-card">
               <input type="radio" name="role" value="institutionAdmin" style="margin-top:4px">
               <div class="role-content">
-                <strong>Institution Admin</strong>
-                <span>Create a new team & manage protocols</span>
+                <strong>Inst. Admin</strong>
+                <span>Create new team.</span>
               </div>
             </label>
 
@@ -265,7 +288,7 @@
         <h4><i class="bi bi-person"></i> Personal</h4>
         <p>
           Best for private practice. You set your own custom calculator ratios. 
-          <br><strong>Price:</strong> Free Forever.
+          <br><strong>Price:</strong> One time registration fee, no annual fee. (MOH: Free)
         </p>
       </div>
 
@@ -276,7 +299,7 @@
         </h4>
         <p>
           Best for hospital teams. You use standardized protocols set by your Admin.
-          <br><strong>Price:</strong> Free Forever.
+          <br><strong>Price:</strong> One time registration fee, no annual fee. (MOH: Free)
         </p>
       </div>
 
@@ -284,7 +307,7 @@
         <h4><i class="bi bi-person-gear"></i> Institution Admin</h4>
         <p>
           For the Team Lead. You manage the team subscription and protocols. 
-          <br><strong>Price:</strong> 1st Year Free, then annual fee (unless waived).
+          <br><strong>Price:</strong> One time registration fee, then annual fee. (MOH: Free)
         </p>
       </div>
     </div>
@@ -294,8 +317,11 @@
     let auth, db;
 
     // --- 1. MASTER PRICE CONTROL ---
+    // Note: Set registration to 0 initially as per your request, 
+    // but the code is ready for you to change it to 50 later.
     const PALLICALC_PRICES = {
-        personal: { registration: 0 }, // Change to 50 later if needed
+        personal: { registration: 0 }, 
+        institutionUser: { registration: 0 },
         moh: { registration_basic: 0, premium_upgrade_one_time: 500 },
         private: { reg_fixed_fee: 500, premium_fixed_fee: 500 }
     };
@@ -306,7 +332,6 @@
 
     async function initFirebase() {
       if (typeof firebase === 'undefined') return;
-      // YOUR CONFIG
       const config = {
           apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
           authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -348,7 +373,8 @@
             const country = countrySelect.value;
             const email = emailInput.value.trim().toLowerCase();
             const isMoH = email.endsWith('@moh.gov.my');
-            // Default to RM if Malaysia or not selected yet, else USD
+            
+            // Check if Country uses RM or USD
             const isMalaysia = (country === 'Malaysia' || country === 'Select country...'); 
 
             // Show/Hide Inst Fields
@@ -369,15 +395,19 @@
             let total = 0;
             currencySpan.textContent = isMalaysia ? 'RM' : 'USD';
 
+            // Universal MOH Logic for Personal/InstUser (Admin is handled separately below)
+            // MOH users have NO registration fee for Personal/InstUser accounts
             if (role === 'personal') {
-                total = PALLICALC_PRICES.personal.registration;
+                total = isMoH ? 0 : PALLICALC_PRICES.personal.registration;
                 pricingBox.style.display = total > 0 ? 'block' : 'none';
                 premOptions.style.display = 'none';
                 freqLabel.textContent = "One-time Account Activation";
             } 
             else if (role === 'institutionUser') {
-                pricingBox.style.display = 'none'; // One-time Account Activation
-                total = 0;
+                total = isMoH ? 0 : PALLICALC_PRICES.institutionUser.registration;
+                pricingBox.style.display = total > 0 ? 'block' : 'none';
+                premOptions.style.display = 'none';
+                freqLabel.textContent = "One-time Account Activation";
             } 
             else if (role === 'institutionAdmin') {
                 pricingBox.style.display = 'block';
@@ -415,7 +445,7 @@
             document.getElementById('occupation-other').required = isOther;
         });
 
-        // Country Load Logic (Yours + Other)
+        // Country Load Logic
         countrySelect.addEventListener('change', async () => {
             const isOther = countrySelect.value === 'Other';
             document.getElementById('country-other').style.display = isOther ? 'block' : 'none';
@@ -475,7 +505,7 @@
                 if(password !== confirm) throw new Error("Passwords do not match");
                 if(password.length < 6) throw new Error("Password too short");
 
-                // Trust Check: Unique Ref
+                // Trust Check: Unique Ref (Only if paying)
                 if (total > 0) {
                     if (!paymentRef) throw new Error("Please enter Payment Reference Number.");
                     const dupeCheck = await db.collection('users').where('paymentReference', '==', paymentRef).get();
@@ -521,10 +551,6 @@
                     if(!instId) throw new Error("Please select an institution.");
                 }
 
-                // Billing Status Logic (Based on your original)
-                let billStatus = 'trial';
-                if (role === 'institutionAdmin' && !isMoH) billStatus = 'active-first-year';
-
                 // Save User
                 await db.collection('users').doc(uid).set({
                     username: document.getElementById('username').value,
@@ -536,7 +562,7 @@
                     
                     // Trust & Billing
                     isPremium: isPremium,
-                    billingStatus: (total > 0) ? 'active' : billStatus, // If paid, force active
+                    billingStatus: (total > 0) ? 'active' : 'trial-free-lifetime',
                     trustStatus: total > 0 ? 'pending-verification' : 'verified',
                     paymentReference: paymentRef || "N/A",
                     requestEInvoice: document.getElementById('requestEInvoice').checked,
