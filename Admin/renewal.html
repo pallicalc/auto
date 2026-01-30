@@ -2,15 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Annual Renewal | PalliCalc</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="style.css">
-
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -18,16 +16,12 @@
     <style>
         body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; color: #333; }
         .renewal-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; }
-        
         .premium-option { border: 2px solid #e9ecef; border-radius: 10px; padding: 20px; transition: all 0.3s; background: white; cursor: pointer; }
         .premium-option:hover { border-color: #adb5bd; }
         .premium-option.selected { border-color: #198754; background-color: #f0fff4; box-shadow: 0 0 0 1px #198754; }
-        
         .date-badge { background: #e2e3e5; color: #383d41; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; }
         .date-badge.active { background: #d1e7dd; color: #0f5132; }
         .date-badge.expired { background: #f8d7da; color: #842029; }
-
-        .discount-badge { font-size: 0.9rem; background: #d1e7dd; color: #0f5132; padding: 5px 10px; border-radius: 6px; }
     </style>
 </head>
 <body>
@@ -72,7 +66,7 @@
                     </div>
                     <div class="card-body p-4">
                         
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                             <div>
                                 <h6 class="fw-bold mb-0">Base Admin License</h6>
                                 <small class="text-muted">Tiered rate based on current staff count.</small>
@@ -91,7 +85,7 @@
                                     Include Premium Data Bridge
                                 </label>
                                 <small class="text-muted">
-                                    QR Transfer, Auto-Sync & Custom Headers.
+                                    Keep or Enable QR Transfer & Custom Headers for the next year.
                                 </small>
                             </div>
                             <div class="fw-bold text-success">
@@ -133,8 +127,9 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Payment Reference / Receipt No.</label>
                             <input type="text" id="paymentRef" class="form-control form-control-lg" placeholder="e.g. DuitNow Ref 123456">
-                            <div class="form-text x-small" id="zeroPayMsg" style="display:none;">
-                                Total is 0. Please enter "WAIVER" or "PROMO".
+                            
+                            <div class="form-text text-success fw-bold small mt-1" id="zeroPayMsg" style="display:none;">
+                                <i class="bi bi-check-circle"></i> Total is 0. Please enter "WAIVER" or "PROMO" above.
                             </div>
                         </div>
 
@@ -174,17 +169,17 @@
         }
     };
 
-    // --- STATE MANAGEMENT ---
+    // --- STATE ---
     let state = {
         basePrice: 0,
         premiumPrice: PALLICALC_PRICES.private.premium_annual_renewal,
         currentExpiry: new Date(),
         newExpiry: new Date(),
         currency: 'RM',
-        manualDiscount: 0 // Will be loaded from Firebase
+        manualDiscount: 0 // <--- THIS WAS MISSING IN YOUR SNIPPET
     };
 
-    // --- AUTH & LOAD ---
+    // --- INITIALIZATION ---
     auth.onAuthStateChanged(async user => {
         if (!user) return window.location.href = '../index.html';
 
@@ -192,21 +187,20 @@
             const userDoc = await db.collection('users').doc(user.uid).get();
             const userData = userDoc.data();
 
-            // 1. MOH GATEKEEPER
             if (userData.isMoH) {
-                alert("MOH Accounts have lifetime access. No annual renewal required.");
+                alert("MOH Accounts have lifetime access.");
                 window.location.href = '../admin.html';
                 return;
             }
 
-            // 2. FETCH MANUAL DISCOUNT (The key update)
+            // 1. FETCH DISCOUNT (ADDED BACK)
             state.manualDiscount = userData.manualDiscount || 0;
 
-            // 3. GET STAFF COUNT FOR TIER
+            // 2. Staff Count
             const staffSnap = await db.collection('users').where('institutionId', '==', userData.institutionId || 'none').get();
             const count = staffSnap.size || 1;
 
-            // 4. DETERMINE CURRENCY & TIER
+            // 3. Currency & Tier
             const isMY = (userData.country === 'Malaysia');
             state.currency = isMY ? 'RM' : 'USD';
             
@@ -214,14 +208,11 @@
             else if (count <= 50) state.basePrice = PALLICALC_PRICES.private.renewal_tiers.tier2;
             else state.basePrice = PALLICALC_PRICES.private.renewal_tiers.tier3;
 
-            // 5. SETUP DATES
-            if (userData.subscriptionEnd) {
-                state.currentExpiry = userData.subscriptionEnd.toDate();
-            } else {
-                state.currentExpiry = new Date();
-            }
+            // 4. Dates
+            if (userData.subscriptionEnd) state.currentExpiry = userData.subscriptionEnd.toDate();
+            else state.currentExpiry = new Date();
 
-            // 6. POPULATE UI
+            // 5. Populate UI
             document.querySelectorAll('.currencySymbol').forEach(el => el.textContent = state.currency);
             document.getElementById('instName').textContent = (userData.username || "User") + "'s Institution";
             document.getElementById('staffCountLabel').textContent = count;
@@ -230,31 +221,28 @@
             document.getElementById('basePriceDisplay').textContent = state.basePrice;
             document.getElementById('premiumPriceDisplay').textContent = state.premiumPrice;
 
-            // Expiry Badge
-            const now = new Date();
-            const badge = document.getElementById('currentExpiryBadge');
-            badge.textContent = state.currentExpiry.toLocaleDateString('en-GB');
-            if (state.currentExpiry > now) {
-                badge.classList.add('active');
-                badge.innerHTML += ' (Active)';
-            } else {
-                badge.classList.add('expired');
-                badge.innerHTML += ' (Expired)';
-            }
-
-            // Show Discount UI if applicable
+            // 6. SHOW DISCOUNT (ADDED BACK)
             if (state.manualDiscount > 0) {
                 document.getElementById('discountRow').classList.remove('d-none');
                 document.getElementById('discountDisplay').textContent = state.manualDiscount;
             }
 
-            // Set Checkbox to match current status
+            // 7. Expiry Badge
+            const now = new Date();
+            const badge = document.getElementById('currentExpiryBadge');
+            badge.textContent = state.currentExpiry.toLocaleDateString('en-GB');
+            if (state.currentExpiry > now) {
+                badge.classList.add('active');
+                badge.innerHTML += ' <span class="ms-1">(Active)</span>';
+            } else {
+                badge.classList.add('expired');
+                badge.innerHTML += ' <span class="ms-1">(Expired)</span>';
+            }
+
+            // 8. Premium Checkbox
             document.getElementById('premiumToggle').checked = userData.isPremium;
 
-            // Initial Calc
             calculateTotals(); 
-
-            // Show Page
             document.getElementById('loading').classList.add('d-none');
             document.getElementById('renewalContent').classList.remove('d-none');
 
@@ -264,7 +252,7 @@
         }
     });
 
-    // --- LOGIC: CALCULATION ---
+    // --- CALCULATION LOGIC ---
     function togglePremium() {
         const chk = document.getElementById('premiumToggle');
         chk.checked = !chk.checked;
@@ -277,20 +265,20 @@
         // 1. Subtotal
         let subtotal = state.basePrice + (wantsPremium ? state.premiumPrice : 0);
 
-        // 2. Apply Discount Math
-        let discountAmount = 0;
+        // 2. APPLY DISCOUNT (ADDED BACK)
+        let discountAmt = 0;
         if (state.manualDiscount > 0) {
-            discountAmount = subtotal * (state.manualDiscount / 100);
+            discountAmt = subtotal * (state.manualDiscount / 100);
         }
-        let finalTotal = subtotal - discountAmount;
-        if(finalTotal < 0) finalTotal = 0;
+        let total = subtotal - discountAmt;
+        if (total < 0) total = 0;
 
-        // 3. Update UI
-        document.getElementById('totalDisplay').textContent = finalTotal.toFixed(2);
+        // 3. UI
+        document.getElementById('totalDisplay').textContent = total.toFixed(2);
         
-        // Handle "Zero Payment" UI hint
+        // Zero Payment Msg
         const msg = document.getElementById('zeroPayMsg');
-        if(finalTotal === 0) msg.style.display = 'block';
+        if (total === 0) msg.style.display = 'block';
         else msg.style.display = 'none';
 
         // Styling
@@ -298,10 +286,9 @@
         if (wantsPremium) box.classList.add('selected');
         else box.classList.remove('selected');
 
-        // 4. Date Logic (Extend from Expiry if active, from Today if expired)
+        // Date Math
         const now = new Date();
         let baseDate = (state.currentExpiry > now) ? state.currentExpiry : now;
-        
         let nextDate = new Date(baseDate.getTime());
         nextDate.setFullYear(nextDate.getFullYear() + 1);
         state.newExpiry = nextDate;
@@ -309,15 +296,15 @@
         document.getElementById('previewNewDate').textContent = nextDate.toLocaleDateString('en-GB');
     }
 
-    // --- SUBMIT: INSTANT UPDATE ---
+    // --- SUBMIT ---
     document.getElementById('btnSubmit').addEventListener('click', async () => {
         const ref = document.getElementById('paymentRef').value.trim();
         const wantsPremium = document.getElementById('premiumToggle').checked;
-        const totalDue = parseFloat(document.getElementById('totalDisplay').textContent);
+        const total = parseFloat(document.getElementById('totalDisplay').textContent);
         
-        // Validation for Trust System
-        if (totalDue > 0 && !ref) return alert("Please enter your payment reference number.");
-        if (totalDue === 0 && !ref) return alert("Please enter 'WAIVER' or 'PROMO' in the reference box.");
+        // Validate
+        if (total > 0 && !ref) return alert("Please enter your payment reference number.");
+        if (total === 0 && !ref) return alert("Please enter 'WAIVER' or 'PROMO' in the reference box.");
 
         if(!confirm("Confirm Renewal? Access will be extended immediately.")) return;
 
@@ -328,27 +315,20 @@
         try {
             const uid = auth.currentUser.uid;
 
-            // INSTANT DB UPDATE
             await db.collection('users').doc(uid).update({
-                // Extend Date
                 subscriptionEnd: firebase.firestore.Timestamp.fromDate(state.newExpiry),
-                
-                // Set Status
                 isPremium: wantsPremium,
                 billingStatus: 'active',
                 trustStatus: 'pending-verification', 
-                
-                // Record
                 paymentReference: ref, 
                 lastRenewalDate: firebase.firestore.FieldValue.serverTimestamp(),
-                renewalAmount: totalDue
+                renewalAmount: total
             });
 
-            alert("Success! Subscription extended to " + state.newExpiry.toLocaleDateString('en-GB') + ".");
+            alert("Success! Extended to " + state.newExpiry.toLocaleDateString('en-GB') + ".");
             window.location.href = "../admin.html";
 
         } catch (e) {
-            console.error(e);
             alert("Error: " + e.message);
             btn.disabled = false;
             btn.innerText = "Submit & Extend Instantly";
