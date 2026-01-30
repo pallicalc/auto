@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Audit | PalliCalc</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    
+    <style>
+        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; }
+        .audit-card { border: none; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); background: white; margin-bottom: 20px; }
+        .card-header { background: white; border-bottom: 1px solid #e2e8f0; padding: 15px 20px; font-weight: 600; border-radius: 12px 12px 0 0 !important; }
+        .table-responsive { font-size: 0.9rem; }
+        .btn-action { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold text-dark"><i class="bi bi-shield-lock-fill me-2"></i>Internal Audit</h4>
+        <button class="btn btn-outline-secondary btn-sm" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="audit-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="text-primary"><i class="bi bi-list-check me-2"></i>Pending Verification Queue</span>
+            <button class="btn btn-sm btn-light border" onclick="loadAuditQueue()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary small text-uppercase">
+                        <tr>
+                            <th class="ps-4">User Details</th>
+                            <th>Reference No.</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditList">
+                        <tr><td colspan="5" class="text-center py-5 text-muted">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- FIREBASE INIT ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
+        authDomain: "pallicalc-eabdc.firebaseapp.com",
+        projectId: "pallicalc-eabdc"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // --- AUTH GUARD ---
+    auth.onAuthStateChanged(user => {
+        if (!user) window.location.href = 'index.html';
+        else loadAuditQueue();
+    });
+
+    // --- LOAD QUEUE ---
+    async function loadAuditQueue() {
+        const list = document.getElementById('auditList');
+        
+        try {
+            // Fetch users who have submitted a payment but aren't verified yet
+            const snap = await db.collection('users')
+                .where('trustStatus', '==', 'pending-verification')
+                .orderBy('createdAt', 'desc') // Show newest first
+                .limit(50)
+                .get();
+
+            if (snap.empty) {
+                list.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted fw-bold"><i class="bi bi-check-circle me-2"></i>All caught up! No pending payments.</td></tr>';
+                return;
+            }
+
+            let html = '';
+            snap.forEach(doc => {
+                const d = doc.data();
+                const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-GB') : 'N/A';
+                // Handle different amount fields (renewalAmount vs initial logic)
+                const amount = d.renewalAmount || "N/A"; 
+
+                html += `
+                <tr>
+                    <td class="ps-4">
+                        <div class="fw-bold text-dark">${d.username || 'Unknown User'}</div>
+                        <div class="small text-muted">${d.email}</div>
+                        <div class="small text-primary fst-italic">${d.institutionName || 'Personal'}</div>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border font-monospace px-2 py-2">${d.paymentReference}</span>
+                    </td>
+                    <td>
+                        <span class="fw-bold">${amount}</span>
+                    </td>
+                    <td class="small text-muted">
+                        ${date}
+                    </td>
+                    <td class="text-end pe-4">
+                        <button class="btn btn-action btn-outline-danger me-2" onclick="rejectUser('${doc.id}')" title="Fake Receipt / Suspend">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                        <button class="btn btn-action btn-success" onclick="verifyUser('${doc.id}')" title="Payment Good">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            list.innerHTML = html;
+
+        } catch (e) {
+            console.error(e);
+            list.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Error loading data: ${e.message}<br><small>Check console for details.</small></td></tr>`;
+        }
+    }
+
+    // --- ACTION: VERIFY (Keep Active) ---
+    async function verifyUser(uid) {
+        if (!confirm("Confirm this payment is valid?")) return;
+        
+        try {
+            // Just mark trustStatus as verified. 
+            // billingStatus is ALREADY 'active', so we don't need to touch it.
+            await db.collection('users').doc(uid).update({
+                trustStatus: 'verified'
+            });
+            // Refresh list to remove this row
+            loadAuditQueue();
+        } catch (e) { alert("Error: " + e.message); }
+    }
+
+    // --- ACTION: REJECT (Suspend Account) ---
+    async function rejectUser(uid) {
+        const reason = prompt("Enter rejection reason (e.g. 'Invalid Receipt'):");
+        if (!reason) return;
+        
+        try {
+            // This stops them from logging in / accessing tools
+            await db.collection('users').doc(uid).update({
+                trustStatus: 'rejected',
+                billingStatus: 'suspended', 
+                rejectionReason: reason
+            });
+            alert("User has been suspended.");
+            loadAuditQueue();
+        } catch (e) { alert("Error: " + e.message); }
+    }
+
+    function logout() {
+        auth.signOut();
+    }
+</script>
+</body>
+</html>
