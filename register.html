@@ -7,6 +7,7 @@
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="style.css">
 
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -373,22 +374,11 @@
   <script>
     let auth, db;
 
-    // --- 1. DYNAMIC PRICE OBJECT ---
-    // This will be populated from Firebase. 
-    // Default 0s allow "Free Launch" mode even if DB fails.
+    // --- 1. DEFAULT PLACEHOLDERS ---
+    // These start as 0. If they change, it means Firebase connected successfully.
     let LIVE_REG_PRICES = {
-        malaysia: { 
-            personal: 0, 
-            institutionUser: 0, 
-            admin_reg: 0, 
-            admin_premium: 500 
-        },
-        international: { 
-            personal: 0, 
-            institutionUser: 0, 
-            admin_reg: 0, 
-            admin_premium: 500 
-        }
+        malaysia: { personal: 0, institutionUser: 0, admin_reg: 0, admin_premium: 0 },
+        international: { personal: 0, institutionUser: 0, admin_reg: 0, admin_premium: 0 }
     };
 
     function normalizeInstitutionName(name) {
@@ -397,31 +387,33 @@
 
     async function initFirebase() {
       if (typeof firebase === 'undefined') return;
-      // YOUR CONFIG
       const config = {
           apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
           authDomain: "pallicalc-eabdc.firebaseapp.com",
           projectId: "pallicalc-eabdc"
       };
       try {
-        firebase.initializeApp(config);
+        if (!firebase.apps.length) firebase.initializeApp(config);
         auth = firebase.auth();
         db = firebase.firestore();
-      } catch(e) { console.error(e); }
+      } catch(e) { console.error("Firebase Init Error:", e); }
     }
 
     // --- FETCH LIVE PRICES FROM FIREBASE ---
     async function fetchLivePrices() {
         try {
+            // FIX APPLIED HERE: using 'setting' (singular) to match your DB
             const doc = await db.collection('setting').doc('registration').get();
+            
             if (doc.exists) {
                 LIVE_REG_PRICES = doc.data();
-                console.log("Live Prices Loaded");
-                // Refresh UI with new prices
+                console.log("Prices successfully loaded from Firebase");
                 updateUI();
+            } else {
+                console.warn("Pricing document not found in 'setting/registration'");
             }
         } catch(e) {
-            console.error("Using default/free pricing. DB fetch error:", e);
+            console.error("Using defaults (0). Fetch failed:", e);
         }
     }
 
@@ -463,8 +455,7 @@
             const isMalaysia = (country === 'Malaysia' || country === 'Select country...'); 
             const geo = isMalaysia ? 'malaysia' : 'international';
             
-            // Get correct price map from loaded data
-            // Fallback to 'international' if specific geo key is missing in DB for some reason
+            // Safe access to pricing data
             const prices = LIVE_REG_PRICES[geo] || LIVE_REG_PRICES['international'];
 
             // Show/Hide Inst Fields
