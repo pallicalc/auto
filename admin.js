@@ -1,19 +1,7 @@
-﻿// 🔥 FIREBASE CONFIGURATION
-const firebaseConfig = {
-    apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
-    authDomain: "pallicalc-eabdc.firebaseapp.com",
-    projectId: "pallicalc-eabdc",
-    storageBucket: "pallicalc-eabdc.firebasestorage.app",
-    messagingSenderId: "347532270864",
-    appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995",
-    measurementId: "G-6G9C984F8E"
-};
+﻿// admin.js - CLEANED VERSION
 
-// Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-
+// NOTE: Firebase is already initialized in Admin.html
+// We just grab the existing instances here.
 const auth = firebase.auth();
 const db = firebase.firestore();
 
@@ -23,9 +11,14 @@ const db = firebase.firestore();
 document.addEventListener('DOMContentLoaded', () => {
     
     // Attach event listeners
-    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-    document.getElementById('transferBtn').addEventListener('click', requestTransferLink);
-    document.getElementById('submitFeedbackBtn').addEventListener('click', submitFeedback);
+    const logoutBtn = document.getElementById('logoutBtn');
+    if(logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+
+    const transferBtn = document.getElementById('transferBtn');
+    if(transferBtn) transferBtn.addEventListener('click', requestTransferLink);
+
+    const feedbackBtn = document.getElementById('submitFeedbackBtn');
+    if(feedbackBtn) feedbackBtn.addEventListener('click', submitFeedback);
 
     // Monitor Auth State
     auth.onAuthStateChanged(async (user) => {
@@ -39,8 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const feedbackSection = document.getElementById('feedbackSection');
 
         // Reset UI to hidden state
-        loginMsg.classList.add('d-none');
-        statusBar.classList.add('d-none');
+        if(loginMsg) loginMsg.classList.add('d-none');
+        if(statusBar) statusBar.classList.add('d-none');
         
         // Hide the main sections
         if(mainWrapper) mainWrapper.classList.add('d-none');
@@ -48,8 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 1. Check if User exists
         if (!user) {
-            loginText.textContent = "Institution administrator login needed for this page.";
-            loginMsg.classList.remove('d-none');
+            if(loginText) loginText.textContent = "Institution administrator login needed for this page.";
+            if(loginMsg) loginMsg.classList.remove('d-none');
             return;
         }
 
@@ -62,21 +55,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.warn("Security Alert: Unauthorized access attempt.");
                 
                 // Show Access Denied UI
-                loginMsg.innerHTML = `
-                    <h4 class="alert-heading text-danger"><i class="bi bi-x-circle"></i> Access Denied</h4>
-                    <p>You are logged in as <strong>${user.email}</strong>, but this account is not an Institution Admin.</p>
-                    <hr>
-                    <div class="d-flex justify-content-center">
-                        <button onclick="handleLogout()" class="btn btn-danger me-2">Logout</button>
-                        <button onclick="window.location.href='index.html'" class="btn btn-outline-danger">Go to User Home</button>
-                    </div>`;
-                loginMsg.classList.remove('d-none');
+                if(loginMsg) {
+                    loginMsg.innerHTML = `
+                        <h4 class="alert-heading text-danger"><i class="bi bi-x-circle"></i> Access Denied</h4>
+                        <p>You are logged in as <strong>${user.email}</strong>, but this account is not an Institution Admin.</p>
+                        <hr>
+                        <div class="d-flex justify-content-center">
+                            <button onclick="handleLogout()" class="btn btn-danger me-2">Logout</button>
+                            <button onclick="window.location.href='index.html'" class="btn btn-outline-danger">Go to User Home</button>
+                        </div>`;
+                    loginMsg.classList.remove('d-none');
+                }
                 return;
             }
 
             // 3. Access Granted: Show the Dashboard
-            document.getElementById('adminEmail').textContent = user.email;
-            statusBar.classList.remove('d-none');
+            const adminEmailDisplay = document.getElementById('adminEmail');
+            if(adminEmailDisplay) adminEmailDisplay.textContent = user.email;
+            
+            if(statusBar) statusBar.classList.remove('d-none');
             
             // Reveal the Main Content and Feedback Section
             if(mainWrapper) mainWrapper.classList.remove('d-none');
@@ -90,6 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isGov) {
                 const billingCard = document.getElementById('billingCard');
                 if (billingCard) {
+                    // We only show this if it wasn't hidden by the premium logic in HTML
+                    // But generally, showing it is safe here.
                     billingCard.classList.remove('d-none');
                 }
             }
@@ -97,8 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Auth check failed:', error);
-            loginMsg.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
-            loginMsg.classList.remove('d-none');
+            if(loginMsg) {
+                loginMsg.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                loginMsg.classList.remove('d-none');
+            }
         }
     });
 });
