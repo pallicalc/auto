@@ -19,7 +19,6 @@
         appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995",
         measurementId: "G-6G9C984F8E"
     };
-    // Initialize immediately so subsequent scripts work
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
@@ -32,23 +31,16 @@
   <script src="admin.js" defer></script>
 
   <style>
-    /* Sticky Footer Layout */
     body { display: flex; flex-direction: column; min-height: 100vh; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); margin: 0; }
     #main-wrapper { flex: 1; width: 100%; }
     .feedback-section { background-color: #e9ecef; border-top: 1px solid #dee2e6; padding: 50px 0; width: 100%; }
     .footer-section { background-color: #f8f9fa; border-top: 1px solid #dcdcdc; padding: 20px 0; width: 100%; margin-top: 0; }
-    
     .admin-card { transition: transform 0.2s; border: none; cursor: pointer; }
     .admin-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
-    
     .bg-purple-soft { background-color: #f3e8ff!important; }
     .text-purple { color: #6f42c1!important; }
     .border-purple { border-left: 5px solid #6f42c1; }
-    
-    /* Super Admin Card Style */
     .border-super { border-left: 5px solid #0d6efd; background: #f0f8ff; }
-
-    /* Premium Upgrade Card Style */
     .border-premium { border-left: 5px solid #ffc107; background: linear-gradient(to right, #ffffff, #fffdf5); }
   </style>
 </head>
@@ -87,14 +79,14 @@
             <p class="lead text-muted">Manage your institution settings securely</p>
           </div>
 
-          <a id="upgradePremiumCard" href="Admin/renewal.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-none text-dark border-premium">
+          <a id="upgradePremiumCard" href="Admin/upgrade.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-none text-dark border-premium">
             <div class="d-flex align-items-center">
               <div class="bg-warning bg-opacity-25 p-3 rounded-circle me-4">
                 <i class="bi bi-star-fill text-warning fs-3"></i>
               </div>
               <div>
                 <h3 class="mb-1 h4 text-warning">Upgrade to Premium</h3>
-                <p class="text-muted mb-0 small">Unlock QR Data Bridge & Sheets Sync</p>
+                <p class="text-muted mb-0 small">Unlock QR Data Bridge & Sheets Sync (One-Time Fee)</p>
               </div>
               <i class="bi bi-arrow-right ms-auto fs-4 text-warning"></i>
             </div>
@@ -246,50 +238,46 @@
   </footer>
 
   <script>
-    // --- DASHBOARD LOGIC (Handles Card Visibility) ---
-    // This runs ON TOP of admin.js to handle specific card toggles
+    // --- DASHBOARD CARD VISIBILITY LOGIC ---
+    // Runs after firebase init
     
-    const SUPER_ADMIN_EMAIL = "alison.chai@moh.gov.my";
+    const SUPER_ADMIN_EMAIL = "chai.alison@moh.gov.my";
 
     firebase.auth().onAuthStateChanged(async user => {
         if (user) {
-            // 1. Reveal Super Admin Card (Email Check)
             const email = user.email.toLowerCase().trim();
+
+            // 1. Reveal Super Admin Card (Email Check)
             if (email === SUPER_ADMIN_EMAIL) {
                 const superCard = document.getElementById('superAdminCard');
                 if (superCard) superCard.classList.remove('d-none');
             }
 
-            // 2. Check Premium vs Standard Status (Database Check)
-            const isGov = email.endsWith('.gov.my') || email.endsWith('.moh.gov.my');
-            
-            // If Gov, they see neither (Free Lifetime)
-            // If Private, we check their status
-            if (!isGov) {
-                try {
-                    const doc = await firebase.firestore().collection('users').doc(user.uid).get();
-                    if (doc.exists) {
-                        const data = doc.data();
-                        const isPremium = data.isPremium === true;
+            // 2. Billing & Premium Card Logic
+            try {
+                const doc = await firebase.firestore().collection('users').doc(user.uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    
+                    const isPremium = data.isPremium === true;
+                    const isGov = email.endsWith('.gov.my') || email.endsWith('.moh.gov.my');
 
-                        if (isPremium) {
-                            // SHOW Renewal Card (Standard Billing)
-                            // HIDE Upgrade Card
-                            const billingCard = document.getElementById('billingCard');
-                            if (billingCard) billingCard.classList.remove('d-none');
-                        } else {
-                            // HIDE Renewal Card
-                            // SHOW Upgrade Card (Gold)
-                            const upgradeCard = document.getElementById('upgradePremiumCard');
-                            const billingCard = document.getElementById('billingCard');
-                            
-                            if (upgradeCard) upgradeCard.classList.remove('d-none');
-                            if (billingCard) billingCard.classList.add('d-none'); // Ensure standard is hidden
-                        }
+                    // LOGIC A: Upgrade Card (Yellow)
+                    // Visible to ANYONE who is NOT Premium yet.
+                    if (!isPremium) {
+                        const upgradeCard = document.getElementById('upgradePremiumCard');
+                        if (upgradeCard) upgradeCard.classList.remove('d-none');
                     }
-                } catch (e) {
-                    console.error("Error checking premium status:", e);
+
+                    // LOGIC B: Renewal Card (Blue)
+                    // Visible to PRIVATE users ONLY. (MOH never renews base account).
+                    if (!isGov) {
+                        const billingCard = document.getElementById('billingCard');
+                        if (billingCard) billingCard.classList.remove('d-none');
+                    }
                 }
+            } catch (e) {
+                console.error("Error checking status:", e);
             }
         }
     });
