@@ -258,39 +258,60 @@
     const SUPER_ADMIN_EMAIL = "chai.alison@moh.gov.my";
 
     window.auth.onAuthStateChanged(async user => {
-        // Hide Loader once Auth is checked
+        // 1. Always hide the loader first
         document.getElementById('pageLoader').style.display = 'none';
 
         if (user) {
-            // 1. Reveal Super Admin Card
+            // 2. Reveal the Dashboard and Status Bar (REQUIRED to see the page)
+            document.getElementById('main-wrapper').classList.remove('d-none');
+            document.getElementById('statusBar').classList.remove('d-none');
+            document.getElementById('feedbackSection').classList.remove('d-none');
+            const adminSpan = document.getElementById('adminEmail');
+            if(adminSpan) adminSpan.textContent = user.email;
+
             const email = user.email.toLowerCase().trim();
+
+            // 3. Reveal Super Admin Card
             if (email === SUPER_ADMIN_EMAIL) {
                 const superCard = document.getElementById('superAdminCard');
                 if (superCard) superCard.classList.remove('d-none');
             }
 
-            // 2. Premium Checks
-            const isGov = email.endsWith('.gov.my') || email.endsWith('.moh.gov.my');
-            if (!isGov) {
-                try {
-                    const doc = await window.db.collection('users').doc(user.uid).get();
-                    if (doc.exists) {
-                        const data = doc.data();
-                        const isPremium = data.isPremium === true;
+            // 4. Premium & Upgrade Logic
+            try {
+                const doc = await window.db.collection('users').doc(user.uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    const isPremium = data.isPremium === true;
+                    const isGov = email.endsWith('.gov.my') || email.endsWith('.moh.gov.my');
 
-                        if (isPremium) {
-                            const billingCard = document.getElementById('billingCard');
-                            if (billingCard) billingCard.classList.remove('d-none');
-                        } else {
-                            const upgradeCard = document.getElementById('upgradePremiumCard');
-                            if (upgradeCard) upgradeCard.classList.remove('d-none');
-                            
-                            const billingCard = document.getElementById('billingCard');
-                            if (billingCard) billingCard.classList.remove('d-none');
+                    const upgradeCard = document.getElementById('upgradePremiumCard');
+                    const billingCard = document.getElementById('billingCard');
+
+                    if (isPremium) {
+                        // User IS Premium (Private or MOH):
+                        // Hide Upgrade (they have it), Show Billing (to manage it)
+                        upgradeCard?.classList.add('d-none');
+                        billingCard?.classList.remove('d-none');
+                    } else {
+                        // User is NOT Premium (Private or MOH):
+                        // Show Upgrade Card to everyone
+                        upgradeCard?.classList.remove('d-none');
+                        
+                        // Billing Card:
+                        // Show for private users (renewal needed)
+                        // Hide for non-premium Gov (usually Free Lifetime)
+                        if (!isGov) {
+                            billingCard?.classList.remove('d-none');
                         }
                     }
-                } catch (e) { console.error(e); }
+                }
+            } catch (e) { 
+                console.error("Firestore Error:", e); 
             }
+        } else {
+            // 5. Not Logged In - Show Login Message
+            document.getElementById('loginMessage').classList.remove('d-none');
         }
     });
   </script>
