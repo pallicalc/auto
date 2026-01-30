@@ -102,10 +102,30 @@
 </footer>
 
 <script>
-    // AUTH CHECK
+    // --- 1. DEFINE SUPER ADMINS ---
+    // Only these emails can see this page. Everyone else is kicked out.
+    const SUPER_ADMINS = [
+        "chai.alison@moh.gov.my"
+    ];
+
+    // --- 2. AUTH GUARD ---
     auth.onAuthStateChanged(user => {
-        if (!user) window.location.href = '../index.html';
-        else loadAuditQueue();
+        if (!user) {
+            // Not logged in -> Go to Login
+            window.location.href = '../index.html';
+        } else {
+            const email = user.email.toLowerCase().trim();
+            
+            // Check if email is in the allowed list
+            if (SUPER_ADMINS.includes(email)) {
+                // Allowed! Load data
+                loadAuditQueue();
+            } else {
+                // Not allowed -> Kick back to Dashboard
+                alert("⛔ ACCESS DENIED: You do not have Super Admin permissions.");
+                window.location.href = '../admin.html';
+            }
+        }
     });
 
     async function loadAuditQueue() {
