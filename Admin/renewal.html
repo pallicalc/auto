@@ -156,9 +156,8 @@
     const auth = firebase.auth();
 
     // ==========================================
-    // 1. LIVE PRICING CONTROL
+    // 1. DYNAMIC PRICING (REPLACED HARDCODED CONST)
     // ==========================================
-    // Default Fallbacks (Freezes logic if DB fails)
     let LIVE_RENEWAL_PRICES = {
         malaysia: { 
             tier1: 200, tier2: 500, tier3: 1000, premium_annual: 500 
@@ -178,16 +177,18 @@
         manualDiscount: 0 
     };
 
-    // Fetch live prices from settings/renewal
+    // --- NEW FETCH FUNCTION ---
     async function fetchLivePrices() {
         try {
             const doc = await db.collection('settings').doc('renewal').get();
             if (doc.exists) {
                 LIVE_RENEWAL_PRICES = doc.data();
-                console.log("Renewal Prices Loaded from DB");
+                console.log("Prices loaded from Firestore");
+            } else {
+                console.warn("Using default prices (doc not found)");
             }
         } catch(e) {
-            console.error("Using default pricing due to fetch error:", e);
+            console.error("DB Fetch Error:", e);
         }
     }
 
@@ -196,10 +197,11 @@
         if (!user) return window.location.href = '../index.html';
 
         try {
-            // 1. Parallel Fetch: User Data & Pricing
+            // 1. Parallel Fetch: User Data & Pricing (UPDATED LOGIC)
             const userDocPromise = db.collection('users').doc(user.uid).get();
-            const pricesPromise = fetchLivePrices();
+            const pricesPromise = fetchLivePrices(); // Call the new fetcher
             
+            // Wait for BOTH to finish before proceeding
             const [userDoc] = await Promise.all([userDocPromise, pricesPromise]);
             const userData = userDoc.data();
 
@@ -213,21 +215,20 @@
             const staffSnap = await db.collection('users').where('institutionId', '==', userData.institutionId || 'none').get();
             const count = staffSnap.size || 1;
 
-            // 3. Determine Region & Prices
+            // 3. Determine Region & Prices using LIVE_RENEWAL_PRICES
             const isMY = (userData.country === 'Malaysia');
             state.currency = isMY ? 'RM' : 'USD';
             const geo = isMY ? 'malaysia' : 'international';
             
-            // Get correct price map from loaded data
-            // Fallback to international if specific country key missing
+            // Safe access to the price map
             const prices = LIVE_RENEWAL_PRICES[geo] || LIVE_RENEWAL_PRICES['international'];
             
-            // Set Base Price by Tier
+            // Set Base Price by Tier from LIVE DATA
             if (count <= 10) state.basePrice = prices.tier1;
             else if (count <= 50) state.basePrice = prices.tier2;
             else state.basePrice = prices.tier3;
 
-            // Set Premium Price
+            // Set Premium Price from LIVE DATA
             state.premiumPrice = prices.premium_annual;
 
             // 4. Other State Setup
