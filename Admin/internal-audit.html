@@ -19,7 +19,6 @@
           appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995",
           measurementId: "G-6G9C984F8E"
       };
-      // Start Firebase right here, before anything else loads
       if (!firebase.apps.length) {
           firebase.initializeApp(firebaseConfig);
       }
@@ -32,43 +31,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Matches your Admin Theme */
         body { 
-            display: flex; 
-            flex-direction: column; 
-            min-height: 100vh; 
+            display: flex; flex-direction: column; min-height: 100vh; 
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
-            font-family: 'Inter', sans-serif; 
-            margin: 0;
+            font-family: 'Inter', sans-serif; margin: 0;
         }
         .main-content { flex: 1; width: 100%; padding-top: 40px; }
-        .audit-card { 
-            border: none; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-            background: white; 
-            margin-bottom: 20px; 
-            overflow: hidden;
-        }
-        .card-header { 
-            background: white; 
-            border-bottom: 1px solid #e2e8f0; 
-            padding: 20px; 
-            font-weight: 600; 
-        }
-        .table-responsive { font-size: 0.9rem; }
-        .btn-action { 
-            width: 34px; 
-            height: 34px; 
-            padding: 0; 
-            display: inline-flex; 
-            align-items: center; 
-            justify-content: center; 
-            border-radius: 8px; 
-            transition: all 0.2s;
-        }
-        .btn-action:hover { transform: scale(1.1); }
+        .audit-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); background: white; margin-bottom: 20px; }
+        .card-header { background: white; border-bottom: 1px solid #e2e8f0; padding: 20px; font-weight: 600; }
         .footer-section { background-color: #f8f9fa; border-top: 1px solid #dcdcdc; padding: 20px 0; width: 100%; margin-top: auto; }
+        .btn-action { width: 34px; height: 34px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s; }
+        .btn-action:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
@@ -93,7 +66,6 @@
                     <i class="bi bi-arrow-clockwise text-muted"></i> Refresh
                 </button>
             </div>
-            
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -130,24 +102,17 @@
 </footer>
 
 <script>
-    // --- AUTH GUARD ---
-    // Ensure only logged-in users can see this
+    // AUTH CHECK
     auth.onAuthStateChanged(user => {
-        if (!user) {
-            window.location.href = '../index.html'; // Go back to login if not authenticated
-        } else {
-            loadAuditQueue();
-        }
+        if (!user) window.location.href = '../index.html';
+        else loadAuditQueue();
     });
 
-    // --- LOAD QUEUE ---
     async function loadAuditQueue() {
         const list = document.getElementById('auditList');
-        // Simple Spinner
         list.innerHTML = '<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div></td></tr>';
         
         try {
-            // Fetch users with 'pending-verification' status
             const snap = await db.collection('users')
                 .where('trustStatus', '==', 'pending-verification')
                 .orderBy('createdAt', 'desc')
@@ -155,14 +120,7 @@
                 .get();
 
             if (snap.empty) {
-                list.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center py-5">
-                            <div class="text-muted opacity-75 mb-2"><i class="bi bi-clipboard-check display-4"></i></div>
-                            <h6 class="fw-bold text-muted">All caught up!</h6>
-                            <small class="text-muted">No pending verifications found.</small>
-                        </td>
-                    </tr>`;
+                list.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted">All caught up! No pending payments.</td></tr>`;
                 return;
             }
 
@@ -171,7 +129,6 @@
                 const d = doc.data();
                 const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-GB') : 'N/A';
                 
-                // Determine Amount Logic (Registration vs Renewal vs Upgrade)
                 let amountDisplay = "N/A";
                 let typeBadge = '<span class="badge bg-secondary">Unknown</span>';
 
@@ -182,8 +139,6 @@
                     amountDisplay = d.renewalAmount;
                     typeBadge = '<span class="badge bg-info text-dark">Renewal</span>';
                 } else {
-                    // Registration typically doesn't store amount unless you added it, 
-                    // but we can infer it's a new registration
                     amountDisplay = "-"; 
                     typeBadge = '<span class="badge bg-success">Registration</span>';
                 }
@@ -196,26 +151,16 @@
                             <div>
                                 <div class="fw-bold text-dark">${d.username || 'Unknown User'}</div>
                                 <div class="small text-muted">${d.email}</div>
-                                <div class="small text-primary fst-italic" style="font-size:0.75rem">${d.institutionName || 'Personal Account'}</div>
+                                <div class="small text-primary fst-italic" style="font-size:0.75rem">${d.institutionName || 'Personal'}</div>
                             </div>
                         </div>
                     </td>
-                    <td>
-                        <span class="badge bg-light text-dark border font-monospace px-2 py-2 user-select-all">${d.paymentReference || 'N/A'}</span>
-                    </td>
-                    <td>
-                        <span class="fw-bold text-dark">${amountDisplay}</span>
-                    </td>
-                    <td class="small text-muted">
-                        ${date}
-                    </td>
+                    <td><span class="badge bg-light text-dark border font-monospace px-2 py-2">${d.paymentReference || 'N/A'}</span></td>
+                    <td><span class="fw-bold text-dark">${amountDisplay}</span></td>
+                    <td class="small text-muted">${date}</td>
                     <td class="text-end pe-4">
-                        <button class="btn btn-action btn-outline-danger me-2" onclick="rejectUser('${doc.id}')" title="Reject & Suspend">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                        <button class="btn btn-action btn-success" onclick="verifyUser('${doc.id}')" title="Verify Payment">
-                            <i class="bi bi-check-lg"></i>
-                        </button>
+                        <button class="btn btn-action btn-outline-danger me-2" onclick="rejectUser('${doc.id}')"><i class="bi bi-x-lg"></i></button>
+                        <button class="btn btn-action btn-success" onclick="verifyUser('${doc.id}')"><i class="bi bi-check-lg"></i></button>
                     </td>
                 </tr>`;
             });
@@ -223,31 +168,25 @@
 
         } catch (e) {
             console.error(e);
-            list.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4"><strong>Error:</strong> ${e.message}<br><small>Check console (F12) for details.</small></td></tr>`;
+            list.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Error: ${e.message}</td></tr>`;
         }
     }
 
-    // --- ACTION: VERIFY ---
     async function verifyUser(uid) {
-        if (!confirm("Confirm payment is valid? This will clear the user from this list.")) return;
-        
+        if (!confirm("Confirm payment is valid?")) return;
         try {
-            await db.collection('users').doc(uid).update({
-                trustStatus: 'verified' // User remains active, just leaves the audit queue
-            });
-            loadAuditQueue(); // Refresh list
+            await db.collection('users').doc(uid).update({ trustStatus: 'verified' });
+            loadAuditQueue();
         } catch (e) { alert("Error: " + e.message); }
     }
 
-    // --- ACTION: REJECT ---
     async function rejectUser(uid) {
-        const reason = prompt("Enter rejection reason (e.g. 'Invalid Receipt'):");
+        const reason = prompt("Enter rejection reason:");
         if (!reason) return;
-        
         try {
             await db.collection('users').doc(uid).update({
                 trustStatus: 'rejected',
-                billingStatus: 'suspended', // Immediately revoke access
+                billingStatus: 'suspended', 
                 rejectionReason: reason
             });
             alert("User suspended.");
