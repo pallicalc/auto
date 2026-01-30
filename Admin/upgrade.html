@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upgrade to Premium | PalliCalc</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    
+    <script>
+      const firebaseConfig = {
+          apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
+          authDomain: "pallicalc-eabdc.firebaseapp.com",
+          projectId: "pallicalc-eabdc",
+          storageBucket: "pallicalc-eabdc.firebasestorage.app",
+          messagingSenderId: "347532270864",
+          appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995",
+          measurementId: "G-6G9C984F8E"
+      };
+      if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+      }
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; color: #333; }
+        .upgrade-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); background: white; max-width: 600px; margin: 0 auto; }
+        .gold-header { background: linear-gradient(135deg, #fffbeb 0%, #fff3cd 100%); color: #856404; padding: 20px; border-radius: 12px 12px 0 0; border-bottom: 1px solid #ffeeba; }
+        .perks-list { list-style: none; padding: 0; margin: 20px 0; }
+        .perks-list li { margin-bottom: 10px; display: flex; align-items: start; }
+        .perks-list i { color: #ffc107; margin-right: 10px; font-size: 1.2rem; margin-top: 2px; }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    
+    <div class="d-flex justify-content-center mb-4" style="max-width: 600px; margin: 0 auto;">
+        <div class="w-100 d-flex justify-content-between align-items-center">
+            <h4 class="fw-bold text-dark mb-0">Premium Upgrade</h4>
+            <a href="admin.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-lg"></i> Cancel</a>
+        </div>
+    </div>
+
+    <div id="loading" class="text-center py-5">
+        <div class="spinner-border text-warning" role="status"></div>
+        <p class="mt-2 text-muted small fw-bold">Checking eligibility...</p>
+    </div>
+
+    <div id="upgradeContent" class="upgrade-card d-none animate__animated animate__fadeIn">
+        
+        <div class="gold-header text-center">
+            <h2 class="fw-bold mb-1"><i class="bi bi-stars"></i> Unlock Premium</h2>
+            <p class="mb-0 small opacity-75">One-time upgrade for data power.</p>
+        </div>
+
+        <div class="card-body p-4">
+            
+            <ul class="perks-list">
+                <li><i class="bi bi-check-circle-fill"></i> <strong>QR Code Data Bridge:</strong> Transfer patient calculations securely between devices.</li>
+                <li><i class="bi bi-check-circle-fill"></i> <strong>Google Sheets Sync:</strong> Auto-save all clinical logs to your private cloud spreadsheet.</li>
+                <li><i class="bi bi-check-circle-fill"></i> <strong>Priority Support:</strong> Direct line to technical assistance.</li>
+            </ul>
+
+            <hr class="my-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h6 class="fw-bold mb-0 text-secondary">Upgrade Fee</h6>
+                    <small class="text-muted" id="regionLabel">Checking region...</small>
+                </div>
+                <div class="text-end">
+                    <h2 class="fw-bold text-dark mb-0"><span id="currencySymbol">RM</span> <span id="priceDisplay">500</span></h2>
+                </div>
+            </div>
+
+            <div class="alert alert-light border small mb-3">
+                <i class="bi bi-shield-lock-fill text-success me-2"></i>
+                <strong>Instant Access:</strong> Enter your payment receipt number below to unlock features immediately.
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold small">Payment Reference / Receipt No.</label>
+                <input type="text" id="paymentRef" class="form-control form-control-lg" placeholder="e.g. DuitNow / Stripe Ref">
+            </div>
+
+            <div class="d-grid gap-2">
+                <button id="btnSubmit" class="btn btn-warning btn-lg fw-bold text-dark shadow-sm">
+                    Upgrade Now <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+                <button onclick="generateInvoice()" class="btn btn-link text-muted btn-sm text-decoration-none">
+                    <i class="bi bi-file-text"></i> Download Invoice
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // Default Prices (Fallback)
+    let PRICE_MY = 500;
+    let PRICE_INT = 500;
+    let currentCurrency = "RM";
+    let currentAmount = 500;
+
+    // --- 1. FETCH LIVE SETTINGS ---
+    async function fetchPricing() {
+        try {
+            const doc = await db.collection('setting').doc('registration').get();
+            if (doc.exists) {
+                const data = doc.data();
+                // We use the admin_premium price from your settings
+                if (data.malaysia && data.malaysia.admin_premium) PRICE_MY = data.malaysia.admin_premium;
+                if (data.international && data.international.admin_premium) PRICE_INT = data.international.admin_premium;
+            }
+        } catch(e) { console.error("Pricing fetch error, using defaults", e); }
+    }
+
+    // --- 2. INIT PAGE ---
+    auth.onAuthStateChanged(async user => {
+        if (!user) return window.location.href = 'index.html';
+
+        try {
+            // Fetch User & Pricing in parallel
+            const [userDoc, _] = await Promise.all([
+                db.collection('users').doc(user.uid).get(),
+                fetchPricing()
+            ]);
+
+            const userData = userDoc.data();
+
+            // Check if already premium
+            if (userData.isPremium) {
+                alert("You are already a Premium member!");
+                window.location.href = 'admin.html';
+                return;
+            }
+
+            // Determine Country & Price
+            const isMY = (userData.country === 'Malaysia');
+            currentCurrency = isMY ? 'RM' : 'USD';
+            currentAmount = isMY ? PRICE_MY : PRICE_INT;
+
+            // Update UI
+            document.getElementById('currencySymbol').textContent = currentCurrency;
+            document.getElementById('priceDisplay').textContent = currentAmount;
+            document.getElementById('regionLabel').textContent = isMY ? "Malaysia Pricing" : "International Pricing";
+
+            // Show Content
+            document.getElementById('loading').classList.add('d-none');
+            document.getElementById('upgradeContent').classList.remove('d-none');
+
+        } catch (e) {
+            alert("Error loading profile: " + e.message);
+        }
+    });
+
+    // --- 3. SUBMIT UPGRADE ---
+    document.getElementById('btnSubmit').addEventListener('click', async () => {
+        const ref = document.getElementById('paymentRef').value.trim();
+        if (!ref) return alert("Please enter your payment reference number.");
+
+        if(!confirm("Confirm Upgrade? Premium features will unlock immediately.")) return;
+
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+
+        try {
+            const uid = auth.currentUser.uid;
+
+            // UPDATE FIRESTORE
+            await db.collection('users').doc(uid).update({
+                isPremium: true, // INSTANT UNLOCK
+                paymentReference: ref,
+                trustStatus: 'pending-verification', // Sends to your Audit Queue
+                lastUpgradeDate: firebase.firestore.FieldValue.serverTimestamp(),
+                upgradeAmount: currentAmount
+            });
+
+            alert("Success! Premium features unlocked.");
+            window.location.href = "admin.html";
+
+        } catch (e) {
+            alert("Error: " + e.message);
+            btn.disabled = false;
+            btn.innerHTML = 'Upgrade Now <i class="bi bi-arrow-right ms-2"></i>';
+        }
+    });
+
+    // --- 4. INVOICE GENERATOR ---
+    window.generateInvoice = function() {
+        const win = window.open('', '_blank');
+        win.document.write(`
+            <html><head><title>Upgrade Invoice</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>body{padding:40px;font-family:sans-serif}</style>
+            </head><body onload="window.print()">
+            <h3 style="color:#0ea5e9">PalliCalc Premium Upgrade</h3>
+            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+            <hr>
+            <p><strong>Item:</strong> Premium Data Bridge (Annual License)</p>
+            <p><strong>Total Due:</strong> ${currentCurrency} ${currentAmount}</p>
+            <br>
+            <p class="text-muted small">Please make payment via DuitNow/Stripe and enter reference on the previous page.</p>
+            </body></html>
+        `);
+        win.document.close();
+    };
+
+</script>
+</body>
+</html>

@@ -1,170 +1,299 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Internal Audit | PalliCalc</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-    
-    <style>
-        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; }
-        .audit-card { border: none; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); background: white; margin-bottom: 20px; }
-        .card-header { background: white; border-bottom: 1px solid #e2e8f0; padding: 15px 20px; font-weight: 600; border-radius: 12px 12px 0 0 !important; }
-        .table-responsive { font-size: 0.9rem; }
-        .btn-action { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; }
-    </style>
-</head>
-<body>
-
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold text-dark"><i class="bi bi-shield-lock-fill me-2"></i>Internal Audit</h4>
-        <button class="btn btn-outline-secondary btn-sm" onclick="logout()">Logout</button>
-    </div>
-
-    <div class="audit-card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span class="text-primary"><i class="bi bi-list-check me-2"></i>Pending Verification Queue</span>
-            <button class="btn btn-sm btn-light border" onclick="loadAuditQueue()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light text-secondary small text-uppercase">
-                        <tr>
-                            <th class="ps-4">User Details</th>
-                            <th>Reference No.</th>
-                            <th>Amount</th>
-                            <th>Date</th>
-                            <th class="text-end pe-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="auditList">
-                        <tr><td colspan="5" class="text-center py-5 text-muted">Loading...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    // --- FIREBASE INIT ---
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PalliCalc Institution Admin Dashboard</title>
+  
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+  
+  <script>
     const firebaseConfig = {
         apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
         authDomain: "pallicalc-eabdc.firebaseapp.com",
-        projectId: "pallicalc-eabdc"
+        projectId: "pallicalc-eabdc",
+        storageBucket: "pallicalc-eabdc.firebasestorage.app",
+        messagingSenderId: "347532270864",
+        appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995",
+        measurementId: "G-6G9C984F8E"
     };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
+    // Initialize immediately so subsequent scripts work
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+  </script>
 
-    // --- AUTH GUARD ---
-    auth.onAuthStateChanged(user => {
-        if (!user) window.location.href = 'index.html';
-        else loadAuditQueue();
-    });
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="admin-style.css">
+  
+  <script src="admin.js" defer></script>
 
-    // --- LOAD QUEUE ---
-    async function loadAuditQueue() {
-        const list = document.getElementById('auditList');
-        
-        try {
-            // Fetch users who have submitted a payment but aren't verified yet
-            const snap = await db.collection('users')
-                .where('trustStatus', '==', 'pending-verification')
-                .orderBy('createdAt', 'desc') // Show newest first
-                .limit(50)
-                .get();
+  <style>
+    /* Sticky Footer Layout */
+    body { display: flex; flex-direction: column; min-height: 100vh; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); margin: 0; }
+    #main-wrapper { flex: 1; width: 100%; }
+    .feedback-section { background-color: #e9ecef; border-top: 1px solid #dee2e6; padding: 50px 0; width: 100%; }
+    .footer-section { background-color: #f8f9fa; border-top: 1px solid #dcdcdc; padding: 20px 0; width: 100%; margin-top: 0; }
+    
+    .admin-card { transition: transform 0.2s; border: none; cursor: pointer; }
+    .admin-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+    
+    .bg-purple-soft { background-color: #f3e8ff!important; }
+    .text-purple { color: #6f42c1!important; }
+    .border-purple { border-left: 5px solid #6f42c1; }
+    
+    /* Super Admin Card Style */
+    .border-super { border-left: 5px solid #0d6efd; background: #f0f8ff; }
 
-            if (snap.empty) {
-                list.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted fw-bold"><i class="bi bi-check-circle me-2"></i>All caught up! No pending payments.</td></tr>';
-                return;
+    /* Premium Upgrade Card Style */
+    .border-premium { border-left: 5px solid #ffc107; background: linear-gradient(to right, #ffffff, #fffdf5); }
+  </style>
+</head>
+<body>
+
+  <div id="loginMessage" class="alert alert-warning text-center shadow-lg d-none mx-auto mt-5" style="max-width: 500px;" role="alert">
+    <h4 class="alert-heading"><i class="bi bi-shield-lock"></i> Admin Login Required</h4>
+    <p id="loginText">Institution administrator login needed for this page.</p>
+    <hr>
+    <div class="d-flex justify-content-center">
+      <button onclick="window.location.href='index.html'" class="btn btn-primary me-2">Go to Login</button>
+      <button onclick="window.location.href='/'" class="btn btn-outline-primary">Home</button>
+    </div>
+  </div>
+
+  <div id="statusBar" class="status-bar bg-success text-white py-3 d-none w-100">
+    <div class="container d-flex justify-content-between align-items-center">
+      <div>
+        <i class="bi bi-person-shield me-2"></i>
+        <strong>Institution Admin:</strong> <span id="adminEmail" class="fw-normal">Loading...</span>
+      </div>
+      <button id="logoutBtn" class="btn btn-outline-light btn-sm">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </button>
+    </div>
+  </div>
+
+  <div id="main-wrapper" class="d-none"> 
+    
+    <div class="container py-5 mt-4">
+      <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+          
+          <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold text-primary mb-3">Admin Dashboard</h1>
+            <p class="lead text-muted">Manage your institution settings securely</p>
+          </div>
+
+          <a id="upgradePremiumCard" href="Admin/renewal.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-none text-dark border-premium">
+            <div class="d-flex align-items-center">
+              <div class="bg-warning bg-opacity-25 p-3 rounded-circle me-4">
+                <i class="bi bi-star-fill text-warning fs-3"></i>
+              </div>
+              <div>
+                <h3 class="mb-1 h4 text-warning">Upgrade to Premium</h3>
+                <p class="text-muted mb-0 small">Unlock QR Data Bridge & Sheets Sync</p>
+              </div>
+              <i class="bi bi-arrow-right ms-auto fs-4 text-warning"></i>
+            </div>
+          </a>
+
+          <a href="Admin/ratios.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-block text-dark">
+            <div class="d-flex align-items-center">
+              <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-4">
+                <i class="bi bi-calculator-fill text-primary fs-3"></i>
+              </div>
+              <div>
+                <h3 class="mb-1 h4">Custom Ratios</h3>
+                <p class="text-muted mb-0 small">Edit & save opioid conversion ratios</p>
+              </div>
+              <i class="bi bi-arrow-right ms-auto fs-4 text-muted"></i>
+            </div>
+          </a>
+
+          <a href="Admin/diagnostics-setup.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-block text-dark border-purple">
+            <div class="d-flex align-items-center">
+              <div class="bg-purple-soft p-3 rounded-circle me-4">
+                <i class="bi bi-clipboard-pulse text-purple fs-3"></i>
+              </div>
+              <div>
+                <h3 class="mb-1 h4 text-purple">Diagnostic Tools</h3>
+                <p class="text-muted mb-0 small">Configure Google Form links (IPOS, HADS)</p>
+              </div>
+              <i class="bi bi-arrow-right ms-auto fs-4 text-purple"></i>
+            </div>
+          </a>
+
+          <a href="Admin/institution.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-block text-dark">
+            <div class="d-flex align-items-center">
+              <div class="bg-info bg-opacity-10 p-3 rounded-circle me-4">
+                <i class="bi bi-building-fill text-info fs-3"></i>
+              </div>
+              <div>
+                <h3 class="mb-1 h4">Institution Info</h3>
+                <p class="text-muted mb-0 small">Logo, name, address, contact details</p>
+              </div>
+              <i class="bi bi-arrow-right ms-auto fs-4 text-muted"></i>
+            </div>
+          </a>
+
+          <a id="billingCard" href="Admin/renewal.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-none text-dark">
+            <div class="d-flex align-items-center">
+              <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-4">
+                <i class="bi bi-receipt-cutoff text-primary fs-3"></i>
+              </div>
+              <div>
+                <h3 class="mb-1 h4">Subscription Renewal</h3>
+                <p class="text-muted mb-0 small">View Tiers, Invoices & Pay Fees</p>
+              </div>
+              <i class="bi bi-arrow-right ms-auto fs-4 text-muted"></i>
+            </div>
+          </a>
+
+          <a href="Admin/remove-account.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-block text-dark" style="border-left: 5px solid #dc3545;">
+            <div class="d-flex align-items-center">
+              <div class="bg-danger bg-opacity-10 p-3 rounded-circle me-4">
+                <i class="bi bi-people-fill text-danger fs-3"></i>
+              </div>
+              <div>
+                <h3 class="mb-1 h4 text-danger">Manage Staff</h3>
+                <p class="text-muted mb-0 small">Remove accounts (14-day notice)</p>
+              </div>
+              <i class="bi bi-arrow-right ms-auto fs-4 text-danger"></i>
+            </div>
+          </a>
+
+          <div class="card admin-card p-4 mb-4 shadow-sm">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-4">
+                <i class="bi bi-arrow-right-circle-fill text-warning fs-3"></i>
+              </div>
+              <h3 class="mb-0 h4">Transfer Account</h3>
+            </div>
+            <p class="text-muted mb-3 small">
+              Secure handover. <strong>Note:</strong> Government emails may delay delivery by 10 minutes.
+            </p>
+            <button id="transferBtn" class="btn btn-warning w-100 mb-2 fw-bold text-dark">
+              <i class="bi bi-envelope me-2"></i> Send Transfer Link
+            </button>
+            <div id="transferStatus" class="small mt-2"></div>
+          </div>
+
+          <a id="superAdminCard" href="Admin/internal-audit.html" class="card admin-card text-decoration-none mb-4 p-4 shadow-sm d-none text-dark border-super">
+            <div class="d-flex align-items-center">
+              <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-4">
+                <i class="bi bi-shield-lock-fill text-primary fs-3"></i>
+              </div>
+              <div>
+                <h3 class="mb-1 h4 text-primary">Internal Audit</h3>
+                <p class="text-muted mb-0 small">Verify Payments & Manage Pricing</p>
+              </div>
+              <i class="bi bi-arrow-right ms-auto fs-4 text-primary"></i>
+            </div>
+          </a>
+
+        </div>
+      </div>
+    </div>
+    
+  </div> 
+
+  <div id="feedbackSection" class="feedback-section d-none">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3">
+              <i class="bi bi-chat-square-text-fill text-success fs-4"></i>
+            </div>
+            <h4 class="mb-0">Feedback & Suggestions</h4>
+          </div>
+          
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="mb-3">
+                <input id="feedbackTitle" type="text" class="form-control bg-light border-0" placeholder="Subject (e.g. Feature Request)">
+              </div>
+              <div class="mb-3">
+                <textarea id="feedbackText" class="form-control bg-light border-0" rows="3" placeholder="Share your ideas or issues..."></textarea>
+              </div>
+              <div class="text-end">
+                <button id="submitFeedbackBtn" class="btn btn-success px-4 rounded-pill fw-bold">
+                  <i class="bi bi-send me-2"></i> Submit Feedback
+                </button>
+              </div>
+              <div id="feedbackStatus" class="mt-2 text-end"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer-section text-center">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <p class="mb-1 text-muted small fw-bold">© 2026 Alivioscript Solutions</p>
+          <p class="mb-1 text-muted small">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+          <p class="mb-0 text-danger small fw-bold">For professional use only. Verify all results.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // --- DASHBOARD LOGIC (Handles Card Visibility) ---
+    // This runs ON TOP of admin.js to handle specific card toggles
+    
+    const SUPER_ADMIN_EMAIL = "alison.chai@moh.gov.my";
+
+    firebase.auth().onAuthStateChanged(async user => {
+        if (user) {
+            // 1. Reveal Super Admin Card (Email Check)
+            const email = user.email.toLowerCase().trim();
+            if (email === SUPER_ADMIN_EMAIL) {
+                const superCard = document.getElementById('superAdminCard');
+                if (superCard) superCard.classList.remove('d-none');
             }
 
-            let html = '';
-            snap.forEach(doc => {
-                const d = doc.data();
-                const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-GB') : 'N/A';
-                // Handle different amount fields (renewalAmount vs initial logic)
-                const amount = d.renewalAmount || "N/A"; 
+            // 2. Check Premium vs Standard Status (Database Check)
+            const isGov = email.endsWith('.gov.my') || email.endsWith('.moh.gov.my');
+            
+            // If Gov, they see neither (Free Lifetime)
+            // If Private, we check their status
+            if (!isGov) {
+                try {
+                    const doc = await firebase.firestore().collection('users').doc(user.uid).get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        const isPremium = data.isPremium === true;
 
-                html += `
-                <tr>
-                    <td class="ps-4">
-                        <div class="fw-bold text-dark">${d.username || 'Unknown User'}</div>
-                        <div class="small text-muted">${d.email}</div>
-                        <div class="small text-primary fst-italic">${d.institutionName || 'Personal'}</div>
-                    </td>
-                    <td>
-                        <span class="badge bg-light text-dark border font-monospace px-2 py-2">${d.paymentReference}</span>
-                    </td>
-                    <td>
-                        <span class="fw-bold">${amount}</span>
-                    </td>
-                    <td class="small text-muted">
-                        ${date}
-                    </td>
-                    <td class="text-end pe-4">
-                        <button class="btn btn-action btn-outline-danger me-2" onclick="rejectUser('${doc.id}')" title="Fake Receipt / Suspend">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                        <button class="btn btn-action btn-success" onclick="verifyUser('${doc.id}')" title="Payment Good">
-                            <i class="bi bi-check-lg"></i>
-                        </button>
-                    </td>
-                </tr>`;
-            });
-            list.innerHTML = html;
-
-        } catch (e) {
-            console.error(e);
-            list.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Error loading data: ${e.message}<br><small>Check console for details.</small></td></tr>`;
+                        if (isPremium) {
+                            // SHOW Renewal Card (Standard Billing)
+                            // HIDE Upgrade Card
+                            const billingCard = document.getElementById('billingCard');
+                            if (billingCard) billingCard.classList.remove('d-none');
+                        } else {
+                            // HIDE Renewal Card
+                            // SHOW Upgrade Card (Gold)
+                            const upgradeCard = document.getElementById('upgradePremiumCard');
+                            const billingCard = document.getElementById('billingCard');
+                            
+                            if (upgradeCard) upgradeCard.classList.remove('d-none');
+                            if (billingCard) billingCard.classList.add('d-none'); // Ensure standard is hidden
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error checking premium status:", e);
+                }
+            }
         }
-    }
+    });
+  </script>
 
-    // --- ACTION: VERIFY (Keep Active) ---
-    async function verifyUser(uid) {
-        if (!confirm("Confirm this payment is valid?")) return;
-        
-        try {
-            // Just mark trustStatus as verified. 
-            // billingStatus is ALREADY 'active', so we don't need to touch it.
-            await db.collection('users').doc(uid).update({
-                trustStatus: 'verified'
-            });
-            // Refresh list to remove this row
-            loadAuditQueue();
-        } catch (e) { alert("Error: " + e.message); }
-    }
-
-    // --- ACTION: REJECT (Suspend Account) ---
-    async function rejectUser(uid) {
-        const reason = prompt("Enter rejection reason (e.g. 'Invalid Receipt'):");
-        if (!reason) return;
-        
-        try {
-            // This stops them from logging in / accessing tools
-            await db.collection('users').doc(uid).update({
-                trustStatus: 'rejected',
-                billingStatus: 'suspended', 
-                rejectionReason: reason
-            });
-            alert("User has been suspended.");
-            loadAuditQueue();
-        } catch (e) { alert("Error: " + e.message); }
-    }
-
-    function logout() {
-        auth.signOut();
-    }
-</script>
 </body>
 </html>
