@@ -3,286 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Doctor Scanner | PalliCalc</title>
+    <title>Universal Clinical Scanner</title>
     
-    <link rel="stylesheet" href="../diagnostic.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
     <style>
-        /* DASHBOARD STYLES */
-        .scanner-box { 
-            width: 100%; max-width: 500px; margin: 0 auto; 
-            background: #000; border-radius: 12px; overflow: hidden; 
+        :root {
+            --primary: #0d6efd;
+            --success: #198754;
+            --danger: #dc3545;
+            --bg-light: #f8f9fa;
+            --text-dark: #212529;
+            --border-radius: 12px;
         }
+
+        body { font-family: 'Inter', sans-serif; background: #eef2f5; margin: 0; padding: 20px; color: var(--text-dark); }
+        .main-container { max-width: 600px; margin: 0 auto; background: white; border-radius: var(--border-radius); box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
+
+        /* HEADER */
+        .app-header { background: white; padding: 20px; text-align: center; border-bottom: 1px solid #eee; }
+        .app-header h1 { margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-dark); }
+        .app-header p { margin: 5px 0 0; font-size: 0.9rem; color: #6c757d; }
+
+        /* SCANNER UI */
+        #scan-screen { position: relative; background: black; }
+        .scanner-wrapper { position: relative; width: 100%; height: 350px; overflow: hidden; }
+        #reader { width: 100%; height: 100%; object-fit: cover; }
         
-        .result-panel { display: none; animation: slideUp 0.4s ease-out; }
-        
-        /* FORM HEADER BADGE */
-        .form-badge {
-            display: inline-block; padding: 5px 12px; border-radius: 20px;
-            font-weight: bold; color: white; font-size: 12px; text-transform: uppercase;
-            margin-bottom: 10px;
+        /* Professional Overlay */
+        .scan-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.3); pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
         }
+        .scan-box {
+            width: 250px; height: 250px; border: 2px solid rgba(255,255,255,0.7);
+            border-radius: 16px; position: relative; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+        }
+        .scan-box::after {
+            content: ''; position: absolute; top: 10px; left: 10px; right: 10px; height: 2px;
+            background: #00c6f7; box-shadow: 0 0 4px #00c6f7;
+            animation: scanLine 2s infinite ease-in-out;
+        }
+
+        /* RESULT WORKFLOW */
+        #result-screen { display: none; padding: 20px; animation: slideUp 0.3s ease-out; }
+        
+        .step-card {
+            background: white; border: 1px solid #e9ecef; border-radius: 8px;
+            padding: 15px; margin-bottom: 15px;
+        }
+        .step-label {
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+            color: #adb5bd; margin-bottom: 8px; display: block;
+        }
+
+        .badge-pill { padding: 4px 12px; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: white; background: var(--primary); }
         .badge-ipos { background: #0061f2; }
-        .badge-hads { background: #6f42c1; } /* Purple */
-        .badge-dt   { background: #dc3545; } /* Red */
+        .badge-hads { background: #6f42c1; }
+        .badge-dt   { background: #dc3545; }
 
-        .patient-inputs {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;
-        }
+        .form-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+
+        /* DATA DISPLAY */
+        .clinical-summary { background: #f8f9fa; border-radius: 6px; padding: 10px; max-height: 250px; overflow-y: auto; border: 1px solid #eee; }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef; font-size: 0.95rem; }
+        .summary-row:last-child { border-bottom: none; }
         
-        .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
-        .summary-table th { text-align: left; padding: 8px; border-bottom: 2px solid #dee2e6; color: #495057; }
-        .summary-table td { padding: 8px; border-bottom: 1px solid #eee; }
-        
-        .score-val-small { font-weight: bold; color: #333; }
+        /* High score highlight */
+        .val-high { color: var(--danger); font-weight: 800; }
+        .val-normal { color: var(--text-dark); font-weight: 600; }
 
-        .score-box { 
-            background: #2c3e50; color: white; padding: 15px; border-radius: 10px; 
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
-        }
-        .score-title { font-size: 13px; opacity: 0.8; text-transform: uppercase; }
-        .score-val { font-size: 24px; font-weight: 800; color: #00c6f7; }
+        /* BUTTONS */
+        .btn-action { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2); }
+        .btn-secondary { background: #e9ecef; color: var(--text-dark); }
 
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scanLine { 0% { top: 10px; opacity: 0; } 50% { opacity: 1; } 100% { top: 240px; opacity: 0; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div class="main-container" style="max-width: 900px;">
-        
-        <div class="header header-ipos">
-            <h1><i class="bi bi-qr-code-scan"></i> Universal Scanner</h1>
-            <p>Scan any PalliCalc Patient Form</p>
-        </div>
-
-        <div id="scan-screen">
-            <div class="scanner-box">
-                <div id="reader"></div>
-            </div>
-            <p class="text-center mt-3 text-muted">Point at Patient's Phone</p>
-        </div>
-
-        <div id="result-screen" class="result-panel">
-            
-            <div class="text-center">
-                <span id="form_type_badge" class="form-badge badge-ipos">IPOS</span>
-            </div>
-
-            <div class="patient-inputs">
-                <div>
-                    <label class="q-label" style="font-size:12px;">Patient Name</label>
-                    <input type="text" id="pt_name" class="form-control" placeholder="Enter Name" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
-                </div>
-                <div>
-                    <label class="q-label" style="font-size:12px;">ID / MRN</label>
-                    <input type="text" id="pt_id" class="form-control" placeholder="Enter ID" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
-                </div>
-            </div>
-
-            <div id="dynamic_content">
-                </div>
-
-            <button onclick="transferToGoogle()" class="btn btn-buccal" style="width: 100%; justify-content: center; font-size: 1.1rem; padding: 15px;">
-                <i class="bi bi-google"></i> Transfer to Google Form
-            </button>
-
-            <button onclick="resetScanner()" class="btn" style="width:100%; margin-top:15px; background:#e2e6ea; color:#333; justify-content:center;">
-                <i class="bi bi-arrow-counterclockwise"></i> Scan Next
-            </button>
-
-        </div>
-
+<div class="main-container">
+    <div class="app-header">
+        <h1>Clinical Data Scanner</h1>
+        <p>Secure Patient-to-EHR Bridge</p>
     </div>
 
-    <script>
-        // ==========================================
-        // 1. UNIVERSAL CONFIGURATION (EDIT THIS)
-        // ==========================================
-        // You can have a different Google Form for EACH tool!
+    <div id="scan-screen">
+        <div class="scanner-wrapper">
+            <div id="reader"></div>
+            <div class="scan-overlay">
+                <div class="scan-box"></div>
+            </div>
+        </div>
+        <div style="background: white; padding: 15px; text-align: center; color: #666; border-top: 1px solid #eee;">
+            <i class="bi bi-camera-video"></i> Point camera at patient's QR code
+        </div>
+    </div>
+
+    <div id="result-screen">
         
-        const GOOGLE_LINKS = {
-            "IPOS": {
-                url: "https://docs.google.com/forms/d/e/YOUR_IPOS_FORM_ID/viewform",
-                fields: { name: "entry.111", id: "entry.222", score: "entry.333", summary: "entry.444" }
-            },
-            "HADS": {
-                url: "https://docs.google.com/forms/d/e/YOUR_HADS_FORM_ID/viewform",
-                fields: { name: "entry.555", id: "entry.666", scoreA: "entry.777", scoreD: "entry.888" }
-            },
-            "DT": { // Distress Thermometer
-                url: "https://docs.google.com/forms/d/e/YOUR_DT_FORM_ID/viewform",
-                fields: { name: "entry.999", id: "entry.000", score: "entry.123", problems: "entry.456" }
-            }
-        };
+        <div class="step-card">
+            <span class="step-label">1. Verify Patient</span>
+            <div class="form-group">
+                <input type="text" id="pt_id" class="form-control" placeholder="Patient ID / MRN" style="font-weight:bold;">
+                <input type="text" id="pt_name" class="form-control" placeholder="Name (Optional)">
+            </div>
+        </div>
 
-        // ==========================================
-        // 2. SCANNER LOGIC
-        // ==========================================
-        let html5QrcodeScanner;
-        let currentData = null; // Stores the scanned JSON
-
-        function onScanSuccess(decodedText) {
-            try {
-                const data = JSON.parse(decodedText);
-                
-                // CHECK: Is it a valid PalliCalc payload?
-                if (data.t && (data.t === "IPOS" || data.t === "HADS" || data.t === "DT")) {
-                    currentData = data;
-                    html5QrcodeScanner.clear(); // Stop camera
-                    renderDashboard(data);
-                } else {
-                    alert("Unknown QR Code format.");
-                }
-            } catch (e) {
-                // Ignore non-JSON
-            }
-        }
-
-        // ==========================================
-        // 3. UNIVERSAL RENDERER
-        // ==========================================
-        function renderDashboard(data) {
-            document.getElementById('scan-screen').style.display = 'none';
-            document.getElementById('result-screen').style.display = 'block';
+        <div class="step-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span class="step-label" style="margin:0;">2. Review Data</span>
+                <span id="form-badge" class="badge-pill">IPOS</span>
+            </div>
             
-            const badge = document.getElementById('form_type_badge');
-            const content = document.getElementById('dynamic_content');
-            content.innerHTML = ""; // Clear previous
-
-            // --- RENDER BASED ON TYPE ---
-            if (data.t === "IPOS") {
-                badge.textContent = "IPOS Assessment";
-                badge.className = "form-badge badge-ipos";
-                renderIPOS(data, content);
-            } 
-            else if (data.t === "HADS") {
-                badge.textContent = "HADS Assessment";
-                badge.className = "form-badge badge-hads";
-                renderHADS(data, content);
-            }
-            else if (data.t === "DT") {
-                badge.textContent = "Distress Thermometer";
-                badge.className = "form-badge badge-dt";
-                renderDT(data, content);
-            }
-        }
-
-        // --- IPOS RENDERER ---
-        function renderIPOS(data, container) {
-            // 1. Q1 Text
-            if(data.q1) {
-                container.innerHTML += `
-                <div style="background:#fff3cd; padding:10px; border-left:4px solid #ffc107; margin-bottom:15px; border-radius:4px; font-style:italic;">
-                    <strong>Main Concerns:</strong> ${data.q1}
-                </div>`;
-            }
-
-            // 2. Table
-            let rows = "";
-            const labels = {
-                p:'Pain', s:'Breath', w:'Weakness', n:'Nausea', v:'Vomiting', 
-                a:'Appetite', c:'Constipation', m:'Mouth', d:'Drowsy', mb:'Mobility',
-                a:'Anxiety', f:'Family', d:'Depressed', pe:'Peace', sh:'Shared', i:'Info', pr:'Practical'
-            };
-
-            // Combine Symptoms & Psychosocial for table
-            const merged = { ...data.s, ...data.p };
-            if(data.o?.l) merged['Other'] = `${data.o.l} (${data.o.v})`;
-
-            for(let [k,v] of Object.entries(merged)) {
-                let name = labels[k] || k;
-                if(k === 'Other') name = data.o.l; // Handle other label
-                let val = (k === 'Other') ? data.o.v : v;
-                
-                rows += `<tr><td>${name}</td><td><b>${val}</b></td></tr>`;
-            }
-
-            container.innerHTML += `
-                <table class="summary-table">
-                    <thead><tr><th>Item</th><th>Score</th></tr></thead>
-                    <tbody>${rows}</tbody>
-                </table>
-                <div class="score-box">
-                    <div>TOTAL IPOS</div>
-                    <div class="score-val">${data.score}</div>
-                </div>
-            `;
-        }
-
-        // --- HADS RENDERER (Future Proofing) ---
-        function renderHADS(data, container) {
-            container.innerHTML += `
-                <div class="score-box" style="background:#6f42c1;">
-                    <div>ANXIETY SCORE</div>
-                    <div class="score-val">${data.scoreA}</div>
-                </div>
-                <div class="score-box" style="background:#6f42c1;">
-                    <div>DEPRESSION SCORE</div>
-                    <div class="score-val">${data.scoreD}</div>
-                </div>
-            `;
-        }
-
-        // --- DT RENDERER (Future Proofing) ---
-        function renderDT(data, container) {
-            container.innerHTML += `
-                <div class="score-box" style="background:${data.score >= 4 ? '#dc3545' : '#28a745'};">
-                    <div>DISTRESS LEVEL</div>
-                    <div class="score-val">${data.score}/10</div>
-                </div>
-                <p><strong>Problems:</strong> ${data.problems || "None"}</p>
-            `;
-        }
-
-        // ==========================================
-        // 4. GOOGLE FORM TRANSFER
-        // ==========================================
-        function transferToGoogle() {
-            if (!currentData) return;
-            const config = GOOGLE_LINKS[currentData.t];
-            if (!config) { alert("Google Form not linked for this tool yet."); return; }
-
-            const name = document.getElementById('pt_name').value;
-            const id = document.getElementById('pt_id').value;
+            <div id="clinical-preview" class="clinical-summary"></div>
             
-            let url = `${config.url}?usp=pp_url`;
+            <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; background:#eef2f5; padding:10px; border-radius:6px;">
+                <strong>Total Score</strong>
+                <span id="total-score" style="font-size:1.2rem; color:var(--primary); font-weight:800;">0</span>
+            </div>
+        </div>
+
+        <button onclick="transferToGoogle()" class="btn-action btn-primary">
+            <i class="bi bi-cloud-upload-fill"></i> Transfer to Google Form
+        </button>
+        <button onclick="resetScanner()" class="btn-action btn-secondary">
+            <i class="bi bi-arrow-repeat"></i> Discard & Scan New
+        </button>
+
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 1. CONFIGURATION (UPDATE IDS HERE)
+    // ==========================================
+    const GOOGLE_LINKS = {
+        "IPOS": {
+            url: "https://docs.google.com/forms/d/e/YOUR_IPOS_FORM_ID/viewform",
+            fields: { 
+                name: "entry.11111", 
+                id: "entry.22222", 
+                score: "entry.33333", 
+                summary: "entry.44444" // The "Full Clinical Report" box
+            }
+        },
+        "HADS": {
+            url: "https://docs.google.com/forms/d/e/YOUR_HADS_FORM_ID/viewform",
+            fields: { name: "entry.555", id: "entry.666", score: "entry.777", summary: "entry.888" }
+        },
+        "DT": {
+            url: "https://docs.google.com/forms/d/e/YOUR_DT_FORM_ID/viewform",
+            fields: { name: "entry.999", id: "entry.000", score: "entry.123", summary: "entry.456" }
+        }
+    };
+
+    // Human Readable Labels for the Doctor's Screen
+    const DISPLAY_LABELS = {
+        Q2a: 'Pain', Q2b: 'Breath', Q2c: 'Weakness', Q2d: 'Nausea', Q2e: 'Vomiting',
+        Q2f: 'Appetite', Q2g: 'Constipation', Q2h: 'Mouth', Q2i: 'Drowsy', Q2j: 'Mobility',
+        Q2k: 'Other',
+        Q3: 'Anxiety', Q4: 'Family Anxiety', Q5: 'Depression', Q6: 'Peace', 
+        Q7: 'Shared Feelings', Q8: 'Information', Q9: 'Practical',
+        Q10: 'Completed By'
+    };
+
+    let html5QrcodeScanner;
+    let currentData = null; 
+
+    // ==========================================
+    // 2. SCANNING LOGIC
+    // ==========================================
+    function onScanSuccess(decodedText) {
+        try {
+            // A. Unwrap Chinese Characters
+            let rawString = decodedText;
+            try { rawString = decodeURIComponent(decodedText); } catch (e) {}
             
-            // Append Name & ID
-            url += `&${config.fields.name}=${encodeURIComponent(name)}`;
-            url += `&${config.fields.id}=${encodeURIComponent(id)}`;
+            // B. Parse JSON
+            const data = JSON.parse(rawString);
 
-            // Append Specific Data based on type
-            if (currentData.t === "IPOS") {
-                url += `&${config.fields.score}=${currentData.score}`;
-                // We create a text summary for the Google Form "Summary" field
-                const summary = `Q1: ${currentData.q1} | JSON: ${JSON.stringify(currentData.s)}`; 
-                url += `&${config.fields.summary}=${encodeURIComponent(summary)}`;
-            } 
-            else if (currentData.t === "HADS") {
-                url += `&${config.fields.scoreA}=${currentData.scoreA}`;
-                url += `&${config.fields.scoreD}=${currentData.scoreD}`;
+            // C. Validate PalliCalc Type
+            if (data.t && GOOGLE_LINKS[data.t]) {
+                currentData = data;
+                html5QrcodeScanner.clear(); // Stop camera
+                renderDashboard(data);
+            } else {
+                alert("Unknown Code. Is this a PalliCalc form?");
             }
-            else if (currentData.t === "DT") {
-                url += `&${config.fields.score}=${currentData.score}`;
-                url += `&${config.fields.problems}=${encodeURIComponent(currentData.problems)}`;
-            }
+        } catch (e) {
+            // Ignore non-JSON scans (e.g. scanning a Coke can)
+        }
+    }
 
-            window.open(url, '_blank');
+    // ==========================================
+    // 3. RENDER UI (Human Friendly)
+    // ==========================================
+    function renderDashboard(data) {
+        document.getElementById('scan-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+
+        // Badge & Score
+        const badge = document.getElementById('form-badge');
+        badge.textContent = data.t;
+        badge.className = `badge-pill badge-${data.t.toLowerCase()}`;
+        document.getElementById('total-score').textContent = data.score || 0;
+
+        const container = document.getElementById('clinical-preview');
+        let html = "";
+
+        // 1. Q1 Text (Main Concern)
+        if (data.Q1) {
+            html += `<div style="padding-bottom:10px; margin-bottom:10px; border-bottom:1px dashed #ccc; font-style:italic; font-size:0.9rem; color:#666;">
+                        <strong>Q1 Concern:</strong> "${data.Q1}"
+                     </div>`;
         }
 
-        function resetScanner() {
-            location.reload();
+        // 2. Loop through Short Codes (Q2a, Q2b...)
+        for (const [key, val] of Object.entries(data)) {
+            // Ignore internal metadata
+            if (['t', 'd', 'score', 'Q1'].includes(key)) continue;
+
+            const label = DISPLAY_LABELS[key] || key; // "Pain" or fallback to "Q2a"
+            const numVal = parseInt(val);
+            
+            // Traffic Light Logic: Scores 3 & 4 are RED
+            const isHigh = (!isNaN(numVal) && numVal >= 3);
+            
+            html += `<div class="summary-row">
+                        <span>${label}</span>
+                        <span class="${isHigh ? 'val-high' : 'val-normal'}">${val}</span>
+                     </div>`;
         }
 
-        window.addEventListener('load', () => {
-            html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
-            html5QrcodeScanner.render(onScanSuccess);
-        });
+        container.innerHTML = html;
+    }
 
-    </script>
+    // ==========================================
+    // 4. TRANSFER LOGIC (Machine Friendly)
+    // ==========================================
+    function transferToGoogle() {
+        if (!currentData) return;
+        
+        const ptName = document.getElementById('pt_name').value;
+        const ptID = document.getElementById('pt_id').value;
+        
+        if (!ptID) {
+            alert("Please enter a Patient ID (MRN).");
+            return;
+        }
+
+        const config = GOOGLE_LINKS[currentData.t];
+        
+        // --- BUILD SMART REPORT STRING ---
+        // Format: "Q1: Text | Q2a: 4 | Q2b: 2 ..."
+        let report = "";
+        const ignoredKeys = ['t', 'd', 'score']; // Don't duplicate score in the summary blob
+        
+        for (let [key, val] of Object.entries(currentData)) {
+            if (!ignoredKeys.includes(key)) {
+                report += `${key}: ${val} | `;
+            }
+        }
+
+        // --- LAUNCH GOOGLE FORM ---
+        let url = `${config.url}?usp=pp_url`;
+        url += `&${config.fields.name}=${encodeURIComponent(ptName)}`;
+        url += `&${config.fields.id}=${encodeURIComponent(ptID)}`;
+        url += `&${config.fields.score}=${currentData.score}`;
+        url += `&${config.fields.summary}=${encodeURIComponent(report)}`;
+
+        window.open(url, '_blank');
+    }
+
+    function resetScanner() {
+        location.reload();
+    }
+
+    window.addEventListener('load', () => {
+        html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", 
+            { fps: 10, qrbox: {width: 250, height: 250}, aspectRatio: 1.0 }, 
+            false
+        );
+        html5QrcodeScanner.render(onScanSuccess);
+    });
+
+</script>
 </body>
 </html>

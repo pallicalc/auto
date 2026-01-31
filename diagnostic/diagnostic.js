@@ -1,4 +1,4 @@
-// --- diagnostic.js (Cleaned - No PDF Hacks) ---
+// --- diagnostic.js (Optimized Production Version) ---
 
 const firebaseConfig = {
     apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
@@ -16,92 +16,104 @@ const auth = firebase.auth();
 let context = { mode: 'personal', instId: null };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. INJECT FOOTER ONLY
+    // 1. STANDARD UI SETUP
     injectStandardFooter();
-
-    // 2. STANDARD FORM LOGIC
+    
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
     const form = document.getElementById('iposForm');
     if(form) form.addEventListener('change', calculateTotalScore);
 
-    // 3. AUTH & INSTITUTION LOGIC
+    // 2. CONTEXT DETERMINATION (The Logic Hub)
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
 
     if (ref) {
+        // SCENARIO A: Patient via Link
         context.mode = 'shared'; 
         context.instId = ref;
         
         const backLink = document.getElementById('backLink');
         if (backLink) backLink.href = `../../diagnostic.html?ref=${ref}`;
+        
+        // Execute Final Setup
+        await finalizeAppSetup(context.instId);
 
-        const blankQr = document.getElementById("blank-qrcode");
-        if(blankQr) new QRCode(blankQr, { text: window.location.href, width: 100, height: 100 }); 
-
-        await loadInstitutionHeader();
     } else {
+        // SCENARIO B: Direct Access (Check Auth)
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 try {
                     const snap = await db.collection('users').doc(user.uid).get();
-                    if (snap.exists && (snap.data().role === 'institutionUser' || snap.data().role === 'institutionAdmin')) {
-                        context.mode = 'institution'; 
-                        context.instId = snap.data().institutionId;
-                        await loadInstitutionHeader();
+                    if (snap.exists) {
+                        const userData = snap.data();
+                        if (['institutionUser', 'institutionAdmin'].includes(userData.role)) {
+                            context.mode = 'institution'; 
+                            context.instId = userData.institutionId;
+                        }
                     }
-                } catch (e) { console.error("User Auth Error:", e); }
+                } catch (e) { console.error("Auth Data Error:", e); }
             }
-            if (context.mode === 'personal') loadPersonalHeader();
+            // Execute Final Setup (works for both Logged In and Guest)
+            finalizeAppSetup(context.instId);
         });
     }
 });
 
-// --- FOOTER INJECTION ---
-function injectStandardFooter() {
-    const footerHTML = `
-        <footer class="standard-footer">
-            <div class="footer-inner">
-                <p style="margin: 0 0 5px; font-weight: bold; color: #343a40;">&copy; 2026 Alivioscript Solutions</p>
-                <div class="author-info">
-                    Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838
-                </div>
-                <div class="footer-disclaimer">
-                    <strong>Disclaimer:</strong> This tool is for professional clinical use.
-                </div>
-            </div>
-        </footer>
-    `;
-    const existing = document.querySelector('footer');
-    if(existing) existing.remove();
-    document.body.insertAdjacentHTML('beforeend', footerHTML);
+// --- CENTRALIZED SETUP HANDLER (Removes Redundancy) ---
+async function finalizeAppSetup(instId) {
+    // 1. Generate the Master Link QR
+    generateBlankFormQR(instId);
+
+    // 2. Load Branding if ID exists, else load Personal/Cached
+    if (instId) {
+        await loadInstitutionHeader(instId);
+    } else {
+        loadPersonalHeader();
+    }
 }
 
-// --- HEADER LOGIC ---
-async function loadInstitutionHeader() {
-    if (!context.instId) return;
+// --- QR CODE GENERATORS ---
+function generateBlankFormQR(instId) {
+    const qrContainer = document.getElementById("blank-qrcode");
+    if (!qrContainer) return;
+
+    qrContainer.innerHTML = ""; 
+    const baseUrl = window.location.href.split('?')[0]; 
+    const targetUrl = instId ? `${baseUrl}?ref=${instId}` : baseUrl;
+    
+    new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
+}
+
+// --- HEADER & BRANDING LOGIC ---
+// Helper: Normalize data so we don't repeat "||" checks everywhere
+function normalizeBranding(data) {
+    const logos = data.headerLogos || (data.logo ? [data.logo] : []);
+    return {
+        name: data.headerName || data.name || "",
+        contact: data.headerContact || data.contact || "",
+        logo: logos.length > 0 ? logos[0] : null
+    };
+}
+
+async function loadInstitutionHeader(instId) {
     try {
-        const doc = await db.collection('institutions').doc(context.instId).get();
+        const doc = await db.collection('institutions').doc(instId).get();
         if (doc.exists) { 
             const data = doc.data();
             if (data.status === 'suspended') {
-                localStorage.removeItem('cached_inst_' + context.instId);
                 localStorage.removeItem('institutionSettings');
                 return; 
             }
-            localStorage.setItem('cached_inst_' + context.instId, JSON.stringify(data));
-            localStorage.setItem('institutionSettings', JSON.stringify({
-                name: data.headerName || data.name,
-                contact: data.headerContact || data.contact,
-                logos: data.headerLogos || (data.logo ? [data.logo] : []),
-                logo: data.logo
-            }));
-            applyBranding(data); 
+            
+            // Normalize ONCE, Save Clean, Apply Clean
+            const cleanData = normalizeBranding(data);
+            localStorage.setItem('institutionSettings', JSON.stringify(cleanData));
+            applyBranding(cleanData); 
         }
     } catch (e) { 
-        const cached = localStorage.getItem('cached_inst_' + context.instId);
-        if (cached) applyBranding(JSON.parse(cached));
+        loadPersonalHeader(); // Fallback to cache
     }
 }
 
@@ -109,33 +121,31 @@ function loadPersonalHeader() {
     const settingsStr = localStorage.getItem('institutionSettings');
     if (settingsStr) {
         try {
-            const settings = JSON.parse(settingsStr);
-            applyBranding({
-                headerName: settings.name,
-                headerContact: settings.contact,
-                headerLogos: settings.logos || (settings.logo ? [settings.logo] : []),
-                logo: settings.logo 
-            });
+            applyBranding(JSON.parse(settingsStr));
         } catch (e) {}
     }
 }
 
-function applyBranding(data) {
-    const name = data.headerName || data.name;
-    const logos = data.headerLogos || (data.logo ? [data.logo] : []);
-    const contact = data.headerContact || data.contact;
-    const logoSrc = logos[0];
-
-    if(name) document.getElementById('inst-name-display').textContent = name;
-    if(contact) document.getElementById('inst-contact-display').textContent = contact;
-    if(logoSrc) {
+function applyBranding({ name, contact, logo }) {
+    if(name) {
+        const nameEl = document.getElementById('inst-name-display');
+        const footerName = document.getElementById('footer-inst-name');
+        if(nameEl) nameEl.textContent = name;
+        if(footerName) footerName.textContent = name;
+    }
+    if(contact) {
+        const contactEl = document.getElementById('inst-contact-display');
+        if(contactEl) contactEl.textContent = contact;
+    }
+    if(logo) {
         const el = document.getElementById('inst-logo-img');
-        if(el) { el.src = logoSrc; el.style.display = 'block'; }
-        document.getElementById('inst-header-container').style.display = 'flex';
+        const container = document.getElementById('inst-header-container');
+        if(el) { el.src = logo; el.style.display = 'block'; }
+        if(container) container.style.display = 'flex';
     }
 }
 
-// --- SCORING & UTILITIES ---
+// --- SCORING ---
 function calculateTotalScore() {
     let total = 0;
     document.querySelectorAll('#iposForm input[type="radio"]:checked').forEach(input => {
@@ -146,20 +156,21 @@ function calculateTotalScore() {
     return total;
 }
 
+// --- RESULT QR GENERATION (Matches Scanner "Q" Codes) ---
 function generateQR() {
     const getVal = (name) => {
         const el = document.querySelector(`input[name="${name}"]:checked`);
         return el ? parseInt(el.value) : 0;
     };
 
-    // Collect data for 3 "Other" rows
+    // Helper for Other Symptoms
     const otherSymptoms = [];
     for (let i = 1; i <= 3; i++) {
         const labelEl = document.getElementById(`other_sym_${i}_label`);
         const label = labelEl ? labelEl.value.substring(0, 20) : "";
         const val = getVal(`other_sym_${i}_val`);
         if (label || val > 0) {
-            otherSymptoms.push({ l: label, v: val });
+            otherSymptoms.push(`${label} (${val})`);
         }
     }
 
@@ -167,31 +178,54 @@ function generateQR() {
         t: "IPOS",
         d: Date.now(),
         score: calculateTotalScore(),
-        q1: document.getElementById('q1_input').value.substring(0, 100),
-        s: { 
-            p: getVal('pain'), s: getVal('sob'), w: getVal('weak'),
-            n: getVal('nau'), v: getVal('vom'), a: getVal('app'),
-            c: getVal('con'), m: getVal('mou'), d: getVal('dro'),
-            mb: getVal('mob')
-        },
-        o: otherSymptoms, 
-        p: { 
-            a: getVal('anxious'), f: getVal('family'), d: getVal('depressed'),
-            pe: getVal('peace'), sh: getVal('share'), i: getVal('info'),
-            pr: getVal('practical')
-        },
-        m: document.getElementById('completion_mode').value
+        Q1: document.getElementById('q1_input').value.substring(0, 100),
+        Q2a: getVal('pain'),
+        Q2b: getVal('sob'),
+        Q2c: getVal('weak'),
+        Q2d: getVal('nau'),
+        Q2e: getVal('vom'),
+        Q2f: getVal('app'),
+        Q2g: getVal('con'),
+        Q2h: getVal('mou'),
+        Q2i: getVal('dro'),
+        Q2j: getVal('mob'),
+        Q2k: otherSymptoms.join(", "), 
+        Q3: getVal('anxious'),
+        Q4: getVal('family'),
+        Q5: getVal('depressed'),
+        Q6: getVal('peace'),
+        Q7: getVal('share'),
+        Q8: getVal('info'),
+        Q9: getVal('practical'),
+        Q10: document.getElementById('completion_mode').value
     };
 
     const qrDiv = document.getElementById("qrcode");
     qrDiv.innerHTML = "";
-    new QRCode(qrDiv, { text: JSON.stringify(payload), width: 200, height: 200 });
+    
+    // Encode for Chinese/Special Characters
+    const safeData = encodeURIComponent(JSON.stringify(payload));
+    new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
 
     const section = document.getElementById('qr-section');
     section.style.display = 'block';
     section.scrollIntoView({behavior: 'smooth'});
 }
 
-function printBlankForm() {
+function injectStandardFooter() {
+    const existing = document.querySelector('footer');
+    if(existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', `
+        <footer class="standard-footer">
+            <div class="footer-inner">
+                <p style="margin: 0 0 5px; font-weight: bold; color: #343a40;">&copy; 2026 Alivioscript Solutions</p>
+                <div class="author-info">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</div>
+                <div class="footer-disclaimer"><strong>Disclaimer:</strong> This tool is for professional clinical use.</div>
+            </div>
+        </footer>
+    `);
+}
+
+function printPDF() {
     window.print(); 
 }
