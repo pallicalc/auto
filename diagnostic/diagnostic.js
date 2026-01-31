@@ -1,4 +1,4 @@
-// --- diagnostic.js (Final: Role-Based Display + Back Button Logic) ---
+// --- diagnostic.js (Final Production Version) ---
 
 const firebaseConfig = {
     apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
@@ -141,8 +141,9 @@ function generateQR() {
         Q6: getVal('peace'),
         Q7: getVal('share'),
         Q8: getVal('info'),
-        Q9: getVal('practical'),
-        Q10: document.getElementById('completion_mode').value
+        Q9: getVal('practical'),   
+        // MAP: 0->A, 1->B, 2->C. Default to A if error.
+        Q10: ["A", "B", "C"][document.getElementById('completion_mode').value] || "A"
     };
 
     const qrDiv = document.getElementById("qrcode");
