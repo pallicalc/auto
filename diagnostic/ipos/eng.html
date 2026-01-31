@@ -15,17 +15,64 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script src="../diagnostic.js"></script>
+
+    <style>
+        /* LAYOUT & OVERRIDES */
+        body { display: flex; flex-direction: column; min-height: 100vh; background-color: #f0f2f5; margin: 0; }
+        .main-container { flex: 1; width: 100%; max-width: 800px; margin: 20px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+
+        /* HEADER */
+        .header-ipos { 
+            background: linear-gradient(135deg, #0061f2 0%, #00c6f7 100%) !important; 
+            margin: -30px -30px 30px -30px; border-radius: 12px 12px 0 0; padding: 30px; color: white;
+            box-shadow: 0 4px 12px rgba(0, 97, 242, 0.2);
+        }
+        
+        /* QUESTIONS */
+        .question-card { background: #fff; border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid #eef2f6; break-inside: avoid; }
+        .q-label { font-weight: 700; color: #2c3e50; margin-bottom: 12px; display: block; font-size: 15px; }
+        .sub-label { display:block; font-weight:600; font-size:14px; margin-bottom:8px; color:#495057; }
+        
+        /* SCALES */
+        .scale-container { display: flex; justify-content: space-between; gap: 4px; margin-top: 10px; margin-bottom: 15px; }
+        .scale-opt { flex: 1; text-align: center; position: relative; }
+        .scale-opt input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; }
+        .scale-opt label {
+            display: flex; flex-direction: column; justify-content: center; height: 50px;
+            background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;
+            color: #6c757d; font-weight: 700; transition: all 0.2s; font-size: 16px; line-height: 1.1;
+        }
+        .scale-opt input:checked + label { background: #e3f2fd; border-color: #0061f2; color: #0061f2; box-shadow: 0 2px 5px rgba(0,97,242,0.15); }
+        .scale-desc { font-size: 10px; font-weight: 400; margin-top: 2px; }
+
+        /* PRINT / PDF MODE */
+        .blank-mode .scale-opt label { background: white !important; border: 1px solid #333 !important; color: #ccc !important; }
+        
+        /* Used during PDF generation to clean up UI */
+        .pdf-clean-mode .main-container { box-shadow: none; margin: 0; padding: 0; width: 100%; max-width: 100%; }
+        .pdf-clean-mode body { background: white; }
+        
+        @media print { body { background: white; } .no-print, .legal-footer { display: none !important; } .main-container { box-shadow: none; margin: 0; padding: 0; max-width: 100%; } }
+        
+        /* SCORE BOX */
+        .score-box { background: #2c3e50; color: white; padding: 20px; border-radius: 12px; margin-top: 30px; display: flex; justify-content: space-between; align-items: center; }
+        .score-val { font-size: 28px; font-weight: 800; color: #00c6f7; }
+        
+        /* FOOTER */
+        .legal-footer { width: 100%; margin-top: 40px; padding: 24px 0; border-top: 1px solid #dee2e6; text-align: center; background-color: #f8f9fa; color: #6c757d; }
+    </style>
 </head>
 <body>
 
-    <div id="pdf-loading">
+    <div id="pdf-loading" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:9999; flex-direction:column; justify-content:center; align-items:center;">
         <div style="display:inline-block; width:3rem; height:3rem; border:4px solid #f3f3f3; border-top:4px solid #0061f2; border-radius:50%; animation:spin 1s linear infinite;"></div>
         <p style="margin-top:15px; font-weight:bold; color:#555">Generating PDF...</p>
         <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
     </div>
 
-    <div class="main-container">
-        <div class="header header-ipos">
+    <div class="main-container" id="main-content-area">
+        
+        <div class="header header-ipos" id="pdf-header">
             <div id="inst-header-container" class="inst-header-container">
                 <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
                 <div class="inst-info"><h3 id="inst-name-display"></h3><p id="inst-contact-display"></p></div>
@@ -34,7 +81,7 @@
             <p>Integrated Palliative care Outcome Scale</p>
         </div>
 
-        <div id="blank-qr-header">
+        <div id="blank-qr-header" style="display:none; text-align:center; margin-bottom:20px; border-bottom:2px dashed #ccc; padding-bottom:15px;">
             <div style="display:flex; align-items:center; justify-content:center; gap:20px;">
                 <div id="blank-qrcode"></div>
                 <div style="text-align:left;"><h4 style="margin:0; color:#0061f2;">Scan to Fill Digitally</h4><small>Use your camera to open this form.</small></div>
@@ -252,7 +299,7 @@
                     <div class="score-val" id="total-score-display">0</div>
                 </div>
 
-                <div id="qr-section">
+                <div id="qr-section" style="display:none; text-align:center; margin-top:30px; border:2px solid #28a745; padding:15px; border-radius:10px;">
                     <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:10px; border-radius:8px; margin-bottom:10px;">
                         <i class="bi bi-check-circle-fill"></i> <strong>Scan to Save</strong>
                     </div>
@@ -275,7 +322,7 @@
 
     </div>
 
-    <footer class="legal-footer no-print">
+    <footer class="legal-footer no-print" id="pdf-footer">
         <div style="max-width:480px; margin:0 auto; padding:0 20px;">
             <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
             <div class="author-info">
@@ -304,7 +351,11 @@
         async function downloadSmartPDF() {
             const loading = document.getElementById('pdf-loading');
             loading.style.display = 'flex';
-            await new Promise(r => setTimeout(r, 500)); 
+            
+            // Clean UI
+            document.body.classList.add('pdf-clean-mode');
+            window.scrollTo(0, 0);
+            await new Promise(r => setTimeout(r, 800));
 
             const inputs = document.querySelectorAll('input[type="radio"]:checked');
             const q1Text = document.getElementById('q1_input').value.trim();
@@ -323,21 +374,29 @@
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 const pageWidth = 210;
+                const pageHeight = 297;
                 const margin = 10;
                 const contentWidth = pageWidth - (margin * 2);
 
-                const header = document.querySelector('.header-ipos');
+                const header = document.getElementById('pdf-header');
                 const page1Content = document.getElementById('pdf-page-1');
                 const page2Content = document.getElementById('pdf-page-2');
+                const footer = document.getElementById('pdf-footer');
                 
                 async function captureAndAdd(element, yOffset) {
-                    const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+                    const canvas = await html2canvas(element, { 
+                        scale: 2, 
+                        useCORS: true, 
+                        backgroundColor: "#ffffff",
+                        windowWidth: 800
+                    });
                     const imgData = canvas.toDataURL('image/jpeg', 0.9);
                     const imgHeight = (canvas.height * contentWidth) / canvas.width;
                     pdf.addImage(imgData, 'JPEG', margin, yOffset, contentWidth, imgHeight);
                     return imgHeight;
                 }
 
+                // --- PAGE 1 ---
                 let currentY = margin;
                 if (isBlank) {
                     const blankHeader = document.getElementById('blank-qr-header');
@@ -345,18 +404,29 @@
                 } else {
                     currentY += await captureAndAdd(header, currentY) + 5;
                 }
+                
+                // Add Content
                 await captureAndAdd(page1Content, currentY);
+                
+                // Add Footer at bottom of Page 1
+                await captureAndAdd(footer, pageHeight - 30);
 
+                // --- PAGE 2 ---
                 pdf.addPage(); 
                 currentY = margin;
                 await captureAndAdd(page2Content, currentY);
+                
+                // Add Footer at bottom of Page 2
+                await captureAndAdd(footer, pageHeight - 30);
 
                 const fname = isBlank ? "IPOS_Blank_Form.pdf" : `IPOS_Result_${new Date().toISOString().slice(0,10)}.pdf`;
                 pdf.save(fname);
 
             } catch (e) {
                 alert("Error: " + e.message);
+                console.error(e);
             } finally {
+                document.body.classList.remove('pdf-clean-mode');
                 document.body.classList.remove('blank-mode');
                 document.getElementById('blank-qr-header').style.display = 'none';
                 document.getElementById('total-score-display').innerText = calculateTotalScore(); 
