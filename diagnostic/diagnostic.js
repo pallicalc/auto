@@ -1,4 +1,4 @@
-// --- diagnostic.js (Final Production Version) ---
+// --- diagnostic.js (Final Production Version with Patient Caching) ---
 
 const firebaseConfig = {
     apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
@@ -30,8 +30,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (ref) {
         // SCENARIO A: PATIENT (Accessed via QR Link)
+        // This is where we capture the ID even if not logged in
         context.mode = 'shared'; 
         context.instId = ref;
+        
+        // Expose to window for eng.html PDF generator to find
+        window.context = context;
         
         // EXECUTE PATIENT VIEW LOGIC
         await finalizeAppSetup(context.instId);
@@ -47,6 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         if (['institutionUser', 'institutionAdmin'].includes(userData.role)) {
                             context.mode = 'institution'; 
                             context.instId = userData.institutionId;
+                            window.context = context; // Expose for PDF
                         }
                     }
                 } catch (e) { console.error("Auth Data Error:", e); }
@@ -141,7 +146,8 @@ function generateQR() {
         Q6: getVal('peace'),
         Q7: getVal('share'),
         Q8: getVal('info'),
-        Q9: getVal('practical'),   
+        Q9: getVal('practical'),
+        
         // MAP: 0->A, 1->B, 2->C. Default to A if error.
         Q10: ["A", "B", "C"][document.getElementById('completion_mode').value] || "A"
     };
@@ -177,17 +183,42 @@ function normalizeBranding(data) {
     };
 }
 
+// --- UPDATED HEADER LOGIC (MATCHES EDUCATION.JS) ---
 async function loadInstitutionHeader(instId) {
     try {
         const doc = await db.collection('institutions').doc(instId).get();
         if (doc.exists) { 
             const data = doc.data();
-            if (data.status === 'suspended') { localStorage.removeItem('institutionSettings'); return; }
+            
+            // Check Suspension
+            if (data.status === 'suspended') { 
+                localStorage.removeItem('institutionSettings'); 
+                localStorage.removeItem('cached_inst_' + instId);
+                return; 
+            }
+
+            // [CRITICAL ADDITION] Cache raw data for PDF generation (Like education.js)
+            // This allows eng.html to find the logo for the PDF
+            localStorage.setItem('cached_inst_' + instId, JSON.stringify(data));
+
+            // Normalize for display
             const cleanData = normalizeBranding(data);
             localStorage.setItem('institutionSettings', JSON.stringify(cleanData));
+            
             applyBranding(cleanData); 
         }
-    } catch (e) { loadPersonalHeader(); }
+    } catch (e) { 
+        console.warn("Fetch failed, trying cache", e);
+        // Fallback to cache if offline
+        const cached = localStorage.getItem('cached_inst_' + instId);
+        if (cached) {
+            const data = JSON.parse(cached);
+            const cleanData = normalizeBranding(data);
+            applyBranding(cleanData);
+        } else {
+            loadPersonalHeader(); 
+        }
+    }
 }
 
 function loadPersonalHeader() {
