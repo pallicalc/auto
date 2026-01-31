@@ -48,12 +48,12 @@
             <div class="print-page-1">
                 
                 <div class="question-card">
-                    <label class="q-label">Q1. What have been your main problems or concerns over the past 3 days?</label>
+                    <label class="q-label">Q1. Main concerns (Past 3 days):</label>
                     <textarea class="form-control" id="q1_input" rows="3" style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" placeholder="List concerns..."></textarea>
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q2. Below is a list of symptoms, which you may or may not have experienced. For each symptom, please tick one box that best describes how it has affected you over the past 3 days.</label>
+                    <label class="q-label">Q2. How have these symptoms affected you?</label>
                     
                     <label class="sub-label">Pain</label>
                     <div class="scale-container">
@@ -145,17 +145,43 @@
                         <div class="scale-opt"><input type="radio" name="mob" value="4" id="mob_4"><label for="mob_4">4<div class="scale-desc">Over- whelm.</div></label></div>
                     </div>
 
-                    <div class="mt-4 pt-3 border-top" style="margin-top:20px; border-top:1px solid #eee;">
-                        <label class="sub-label text-primary" style="font-weight:normal;">Please list any other symptoms not mentioned above, and tick one box to show how they have affected you over the past 3 days.</label>
-                        <input type="text" id="other_sym_label" class="form-control mb-2" maxlength="20" placeholder="e.g. Itchiness" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                        <div class="scale-container">
-                            <div class="scale-opt"><input type="radio" name="other_sym_val" value="0" id="oth_0"><label for="oth_0">0</label></div>
-                            <div class="scale-opt"><input type="radio" name="other_sym_val" value="1" id="oth_1"><label for="oth_1">1</label></div>
-                            <div class="scale-opt"><input type="radio" name="other_sym_val" value="2" id="oth_2"><label for="oth_2">2</label></div>
-                            <div class="scale-opt"><input type="radio" name="other_sym_val" value="3" id="oth_3"><label for="oth_3">3</label></div>
-                            <div class="scale-opt"><input type="radio" name="other_sym_val" value="4" id="oth_4"><label for="oth_4">4</label></div>
+                    <div class="mt-4 pt-3 border-top" style="margin-top:25px; border-top:2px solid #eee; padding-top: 20px;">
+                        <label class="q-label" style="margin-bottom: 15px;">Please list any other symptoms not mentioned above, and tick one box to show how they have affected you over the past 3 days.</label>
+
+                        <div class="other-symptom-row">
+                            <input type="text" id="other_sym_1_label" class="form-control other-input" maxlength="20" placeholder="e.g. Itchiness">
+                            <div class="scale-container other-scale">
+                                <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="0" id="oth1_0"><label for="oth1_0">0</label></div>
+                                <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="1" id="oth1_1"><label for="oth1_1">1</label></div>
+                                <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="2" id="oth1_2"><label for="oth1_2">2</label></div>
+                                <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="3" id="oth1_3"><label for="oth1_3">3</label></div>
+                                <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="4" id="oth1_4"><label for="oth1_4">4</label></div>
+                            </div>
+                        </div>
+
+                        <div class="other-symptom-row">
+                            <input type="text" id="other_sym_2_label" class="form-control other-input" maxlength="20" placeholder="e.g. Symptom 2">
+                            <div class="scale-container other-scale">
+                                <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="0" id="oth2_0"><label for="oth2_0">0</label></div>
+                                <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="1" id="oth2_1"><label for="oth2_1">1</label></div>
+                                <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="2" id="oth2_2"><label for="oth2_2">2</label></div>
+                                <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="3" id="oth2_3"><label for="oth2_3">3</label></div>
+                                <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="4" id="oth2_4"><label for="oth2_4">4</label></div>
+                            </div>
+                        </div>
+
+                        <div class="other-symptom-row">
+                            <input type="text" id="other_sym_3_label" class="form-control other-input" maxlength="20" placeholder="e.g. Symptom 3">
+                            <div class="scale-container other-scale">
+                                <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="0" id="oth3_0"><label for="oth3_0">0</label></div>
+                                <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="1" id="oth3_1"><label for="oth3_1">1</label></div>
+                                <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="2" id="oth3_2"><label for="oth3_2">2</label></div>
+                                <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="3" id="oth3_3"><label for="oth3_3">3</label></div>
+                                <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="4" id="oth3_4"><label for="oth3_4">4</label></div>
+                            </div>
                         </div>
                     </div>
+
                 </div>
             </div>
 
@@ -163,7 +189,7 @@
 
             <div class="print-page-2">
                 <div class="question-card">
-                    <label class="q-label">Q3. Have you been feeling anxious or worried about your illness or treatment?</label>
+                    <label class="q-label">Q3. Feeling anxious/worried about illness?</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="anxious" value="0" id="anx_0"><label for="anx_0">0<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="anxious" value="1" id="anx_1"><label for="anx_1">1</label></div>
@@ -174,7 +200,7 @@
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q4. Have any of your family or friends been anxious or worried about you?</label>
+                    <label class="q-label">Q4. Family/friends anxious about you?</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="family" value="0" id="fam_0"><label for="fam_0">0<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="family" value="1" id="fam_1"><label for="fam_1">1</label></div>
@@ -185,7 +211,7 @@
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q5. Have you been feeling depressed?</label>
+                    <label class="q-label">Q5. Feeling depressed?</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="depressed" value="0" id="dep_0"><label for="dep_0">0<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="depressed" value="1" id="dep_1"><label for="dep_1">1</label></div>
@@ -207,7 +233,7 @@
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q7. Have you been able to share how you are feeling with your family or friends as much as you wanted?</label>
+                    <label class="q-label">Q7. Able to share feelings?</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="share" value="4" id="sha_0"><label for="sha_0">4<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="share" value="3" id="sha_1"><label for="sha_1">3</label></div>
@@ -218,7 +244,7 @@
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q8. Have you had as much information as you wanted?</label>
+                    <label class="q-label">Q8. Had enough information?</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="info" value="4" id="inf_0"><label for="inf_0">4<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="info" value="3" id="inf_1"><label for="inf_1">3</label></div>
@@ -229,7 +255,7 @@
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q9. Have any practical problems resulting from your illness been addressed? (such as financial or personal)</label>
+                    <label class="q-label">Q9. Practical problems addressed?</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="practical" value="4" id="pra_0"><label for="pra_0">4<div class="scale-desc">Not addressed</div></label></div>
                         <div class="scale-opt"><input type="radio" name="practical" value="3" id="pra_1"><label for="pra_1">3</label></div>
@@ -240,7 +266,7 @@
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q10. How did you complete this questionnaire?</label>
+                    <label class="q-label">Q10. How did you complete this?</label>
                     <select id="completion_mode" class="form-select" style="font-size:14px; padding:8px; width:100%; border:1px solid #ced4da; border-radius:6px;">
                         <option value="0">On my own</option>
                         <option value="1">With help from a friend or relative</option>
@@ -277,29 +303,31 @@
 
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
-            document.getElementById('iposForm').addEventListener('change', calculateTotalScore);
+    <footer class="legal-footer">
+        <div class="footer-inner">
+            <div class="screen-footer-content no-print">
+                <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
+                <div class="author-info">
+                    <span class="author-name">Author: Alison Chai</span>
+                    <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
+                </div>
+                <p class="legal-warning">Clinical Tool. For Professional Use Only.</p>
+            </div>
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const ref = urlParams.get('ref');
-            if (ref) {
-                document.getElementById('backLink').href = `../../diagnostic.html?ref=${ref}`;
-                await loadInstitutionData(ref);
-            }
-            
-            // Create "Blank Form" QR Code (points to this page)
-            new QRCode(document.getElementById("blank-qrcode"), { 
-                text: window.location.href, 
-                width: 90, 
-                height: 90 
-            });
-        });
+            <div class="print-branding" id="print-branding-container">
+                <div class="print-logo-row" id="footer-print-logos"></div>
+                <div class="print-info-row">
+                    <strong id="footer-print-name"></strong>
+                    <span id="footer-print-contact" style="margin-left:5px; color:#666;"></span>
+                </div>
+                <hr class="print-divider">
+                
+                <div style="text-align:right; font-size:9px; color:#888;">
+                    &copy; 2026 Alivioscript Solutions | Alison Chai (RPh 9093)
+                </div>
+            </div>
+        </div>
+    </footer>
 
-        function printBlankForm() {
-            window.print(); 
-        }
-    </script>
 </body>
 </html>
