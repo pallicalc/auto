@@ -161,33 +161,33 @@
                     <div class="other-symptom-row">
                         <input type="text" id="other_sym_1_label" class="form-control other-input" maxlength="20" placeholder="e.g. Itchiness" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                         <div class="scale-container">
-                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="0" id="oth1_0"><label for="oth1_0">0</label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="0" id="oth1_0"><label for="oth1_0">0<div class="scale-desc">Not at all</div></label></div>
                             <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="1" id="oth1_1"><label for="oth1_1">1</label></div>
                             <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="2" id="oth1_2"><label for="oth1_2">2</label></div>
                             <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="3" id="oth1_3"><label for="oth1_3">3</label></div>
-                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="4" id="oth1_4"><label for="oth1_4">4</label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="4" id="oth1_4"><label for="oth1_4">4<div class="scale-desc">Over- whelm.</div></label></div>
                         </div>
                     </div>
 
                     <div class="other-symptom-row">
                         <input type="text" id="other_sym_2_label" class="form-control other-input" maxlength="20" placeholder="e.g. Symptom 2" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                         <div class="scale-container">
-                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="0" id="oth2_0"><label for="oth2_0">0</label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="0" id="oth2_0"><label for="oth2_0">0<div class="scale-desc">Not at all</div></label></div>
                             <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="1" id="oth2_1"><label for="oth2_1">1</label></div>
                             <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="2" id="oth2_2"><label for="oth2_2">2</label></div>
                             <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="3" id="oth2_3"><label for="oth2_3">3</label></div>
-                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="4" id="oth2_4"><label for="oth2_4">4</label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="4" id="oth2_4"><label for="oth2_4">4<div class="scale-desc">Over- whelm.</div></label></div>
                         </div>
                     </div>
 
                     <div class="other-symptom-row">
                         <input type="text" id="other_sym_3_label" class="form-control other-input" maxlength="20" placeholder="e.g. Symptom 3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                         <div class="scale-container">
-                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="0" id="oth3_0"><label for="oth3_0">0</label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="0" id="oth3_0"><label for="oth3_0">0<div class="scale-desc">Not at all</div></label></div>
                             <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="1" id="oth3_1"><label for="oth3_1">1</label></div>
                             <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="2" id="oth3_2"><label for="oth3_2">2</label></div>
                             <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="3" id="oth3_3"><label for="oth3_3">3</label></div>
-                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="4" id="oth3_4"><label for="oth3_4">4</label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="4" id="oth3_4"><label for="oth3_4">4<div class="scale-desc">Over- whelm.</div></label></div>
                         </div>
                     </div>
                 </div>
@@ -314,7 +314,7 @@
             
             const printWindow = window.open('', '_blank');
             if (!printWindow) {
-                alert("Sila benarkan 'popups' untuk melihat PDF.");
+                alert("Please allow 'popups' to view the PDF.");
                 loading.style.display = 'none';
                 return;
             }
@@ -361,7 +361,7 @@
                 const A4_H = 841.89;
                 const FOOTER_H = 80;
 
-                // C. STAMP FOOTER (Matches Layout)
+                // C. STAMP FOOTER (Matches Layout for all pages)
                 for (const page of embeddedPages) {
                     const newPage = newPdf.addPage([A4_W, A4_H]);
                     
@@ -401,13 +401,13 @@
                                     height: 35
                                 });
                                 currentX += lWidth + 15;
-                            } catch (e) { console.warn("Ralat Logo", e); }
+                            } catch (e) { console.warn("Logo Error", e); }
                         }
                     }
 
                     // 4. TEXT (RIGHT)
                     const nameStr = footerData.name || "PalliCalc Patient Education";
-                    const contactStr = footerData.contact ? `Hubungi: ${footerData.contact}` : "";
+                    const contactStr = footerData.contact ? `Contact: ${footerData.contact}` : "";
                     
                     const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
                     newPage.drawText(nameStr, { 
@@ -447,7 +447,7 @@
 
             } catch (e) {
                 printWindow.close();
-                alert("Ralat: " + e.message);
+                alert("Error: " + e.message);
             } finally {
                 loading.style.display = 'none';
             }
