@@ -11,7 +11,7 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    font-size: 16px; /* Larger base font for screen */
+    font-size: 16px; 
 }
 
 .main-container {
@@ -108,17 +108,17 @@ body {
 .score-val { font-size: 32px; font-weight: 800; color: #00c6f7; }
 
 /* =========================================
-   5. STANDARD FOOTER (Web View)
+   5. STANDARD FOOTER (Web View - Small)
    ========================================= */
 .standard-footer {
     width: 100%; background-color: #f8f9fa; border-top: 1px solid #dee2e6;
-    padding: 20px 0; text-align: center; margin-top: auto;
+    padding: 15px 0; text-align: center; margin-top: auto;
 }
 .footer-inner { max-width: 100%; padding: 0 15px; }
-.screen-footer-content .f-copyright { color: #6c757d; font-weight: 700; margin: 0 0 4px 0; font-size: 14px; }
-.screen-footer-content .f-author { color: #212529; font-weight: 700; margin: 0 0 4px 0; font-size: 14px; }
-.screen-footer-content .f-creds { color: #6c757d; margin: 0 0 8px 0; font-size: 13px; }
-.screen-footer-content .f-warning { color: #a73c3c; font-weight: 700; margin: 0; font-size: 13px; }
+.screen-footer-content .f-copyright { color: #6c757d; font-weight: 700; margin: 0 0 2px 0; font-size: 12px; }
+.screen-footer-content .f-author { color: #212529; font-weight: 700; margin: 0 0 2px 0; font-size: 12px; }
+.screen-footer-content .f-creds { color: #6c757d; margin: 0 0 5px 0; font-size: 12px; }
+.screen-footer-content .f-warning { color: #a73c3c; font-weight: 700; margin: 0; font-size: 12px; }
 
 #blank-qr-header, #qr-section { display: none; }
 @media (max-width: 600px) {
@@ -127,11 +127,11 @@ body {
 }
 
 /* =========================================
-   6. PRINT STYLES (Optimized for 12pt / 2 Pages)
+   6. PRINT STYLES (Strict 2-Page Fit)
    ========================================= */
 @media print {
     /* 1. Base Settings */
-    body { background: white; font-size: 12pt; line-height: 1.3; color: #000; }
+    body { background: white; font-size: 12pt; line-height: 1.2; color: #000; }
     .no-print, #qr-section, .header { display: none !important; }
     
     .main-container {
@@ -139,55 +139,76 @@ body {
         max-width: 100%; width: 100%;
     }
     
-    /* 2. Compact Print Header (IPOS Title + QR) */
+    /* 2. Compact Print Header */
     #blank-qr-header { 
         display: flex !important; justify-content: space-between; align-items: center;
         margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #333;
     }
     .print-only-title { margin: 0; font-size: 24px; font-weight: 800; color: #000; }
     #blank-qr-header > div { border: none !important; padding: 0 !important; gap: 10px !important; }
-    #blank-qr-header h4, #blank-qr-header small { display: none !important; } /* Clean look */
-    #blank-qrcode img { width: 70px !important; height: 70px !important; }
+    #blank-qr-header h4, #blank-qr-header small { display: none !important; }
+    #blank-qrcode img { width: 60px !important; height: 60px !important; }
 
-    /* 3. Form Layout Optimization */
+    /* 3. Base Form Layout */
     .question-card {
         padding: 5px 0; margin-bottom: 5px; border: none; 
         border-bottom: 1px dotted #ccc; border-radius: 0;
     }
-    .q-label { margin-bottom: 4px; font-size: 13pt; color: #000; }
+    .q-label { margin-bottom: 3px; font-size: 13pt; color: #000; font-weight: 700; }
     
-    /* Reduce Q1 Text Area Height to save space */
-    #q1_input { height: 60px !important; min-height: 60px !important; }
+    /* Reduce Q1 Text Area Height */
+    #q1_input { height: 50px !important; min-height: 50px !important; }
 
-    /* 4. Page 1 (Q2) Specific Optimizations */
-    /* Add Scale Header Legend to Q2 Label */
+    /* =========================================
+       4. PAGE 1 SPECIFIC (Aggressively Compact)
+       ========================================= */
+    
+    /* Legend Header for Q2 */
     .print-page-1 .question-card:nth-of-type(2) .q-label::after {
         content: " (Scale: 0=Not at all ... 4=Overwhelming)";
-        font-size: 11pt; font-weight: 400; color: #555;
+        font-size: 10pt; font-weight: 400; color: #555; display: inline-block; margin-left: 5px;
+    }
+
+    /* Sub-labels closer to buttons */
+    .print-page-1 .sub-label {
+        margin-top: 2px; margin-bottom: 2px; font-size: 11pt; color: #222;
     }
     
-    /* Hide repetitive text labels in Q2 only */
+    /* Hide repetitive descriptions in Q2 */
     .print-page-1 .scale-desc { display: none !important; }
 
-    /* Make Q2 buttons big and square */
+    /* Small, tight scale container */
+    .print-page-1 .scale-container { margin: 0 0 4px 0; gap: 4px; }
+
+    /* SMALL Buttons for Page 1 */
     .print-page-1 .scale-opt label {
-        height: 32px !important;
-        font-size: 14pt !important;
+        height: 24px !important;       /* Reduced height */
+        line-height: 22px !important;  /* Center text */
+        font-size: 11pt !important;    /* Smaller, readable font */
         font-weight: 700;
         background: white !important;
-        border: 1px solid #333 !important;
+        border: 1px solid #555 !important;
         color: #000 !important;
         border-radius: 4px !important;
     }
+    .print-page-1 .scale-opt input:checked + label {
+        background: #ccc !important;
+        border: 2px solid #000 !important;
+    }
 
-    /* 5. Page 2 (Q3-Q10) Optimizations */
-    /* Keep descriptive text for Page 2 */
+    /* =========================================
+       5. PAGE 2 SPECIFIC (Normal Spacing)
+       ========================================= */
+    
+    .print-page-2 .question-card { margin-bottom: 15px; border-bottom: none; }
+    
+    /* Keep scale descriptions for mixed scales */
     .print-page-2 .scale-desc { display: block !important; font-size: 9pt; }
     
-    /* Slightly wider layout for Page 2 */
-    .print-page-2 .question-card { margin-bottom: 10px; padding-bottom: 10px; }
+    /* Larger buttons for Page 2 since space allows */
     .print-page-2 .scale-opt label {
-        height: 40px !important; /* Taller buttons for mixed scales */
+        height: 38px !important;
+        font-size: 12pt !important;
         background: white !important;
         border: 1px solid #333 !important;
         color: #000 !important;
@@ -198,30 +219,32 @@ body {
         border: 2px solid #000 !important;
     }
 
-    /* 6. Footer (Snug at bottom of Page 2) */
+    /* =========================================
+       6. PRINT FOOTER (Minimal & Bottom)
+       ========================================= */
     .standard-footer {
         position: static;
         background: transparent; border: none;
         padding: 10px 0 0 0;
         text-align: left;
-        margin-top: 15px;
+        margin-top: 10px;
     }
     .screen-footer-content { display: none !important; }
     
     #print-branding-container { display: block !important; width: 100%; }
-    .print-branding-top { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; }
+    .print-branding-top { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px; }
     .print-logo-row { display: flex; align-items: center; gap: 10px; }
     .print-footer-logo { height: 35px; width: auto; }
     
     .print-info-row { text-align: right; }
-    #print-inst-name { font-size: 14px; font-weight: bold; color: #000; display: block; margin-bottom: 2px; }
-    #print-inst-contact { font-size: 11px; color: #444; }
+    #print-inst-name { font-size: 13px; font-weight: bold; color: #000; display: block; margin-bottom: 1px; }
+    #print-inst-contact { font-size: 10px; color: #555; }
     
     .print-copyright-line {
-        text-align: center; font-size: 9px; color: #666;
-        border-top: 1px solid #ccc; padding-top: 8px;
+        text-align: center; font-size: 9px; color: #777;
+        border-top: 1px solid #ccc; padding-top: 6px;
     }
 
-    /* 7. Utility */
+    /* 7. Utilities */
     .page-break { page-break-after: always; display: block; height: 1px; }
 }
