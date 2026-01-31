@@ -1,4 +1,4 @@
-// --- diagnostic.js (Unified with Education Logic) ---
+// --- diagnostic.js (Synced with Education Logic) ---
 
 const firebaseConfig = {
     apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
@@ -8,6 +8,8 @@ const firebaseConfig = {
     messagingSenderId: "347532270864",
     appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
 };
+
+// Initialize Firebase only once
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
@@ -15,15 +17,9 @@ const auth = firebase.auth();
 // Global context
 let context = { mode: 'personal', instId: null };
 
-// --- 1. INITIALIZATION & HEADER/FOOTER ---
+// --- 1. INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', async () => {
-    // A. INJECT FOOTER (Matches Education HTML + PDF Branding)
-    injectStandardFooter();
-
-    // B. HANDLE URL PARAMS & AUTH
-    const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get('ref');
-
+    
     // Display Date
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
@@ -32,23 +28,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     const form = document.getElementById('iposForm');
     if(form) form.addEventListener('change', calculateTotalScore);
 
-    // C. LOAD INSTITUTION DATA
+    // --- LOGIC FROM EDUCATION.JS ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+
     if (ref) {
         context.mode = 'shared'; 
         context.instId = ref;
         
         const backLink = document.getElementById('backLink');
         if (backLink) backLink.href = `../../diagnostic.html?ref=${ref}`;
-        
-        // Generate QR for blank form
+
+        // QR for blank form
         const blankQr = document.getElementById("blank-qrcode");
-        if(blankQr) {
-            new QRCode(blankQr, { text: window.location.href, width: 90, height: 90 });
-        }
+        if(blankQr) new QRCode(blankQr, { text: window.location.href, width: 90, height: 90 });
 
         await loadInstitutionHeader();
     } else {
-        // Fallback for personal/admin usage
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 try {
@@ -58,7 +54,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         context.instId = snap.data().institutionId;
                         await loadInstitutionHeader();
                     }
-                } catch (e) { console.error("User Auth Error:", e); }
+                } catch (e) {
+                    console.error("User Auth Error:", e);
+                }
             }
             if (context.mode === 'personal') {
                 loadPersonalHeader();
@@ -67,39 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// --- 2. HEADER & FOOTER LOGIC (COPIED FROM EDUCATION.JS) ---
-
-function injectStandardFooter() {
-    // 1. Base Footer (Author + Disclaimer)
-    const baseFooterHTML = `
-        <footer class="standard-footer">
-            <div class="footer-inner">
-                <div class="print-branding" id="print-branding-container" style="display:none;">
-                    <div class="print-logo-row" id="print-logo-row"></div>
-                    <div class="print-info-row">
-                        <strong id="print-inst-name"></strong>
-                        <span id="print-inst-contact"></span>
-                    </div>
-                    <hr class="print-divider">
-                </div>
-
-                <p style="margin: 0 0 5px; font-weight: bold; color: #343a40;">&copy; 2026 Alivioscript Solutions</p>
-                <div class="author-info">
-                    Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838
-                </div>
-                <div class="footer-disclaimer">
-                    <strong>Disclaimer:</strong> This tool is for professional clinical use.
-                </div>
-            </div>
-        </footer>
-    `;
-    
-    // Remove existing footer if any
-    const existing = document.querySelector('footer');
-    if(existing) existing.remove();
-
-    document.body.insertAdjacentHTML('beforeend', baseFooterHTML);
-}
+// --- 2. HEADER LOGIC (EXACT COPY OF EDUCATION.JS) ---
 
 async function loadInstitutionHeader() {
     if (!context.instId) return;
@@ -108,7 +74,7 @@ async function loadInstitutionHeader() {
         if (doc.exists) { 
             const data = doc.data();
             
-            // 🛑 SUSPENSION CHECK
+            // 🛑 CRITICAL TWEAK: CHECK SUSPENSION STATUS
             if (data.status === 'suspended') {
                 console.log("Institution suspended. Wiping branding data.");
                 localStorage.removeItem('cached_inst_' + context.instId);
@@ -116,10 +82,10 @@ async function loadInstitutionHeader() {
                 return; 
             }
 
-            // Cache Data
+            // --- CACHE FOR OFFLINE ---
             localStorage.setItem('cached_inst_' + context.instId, JSON.stringify(data));
             
-            // Sync Settings
+            // Sync with general settings
             localStorage.setItem('institutionSettings', JSON.stringify({
                 name: data.headerName || data.name,
                 contact: data.headerContact || data.contact,
@@ -127,12 +93,16 @@ async function loadInstitutionHeader() {
                 logo: data.logo
             }));
 
-            applyBranding(data); 
+            renderHeader(data); 
         }
     } catch (e) { 
-        console.warn("Header Fetch Error (Offline):", e);
+        console.warn("Header Fetch Error (Switching to Offline Cache):", e);
         const cached = localStorage.getItem('cached_inst_' + context.instId);
-        if (cached) applyBranding(JSON.parse(cached));
+        if (cached) {
+            renderHeader(JSON.parse(cached));
+        } else {
+            loadPersonalHeader();
+        }
     }
 }
 
@@ -147,45 +117,61 @@ function loadPersonalHeader() {
                 headerLogos: settings.logos || (settings.logo ? [settings.logo] : []),
                 logo: settings.logo 
             };
-            applyBranding(data);
+            renderHeader(data);
         } catch (e) { console.error("Local Storage Parse Error", e); }
     }
 }
 
-function applyBranding(data) {
+function renderHeader(data) {
+    // 1. Render Top Header (Screen)
+    const container = document.getElementById('inst-header-container');
+    const nameEl = document.getElementById('inst-name-display');
+    const contactEl = document.getElementById('inst-contact-display');
+    const logoEl = document.getElementById('inst-logo-img');
+
     const name = data.headerName || data.name;
-    const logo = (data.headerLogos && data.headerLogos[0]) || data.logo;
-    const logos = data.headerLogos || (data.logo ? [data.logo] : []);
+    if (name && nameEl) nameEl.textContent = name;
+
     const contact = data.headerContact || data.contact;
-
-    // 1. Apply to Header
-    if(name) {
-        document.getElementById('inst-name-display').textContent = name;
-    }
-    if(contact) document.getElementById('inst-contact-display').textContent = contact;
-    if(logo) {
-        document.getElementById('inst-logo-img').src = logo;
-        document.getElementById('inst-logo-img').style.display = 'block';
-        document.getElementById('inst-header-container').style.display = 'flex';
-    }
-
-    // 2. Apply to Print Footer (The "PDF Footer" Requirement)
-    if(name) document.getElementById('print-inst-name').textContent = name;
-    if(contact) document.getElementById('print-inst-contact').textContent = " | " + contact;
+    if (contact && contactEl) contactEl.textContent = contact;
     
-    const logoRow = document.getElementById('print-logo-row');
-    if(logos.length > 0 && logoRow) {
-        logoRow.innerHTML = '';
-        logos.forEach(url => {
-            const img = document.createElement('img');
-            img.src = url;
-            img.className = 'print-footer-logo';
-            logoRow.appendChild(img);
+    const logoSrc = (data.headerLogos && data.headerLogos.length > 0) ? data.headerLogos[0] : data.logo;
+    
+    if (logoSrc && logoEl && container) { 
+        logoEl.src = logoSrc; 
+        logoEl.style.display = 'block'; 
+        container.style.display = 'flex'; 
+    }
+
+    // 2. Render Print Footer (Hidden on screen, visible on PDF)
+    updatePrintFooter(name, contact, data.headerLogos || [logoSrc]);
+}
+
+// Helper to populate the Print Footer
+function updatePrintFooter(name, contact, logos) {
+    const footerName = document.getElementById('footer-print-name');
+    const footerContact = document.getElementById('footer-print-contact');
+    const footerLogos = document.getElementById('footer-print-logos');
+
+    if (footerName && name) footerName.innerText = name;
+    if (footerContact && contact) footerContact.innerText = contact;
+
+    if (footerLogos && logos && logos.length > 0) {
+        footerLogos.innerHTML = '';
+        logos.forEach(src => {
+            if(src) {
+                const img = document.createElement('img');
+                img.src = src;
+                img.style.height = '25px';
+                img.style.marginRight = '10px';
+                footerLogos.appendChild(img);
+            }
         });
     }
 }
 
 // --- 3. SCORING & UTILITIES ---
+
 function calculateTotalScore() {
     let total = 0;
     const checkedInputs = document.querySelectorAll('#iposForm input[type="radio"]:checked');

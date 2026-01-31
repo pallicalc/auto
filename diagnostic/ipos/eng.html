@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
@@ -277,41 +278,30 @@
     </div>
 
     <footer class="legal-footer">
-        <div style="max-width:480px; margin:0 auto; padding:0 20px;">
-            <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
-            <div class="author-info">
-                <span class="author-name">Author: Alison Chai</span>
-                <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
+        <div class="footer-inner">
+            <div class="screen-footer-content no-print">
+                <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
+                <div class="author-info">
+                    <span class="author-name">Author: Alison Chai</span>
+                    <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
+                </div>
+                <p class="legal-warning">Clinical Tool. For Professional Use Only.</p>
             </div>
-            <p class="legal-warning">Clinical Tool. For Professional Use Only.</p>
-            <div id="footer-inst-name" style="margin-top:8px; font-weight:bold; color:#0061f2; font-size:11px;"></div>
+
+            <div class="print-branding" id="print-branding-container">
+                <div class="print-logo-row" id="footer-print-logos"></div>
+                <div class="print-info-row">
+                    <strong id="footer-print-name"></strong>
+                    <span id="footer-print-contact" style="margin-left:5px; color:#666;"></span>
+                </div>
+                <hr class="print-divider">
+                
+                <div style="text-align:right; font-size:9px; color:#888;">
+                    &copy; 2026 Alivioscript Solutions | Alison Chai (RPh 9093)
+                </div>
+            </div>
         </div>
     </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
-            document.getElementById('iposForm').addEventListener('change', calculateTotalScore);
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const ref = urlParams.get('ref');
-            if (ref) {
-                document.getElementById('backLink').href = `../../diagnostic.html?ref=${ref}`;
-                await loadInstitutionData(ref);
-            }
-            
-            // Create "Blank Form" QR Code (points to this page)
-            new QRCode(document.getElementById("blank-qrcode"), { 
-                text: window.location.href, 
-                width: 90, 
-                height: 90 
-            });
-        });
-
-        // --- NATIVE PRINT FUNCTION ---
-        function printBlankForm() {
-            window.print(); 
-        }
-    </script>
 </body>
 </html>
