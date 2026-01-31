@@ -16,42 +16,54 @@ const auth = firebase.auth();
 let context = { mode: 'personal', instId: null };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // A. INJECT NEW FOOTER
     injectStandardFooter();
 
-    // B. DATE & FORM LOGIC
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
     const form = document.getElementById('iposForm');
     if(form) form.addEventListener('change', calculateTotalScore);
 
-    // C. AUTH & HEADER LOGIC
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
 
-    // NEW: Prepare Print Header Layout
+    // --- 1. PREPARE PRINT HEADER (Title + Subtitle) ---
     const blankQrHeader = document.getElementById('blank-qr-header');
     if (blankQrHeader) {
-        // Create container for text
         const textContainer = document.createElement('div');
         textContainer.className = 'print-header-text';
         
-        // Title
         const printTitle = document.createElement('h1');
         printTitle.innerText = 'IPOS Assessment';
         printTitle.className = 'print-only-title';
         
-        // Subtitle
         const printSubtitle = document.createElement('p');
         printSubtitle.innerText = 'Integrated Palliative care Outcome Scale';
         printSubtitle.className = 'print-only-subtitle';
 
         textContainer.appendChild(printTitle);
         textContainer.appendChild(printSubtitle);
-
-        // Insert text container before the QR container
         blankQrHeader.insertBefore(textContainer, blankQrHeader.firstChild);
+    }
+
+    // --- 2. PREPARE PRINT Q2 HEADER (Scale Labels) ---
+    // This inserts the row "Not at all ... Overwhelmingly" at the top of Q2
+    const q2Card = document.querySelector('.print-page-1 .question-card:nth-of-type(2)');
+    if (q2Card) {
+        const headerRow = document.createElement('div');
+        headerRow.className = 'print-q2-header-row';
+        headerRow.innerHTML = `
+            <div class="p-spacer"></div> <div class="p-scale-labels">
+                <span>Not at all</span>
+                <span>Slightly</span>
+                <span>Moderately</span>
+                <span>Severely</span>
+                <span>Overwhelmingly</span>
+            </div>
+        `;
+        // Insert after the main Q2 label
+        const qLabel = q2Card.querySelector('.q-label');
+        if (qLabel) qLabel.parentNode.insertBefore(headerRow, qLabel.nextSibling);
     }
 
     if (ref) {
@@ -61,9 +73,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const backLink = document.getElementById('backLink');
         if (backLink) backLink.href = `../../diagnostic.html?ref=${ref}`;
 
-        // QR Code Generation (Size increased to 120 as requested)
+        // QR SIZE set to 100 as requested
         const blankQr = document.getElementById("blank-qrcode");
-        if(blankQr) new QRCode(blankQr, { text: window.location.href, width: 120, height: 120 }); 
+        if(blankQr) new QRCode(blankQr, { text: window.location.href, width: 100, height: 100 }); 
 
         await loadInstitutionHeader();
     } else {
@@ -83,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// --- UPDATED FOOTER INJECTION ---
+// --- FOOTER INJECTION ---
 function injectStandardFooter() {
     const footerHTML = `
         <footer class="standard-footer">
@@ -165,7 +177,7 @@ function applyBranding(data) {
     const contact = data.headerContact || data.contact;
     const logoSrc = logos[0];
 
-    // Screen Header
+    // Screen
     if(name) document.getElementById('inst-name-display').textContent = name;
     if(contact) document.getElementById('inst-contact-display').textContent = contact;
     if(logoSrc) {
@@ -201,7 +213,6 @@ function calculateTotalScore() {
 }
 
 function generateQR() {
-    // ... (Existing QR Logic) ...
     const getVal = (name) => {
         const el = document.querySelector(`input[name="${name}"]:checked`);
         return el ? parseInt(el.value) : 0;

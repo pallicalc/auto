@@ -125,7 +125,7 @@ body {
 }
 
 /* =========================================
-   6. PRINT STYLES (Strict 2-Page + Table Layout)
+   6. PRINT STYLES (Strict 2-Page Fit)
    ========================================= */
 @media print {
     body { background: white; font-size: 12pt; line-height: 1.2; color: #000; }
@@ -136,112 +136,71 @@ body {
         max-width: 100%; width: 100%;
     }
     
-    /* --- Print Header --- */
+    /* PRINT HEADER */
     #blank-qr-header { 
         display: flex !important; justify-content: space-between; align-items: flex-start;
-        margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;
+        margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #333;
     }
     .print-header-text { display: flex; flex-direction: column; justify-content: center; }
     .print-only-title { margin: 0; font-size: 32px; font-weight: 800; color: #000; line-height: 1.1; }
     .print-only-subtitle { margin: 4px 0 0 0; font-size: 12px; font-weight: 400; color: #555; }
     
-    #blank-qr-header > div:last-child { border: none !important; padding: 0 !important; gap: 0 !important; }
+    #blank-qr-header > div:last-child { border: none !important; padding: 0 !important; }
     #blank-qr-header h4, #blank-qr-header small { display: none !important; }
-    #blank-qrcode { border: 1px solid #000; padding: 4px; display: inline-block; }
-    #blank-qrcode img { width: 120px !important; height: 120px !important; display: block; }
+    
+    /* QR Code Border & Size */
+    #blank-qrcode { border: 2px solid #000; padding: 4px; display: inline-block; }
+    #blank-qrcode img { width: 100px !important; height: 100px !important; display: block; }
 
-    /* --- Base Form Layout --- */
+    /* Base Form Layout */
     .question-card {
-        padding: 5px 0; margin-bottom: 10px; border: none; 
+        padding: 5px 0; margin-bottom: 5px; border: none; 
         border-bottom: 1px dotted #ccc; border-radius: 0;
     }
-    .q-label { margin-bottom: 5px; font-size: 13pt; color: #000; font-weight: 700; }
+    .q-label { margin-bottom: 3px; font-size: 13pt; color: #000; font-weight: 700; }
     #q1_input { height: 50px !important; min-height: 50px !important; }
 
     /* =========================================
-       PAGE 1 - Q2 TABLE TRANSFORMATION
+       PAGE 1 SPECIFIC (Side-by-Side Table Layout)
        ========================================= */
-    /* Transform Q2 Card into a Grid Table */
-    .print-page-1 .question-card:nth-of-type(2) {
-        display: grid !important;
-        grid-template-columns: 240px 1fr !important;
-        gap: 0 !important;
-        border: none !important;
-        padding-top: 30px !important; /* Space for Header */
-        position: relative !important;
+    
+    /* 1. Header Row (Injected by JS) */
+    .print-q2-header-row {
+        display: flex; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 2px;
+    }
+    .p-spacer { width: 40%; } /* Space for Label column */
+    .p-scale-labels { width: 60%; display: flex; justify-content: space-between; }
+    .p-scale-labels span { 
+        font-size: 9pt; font-weight: 700; text-align: center; width: 20%; 
     }
 
-    /* THE HEADER ROW (Pseudo Element) */
-    .print-page-1 .question-card:nth-of-type(2)::before {
-        content: "Not_at_all Slightly Moderately Severely Overwhelmingly" !important;
-        position: absolute !important;
-        top: 0; left: 240px; right: 0;
-        display: flex !important; justify-content: space-between !important;
-        font-size: 10pt !important; font-weight: bold !important; font-style: italic !important;
-        padding: 0 15px !important;
-    }
-    /* Note: "Not_at_all" uses underscores to be treated as one word for simple spacing, visual tweak */
-
-    /* The Symptom Labels (Left Column) */
+    /* 2. Symptom Rows (Flex Layout) */
     .print-page-1 .sub-label {
-        grid-column: 1 !important;
-        border-bottom: 1px solid #000 !important;
-        margin: 0 !important; padding: 8px 5px !important;
-        font-size: 11pt !important;
-        display: flex !important; align-items: center !important;
-        height: 100% !important;
+        width: 40%; float: left; /* Symptom on Left */
+        margin: 0; font-size: 11pt; color: #222; padding-top: 4px;
     }
-
-    /* The Scale Container (Right Column) */
     .print-page-1 .scale-container {
-        grid-column: 2 !important;
-        display: grid !important; grid-template-columns: repeat(5, 1fr) !important;
-        border-bottom: 1px solid #000 !important;
-        margin: 0 !important; padding: 8px 0 !important;
-        gap: 0 !important; align-items: center !important;
+        width: 60%; float: right; /* Buttons on Right */
+        margin: 0 0 8px 0; gap: 4px;
+        display: flex; justify-content: space-between;
     }
+    /* Clearfix for float layout */
+    .print-page-1 .question-card:after { content: ""; display: table; clear: both; }
 
-    /* HIDE Description Text in Q2 */
+    /* 3. Button Styling */
+    .print-page-1 .scale-opt label {
+        height: 24px !important; line-height: 22px !important; font-size: 11pt !important;
+        font-weight: 700; background: white !important; border: 1px solid #555 !important;
+        color: #000 !important; border-radius: 4px !important;
+    }
+    .print-page-1 .scale-opt input:checked + label { background: #ccc !important; border: 2px solid #000 !important; }
     .print-page-1 .scale-desc { display: none !important; }
 
-    /* The Checkbox Style (Number + Box) */
-    .print-page-1 .scale-opt label {
-        display: flex !important; align-items: center !important; justify-content: center !important;
-        background: transparent !important; border: none !important;
-        height: auto !important; width: 100% !important; padding: 0 !important;
-        font-weight: normal !important; font-size: 12pt !important;
-    }
-    /* The Box */
-    .print-page-1 .scale-opt label::after {
-        content: "" !important; display: inline-block !important;
-        width: 16px !important; height: 16px !important;
-        border: 1px solid #000 !important; margin-left: 8px !important;
-    }
-    .print-page-1 .scale-opt input:checked + label::after { background: #000 !important; }
-
-    /* SPECIAL: Handle 'Other Symptoms' Row within the grid */
-    .print-page-1 .question-card:nth-of-type(2) > div.mt-4 {
-        grid-column: 1 / -1 !important;
-        display: grid !important; grid-template-columns: 240px 1fr !important;
-        border-bottom: 1px solid #000 !important; margin: 0 !important;
-        border-top: none !important;
-    }
-    /* Label + Input */
-    .print-page-1 .question-card:nth-of-type(2) > div.mt-4 .sub-label { border: none !important; }
-    #other_sym_label {
-        border: none !important; border-bottom: 1px dotted #000 !important;
-        font-size: 11pt !important; width: 95% !important;
-        padding: 0 !important; height: 20px !important;
-    }
-    .print-page-1 .question-card:nth-of-type(2) > div.mt-4 .scale-container { border: none !important; }
-
-
     /* =========================================
-       PAGE 2 (Mixed Scales)
+       PAGE 2 SPECIFIC
        ========================================= */
     .print-page-2 .question-card { margin-bottom: 15px; border-bottom: none; }
     .print-page-2 .scale-desc { display: block !important; font-size: 9pt; }
-    
     .print-page-2 .scale-opt label {
         height: 38px !important; font-size: 12pt !important;
         background: white !important; border: 1px solid #333 !important; color: #000 !important;
@@ -249,12 +208,11 @@ body {
     .print-page-2 .scale-opt input:checked + label { background: #ddd !important; border: 2px solid #000 !important; }
 
     /* =========================================
-       PRINT FOOTER (Fixed Bottom)
+       PRINT FOOTER (FIXED)
        ========================================= */
     .standard-footer {
         position: fixed; bottom: 0; left: 0; width: 100%;
-        background: white; border: none;
-        padding: 5px 30px; margin: 0;
+        background: white; border: none; padding: 5px 30px;
         z-index: 9999;
     }
     .screen-footer-content { display: none !important; }
@@ -265,7 +223,6 @@ body {
         display: flex; justify-content: space-between; align-items: flex-end; 
         margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 5px; 
     }
-    
     .footer-left { display: flex; align-items: center; gap: 10px; }
     .print-footer-logo { height: 35px; width: auto; }
     
