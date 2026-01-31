@@ -211,4 +211,68 @@ body {
     body { background: white; }
     .no-print, .legal-footer { display: none !important; }
     .main-container { box-shadow: none; margin: 0; padding: 0; width: 100%; max-width: 100%; }
+}/* --- diagnostic.css (Compact + Print Fixes) --- */
+
+/* ... (Keep 1-8 same as before) ... */
+
+/* 9. PRINT SETTINGS (Add/Replace this section at the bottom) */
+@media print {
+    body { 
+        background: white; 
+        font-size: 12px; /* Smaller font for A4 */
+    }
+    
+    .no-print { display: none !important; }
+    
+    /* Show the Blank QR Header ONLY when printing */
+    #blank-qr-header { 
+        display: block !important; 
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px dashed #999;
+    }
+
+    /* Hide the Result QR Area */
+    #qr-section { display: none !important; }
+
+    /* Force Page Break */
+    .page-break { 
+        page-break-after: always; 
+        display: block; 
+        height: 1px; 
+    }
+
+    /* Clean Layout */
+    .main-container {
+        box-shadow: none;
+        border: none;
+        margin: 0;
+        padding: 0;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    /* Force Radio Buttons to look empty/printable */
+    .scale-opt label {
+        background: white !important;
+        border: 1px solid #333 !important;
+        color: #000 !important;
+        height: 35px !important;
+        box-shadow: none !important;
+    }
+    
+    /* IMPORTANT: Hide checked state so form looks blank */
+    .scale-opt input:checked + label {
+        background: white !important;
+        border-color: #333 !important;
+        color: #000 !important;
+    }
+
+    /* Footer adjustments */
+    .legal-footer {
+        position: fixed;
+        bottom: 0;
+        border-top: 1px solid #ccc;
+        padding: 10px 0;
+    }
 }

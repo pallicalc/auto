@@ -33,7 +33,16 @@ window.addEventListener('load', async () => {
 function initApp() {
     updateCounters();
     setInterval(() => debounceCounters(), 30000);
-    auth.onAuthStateChanged(checkAuthState);
+    
+    // Standard listener for page loads/refreshes
+    auth.onAuthStateChanged((user) => {
+        // We only trigger this automatically if we aren't currently logging in 
+        // (The login button handles the manual trigger for immediate feedback)
+        if (!document.querySelector('.login-btn-submit[disabled]')) {
+            checkAuthState(user);
+        }
+    });
+
     setupEventListeners();
     setupDisclaimerHandlers();
 }
@@ -48,20 +57,24 @@ function debounceCounters() {
 async function updateCounters() {
     if (!db) return;
     try {
-        // Because rules allow 'list', this works even if specific docs are blocked
         const usersSnap = await db.collection('users').get();
-        document.getElementById('total-users').textContent = usersSnap.size;
+        const uEl = document.getElementById('total-users');
+        if(uEl) uEl.textContent = usersSnap.size;
 
         const instSnap = await db.collection('institutions').get();
-        document.getElementById('total-institutions').textContent = instSnap.size;
+        const iEl = document.getElementById('total-institutions');
+        if(iEl) iEl.textContent = instSnap.size;
     } catch(e) {
         console.error('Counter Error:', e);
-        document.getElementById('total-users').textContent = "-";
-        document.getElementById('total-institutions').textContent = "-";
+        const uEl = document.getElementById('total-users');
+        const iEl = document.getElementById('total-institutions');
+        if(uEl) uEl.textContent = "-";
+        if(iEl) iEl.textContent = "-";
     }
 }
 
 // ✅ ROBUST AUTH HANDLER (The Gatekeeper)
+// Returns a Promise so we can await it in the login button handler
 async function checkAuthState(user) {
     currentUser = user;
     
@@ -73,7 +86,6 @@ async function checkAuthState(user) {
     const toolsSection = document.getElementById('tools-section');
     const featureSection = document.getElementById('features-section');
     const toolsTitle = document.querySelector('#tools-section h2');
-    const featureTitle = document.querySelector('#features-section h2');
 
     if (user) {
         // 1. Email Verification Check
@@ -97,7 +109,7 @@ async function checkAuthState(user) {
                 userData = userDoc.data();
                 const instId = userData.institutionId;
 
-                // 🛑 GATEKEEPER LOGIC (Crucial Fix)
+                // 🛑 GATEKEEPER LOGIC
                 if (instId) {
                     try {
                         // Attempt to read the institution document
@@ -146,6 +158,8 @@ async function checkAuthState(user) {
             
         } catch(e) {
             console.error('Profile Load Error:', e);
+            // Fallback: show basic UI even if DB fails
+            updateUIForLogin({}, user.email, false);
         }
         
     } else {
@@ -153,7 +167,7 @@ async function checkAuthState(user) {
         localStorage.removeItem('palliCalc_customRatios');
         localStorage.removeItem('palliCalc_institutionName');
 
-        if (userInfo) userInfo.innerHTML = '<button id="login-btn" class="login-btn">🔐 Login</button>';
+        if (userInfo) userInfo.innerHTML = '<button id="login-btn" class="login-btn" aria-label="Login to access calculators">🔐 Login</button>';
         
         if (actionBtns) actionBtns.classList.remove('hidden');
         
@@ -161,38 +175,54 @@ async function checkAuthState(user) {
             toolsSection.classList.remove('visible');
             toolsSection.style.display = ''; // Reset CSS
             toolsSection.innerHTML = `
-                <h2 style="text-align:center;font-size:24px;font-weight:700;color:#1e293b;margin-bottom:20px;">
+                <h2 id="tools-title"
+                    style="text-align:center;font-size:24px;font-weight:700;color:#1e293b;margin-bottom:20px;"
+                    aria-label="Tools available">
                     🛠️ Tools Available
                 </h2>
+                <a href="all-calculators.html" class="tool-btn" aria-label="All calculators page">
+                    <span class="tool-icon" role="img" aria-label="Pill icon">💊</span>
+                    <span>All calculators
+                        <span id="user-tier-badge" class="vip-badge" style="display:none;">PRO</span>
+                    </span>
+                </a>
+                <a href="diagnostic.html" class="tool-btn" aria-label="Diagnostic tools page">
+                    <span class="tool-icon" role="img" aria-label="Stethoscope icon">🩺</span>
+                    <span>Diagnostic Tools
+                        <span class="vip-badge" style="background-color: #28a745; font-size: 0.7em;">NEW</span>
+                    </span>
+                </a>
+                <a href="patient-education.html" class="tool-btn" aria-label="Patient information pamphlets">
+                    <span class="tool-icon" role="img" aria-label="Information sheets icon">📄</span>
+                    <span>Patient information pamphlets</span>
+                </a>
+                <a href="healthcare-guidelines.html" class="tool-btn" aria-label="Healthcare guidelines">
+                    <span class="tool-icon" role="img" aria-label="Guidelines icon">📘</span>
+                    <span>Healthcare guidelines</span>
+                </a>
                 `;
-            // Note: Ideally, you should restore the original HTML of tools-section here if it was modified
-            // For now, reloading the page on logout is the cleanest way to reset the DOM
         }
 
         if (featureSection) featureSection.style.display = '';
         if (vipBadge) vipBadge.style.display = 'none';
         if (vipLock) vipLock.style.display = 'none';
 
+        // Re-attach login listener since we replaced the button HTML
         const newLoginBtn = document.getElementById('login-btn');
         if (newLoginBtn) newLoginBtn.addEventListener('click', openLoginModal);
     }
 }
 
-
-
-// 🛡️ HELPER: Handle Suspension (The "Lockout")
+// 🛡️ HELPER: Handle Suspension
 function handleSuspension(userData, instName) {
-    // 1. Wipe Data
     localStorage.removeItem('palliCalc_customRatios');
     localStorage.removeItem('palliCalc_institutionName');
 
-    // 2. Admin Redirect
     if (userData.role === 'institutionAdmin') {
         window.location.href = 'Admin/renewal.html';
         return;
     }
 
-    // 3. Staff Notice (Stay on page, show alert)
     updateUIForLogin(userData, currentUser.email, true); 
     showSuspensionNotice(instName);
 }
@@ -219,7 +249,8 @@ function updateUIForLogin(userData, email, isSuspended) {
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </button>
             </div>`;
-        document.getElementById('logout-btn').addEventListener('click', handleLogout);
+        const logoutBtn = document.getElementById('logout-btn');
+        if(logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     }
 
     if (actionBtns) actionBtns.classList.add('hidden');
@@ -229,7 +260,7 @@ function updateUIForLogin(userData, email, isSuspended) {
     if (!isSuspended) {
         if (toolsSection) {
             toolsSection.classList.add('visible');
-            toolsSection.style.display = 'block'; 
+            toolsSection.style.display = 'grid'; 
         }
         if (toolsTitle) toolsTitle.textContent = '🛠️ Tools Available';
         if (vipBadge) vipBadge.style.display = isVipUser ? 'inline' : 'none';
@@ -237,11 +268,10 @@ function updateUIForLogin(userData, email, isSuspended) {
     }
 }
 
-// 📢 SHOW NOTICE (With forced visibility)
+// 📢 SHOW NOTICE
 function showSuspensionNotice(instName) {
     const toolsSection = document.getElementById('tools-section');
     if (toolsSection) {
-        // Inject the Alert Card
         toolsSection.innerHTML = `
             <div class="suspended-alert-card" style="border: 1px solid #e2e8f0; background: #fffafa; padding: 2rem; text-align: center; border-radius: 12px; margin: 20px auto;">
                 <i class="bi bi-shield-lock" style="color: #ef4444; font-size: 2.5rem; display:block; margin-bottom:1rem;"></i>
@@ -255,17 +285,12 @@ function showSuspensionNotice(instName) {
                         <i class="bi bi-envelope"></i> Notify Admin
                     </button>
                 </div>
-                
-                <div style="margin-top: 20px; font-size: 13px; color: #0f5132; background: #f0fdf4; padding: 8px; border-radius: 6px; display: inline-block;">
-                    <i class="bi bi-check-circle"></i> Standard PalliCalc tools remain active.
-                </div>
             </div>
         `;
         
         toolsSection.classList.add('visible');
-        toolsSection.style.display = 'block'; // FORCE VISIBILITY to override any hidden state
+        toolsSection.style.display = 'block'; 
 
-        // Add Click Listener for Notify Button
         const btn = document.getElementById('notify-admin-btn');
         if (btn) {
             btn.addEventListener('click', async function() {
@@ -302,7 +327,7 @@ async function handleLogout() {
     try {
         await auth.signOut();
         localStorage.removeItem('palliCalcLoginPassword');
-        window.location.reload(); // Refresh to clean state
+        window.location.reload(); 
     } catch (error) {
         console.error('Logout error:', error);
     }
@@ -327,8 +352,15 @@ function setupEventListeners() {
             submitBtn.innerHTML = 'Logging in...';
             
             try {
-                await auth.signInWithEmailAndPassword(email, password);
+                // 1. Authenticate
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
                 localStorage.setItem('palliCalcLoginPassword', password);
+                
+                // 2. 🔥 FORCE UI UPDATE & WAIT FOR IT 🔥
+                // This ensures the data is fetched BEFORE we close the modal
+                await checkAuthState(userCredential.user);
+                
+                // 3. Close modal only after UI is ready
                 closeLoginModal();
             } catch (error) {
                 console.error("Login Error:", error.code);

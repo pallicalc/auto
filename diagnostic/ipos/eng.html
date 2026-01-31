@@ -11,22 +11,14 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script src="../diagnostic.js"></script>
 </head>
 <body>
 
-    <div id="pdf-loading">
-        <div style="display:inline-block; width:3rem; height:3rem; border:4px solid #f3f3f3; border-top:4px solid #0061f2; border-radius:50%; animation:spin 1s linear infinite;"></div>
-        <p style="margin-top:15px; font-weight:bold; color:#555">Generating PDF...</p>
-        <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
-    </div>
-
-    <div class="main-container" id="main-content-area">
+    <div class="main-container">
         
-        <div class="header header-ipos" id="pdf-header">
+        <div class="header header-ipos">
             <div id="inst-header-container" class="inst-header-container">
                 <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
                 <div class="inst-info"><h3 id="inst-name-display"></h3><p id="inst-contact-display"></p></div>
@@ -36,9 +28,12 @@
         </div>
 
         <div id="blank-qr-header">
-            <div style="display:flex; align-items:center; justify-content:center; gap:20px;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:20px; border: 2px dashed #ccc; padding: 15px; border-radius: 8px;">
                 <div id="blank-qrcode"></div>
-                <div style="text-align:left;"><h4 style="margin:0; color:#0061f2;">Scan to Fill Digitally</h4><small>Use your camera to open this form.</small></div>
+                <div style="text-align:left;">
+                    <h4 style="margin:0; color:#0061f2;">Scan to Start</h4>
+                    <small>Scan this code to fill the form on your phone.</small>
+                </div>
             </div>
         </div>
 
@@ -48,10 +43,12 @@
         </div>
 
         <form id="iposForm">
-            <div id="pdf-page-1">
+            
+            <div class="print-page-1">
+                
                 <div class="question-card">
                     <label class="q-label">Q1. Main concerns (Past 3 days):</label>
-                    <textarea class="form-control" id="q1_input" rows="2" style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:8px; font-size:14px;" placeholder="List concerns..."></textarea>
+                    <textarea class="form-control" id="q1_input" rows="3" style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" placeholder="List concerns..."></textarea>
                 </div>
 
                 <div class="question-card">
@@ -147,9 +144,9 @@
                         <div class="scale-opt"><input type="radio" name="mob" value="4" id="mob_4"><label for="mob_4">4<div class="scale-desc">Over- whelm.</div></label></div>
                     </div>
 
-                    <div class="mt-4 pt-3 border-top" style="margin-top:10px; border-top:1px solid #eee;">
+                    <div class="mt-4 pt-3 border-top" style="margin-top:20px; border-top:1px solid #eee;">
                         <label class="sub-label text-primary">Other Symptoms:</label>
-                        <input type="text" id="other_sym_label" class="form-control mb-2" maxlength="20" placeholder="e.g. Itchiness" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                        <input type="text" id="other_sym_label" class="form-control mb-2" maxlength="20" placeholder="e.g. Itchiness" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                         <div class="scale-container">
                             <div class="scale-opt"><input type="radio" name="other_sym_val" value="0" id="oth_0"><label for="oth_0">0</label></div>
                             <div class="scale-opt"><input type="radio" name="other_sym_val" value="1" id="oth_1"><label for="oth_1">1</label></div>
@@ -161,7 +158,9 @@
                 </div>
             </div>
 
-            <div id="pdf-page-2">
+            <div class="page-break"></div>
+
+            <div class="print-page-2">
                 <div class="question-card">
                     <label class="q-label">Q3. Feeling anxious/worried about illness?</label>
                     <div class="scale-container">
@@ -247,44 +246,45 @@
                         <option value="2">With help from a member of staff</option>
                     </select>
                 </div>
-                
-                <div class="score-box">
-                    <div><div class="score-title">Total IPOS Score</div><small style="opacity:0.7">Higher = More Distress</small></div>
-                    <div class="score-val" id="total-score-display">0</div>
-                </div>
+            </div>
 
-                <div id="qr-section">
-                    <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:8px; border-radius:6px; margin-bottom:8px; font-size:12px;">
-                        <i class="bi bi-check-circle-fill"></i> <strong>Scan to Save</strong>
-                    </div>
-                    <div id="qrcode-container" style="background:white; padding:8px; border-radius:8px; display:inline-block;">
-                        <div id="qrcode"></div>
-                        <div style="font-size:9px; color:#999; margin-top:4px;">IPOS Secure Payload</div>
-                    </div>
+            <div class="score-box no-print">
+                <div><div class="score-title">Total IPOS Score</div><small style="opacity:0.7">Higher = More Distress</small></div>
+                <div class="score-val" id="total-score-display">0</div>
+            </div>
+
+            <div id="qr-section">
+                <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:8px; border-radius:6px; margin-bottom:8px; font-size:12px;">
+                    <i class="bi bi-check-circle-fill"></i> <strong>Result Ready!</strong>
+                    <p style="margin:0; font-size:13px;">Show this QR to your doctor.</p>
+                </div>
+                <div id="qrcode-container" style="background:white; padding:8px; border-radius:8px; display:inline-block;">
+                    <div id="qrcode"></div>
+                    <div style="font-size:9px; color:#999; margin-top:4px;">IPOS Secure Payload</div>
                 </div>
             </div>
 
             <div class="action-buttons no-print" style="margin-top:20px; display:flex; gap:8px; flex-direction:column;">
-                <button type="button" class="btn btn-buccal" onclick="generateQR()" style="width:100%; justify-content:center;">
-                    <i class="bi bi-qr-code-scan"></i> Generate QR
+                <button type="button" class="btn btn-buccal" onclick="generateQR()" style="width:100%;">
+                    <i class="bi bi-qr-code-scan"></i> Generate Result QR
                 </button>
-                <button type="button" class="btn btn-pdf" onclick="downloadSmartPDF()" style="width:100%; justify-content:center;">
-                    <i class="bi bi-printer"></i> Print / Save as PDF
+                <button type="button" class="btn btn-pdf" onclick="printBlankForm()" style="width:100%;">
+                    <i class="bi bi-printer"></i> Print Blank Form
                 </button>
             </div>
         </form>
 
     </div>
 
-    <footer class="legal-footer no-print" id="pdf-footer">
-        <div style="max-width:480px; margin:0 auto; padding:0 15px;">
+    <footer class="legal-footer">
+        <div style="max-width:480px; margin:0 auto; padding:0 20px;">
             <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
             <div class="author-info">
                 <span class="author-name">Author: Alison Chai</span>
                 <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
             </div>
             <p class="legal-warning">Clinical Tool. For Professional Use Only.</p>
-            <div id="footer-inst-name" style="margin-top:5px; font-weight:bold; color:#0061f2; font-size:10px;"></div>
+            <div id="footer-inst-name" style="margin-top:8px; font-weight:bold; color:#0061f2; font-size:11px;"></div>
         </div>
     </footer>
 
@@ -298,81 +298,19 @@
             if (ref) {
                 document.getElementById('backLink').href = `../../diagnostic.html?ref=${ref}`;
                 await loadInstitutionData(ref);
-                new QRCode(document.getElementById("blank-qrcode"), { text: window.location.href, width: 64, height: 64 });
             }
+            
+            // Create "Blank Form" QR Code (points to this page)
+            new QRCode(document.getElementById("blank-qrcode"), { 
+                text: window.location.href, 
+                width: 90, 
+                height: 90 
+            });
         });
 
-        async function downloadSmartPDF() {
-            const loading = document.getElementById('pdf-loading');
-            loading.style.display = 'flex';
-            
-            document.body.classList.add('pdf-clean-mode');
-            window.scrollTo(0, 0);
-            await new Promise(r => setTimeout(r, 800));
-
-            const inputs = document.querySelectorAll('input[type="radio"]:checked');
-            const q1Text = document.getElementById('q1_input').value.trim();
-            const isBlank = (inputs.length === 0 && q1Text === "");
-
-            if (isBlank) {
-                document.body.classList.add('blank-mode');
-                document.getElementById('blank-qr-header').style.display = 'block';
-                document.getElementById('qr-section').style.display = 'none';
-                document.getElementById('total-score-display').innerText = ""; 
-            } else {
-                generateQR();
-            }
-
-            try {
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const pageWidth = 210;
-                const pageHeight = 297;
-                const margin = 10;
-                const contentWidth = pageWidth - (margin * 2);
-
-                const header = document.getElementById('pdf-header');
-                const page1Content = document.getElementById('pdf-page-1');
-                const page2Content = document.getElementById('pdf-page-2');
-                const footer = document.getElementById('pdf-footer');
-                
-                async function captureAndAdd(element, yOffset) {
-                    const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff", windowWidth: 800 });
-                    const imgData = canvas.toDataURL('image/jpeg', 0.9);
-                    const imgHeight = (canvas.height * contentWidth) / canvas.width;
-                    pdf.addImage(imgData, 'JPEG', margin, yOffset, contentWidth, imgHeight);
-                    return imgHeight;
-                }
-
-                let currentY = margin;
-                if (isBlank) {
-                    const blankHeader = document.getElementById('blank-qr-header');
-                    currentY += await captureAndAdd(blankHeader, currentY) + 5;
-                } else {
-                    currentY += await captureAndAdd(header, currentY) + 5;
-                }
-                
-                await captureAndAdd(page1Content, currentY);
-                await captureAndAdd(footer, pageHeight - 30);
-
-                pdf.addPage(); 
-                currentY = margin;
-                await captureAndAdd(page2Content, currentY);
-                await captureAndAdd(footer, pageHeight - 30);
-
-                const fname = isBlank ? "IPOS_Blank_Form.pdf" : `IPOS_Result_${new Date().toISOString().slice(0,10)}.pdf`;
-                pdf.save(fname);
-
-            } catch (e) {
-                alert("Error: " + e.message);
-                console.error(e);
-            } finally {
-                document.body.classList.remove('pdf-clean-mode');
-                document.body.classList.remove('blank-mode');
-                document.getElementById('blank-qr-header').style.display = 'none';
-                document.getElementById('total-score-display').innerText = calculateTotalScore(); 
-                loading.style.display = 'none';
-            }
+        // --- NATIVE PRINT FUNCTION ---
+        function printBlankForm() {
+            window.print(); 
         }
     </script>
 </body>
