@@ -126,7 +126,7 @@
               <div>
                 <span class="magic-badge">MAGIC_ID</span>
                 <span class="magic-badge">MAGIC_Q1</span>
-                <span class="magic-badge">MAGIC_Q2</span>
+                <span class="magic-badge">MAGIC_SUMMARY</span>
                 <span class="text-muted small ms-1">... up to MAGIC_Q10</span>
               </div>
             </div>
@@ -256,9 +256,10 @@
         const doc = await db.collection("institutions").doc(currentInstitutionId).get();
         if (doc.exists) {
             const data = doc.data().diagnosticLinks || {};
+            // Key mapping matches the keys used in SAVE logic
             if(data.ipos) document.getElementById('link_ipos').value = data.ipos;
             if(data.hads) document.getElementById('link_hads').value = data.hads;
-            if(data.distress) document.getElementById('link_distress').value = data.distress;
+            if(data.dt)   document.getElementById('link_distress').value = data.dt; // Load 'dt' into 'link_distress' box
         }
       } catch (e) {
         console.error("Load Failed:", e);
@@ -286,11 +287,11 @@
         const cred = firebase.auth.EmailAuthProvider.credential(user.email, password);
         await user.reauthenticateWithCredential(cred);
 
-        // 2. Gather Data
+        // 2. Gather Data (CORRECTED MAPPING)
         const links = {
             ipos: document.getElementById('link_ipos').value.trim(),
             hads: document.getElementById('link_hads').value.trim(),
-            distress: document.getElementById('link_distress').value.trim()
+            dt:   document.getElementById('link_distress').value.trim() // Corrected: ID matches HTML, Key matches Scanner
         };
 
         // 3. Save to Firebase
