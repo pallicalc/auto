@@ -16,32 +16,42 @@ const auth = firebase.auth();
 let context = { mode: 'personal', instId: null };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. INJECT FOOTER FIRST
+    // A. INJECT NEW FOOTER
     injectStandardFooter();
 
-    // 2. SETUP DATE & FORM
+    // B. DATE & FORM LOGIC
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
     const form = document.getElementById('iposForm');
     if(form) form.addEventListener('change', calculateTotalScore);
 
-    // 3. HANDLE AUTH & QR
+    // C. AUTH & HEADER LOGIC
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
 
-    // --- NEW: FORCE PRINT HEADER LAYOUT (Picture 2) ---
+    // NEW: Prepare Print Header Layout
     const blankQrHeader = document.getElementById('blank-qr-header');
     if (blankQrHeader) {
-        // Clear existing text to avoid duplicates if re-run
-        const existingTitle = blankQrHeader.querySelector('.print-only-title');
-        if (!existingTitle) {
-            const printTitle = document.createElement('h1');
-            printTitle.innerText = 'IPOS Assessment';
-            printTitle.className = 'print-only-title';
-            // Insert Title at the start (Left), QR will be at the end (Right)
-            blankQrHeader.insertBefore(printTitle, blankQrHeader.firstChild);
-        }
+        // Create container for text
+        const textContainer = document.createElement('div');
+        textContainer.className = 'print-header-text';
+        
+        // Title
+        const printTitle = document.createElement('h1');
+        printTitle.innerText = 'IPOS Assessment';
+        printTitle.className = 'print-only-title';
+        
+        // Subtitle
+        const printSubtitle = document.createElement('p');
+        printSubtitle.innerText = 'Integrated Palliative care Outcome Scale';
+        printSubtitle.className = 'print-only-subtitle';
+
+        textContainer.appendChild(printTitle);
+        textContainer.appendChild(printSubtitle);
+
+        // Insert text container before the QR container
+        blankQrHeader.insertBefore(textContainer, blankQrHeader.firstChild);
     }
 
     if (ref) {
@@ -51,9 +61,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const backLink = document.getElementById('backLink');
         if (backLink) backLink.href = `../../diagnostic.html?ref=${ref}`;
 
-        // QR Generation (Smaller size as requested)
+        // QR Code Generation (Size increased to 120 as requested)
         const blankQr = document.getElementById("blank-qrcode");
-        if(blankQr) new QRCode(blankQr, { text: window.location.href, width: 80, height: 80 });
+        if(blankQr) new QRCode(blankQr, { text: window.location.href, width: 120, height: 120 }); 
 
         await loadInstitutionHeader();
     } else {
@@ -73,23 +83,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// --- UPDATED FOOTER INJECTION (Strictly Picture 4 Layout) ---
+// --- UPDATED FOOTER INJECTION ---
 function injectStandardFooter() {
     const footerHTML = `
         <footer class="standard-footer">
             <div class="footer-inner">
-                
                 <div class="print-branding" id="print-branding-container" style="display:none;">
-                    <div class="print-branding-flex">
-                        <div class="print-logo-row" id="print-logo-row">
-                            </div>
-                        
-                        <div class="print-info-col">
+                    <div class="print-branding-row">
+                        <div class="footer-left" id="print-logo-row"></div>
+                        <div class="footer-right">
                             <strong id="print-inst-name"></strong>
                             <div id="print-inst-contact"></div>
                         </div>
                     </div>
-                    
                     <div class="print-copyright-line">
                         &copy; 2026 Alivioscript Solutions | PalliCalc™
                     </div>
@@ -111,7 +117,7 @@ function injectStandardFooter() {
     document.body.insertAdjacentHTML('beforeend', footerHTML);
 }
 
-// --- HEADER & BRANDING LOGIC ---
+// --- HEADER LOGIC ---
 async function loadInstitutionHeader() {
     if (!context.instId) return;
     try {
@@ -159,7 +165,7 @@ function applyBranding(data) {
     const contact = data.headerContact || data.contact;
     const logoSrc = logos[0];
 
-    // 1. Screen Header (Top)
+    // Screen Header
     if(name) document.getElementById('inst-name-display').textContent = name;
     if(contact) document.getElementById('inst-contact-display').textContent = contact;
     if(logoSrc) {
@@ -168,10 +174,9 @@ function applyBranding(data) {
         document.getElementById('inst-header-container').style.display = 'flex';
     }
 
-    // 2. Print Footer Data (Bottom)
+    // Print Footer
     if(name) document.getElementById('print-inst-name').textContent = name;
     if(contact) document.getElementById('print-inst-contact').textContent = "Contact: " + contact;
-    
     const logoRow = document.getElementById('print-logo-row');
     if(logos.length > 0 && logoRow) {
         logoRow.innerHTML = '';
@@ -196,6 +201,7 @@ function calculateTotalScore() {
 }
 
 function generateQR() {
+    // ... (Existing QR Logic) ...
     const getVal = (name) => {
         const el = document.querySelector(`input[name="${name}"]:checked`);
         return el ? parseInt(el.value) : 0;

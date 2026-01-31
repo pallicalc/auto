@@ -46,7 +46,6 @@ body {
 .header h1 { font-size: 28px; font-weight: 700; margin: 0 0 10px 0; line-height: 1.2; }
 .header p { font-size: 16px; opacity: 0.95; margin: 0; }
 
-/* Institution Header (Hidden by default) */
 .inst-header-container {
     display: none; align-items: center; gap: 15px; margin-bottom: 20px;
     padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.3);
@@ -88,7 +87,6 @@ body {
 .q-label { font-weight: 700; color: #2c3e50; margin-bottom: 10px; display: block; font-size: 16px; }
 .sub-label { display: block; font-weight: 600; font-size: 15px; margin-bottom: 8px; color: #495057; margin-top: 15px; }
 
-/* Scale Radio Buttons (Screen View) */
 .scale-container { display: flex; justify-content: space-between; gap: 5px; margin: 10px 0; }
 .scale-opt { flex: 1; text-align: center; position: relative; }
 .scale-opt input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; left:0; top:0; }
@@ -127,7 +125,7 @@ body {
 }
 
 /* =========================================
-   6. PRINT STYLES (Strict 2-Page Fit)
+   6. PRINT STYLES (Fixed Footer + New Header)
    ========================================= */
 @media print {
     /* 1. Base Settings */
@@ -135,19 +133,33 @@ body {
     .no-print, #qr-section, .header { display: none !important; }
     
     .main-container {
-        box-shadow: none; border: none; margin: 0; padding: 0 10px;
+        box-shadow: none; border: none; margin: 0; padding: 0 10px 40px 10px; /* Bottom padding for fixed footer */
         max-width: 100%; width: 100%;
     }
     
-    /* 2. Print Header (Larger Title & QR) */
+    /* 2. Print Header (Layout Updated) */
     #blank-qr-header { 
-        display: flex !important; justify-content: space-between; align-items: center;
+        display: flex !important; justify-content: space-between; align-items: flex-start;
         margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #333;
     }
-    .print-only-title { margin: 0; font-size: 32px; font-weight: 800; color: #000; } /* Larger Title */
-    #blank-qr-header > div { border: none !important; padding: 0 !important; gap: 15px !important; }
+    /* Text Container on Left */
+    .print-header-text { display: flex; flex-direction: column; justify-content: center; }
+    .print-only-title { margin: 0; font-size: 32px; font-weight: 800; color: #000; line-height: 1.1; }
+    .print-only-subtitle { margin: 4px 0 0 0; font-size: 12px; font-weight: 400; color: #555; }
+    
+    /* QR Container on Right */
+    #blank-qr-header > div:last-child { 
+        border: none !important; padding: 0 !important; gap: 0 !important; 
+    }
     #blank-qr-header h4, #blank-qr-header small { display: none !important; }
-    #blank-qrcode img { width: 100px !important; height: 100px !important; } /* Larger QR */
+    
+    /* QR Code Size & Border */
+    #blank-qrcode { 
+        border: 1px solid #000; /* Border drawn as requested */
+        padding: 4px;
+        display: inline-block;
+    }
+    #blank-qrcode img { width: 120px !important; height: 120px !important; display: block; }
 
     /* 3. Base Form Layout */
     .question-card {
@@ -156,96 +168,61 @@ body {
     }
     .q-label { margin-bottom: 3px; font-size: 13pt; color: #000; font-weight: 700; }
     
-    /* Reduce Q1 Text Area Height */
     #q1_input { height: 50px !important; min-height: 50px !important; }
 
-    /* =========================================
-       4. PAGE 1 SPECIFIC (Aggressively Compact)
-       ========================================= */
-    
-    /* Legend Header for Q2 */
+    /* 4. Page 1 (Compact) */
     .print-page-1 .question-card:nth-of-type(2) .q-label::after {
         content: " (Scale: 0=Not at all ... 4=Overwhelming)";
         font-size: 10pt; font-weight: 400; color: #555; display: inline-block; margin-left: 5px;
     }
-
-    /* Sub-labels closer to buttons */
-    .print-page-1 .sub-label {
-        margin-top: 2px; margin-bottom: 2px; font-size: 11pt; color: #222;
-    }
-    
-    /* Hide repetitive descriptions in Q2 */
+    .print-page-1 .sub-label { margin-top: 2px; margin-bottom: 2px; font-size: 11pt; color: #222; }
     .print-page-1 .scale-desc { display: none !important; }
-
-    /* Small, tight scale container */
     .print-page-1 .scale-container { margin: 0 0 4px 0; gap: 4px; }
-
-    /* SMALL Buttons for Page 1 */
     .print-page-1 .scale-opt label {
-        height: 24px !important;
-        line-height: 22px !important;
-        font-size: 11pt !important;
-        font-weight: 700;
-        background: white !important;
-        border: 1px solid #555 !important;
-        color: #000 !important;
-        border-radius: 4px !important;
+        height: 24px !important; line-height: 22px !important; font-size: 11pt !important;
+        font-weight: 700; background: white !important; border: 1px solid #555 !important;
+        color: #000 !important; border-radius: 4px !important;
     }
-    .print-page-1 .scale-opt input:checked + label {
-        background: #ccc !important;
-        border: 2px solid #000 !important;
-    }
+    .print-page-1 .scale-opt input:checked + label { background: #ccc !important; border: 2px solid #000 !important; }
 
-    /* =========================================
-       5. PAGE 2 SPECIFIC (Normal Spacing)
-       ========================================= */
-    
+    /* 5. Page 2 (Normal) */
     .print-page-2 .question-card { margin-bottom: 15px; border-bottom: none; }
-    
-    /* Keep scale descriptions for mixed scales */
     .print-page-2 .scale-desc { display: block !important; font-size: 9pt; }
-    
-    /* Larger buttons for Page 2 since space allows */
     .print-page-2 .scale-opt label {
-        height: 38px !important;
-        font-size: 12pt !important;
-        background: white !important;
-        border: 1px solid #333 !important;
-        color: #000 !important;
+        height: 38px !important; font-size: 12pt !important;
+        background: white !important; border: 1px solid #333 !important; color: #000 !important;
     }
-    .print-page-2 .scale-opt input:checked + label {
-        background: #ddd !important;
-        color: #000 !important;
-        border: 2px solid #000 !important;
-    }
+    .print-page-2 .scale-opt input:checked + label { background: #ddd !important; color: #000 !important; border: 2px solid #000 !important; }
 
-    /* =========================================
-       6. PRINT FOOTER (Compact & Bottom)
-       ========================================= */
+    /* 6. PRINT FOOTER (FIXED POSITION) */
     .standard-footer {
-        position: static;
-        background: transparent; border: none;
-        padding: 5px 0 0 0; /* Minimal padding */
-        text-align: left;
-        margin-top: 10px;
-        border-top: 1px solid #ccc; /* Single top border */
+        position: fixed; /* Fixed to bottom of paper */
+        bottom: 0; left: 0; width: 100%;
+        background: white; border: none;
+        padding: 5px 30px; /* Side padding to align with content */
+        margin: 0;
+        z-index: 9999;
     }
     .screen-footer-content { display: none !important; }
     
     #print-branding-container { display: block !important; width: 100%; }
-    .print-branding-top { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px; }
-    .print-logo-row { display: flex; align-items: center; gap: 10px; }
+    
+    .print-branding-row { 
+        display: flex; justify-content: space-between; align-items: flex-end; 
+        margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 5px; 
+    }
+    
+    /* Left: Logos */
+    .footer-left { display: flex; align-items: center; gap: 10px; }
     .print-footer-logo { height: 35px; width: auto; }
     
-    .print-info-row { text-align: right; }
+    /* Right: Info */
+    .footer-right { text-align: right; }
     #print-inst-name { font-size: 13px; font-weight: bold; color: #000; display: block; margin-bottom: 1px; }
     #print-inst-contact { font-size: 10px; color: #555; }
     
-    .print-copyright-line {
-        text-align: center; font-size: 9px; color: #777;
-        padding-top: 5px;
-    }
+    /* Center Bottom: Copyright */
+    .print-copyright-line { text-align: center; font-size: 9px; color: #777; margin-top: 2px; }
 
-    /* 7. Utilities */
     .page-break { page-break-after: always; display: block; height: 1px; }
 }
