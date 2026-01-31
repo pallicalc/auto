@@ -1,4 +1,4 @@
-// --- diagnostic.js (Optimized Production Version) ---
+// --- diagnostic.js (Final: Role-Based Display + Back Button Logic) ---
 
 const firebaseConfig = {
     apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
@@ -16,7 +16,6 @@ const auth = firebase.auth();
 let context = { mode: 'personal', instId: null };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. STANDARD UI SETUP
     injectStandardFooter();
     
     const dateDisplay = document.getElementById('dateDisplay');
@@ -25,23 +24,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const form = document.getElementById('iposForm');
     if(form) form.addEventListener('change', calculateTotalScore);
 
-    // 2. CONTEXT DETERMINATION (The Logic Hub)
+    // --- DETERMINE ROLE ---
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
 
     if (ref) {
-        // SCENARIO A: Patient via Link
+        // SCENARIO A: PATIENT (Accessed via QR Link)
         context.mode = 'shared'; 
         context.instId = ref;
         
-        const backLink = document.getElementById('backLink');
-        if (backLink) backLink.href = `../../diagnostic.html?ref=${ref}`;
-        
-        // Execute Final Setup
+        // EXECUTE PATIENT VIEW LOGIC
         await finalizeAppSetup(context.instId);
 
     } else {
-        // SCENARIO B: Direct Access (Check Auth)
+        // SCENARIO B: DOCTOR (Direct Access / Login)
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 try {
@@ -55,18 +51,38 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 } catch (e) { console.error("Auth Data Error:", e); }
             }
-            // Execute Final Setup (works for both Logged In and Guest)
+            // Execute Final Setup (Doctors will see QR & Back Button)
             finalizeAppSetup(context.instId);
         });
     }
 });
 
-// --- CENTRALIZED SETUP HANDLER (Removes Redundancy) ---
+// --- UI SETUP HANDLER ---
 async function finalizeAppSetup(instId) {
-    // 1. Generate the Master Link QR
-    generateBlankFormQR(instId);
+    const blankQrHeader = document.getElementById('blank-qr-header');
+    const backButton = document.getElementById('backLink');
 
-    // 2. Load Branding if ID exists, else load Personal/Cached
+    if (context.mode === 'shared') {
+        // === PATIENT VIEW ===
+        // 1. Hide the "Scan to Start" QR (They are already here)
+        if(blankQrHeader) blankQrHeader.style.display = 'none';
+        
+        // 2. Hide the Back Button (Prevent accidental exit)
+        if(backButton) backButton.style.display = 'none';
+    
+    } else {
+        // === DOCTOR VIEW ===
+        // 1. Generate and Show the "Scan to Start" QR
+        if(blankQrHeader) {
+            blankQrHeader.style.display = 'block';
+            generateBlankFormQR(instId);
+        }
+        
+        // 2. Ensure Back Button is Visible
+        if(backButton) backButton.style.display = 'inline-flex';
+    }
+
+    // Load Branding
     if (instId) {
         await loadInstitutionHeader(instId);
     } else {
@@ -74,7 +90,7 @@ async function finalizeAppSetup(instId) {
     }
 }
 
-// --- QR CODE GENERATORS ---
+// --- 1. START QR (URL LINK) ---
 function generateBlankFormQR(instId) {
     const qrContainer = document.getElementById("blank-qrcode");
     if (!qrContainer) return;
@@ -86,84 +102,13 @@ function generateBlankFormQR(instId) {
     new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
 }
 
-// --- HEADER & BRANDING LOGIC ---
-// Helper: Normalize data so we don't repeat "||" checks everywhere
-function normalizeBranding(data) {
-    const logos = data.headerLogos || (data.logo ? [data.logo] : []);
-    return {
-        name: data.headerName || data.name || "",
-        contact: data.headerContact || data.contact || "",
-        logo: logos.length > 0 ? logos[0] : null
-    };
-}
-
-async function loadInstitutionHeader(instId) {
-    try {
-        const doc = await db.collection('institutions').doc(instId).get();
-        if (doc.exists) { 
-            const data = doc.data();
-            if (data.status === 'suspended') {
-                localStorage.removeItem('institutionSettings');
-                return; 
-            }
-            
-            // Normalize ONCE, Save Clean, Apply Clean
-            const cleanData = normalizeBranding(data);
-            localStorage.setItem('institutionSettings', JSON.stringify(cleanData));
-            applyBranding(cleanData); 
-        }
-    } catch (e) { 
-        loadPersonalHeader(); // Fallback to cache
-    }
-}
-
-function loadPersonalHeader() {
-    const settingsStr = localStorage.getItem('institutionSettings');
-    if (settingsStr) {
-        try {
-            applyBranding(JSON.parse(settingsStr));
-        } catch (e) {}
-    }
-}
-
-function applyBranding({ name, contact, logo }) {
-    if(name) {
-        const nameEl = document.getElementById('inst-name-display');
-        const footerName = document.getElementById('footer-inst-name');
-        if(nameEl) nameEl.textContent = name;
-        if(footerName) footerName.textContent = name;
-    }
-    if(contact) {
-        const contactEl = document.getElementById('inst-contact-display');
-        if(contactEl) contactEl.textContent = contact;
-    }
-    if(logo) {
-        const el = document.getElementById('inst-logo-img');
-        const container = document.getElementById('inst-header-container');
-        if(el) { el.src = logo; el.style.display = 'block'; }
-        if(container) container.style.display = 'flex';
-    }
-}
-
-// --- SCORING ---
-function calculateTotalScore() {
-    let total = 0;
-    document.querySelectorAll('#iposForm input[type="radio"]:checked').forEach(input => {
-        total += parseInt(input.value);
-    });
-    const display = document.getElementById('total-score-display');
-    if(display) display.innerText = total;
-    return total;
-}
-
-// --- RESULT QR GENERATION (Matches Scanner "Q" Codes) ---
+// --- 2. RESULT QR (DATA PAYLOAD) ---
 function generateQR() {
     const getVal = (name) => {
         const el = document.querySelector(`input[name="${name}"]:checked`);
         return el ? parseInt(el.value) : 0;
     };
 
-    // Helper for Other Symptoms
     const otherSymptoms = [];
     for (let i = 1; i <= 3; i++) {
         const labelEl = document.getElementById(`other_sym_${i}_label`);
@@ -203,7 +148,6 @@ function generateQR() {
     const qrDiv = document.getElementById("qrcode");
     qrDiv.innerHTML = "";
     
-    // Encode for Chinese/Special Characters
     const safeData = encodeURIComponent(JSON.stringify(payload));
     new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
 
@@ -212,11 +156,65 @@ function generateQR() {
     section.scrollIntoView({behavior: 'smooth'});
 }
 
+// --- UTILS ---
+function calculateTotalScore() {
+    let total = 0;
+    document.querySelectorAll('#iposForm input[type="radio"]:checked').forEach(input => {
+        total += parseInt(input.value);
+    });
+    const display = document.getElementById('total-score-display');
+    if(display) display.innerText = total;
+    return total;
+}
+
+function normalizeBranding(data) {
+    const logos = data.headerLogos || (data.logo ? [data.logo] : []);
+    return {
+        name: data.headerName || data.name || "",
+        contact: data.headerContact || data.contact || "",
+        logo: logos.length > 0 ? logos[0] : null
+    };
+}
+
+async function loadInstitutionHeader(instId) {
+    try {
+        const doc = await db.collection('institutions').doc(instId).get();
+        if (doc.exists) { 
+            const data = doc.data();
+            if (data.status === 'suspended') { localStorage.removeItem('institutionSettings'); return; }
+            const cleanData = normalizeBranding(data);
+            localStorage.setItem('institutionSettings', JSON.stringify(cleanData));
+            applyBranding(cleanData); 
+        }
+    } catch (e) { loadPersonalHeader(); }
+}
+
+function loadPersonalHeader() {
+    const settingsStr = localStorage.getItem('institutionSettings');
+    if (settingsStr) { try { applyBranding(JSON.parse(settingsStr)); } catch (e) {} }
+}
+
+function applyBranding({ name, contact, logo }) {
+    if(name) {
+        const nameEl = document.getElementById('inst-name-display');
+        const footerName = document.getElementById('footer-inst-name');
+        if(nameEl) nameEl.textContent = name;
+        if(footerName) footerName.textContent = name;
+    }
+    if(contact) document.getElementById('inst-contact-display').textContent = contact;
+    if(logo) {
+        const el = document.getElementById('inst-logo-img');
+        const container = document.getElementById('inst-header-container');
+        if(el) { el.src = logo; el.style.display = 'block'; }
+        if(container) container.style.display = 'flex';
+    }
+}
+
 function injectStandardFooter() {
     const existing = document.querySelector('footer');
     if(existing) existing.remove();
     document.body.insertAdjacentHTML('beforeend', `
-<footer class="standard-footer" style="padding: 15px 10px; background: transparent; border-top: none;">
+        <footer class="standard-footer" style="padding: 15px 10px; background: transparent; border-top: none;">
             <div class="footer-inner" style="line-height: 1.4;">
                 <p style="margin: 0; font-weight: bold; color: #495057;">&copy; 2026 Alivioscript Solutions</p>
                 <p style="margin: 2px 0; color: #6c757d;">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
@@ -226,6 +224,4 @@ function injectStandardFooter() {
     `);
 }
 
-function printPDF() {
-    window.print(); 
-}
+function printPDF() { window.print(); }
