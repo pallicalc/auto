@@ -23,10 +23,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('openSettingsBtn').addEventListener('click', openSettings);
         document.getElementById('closeSettingsBtn').addEventListener('click', closeSettings);
     }
-    if(document.getElementById('openShareBtn')) {
-        document.getElementById('openShareBtn').addEventListener('click', openShareModal);
-        document.getElementById('closeShareBtn').addEventListener('click', closeShareModal);
-    }
+if(document.getElementById('openScannerBtn')) {
+    document.getElementById('openScannerBtn').addEventListener('click', () => {
+        window.location.href = 'diagnostic/scan.html';
+    });
+}
     if(document.getElementById('institutionForm')) {
         document.getElementById('institutionForm').addEventListener('submit', saveSettings);
     }
