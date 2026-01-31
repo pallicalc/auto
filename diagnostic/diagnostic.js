@@ -11,58 +11,27 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ==========================================
-// 1. IPOS SCORING LOGIC
-// ==========================================
-
-// Standard Questions (0=Good, 4=Bad)
-const standardQuestions = [
-    'pain', 'sob', 'weak', 'nau', 'vom', 'app', 'con', 'mou', 'dro', 'mob', // Q2 Symptoms
-    'other_sym_val', // Q2 Other
-    'anxious', 'family', 'depressed', // Q3-Q5
-    'practical' // Q9
-];
-
-[cite_start]// Reversed Questions (0=Bad/High Score, 4=Good/Low Score) [cite: 62-95]
-// Logic: Score = 4 minus Selected Value
-const reverseQuestions = [
-    'peace', // Q6
-    'share', // Q7
-    'info'   // Q8
-];
-
+// 1. SIMPLE SUM SCORING (HTML handles the logic)
 function calculateTotalScore() {
     let total = 0;
-
-    // 1. Calculate Standard Items (Value = Score)
-    standardQuestions.forEach(id => {
-        const el = document.querySelector(`input[name="${id}"]:checked`);
-        if (el) {
-            total += parseInt(el.value);
-        }
+    
+    // Find all checked radio buttons inside the form
+    const checkedInputs = document.querySelectorAll('#iposForm input[type="radio"]:checked');
+    
+    checkedInputs.forEach(input => {
+        // The HTML value is already the correct 'score' (e.g., 4 for 'Not at all' on Q6)
+        total += parseInt(input.value);
     });
 
-    // 2. Calculate Reversed Items (Score = 4 - Value)
-    reverseQuestions.forEach(id => {
-        const el = document.querySelector(`input[name="${id}"]:checked`);
-        if (el) {
-            const val = parseInt(el.value);
-            total += (4 - val); // REVERSAL FORMULA
-        }
-    });
-
-    // Update Display
     const display = document.getElementById('total-score-display');
-    if (display) display.innerText = total;
-
+    if(display) display.innerText = total;
+    
     return total;
 }
 
-// ==========================================
-// 2. QR GENERATION (Digital Clipboard)
-// ==========================================
+// 2. QR GENERATION
 function generateQR() {
-    // Helper to get raw value
+    // Helper to safely get value
     const getVal = (name) => {
         const el = document.querySelector(`input[name="${name}"]:checked`);
         return el ? parseInt(el.value) : 0;
@@ -71,7 +40,7 @@ function generateQR() {
     const payload = {
         t: "IPOS",
         d: Date.now(),
-        score: calculateTotalScore(), // Saves the calculated score
+        score: calculateTotalScore(),
         q1: document.getElementById('q1_input').value.substring(0, 100),
         s: { // Symptoms
             p: getVal('pain'), s: getVal('sob'), w: getVal('weak'),
@@ -100,9 +69,7 @@ function generateQR() {
     section.scrollIntoView({behavior: 'smooth'});
 }
 
-// ==========================================
 // 3. BRANDING UTILITIES
-// ==========================================
 async function loadInstitutionData(id) {
     if (!id) return;
     try {

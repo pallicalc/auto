@@ -15,58 +15,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script src="../diagnostic.js"></script>
-
-    <style>
-        /* LAYOUT & OVERRIDES */
-        body { display: flex; flex-direction: column; min-height: 100vh; background-color: #f0f2f5; margin: 0; }
-        .main-container { flex: 1; width: 100%; max-width: 800px; margin: 20px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-
-        /* HEADER */
-        .header-ipos { 
-            background: linear-gradient(135deg, #0061f2 0%, #00c6f7 100%) !important; 
-            margin: -30px -30px 30px -30px; border-radius: 12px 12px 0 0; padding: 30px; color: white;
-            box-shadow: 0 4px 12px rgba(0, 97, 242, 0.2);
-        }
-        
-        /* QUESTION STYLES */
-        .question-card { background: #fff; border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid #eef2f6; break-inside: avoid; }
-        .q-label { font-weight: 700; color: #2c3e50; margin-bottom: 12px; display: block; font-size: 15px; }
-        .sub-label { display:block; font-weight:600; font-size:14px; margin-bottom:8px; color:#495057; }
-        
-        /* SCALES */
-        .scale-container { display: flex; justify-content: space-between; gap: 4px; margin-top: 10px; margin-bottom: 15px; }
-        .scale-opt { flex: 1; text-align: center; position: relative; }
-        .scale-opt input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; }
-        .scale-opt label {
-            display: flex; flex-direction: column; justify-content: center; height: 50px;
-            background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;
-            color: #6c757d; font-weight: 700; transition: all 0.2s; font-size: 13px; line-height: 1.1;
-        }
-        .scale-opt input:checked + label { background: #e3f2fd; border-color: #0061f2; color: #0061f2; box-shadow: 0 2px 5px rgba(0,97,242,0.15); }
-        .scale-desc { font-size: 9px; font-weight: 400; margin-top: 2px; }
-
-        /* PRINT */
-        .blank-mode .scale-opt label { background: white !important; border: 1px solid #333 !important; color: #ccc !important; }
-        @media print { body { background: white; } .no-print, .legal-footer { display: none !important; } .main-container { box-shadow: none; margin: 0; padding: 0; max-width: 100%; } }
-        
-        /* SCORE BOX */
-        .score-box { background: #2c3e50; color: white; padding: 20px; border-radius: 12px; margin-top: 30px; display: flex; justify-content: space-between; align-items: center; }
-        .score-val { font-size: 28px; font-weight: 800; color: #00c6f7; }
-        
-        /* FOOTER */
-        .legal-footer { width: 100%; margin-top: 40px; padding: 24px 0; border-top: 1px solid #dee2e6; text-align: center; background-color: #f8f9fa; color: #6c757d; }
-    </style>
 </head>
 <body>
 
-    <div id="pdf-loading" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:9999; flex-direction:column; justify-content:center; align-items:center;">
+    <div id="pdf-loading">
         <div style="display:inline-block; width:3rem; height:3rem; border:4px solid #f3f3f3; border-top:4px solid #0061f2; border-radius:50%; animation:spin 1s linear infinite;"></div>
         <p style="margin-top:15px; font-weight:bold; color:#555">Generating PDF...</p>
         <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
     </div>
 
     <div class="main-container">
-        
         <div class="header header-ipos">
             <div id="inst-header-container" class="inst-header-container">
                 <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
@@ -76,7 +34,7 @@
             <p>Integrated Palliative care Outcome Scale</p>
         </div>
 
-        <div id="blank-qr-header" style="display:none; text-align:center; margin-bottom:20px; border-bottom:2px dashed #ccc; padding-bottom:15px;">
+        <div id="blank-qr-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:20px;">
                 <div id="blank-qrcode"></div>
                 <div style="text-align:left;"><h4 style="margin:0; color:#0061f2;">Scan to Fill Digitally</h4><small>Use your camera to open this form.</small></div>
@@ -239,44 +197,44 @@
                 <div class="question-card">
                     <label class="q-label">Q6. Have you felt at peace?</label>
                     <div class="scale-container">
-                        <div class="scale-opt"><input type="radio" name="peace" value="0" id="pea_0"><label for="pea_0">0<div class="scale-desc">Not at all</div></label></div>
-                        <div class="scale-opt"><input type="radio" name="peace" value="1" id="pea_1"><label for="pea_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="peace" value="4" id="pea_0"><label for="pea_0">4<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="peace" value="3" id="pea_1"><label for="pea_1">3</label></div>
                         <div class="scale-opt"><input type="radio" name="peace" value="2" id="pea_2"><label for="pea_2">2</label></div>
-                        <div class="scale-opt"><input type="radio" name="peace" value="3" id="pea_3"><label for="pea_3">3</label></div>
-                        <div class="scale-opt"><input type="radio" name="peace" value="4" id="pea_4"><label for="pea_4">4<div class="scale-desc">Always</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="peace" value="1" id="pea_3"><label for="pea_3">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="peace" value="0" id="pea_4"><label for="pea_4">0<div class="scale-desc">Always</div></label></div>
                     </div>
                 </div>
 
                 <div class="question-card">
                     <label class="q-label">Q7. Have you been able to share how you are feeling with your family or friends?</label>
                     <div class="scale-container">
-                        <div class="scale-opt"><input type="radio" name="share" value="0" id="sha_0"><label for="sha_0">0<div class="scale-desc">Not at all</div></label></div>
-                        <div class="scale-opt"><input type="radio" name="share" value="1" id="sha_1"><label for="sha_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="share" value="4" id="sha_0"><label for="sha_0">4<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="share" value="3" id="sha_1"><label for="sha_1">3</label></div>
                         <div class="scale-opt"><input type="radio" name="share" value="2" id="sha_2"><label for="sha_2">2</label></div>
-                        <div class="scale-opt"><input type="radio" name="share" value="3" id="sha_3"><label for="sha_3">3</label></div>
-                        <div class="scale-opt"><input type="radio" name="share" value="4" id="sha_4"><label for="sha_4">4<div class="scale-desc">Always</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="share" value="1" id="sha_3"><label for="sha_3">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="share" value="0" id="sha_4"><label for="sha_4">0<div class="scale-desc">Always</div></label></div>
                     </div>
                 </div>
 
                 <div class="question-card">
                     <label class="q-label">Q8. Have you had as much information as you wanted?</label>
                     <div class="scale-container">
-                        <div class="scale-opt"><input type="radio" name="info" value="0" id="inf_0"><label for="inf_0">0<div class="scale-desc">Not at all</div></label></div>
-                        <div class="scale-opt"><input type="radio" name="info" value="1" id="inf_1"><label for="inf_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="info" value="4" id="inf_0"><label for="inf_0">4<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="info" value="3" id="inf_1"><label for="inf_1">3</label></div>
                         <div class="scale-opt"><input type="radio" name="info" value="2" id="inf_2"><label for="inf_2">2</label></div>
-                        <div class="scale-opt"><input type="radio" name="info" value="3" id="inf_3"><label for="inf_3">3</label></div>
-                        <div class="scale-opt"><input type="radio" name="info" value="4" id="inf_4"><label for="inf_4">4<div class="scale-desc">Always</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="info" value="1" id="inf_3"><label for="inf_3">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="info" value="0" id="inf_4"><label for="inf_4">0<div class="scale-desc">Always</div></label></div>
                     </div>
                 </div>
 
                 <div class="question-card">
                     <label class="q-label">Q9. Have any practical problems resulting from your illness been addressed?</label>
                     <div class="scale-container">
-                        <div class="scale-opt"><input type="radio" name="practical" value="0" id="pra_0"><label for="pra_0">0<div class="scale-desc">Addressed</div></label></div>
-                        <div class="scale-opt"><input type="radio" name="practical" value="1" id="pra_1"><label for="pra_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="practical" value="4" id="pra_0"><label for="pra_0">4<div class="scale-desc">Not addressed</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="practical" value="3" id="pra_1"><label for="pra_1">3</label></div>
                         <div class="scale-opt"><input type="radio" name="practical" value="2" id="pra_2"><label for="pra_2">2</label></div>
-                        <div class="scale-opt"><input type="radio" name="practical" value="3" id="pra_3"><label for="pra_3">3</label></div>
-                        <div class="scale-opt"><input type="radio" name="practical" value="4" id="pra_4"><label for="pra_4">4<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="practical" value="1" id="pra_3"><label for="pra_3">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="practical" value="0" id="pra_4"><label for="pra_4">0<div class="scale-desc">Addressed</div></label></div>
                     </div>
                 </div>
 
@@ -294,7 +252,7 @@
                     <div class="score-val" id="total-score-display">0</div>
                 </div>
 
-                <div id="qr-section" style="display:none; text-align:center; margin-top:30px; border:2px solid #28a745; padding:15px; border-radius:10px;">
+                <div id="qr-section">
                     <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:10px; border-radius:8px; margin-bottom:10px;">
                         <i class="bi bi-check-circle-fill"></i> <strong>Scan to Save</strong>
                     </div>

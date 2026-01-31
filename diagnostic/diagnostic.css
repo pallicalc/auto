@@ -1,6 +1,6 @@
 /* --- diagnostic.css --- */
 
-/* 1. GLOBAL RESET & LAYOUT */
+/* 1. GLOBAL RESET */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -18,7 +18,7 @@ body {
 .main-container {
     flex: 1;
     width: 100%;
-    max-width: 800px; /* Wider for clinical view */
+    max-width: 800px;
     margin: 20px auto;
     background: white;
     padding: 30px;
@@ -28,14 +28,13 @@ body {
 
 /* 3. HEADERS & BRANDING */
 .header {
-    margin: -30px -30px 30px -30px; /* Bleed to edges */
+    margin: -30px -30px 30px -30px;
     border-radius: 12px 12px 0 0;
     padding: 30px;
     color: white;
     text-align: center;
 }
 
-/* Specific IPOS Header Gradient */
 .header-ipos {
     background: linear-gradient(135deg, #0061f2 0%, #00c6f7 100%);
     box-shadow: 0 4px 12px rgba(0, 97, 242, 0.2);
@@ -44,7 +43,6 @@ body {
 .header h1 { font-size: 1.5rem; margin-bottom: 5px; font-weight: 700; }
 .header p { opacity: 0.9; font-size: 0.9rem; }
 
-/* Dynamic Institution Header (Hidden by default) */
 .inst-header-container {
     display: none;
     align-items: center;
@@ -84,21 +82,34 @@ body {
 }
 .nav-link:hover { color: #007bff; }
 
-/* 5. QUESTION CARDS & INPUTS */
+/* 5. QUESTION CARDS */
 .question-card {
     background: #fff;
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 20px;
     border: 1px solid #eef2f6;
-    break-inside: avoid; /* Important for PDF */
+    break-inside: avoid;
 }
 .q-label { font-weight: 700; color: #2c3e50; margin-bottom: 12px; display: block; font-size: 15px; }
 
-/* 6. SCALE RADIO BUTTONS (0-4) */
-.scale-container { display: flex; justify-content: space-between; gap: 4px; margin-top: 10px; }
+/* 6. SCALE RADIO BUTTONS (CRITICAL FIX) */
+.scale-container { display: flex; justify-content: space-between; gap: 4px; margin-top: 10px; margin-bottom: 15px; }
 .scale-opt { flex: 1; text-align: center; position: relative; }
-.scale-opt input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; }
+
+/* FIX: Added top:0, left:0, margin:0 to force alignment */
+.scale-opt input { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    margin: 0;
+    opacity: 0; 
+    width: 100%; 
+    height: 100%; 
+    cursor: pointer; 
+    z-index: 2; 
+}
+
 .scale-opt label {
     display: flex; flex-direction: column; justify-content: center; height: 50px;
     background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;
@@ -111,7 +122,7 @@ body {
 }
 .scale-desc { font-size: 9px; font-weight: 400; margin-top: 2px; }
 
-/* 7. SCORE BOX */
+/* 7. SCORE & BUTTONS */
 .score-box {
     background: #2c3e50;
     color: white;
@@ -126,7 +137,6 @@ body {
 .score-title { font-size: 14px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
 .score-val { font-size: 28px; font-weight: 800; color: #00c6f7; }
 
-/* 8. BUTTONS */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -142,19 +152,10 @@ body {
     font-size: 1rem;
 }
 .btn:active { transform: scale(0.98); }
+.btn-buccal { background: linear-gradient(135deg, #0061f2 0%, #00c6f7 100%); color: white; box-shadow: 0 4px 15px rgba(0, 97, 242, 0.3); }
+.btn-pdf { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3); }
 
-.btn-buccal { /* Blue */
-    background: linear-gradient(135deg, #0061f2 0%, #00c6f7 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(0, 97, 242, 0.3);
-}
-.btn-pdf { /* Gray */
-    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
-}
-
-/* 9. LOADING SPINNER */
+/* 8. LOADING & PRINT */
 #pdf-loading {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(255,255,255,0.95); z-index: 9999;
@@ -162,22 +163,12 @@ body {
     justify-content: center; align-items: center;
 }
 
-/* 10. PRINT / PDF SUPPORT */
-.blank-mode .scale-opt label {
-    background: white !important; border: 1px solid #333 !important; color: #ccc !important;
-}
+.blank-mode .scale-opt label { background: white !important; border: 1px solid #333 !important; color: #ccc !important; }
+#blank-qr-header, #qr-section { display: none; }
+#qr-section { text-align: center; margin-top: 30px; border: 2px solid #28a745; padding: 15px; border-radius: 10px; }
+#blank-qr-header { text-align: center; margin-bottom: 20px; border-bottom: 2px dashed #ccc; padding-bottom: 15px; }
 
-#blank-qr-header {
-    display: none; text-align: center; margin-bottom: 20px;
-    border-bottom: 2px dashed #ccc; padding-bottom: 15px;
-}
-
-#qr-section {
-    display: none; text-align: center; margin-top: 30px;
-    border: 2px solid #28a745; padding: 15px; border-radius: 10px;
-}
-
-/* 11. FULL WIDTH FOOTER */
+/* 9. FOOTER & MEDIA */
 .legal-footer {
     width: 100%;
     margin-top: 40px;
@@ -192,7 +183,6 @@ body {
 .author-name { font-weight: 600; color: #1e293b; }
 .legal-warning { display: block; color: #B22222; font-weight: 600; font-size: 11px; margin-top: 2px; }
 
-/* 12. MEDIA QUERIES (Mobile & Print) */
 @media (max-width: 600px) {
     .main-container { margin: 0; border-radius: 0; padding: 20px; max-width: 100%; }
     .header { margin: -20px -20px 20px -20px; border-radius: 0; }
@@ -201,7 +191,6 @@ body {
 
 @media print {
     body { background: white; }
-    .no-print { display: none !important; }
-    .legal-footer { display: none !important; } /* Hide web footer on print */
+    .no-print, .legal-footer { display: none !important; }
     .main-container { box-shadow: none; margin: 0; padding: 0; width: 100%; max-width: 100%; }
 }
