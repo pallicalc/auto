@@ -341,11 +341,13 @@
                     }
                 }
 
-                // B. LOAD PDF (Changing target to 'eng.pdf')
+                // B. LOAD PDF (Force Cache Busting with '?v=timestamp')
                 const { PDFDocument, rgb, StandardFonts } = PDFLib;
                 
-                // IMPORTANT: Ensure 'eng.pdf' exists in the folder!
-                const existingPdfBytes = await fetch('eng.pdf').then(res => {
+                // CRITICAL FIX: Append timestamp to force new download
+                const pdfUrl = 'eng.pdf?v=' + Date.now();
+                
+                const existingPdfBytes = await fetch(pdfUrl).then(res => {
                     if (!res.ok) throw new Error("File eng.pdf not found!");
                     return res.arrayBuffer();
                 });
@@ -355,13 +357,16 @@
                 
                 const helveticaFont = await newPdf.embedFont(StandardFonts.Helvetica);
                 const helveticaBold = await newPdf.embedFont(StandardFonts.HelveticaBold);
-                const embeddedPages = await newPdf.embedPdf(pdfDoc);
+
+                // CRITICAL FIX: Explicitly embed ALL pages by index
+                const pageIndices = pdfDoc.getPageIndices(); 
+                const embeddedPages = await newPdf.embedPdf(pdfDoc, pageIndices);
 
                 const A4_W = 595.28; 
                 const A4_H = 841.89;
                 const FOOTER_H = 80;
 
-                // C. STAMP FOOTER (Matches Layout for all pages)
+                // C. STAMP FOOTER (Iterates through ALL pages)
                 for (const page of embeddedPages) {
                     const newPage = newPdf.addPage([A4_W, A4_H]);
                     
