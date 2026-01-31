@@ -1,381 +1,410 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>IPOS Assessment (English) | PalliCalc</title>
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-<style>
-    :root {
-        --primary: #007bff;
-        --bg: #f8fafc;
-        --text: #334155;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IPOS Assessment | PalliCalc</title>
     
-    body {
-        font-family: 'Inter', sans-serif;
-        background: var(--bg);
-        margin: 0;
-        padding: 20px;
-        color: var(--text);
-    }
-
-    .container {
-        max-width: 600px;
-        margin: 0 auto;
-        background: white;
-        padding: 25px;
-        border-radius: 16px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    }
-
-    /* HEADER */
-    .nav-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 25px;
-        border-bottom: 1px solid #e2e8f0;
-        padding-bottom: 15px;
-    }
+    <link rel="stylesheet" href="../diagnostic.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     
-    .back-btn {
-        text-decoration: none;
-        color: var(--primary);
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 0.95rem;
-    }
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    h1 { margin: 0; font-size: 1.4rem; color: #1e293b; font-weight: 700; margin-left: auto; margin-right: auto; transform: translateX(-20px); }
-    
-    .subtitle {
-        background: #eff6ff;
-        color: #1e40af;
-        padding: 15px;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        margin-bottom: 30px;
-        line-height: 1.5;
-        border-left: 4px solid #3b82f6;
-    }
+    <script src="../diagnostic.js"></script>
 
-    /* QUESTIONS */
-    .question-block {
-        margin-bottom: 30px;
-        padding-bottom: 20px;
-        border-bottom: 1px dashed #e2e8f0;
-    }
-    
-    .q-label {
-        font-weight: 700;
-        font-size: 1.05rem;
-        margin-bottom: 15px;
-        display: block;
-        color: #0f172a;
-    }
+    <style>
+        /* LAYOUT & OVERRIDES */
+        body { display: flex; flex-direction: column; min-height: 100vh; background-color: #f0f2f5; margin: 0; }
+        .main-container { flex: 1; width: 100%; max-width: 800px; margin: 20px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
 
-    /* SCALE (0-4) */
-    .scale-options {
-        display: flex;
-        justify-content: space-between;
-        gap: 4px;
-    }
-    
-    .scale-opt {
-        flex: 1;
-        text-align: center;
-        position: relative;
-    }
-    
-    .scale-opt input {
-        position: absolute;
-        opacity: 0;
-        cursor: pointer;
-        height: 100%;
-        width: 100%;
-        z-index: 2;
-    }
-    
-    .scale-opt label {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        height: 60px;
-        background: #f1f5f9;
-        border-radius: 8px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #64748b;
-        transition: all 0.2s ease;
-        border: 2px solid transparent;
-    }
+        /* HEADER */
+        .header-ipos { 
+            background: linear-gradient(135deg, #0061f2 0%, #00c6f7 100%) !important; 
+            margin: -30px -30px 30px -30px; border-radius: 12px 12px 0 0; padding: 30px; color: white;
+            box-shadow: 0 4px 12px rgba(0, 97, 242, 0.2);
+        }
+        
+        /* QUESTION STYLES */
+        .question-card { background: #fff; border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid #eef2f6; break-inside: avoid; }
+        .q-label { font-weight: 700; color: #2c3e50; margin-bottom: 12px; display: block; font-size: 15px; }
+        .sub-label { display:block; font-weight:600; font-size:14px; margin-bottom:8px; color:#495057; }
+        
+        /* SCALES */
+        .scale-container { display: flex; justify-content: space-between; gap: 4px; margin-top: 10px; margin-bottom: 15px; }
+        .scale-opt { flex: 1; text-align: center; position: relative; }
+        .scale-opt input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; }
+        .scale-opt label {
+            display: flex; flex-direction: column; justify-content: center; height: 50px;
+            background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;
+            color: #6c757d; font-weight: 700; transition: all 0.2s; font-size: 13px; line-height: 1.1;
+        }
+        .scale-opt input:checked + label { background: #e3f2fd; border-color: #0061f2; color: #0061f2; box-shadow: 0 2px 5px rgba(0,97,242,0.15); }
+        .scale-desc { font-size: 9px; font-weight: 400; margin-top: 2px; }
 
-    .scale-desc {
-        font-size: 0.65rem;
-        font-weight: 400;
-        margin-top: 2px;
-        line-height: 1;
-    }
-
-    /* Checked State */
-    .scale-opt input:checked + label {
-        background: #e0f2fe;
-        border-color: #007bff;
-        color: #007bff;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px rgba(0,123,255,0.15);
-    }
-
-    /* SUBMIT BUTTON */
-    .btn-submit {
-        width: 100%;
-        background: linear-gradient(135deg, #28a745, #20c997);
-        color: white;
-        border: none;
-        padding: 18px;
-        font-size: 1.1rem;
-        font-weight: 700;
-        border-radius: 12px;
-        cursor: pointer;
-        margin-top: 10px;
-        box-shadow: 0 4px 12px rgba(40,167,69,0.3);
-        transition: transform 0.2s;
-    }
-    
-    .btn-submit:active { transform: scale(0.98); }
-    .btn-submit:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
-
-    /* RESULTS & LOADING */
-    #qr-result {
-        display: none;
-        margin-top: 30px;
-        text-align: center;
-        background: #f0fdf4;
-        padding: 30px 20px;
-        border-radius: 16px;
-        border: 2px solid #22c55e;
-        animation: fadeIn 0.5s ease;
-    }
-    
-    #loadingOverlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(255,255,255,0.95); z-index: 9999;
-        display: flex; flex-direction: column;
-        justify-content: center; align-items: center;
-    }
-    
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-</style>
+        /* PRINT */
+        .blank-mode .scale-opt label { background: white !important; border: 1px solid #333 !important; color: #ccc !important; }
+        @media print { body { background: white; } .no-print, .legal-footer { display: none !important; } .main-container { box-shadow: none; margin: 0; padding: 0; max-width: 100%; } }
+        
+        /* SCORE BOX */
+        .score-box { background: #2c3e50; color: white; padding: 20px; border-radius: 12px; margin-top: 30px; display: flex; justify-content: space-between; align-items: center; }
+        .score-val { font-size: 28px; font-weight: 800; color: #00c6f7; }
+        
+        /* FOOTER */
+        .legal-footer { width: 100%; margin-top: 40px; padding: 24px 0; border-top: 1px solid #dee2e6; text-align: center; background-color: #f8f9fa; color: #6c757d; }
+    </style>
 </head>
 <body>
 
-    <div id="loadingOverlay">
-        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem; border: 4px solid #e2e8f0; border-top-color: #007bff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-        <div style="color: #64748b; font-weight: 600;">Loading Assessment...</div>
+    <div id="pdf-loading" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:9999; flex-direction:column; justify-content:center; align-items:center;">
+        <div style="display:inline-block; width:3rem; height:3rem; border:4px solid #f3f3f3; border-top:4px solid #0061f2; border-radius:50%; animation:spin 1s linear infinite;"></div>
+        <p style="margin-top:15px; font-weight:bold; color:#555">Generating PDF...</p>
+        <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
     </div>
-    <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
 
-    <div class="container">
-        <div class="nav-header">
-            <a href="../../diagnostic.html" class="back-btn" id="backBtn"><i class="bi bi-arrow-left"></i> Back</a>
+    <div class="main-container">
+        
+        <div class="header header-ipos">
+            <div id="inst-header-container" class="inst-header-container">
+                <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+                <div class="inst-info"><h3 id="inst-name-display"></h3><p id="inst-contact-display"></p></div>
+            </div>
             <h1>IPOS Assessment</h1>
+            <p>Integrated Palliative care Outcome Scale</p>
         </div>
 
-        <div class="subtitle">
-            <i class="bi bi-info-circle-fill" style="margin-right: 6px;"></i>
-            Please select the number that best describes how you have been feeling over the <strong>past 3 days</strong>.
+        <div id="blank-qr-header" style="display:none; text-align:center; margin-bottom:20px; border-bottom:2px dashed #ccc; padding-bottom:15px;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:20px;">
+                <div id="blank-qrcode"></div>
+                <div style="text-align:left;"><h4 style="margin:0; color:#0061f2;">Scan to Fill Digitally</h4><small>Use your camera to open this form.</small></div>
+            </div>
+        </div>
+
+        <div class="nav-bar no-print">
+            <a href="../../diagnostic.html" class="nav-link" id="backLink"><i class="bi bi-arrow-left"></i> Back</a>
+            <div class="nav-link" style="color:#6c757d; cursor:default;"><i class="bi bi-calendar-event"></i> <span id="dateDisplay"></span></div>
         </div>
 
         <form id="iposForm">
-            
-            <div id="questionsContainer"></div>
+            <div id="pdf-page-1">
+                <div class="question-card">
+                    <label class="q-label">Q1. What have been your main problems or concerns over the past 3 days?</label>
+                    <textarea class="form-control" id="q1_input" rows="3" style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" placeholder="List concerns..."></textarea>
+                </div>
 
-            <button type="button" class="btn-submit" id="generateBtn" onclick="generateBridgeQR()">
-                Generate QR Code
-            </button>
-        </form>
+                <div class="question-card">
+                    <label class="q-label">Q2. How have these symptoms affected you?</label>
+                    
+                    <label class="sub-label">Pain</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="pain" value="0" id="pain_0"><label for="pain_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="pain" value="1" id="pain_1"><label for="pain_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="pain" value="2" id="pain_2"><label for="pain_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="pain" value="3" id="pain_3"><label for="pain_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="pain" value="4" id="pain_4"><label for="pain_4">4<div class="scale-desc">Over- whelm.</div></label></div>
+                    </div>
 
-        <div id="qr-result">
-            <h3 style="margin: 0 0 15px 0; color: #15803d;"><i class="bi bi-check-circle-fill"></i> Assessment Complete</h3>
-            <p style="margin: 0 0 20px 0; color: #166534; font-size: 0.9rem;">Show this code to your doctor to save the results.</p>
-            
-            <div id="qrcode" style="display:flex; justify-content:center; background: white; padding: 15px; border-radius: 10px; width: fit-content; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
-        </div>
-    </div>
+                    <label class="sub-label">Shortness of Breath</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="sob" value="0" id="sob_0"><label for="sob_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="sob" value="1" id="sob_1"><label for="sob_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="sob" value="2" id="sob_2"><label for="sob_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="sob" value="3" id="sob_3"><label for="sob_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="sob" value="4" id="sob_4"><label for="sob_4">4<div class="scale-desc">Over- whelm.</div></label></div>
+                    </div>
 
-<script>
-    // --- 1. CONFIG & DATA ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
-        authDomain: "pallicalc-eabdc.firebaseapp.com",
-        projectId: "pallicalc-eabdc",
-        storageBucket: "pallicalc-eabdc.firebasestorage.app",
-        messagingSenderId: "347532270864",
-        appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+                    <label class="sub-label">Weakness</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="weak" value="0" id="weak_0"><label for="weak_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="weak" value="1" id="weak_1"><label for="weak_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="weak" value="2" id="weak_2"><label for="weak_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="weak" value="3" id="weak_3"><label for="weak_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="weak" value="4" id="weak_4"><label for="weak_4">4<div class="scale-desc">Over- whelm.</div></label></div>
+                    </div>
 
-    // The Questions
-    const questions = [
-        "1. Have you been affected by Pain?",
-        "2. Have you been affected by Shortness of Breath?",
-        "3. Have you been affected by Weakness or Lack of Energy?",
-        "4. Have you been affected by Nausea?",
-        "5. Have you been affected by Vomiting?",
-        "6. Have you been affected by Poor Appetite?",
-        "7. Have you been affected by Constipation?",
-        "8. Have you been feeling Anxious or Worried?",
-        "9. Have your family or friends been anxious or worried about you?",
-        "10. Have you been feeling Depressed?"
-    ];
+                    <label class="sub-label">Nausea</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="nau" value="0" id="nau_0"><label for="nau_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="nau" value="1" id="nau_1"><label for="nau_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="nau" value="2" id="nau_2"><label for="nau_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="nau" value="3" id="nau_3"><label for="nau_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="nau" value="4" id="nau_4"><label for="nau_4">4<div class="scale-desc">Over- whelm.</div></label></div>
+                    </div>
 
-    let institutionGoogleLink = null;
-    let institutionId = null;
+                    <label class="sub-label">Vomiting</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="vom" value="0" id="vom_0"><label for="vom_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="vom" value="1" id="vom_1"><label for="vom_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="vom" value="2" id="vom_2"><label for="vom_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="vom" value="3" id="vom_3"><label for="vom_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="vom" value="4" id="vom_4"><label for="vom_4">4<div class="scale-desc">Over- whelm.</div></label></div>
+                    </div>
 
-    // --- 2. INITIALIZATION ---
-    document.addEventListener('DOMContentLoaded', async () => {
-        renderQuestions();
-        
-        // Get 'ref' from URL (e.g., ?ref=hospital-kl)
-        const params = new URLSearchParams(window.location.search);
-        institutionId = params.get('ref');
+                    <label class="sub-label">Poor Appetite</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="app" value="0" id="app_0"><label for="app_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="app" value="1" id="app_1"><label for="app_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="app" value="2" id="app_2"><label for="app_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="app" value="3" id="app_3"><label for="app_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="app" value="4" id="app_4"><label for="app_4">4<div class="scale-desc">Over- whelm.</div></label></div>
+                    </div>
 
-        // Update Back Button to keep the ref
-        if(institutionId) {
-            document.getElementById('backBtn').href = `../../diagnostic.html?ref=${institutionId}`;
-        }
+                    <label class="sub-label">Constipation</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="con" value="0" id="con_0"><label for="con_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="con" value="1" id="con_1"><label for="con_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="con" value="2" id="con_2"><label for="con_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="con" value="3" id="con_3"><label for="con_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="con" value="4" id="con_4"><label for="con_4">4<div class="scale-desc">Over- whelm.</div></label></div>
+                    </div>
 
-        if (institutionId) {
-            await fetchConfig(institutionId);
-        } else {
-            // Fallback for testing without a link
-            document.getElementById('loadingOverlay').style.display = 'none';
-            console.warn("No Institution ID provided in URL.");
-        }
-    });
+                    <label class="sub-label">Sore/Dry Mouth</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="mou" value="0" id="mou_0"><label for="mou_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="mou" value="1" id="mou_1"><label for="mou_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="mou" value="2" id="mou_2"><label for="mou_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="mou" value="3" id="mou_3"><label for="mou_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="mou" value="4" id="mou_4"><label for="mou_4">4<div class="scale-desc">Over- whelm.</div></label></div>
+                    </div>
 
-    // --- 3. FETCH CONFIG FROM FIREBASE ---
-    async function fetchConfig(id) {
-        try {
-            const doc = await db.collection('institutions').doc(id).get();
-            if (doc.exists) {
-                const data = doc.data();
-                // We are looking for diagnosticLinks.ipos
-                if (data.diagnosticLinks && data.diagnosticLinks.ipos) {
-                    institutionGoogleLink = data.diagnosticLinks.ipos;
-                } else {
-                    console.warn("Institution has no IPOS link configured.");
-                }
-            }
-        } catch (e) {
-            console.error("Error fetching config:", e);
-        } finally {
-            document.getElementById('loadingOverlay').style.display = 'none';
-        }
-    }
+                    <label class="sub-label">Drowsiness</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="dro" value="0" id="dro_0"><label for="dro_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="dro" value="1" id="dro_1"><label for="dro_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="dro" value="2" id="dro_2"><label for="dro_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="dro" value="3" id="dro_3"><label for="dro_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="dro" value="4" id="dro_4"><label for="dro_4">4<div class="scale-desc">Over- whelm.</div></label></div>
+                    </div>
 
-    // --- 4. RENDER UI ---
-    function renderQuestions() {
-        const container = document.getElementById('questionsContainer');
-        let html = '';
+                    <label class="sub-label">Poor Mobility</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="mob" value="0" id="mob_0"><label for="mob_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="mob" value="1" id="mob_1"><label for="mob_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="mob" value="2" id="mob_2"><label for="mob_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="mob" value="3" id="mob_3"><label for="mob_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="mob" value="4" id="mob_4"><label for="mob_4">4<div class="scale-desc">Over- whelm.</div></label></div>
+                    </div>
 
-        questions.forEach((q, index) => {
-            const qNum = index + 1;
-            html += `
-                <div class="question-block" data-id="Q${qNum}">
-                    <span class="q-label">${q}</span>
-                    <div class="scale-options">
-                        ${renderOption(qNum, 0, "Not at all")}
-                        ${renderOption(qNum, 1, "Slightly")}
-                        ${renderOption(qNum, 2, "Moderately")}
-                        ${renderOption(qNum, 3, "Severely")}
-                        ${renderOption(qNum, 4, "Overwhel.")}
+                    <div class="mt-4 pt-3 border-top" style="margin-top:20px; border-top:1px solid #eee;">
+                        <label class="sub-label text-primary">Other Symptoms:</label>
+                        <input type="text" id="other_sym_label" class="form-control mb-2" maxlength="20" placeholder="e.g. Itchiness" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        <div class="scale-container">
+                            <div class="scale-opt"><input type="radio" name="other_sym_val" value="0" id="oth_0"><label for="oth_0">0</label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_val" value="1" id="oth_1"><label for="oth_1">1</label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_val" value="2" id="oth_2"><label for="oth_2">2</label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_val" value="3" id="oth_3"><label for="oth_3">3</label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_val" value="4" id="oth_4"><label for="oth_4">4</label></div>
+                        </div>
                     </div>
                 </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
-
-    function renderOption(qNum, val, desc) {
-        // Only show description for 0 and 4 to save space on mobile
-        const showDesc = (val === 0 || val === 4) ? `<span class="scale-desc">${desc}</span>` : `<span class="scale-desc">&nbsp;</span>`;
-        return `
-            <div class="scale-opt">
-                <input type="radio" name="Q${qNum}" value="${val}" id="q${qNum}_${val}">
-                <label for="q${qNum}_${val}">
-                    ${val}
-                    ${showDesc}
-                </label>
             </div>
-        `;
-    }
 
-    // --- 5. GENERATE QR LOGIC ---
-    function generateBridgeQR() {
-        // 1. Validation: Check if Google Link exists
-        if (!institutionGoogleLink) {
-            alert("⚠️ System Error: This institution has not configured the IPOS link yet.\nPlease contact the administrator.");
-            return;
-        }
+            <div id="pdf-page-2">
+                <div class="question-card">
+                    <label class="q-label">Q3. Have you been feeling anxious or worried about your illness or treatment?</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="anxious" value="0" id="anx_0"><label for="anx_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="anxious" value="1" id="anx_1"><label for="anx_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="anxious" value="2" id="anx_2"><label for="anx_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="anxious" value="3" id="anx_3"><label for="anx_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="anxious" value="4" id="anx_4"><label for="anx_4">4<div class="scale-desc">Always</div></label></div>
+                    </div>
+                </div>
 
-        // 2. Gather Data
-        let answers = {};
-        for (let i = 1; i <= 10; i++) {
-            const selected = document.querySelector(`input[name="Q${i}"]:checked`);
-            // Default to 0 if skipped? Or force selection? Let's default to 0 to prevent errors.
-            answers[`Q${i}`] = selected ? selected.value : "0"; 
-        }
+                <div class="question-card">
+                    <label class="q-label">Q4. Have any of your family or friends been anxious or worried about you?</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="family" value="0" id="fam_0"><label for="fam_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="family" value="1" id="fam_1"><label for="fam_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="family" value="2" id="fam_2"><label for="fam_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="family" value="3" id="fam_3"><label for="fam_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="family" value="4" id="fam_4"><label for="fam_4">4<div class="scale-desc">Always</div></label></div>
+                    </div>
+                </div>
 
-        // 3. Magic Replacement
-        try {
-            let finalUrl = institutionGoogleLink;
-            
-            // Replace MAGIC_Q1 ... MAGIC_Q10
-            for (let i = 1; i <= 10; i++) {
-                finalUrl = finalUrl.replace(`MAGIC_Q${i}`, answers[`Q${i}`]);
+                <div class="question-card">
+                    <label class="q-label">Q5. Have you been feeling depressed?</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="depressed" value="0" id="dep_0"><label for="dep_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="depressed" value="1" id="dep_1"><label for="dep_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="depressed" value="2" id="dep_2"><label for="dep_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="depressed" value="3" id="dep_3"><label for="dep_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="depressed" value="4" id="dep_4"><label for="dep_4">4<div class="scale-desc">Always</div></label></div>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <label class="q-label">Q6. Have you felt at peace?</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="peace" value="0" id="pea_0"><label for="pea_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="peace" value="1" id="pea_1"><label for="pea_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="peace" value="2" id="pea_2"><label for="pea_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="peace" value="3" id="pea_3"><label for="pea_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="peace" value="4" id="pea_4"><label for="pea_4">4<div class="scale-desc">Always</div></label></div>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <label class="q-label">Q7. Have you been able to share how you are feeling with your family or friends?</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="share" value="0" id="sha_0"><label for="sha_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="share" value="1" id="sha_1"><label for="sha_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="share" value="2" id="sha_2"><label for="sha_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="share" value="3" id="sha_3"><label for="sha_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="share" value="4" id="sha_4"><label for="sha_4">4<div class="scale-desc">Always</div></label></div>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <label class="q-label">Q8. Have you had as much information as you wanted?</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="info" value="0" id="inf_0"><label for="inf_0">0<div class="scale-desc">Not at all</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="info" value="1" id="inf_1"><label for="inf_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="info" value="2" id="inf_2"><label for="inf_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="info" value="3" id="inf_3"><label for="inf_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="info" value="4" id="inf_4"><label for="inf_4">4<div class="scale-desc">Always</div></label></div>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <label class="q-label">Q9. Have any practical problems resulting from your illness been addressed?</label>
+                    <div class="scale-container">
+                        <div class="scale-opt"><input type="radio" name="practical" value="0" id="pra_0"><label for="pra_0">0<div class="scale-desc">Addressed</div></label></div>
+                        <div class="scale-opt"><input type="radio" name="practical" value="1" id="pra_1"><label for="pra_1">1</label></div>
+                        <div class="scale-opt"><input type="radio" name="practical" value="2" id="pra_2"><label for="pra_2">2</label></div>
+                        <div class="scale-opt"><input type="radio" name="practical" value="3" id="pra_3"><label for="pra_3">3</label></div>
+                        <div class="scale-opt"><input type="radio" name="practical" value="4" id="pra_4"><label for="pra_4">4<div class="scale-desc">Not at all</div></label></div>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <label class="q-label">Q10. How did you complete this questionnaire?</label>
+                    <select id="completion_mode" class="form-select" style="font-size:16px; padding:10px; width:100%; border:1px solid #ced4da; border-radius:6px;">
+                        <option value="0">On my own</option>
+                        <option value="1">With help from a friend or relative</option>
+                        <option value="2">With help from a member of staff</option>
+                    </select>
+                </div>
+                
+                <div class="score-box">
+                    <div><div class="score-title">Total IPOS Score</div><small style="opacity:0.7">Higher score = Higher distress</small></div>
+                    <div class="score-val" id="total-score-display">0</div>
+                </div>
+
+                <div id="qr-section" style="display:none; text-align:center; margin-top:30px; border:2px solid #28a745; padding:15px; border-radius:10px;">
+                    <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:10px; border-radius:8px; margin-bottom:10px;">
+                        <i class="bi bi-check-circle-fill"></i> <strong>Scan to Save</strong>
+                    </div>
+                    <div id="qrcode-container" style="background:white; padding:10px; border-radius:8px; display:inline-block;">
+                        <div id="qrcode"></div>
+                        <div style="font-size:10px; color:#999; margin-top:5px;">IPOS Secure Payload</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons no-print" style="margin-top:30px; display:flex; gap:10px; flex-direction:column;">
+                <button type="button" class="btn btn-buccal" onclick="generateQR()" style="width:100%; justify-content:center;">
+                    <i class="bi bi-qr-code-scan"></i> Generate QR
+                </button>
+                <button type="button" class="btn btn-pdf" onclick="downloadSmartPDF()" style="width:100%; justify-content:center;">
+                    <i class="bi bi-printer"></i> Print / Save as PDF
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+    <footer class="legal-footer no-print">
+        <div style="max-width:480px; margin:0 auto; padding:0 20px;">
+            <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
+            <div class="author-info">
+                <span class="author-name">Author: Alison Chai</span>
+                <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
+            </div>
+            <p class="legal-warning">Clinical Tool. For Professional Use Only.</p>
+            <div id="footer-inst-name" style="margin-top:8px; font-weight:bold; color:#0061f2; font-size:11px;"></div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
+            document.getElementById('iposForm').addEventListener('change', calculateTotalScore);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            if (ref) {
+                document.getElementById('backLink').href = `../../diagnostic.html?ref=${ref}`;
+                await loadInstitutionData(ref);
+                new QRCode(document.getElementById("blank-qrcode"), { text: window.location.href, width: 64, height: 64 });
             }
-            
-            // Replace MAGIC_ID with empty string (Doctor fills it)
-            finalUrl = finalUrl.replace('MAGIC_ID', ""); 
+        });
 
-            // 4. Render QR
-            const qrDiv = document.getElementById("qrcode");
-            qrDiv.innerHTML = "";
-            new QRCode(qrDiv, {
-                text: finalUrl,
-                width: 200,
-                height: 200,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
+        async function downloadSmartPDF() {
+            const loading = document.getElementById('pdf-loading');
+            loading.style.display = 'flex';
+            await new Promise(r => setTimeout(r, 500)); 
 
-            // 5. Show Result
-            document.getElementById('qr-result').style.display = 'block';
-            document.getElementById('generateBtn').style.display = 'none'; // Hide button after generating
-            
-            // Scroll to bottom
-            setTimeout(() => {
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-            }, 100);
+            const inputs = document.querySelectorAll('input[type="radio"]:checked');
+            const q1Text = document.getElementById('q1_input').value.trim();
+            const isBlank = (inputs.length === 0 && q1Text === "");
 
-        } catch (e) {
-            console.error(e);
-            alert("Error generating QR code. Please check the console.");
+            if (isBlank) {
+                document.body.classList.add('blank-mode');
+                document.getElementById('blank-qr-header').style.display = 'block';
+                document.getElementById('qr-section').style.display = 'none';
+                document.getElementById('total-score-display').innerText = ""; 
+            } else {
+                generateQR();
+            }
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = 210;
+                const margin = 10;
+                const contentWidth = pageWidth - (margin * 2);
+
+                const header = document.querySelector('.header-ipos');
+                const page1Content = document.getElementById('pdf-page-1');
+                const page2Content = document.getElementById('pdf-page-2');
+                
+                async function captureAndAdd(element, yOffset) {
+                    const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+                    const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                    const imgHeight = (canvas.height * contentWidth) / canvas.width;
+                    pdf.addImage(imgData, 'JPEG', margin, yOffset, contentWidth, imgHeight);
+                    return imgHeight;
+                }
+
+                let currentY = margin;
+                if (isBlank) {
+                    const blankHeader = document.getElementById('blank-qr-header');
+                    currentY += await captureAndAdd(blankHeader, currentY) + 5;
+                } else {
+                    currentY += await captureAndAdd(header, currentY) + 5;
+                }
+                await captureAndAdd(page1Content, currentY);
+
+                pdf.addPage(); 
+                currentY = margin;
+                await captureAndAdd(page2Content, currentY);
+
+                const fname = isBlank ? "IPOS_Blank_Form.pdf" : `IPOS_Result_${new Date().toISOString().slice(0,10)}.pdf`;
+                pdf.save(fname);
+
+            } catch (e) {
+                alert("Error: " + e.message);
+            } finally {
+                document.body.classList.remove('blank-mode');
+                document.getElementById('blank-qr-header').style.display = 'none';
+                document.getElementById('total-score-display').innerText = calculateTotalScore(); 
+                loading.style.display = 'none';
+            }
         }
-    }
-</script>
-
+    </script>
 </body>
 </html>
