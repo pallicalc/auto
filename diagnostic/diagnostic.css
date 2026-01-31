@@ -139,15 +139,15 @@ body {
         max-width: 100%; width: 100%;
     }
     
-    /* 2. Compact Print Header */
+    /* 2. Print Header (Larger Title & QR) */
     #blank-qr-header { 
         display: flex !important; justify-content: space-between; align-items: center;
-        margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #333;
+        margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #333;
     }
-    .print-only-title { margin: 0; font-size: 24px; font-weight: 800; color: #000; }
-    #blank-qr-header > div { border: none !important; padding: 0 !important; gap: 10px !important; }
+    .print-only-title { margin: 0; font-size: 32px; font-weight: 800; color: #000; } /* Larger Title */
+    #blank-qr-header > div { border: none !important; padding: 0 !important; gap: 15px !important; }
     #blank-qr-header h4, #blank-qr-header small { display: none !important; }
-    #blank-qrcode img { width: 60px !important; height: 60px !important; }
+    #blank-qrcode img { width: 100px !important; height: 100px !important; } /* Larger QR */
 
     /* 3. Base Form Layout */
     .question-card {
@@ -182,9 +182,9 @@ body {
 
     /* SMALL Buttons for Page 1 */
     .print-page-1 .scale-opt label {
-        height: 24px !important;       /* Reduced height */
-        line-height: 22px !important;  /* Center text */
-        font-size: 11pt !important;    /* Smaller, readable font */
+        height: 24px !important;
+        line-height: 22px !important;
+        font-size: 11pt !important;
         font-weight: 700;
         background: white !important;
         border: 1px solid #555 !important;
@@ -220,14 +220,15 @@ body {
     }
 
     /* =========================================
-       6. PRINT FOOTER (Minimal & Bottom)
+       6. PRINT FOOTER (Compact & Bottom)
        ========================================= */
     .standard-footer {
         position: static;
         background: transparent; border: none;
-        padding: 10px 0 0 0;
+        padding: 5px 0 0 0; /* Minimal padding */
         text-align: left;
         margin-top: 10px;
+        border-top: 1px solid #ccc; /* Single top border */
     }
     .screen-footer-content { display: none !important; }
     
@@ -242,7 +243,7 @@ body {
     
     .print-copyright-line {
         text-align: center; font-size: 9px; color: #777;
-        border-top: 1px solid #ccc; padding-top: 6px;
+        padding-top: 5px;
     }
 
     /* 7. Utilities */
