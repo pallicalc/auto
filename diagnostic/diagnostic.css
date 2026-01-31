@@ -26,7 +26,7 @@ body {
 }
 
 /* =========================================
-   2. HEADER (Matches Education.css)
+   2. HEADER & BRANDING
    ========================================= */
 .header {
     margin: -20px -20px 24px -20px; 
@@ -43,21 +43,12 @@ body {
     box-shadow: 0 4px 12px rgba(0, 97, 242, 0.2);
 }
 
-.header h1 { 
-    font-size: 26px; 
-    font-weight: 700; 
-    margin: 0 0 10px 0; 
-    line-height: 1.2;
-}
-
+.header h1 { font-size: 26px; font-weight: 700; margin: 0 0 10px 0; line-height: 1.2; }
 .header p { font-size: 14px; opacity: 0.95; margin: 0; }
 
-/* Institution Header (Hidden by default) */
 .inst-header-container {
-    display: none; 
-    align-items: center; gap: 12px; 
-    margin-bottom: 16px; padding-bottom: 16px; 
-    border-bottom: 1px solid rgba(255,255,255,0.3);
+    display: none; align-items: center; gap: 12px; margin-bottom: 16px;
+    padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.3);
 }
 
 .inst-logo {
@@ -70,7 +61,7 @@ body {
 .inst-info p { font-size: 13px; margin: 2px 0 0 0; opacity: 0.9; }
 
 /* =========================================
-   3. NAVIGATION & BUTTONS
+   3. NAVIGATION & UI
    ========================================= */
 .nav-bar {
     display: flex; justify-content: space-between; align-items: center;
@@ -98,10 +89,9 @@ body {
 .q-label { font-weight: 700; color: #2c3e50; margin-bottom: 8px; display: block; font-size: 14px; }
 .sub-label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; color: #495057; margin-top: 8px; }
 
-/* Scale Radio Buttons */
 .scale-container { display: flex; justify-content: space-between; gap: 3px; margin: 5px 0; }
 .scale-opt { flex: 1; text-align: center; position: relative; }
-.scale-opt input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; margin: 0; top: 0; left: 0; }
+.scale-opt input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; margin: 0; left: 0; top: 0; }
 .scale-opt label {
     display: flex; flex-direction: column; justify-content: center; height: 38px;
     background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;
@@ -110,7 +100,6 @@ body {
 .scale-opt input:checked + label { background: #e3f2fd; border-color: #0061f2; color: #0061f2; }
 .scale-desc { font-size: 8px; font-weight: 400; margin-top: 2px; }
 
-/* Score Box */
 .score-box {
     background: #2c3e50; color: white; padding: 15px; border-radius: 10px;
     margin-top: 20px; display: flex; justify-content: space-between; align-items: center;
@@ -119,25 +108,33 @@ body {
 .score-val { font-size: 24px; font-weight: 800; color: #00c6f7; }
 
 /* =========================================
-   5. FOOTER (Matches Uploaded Image)
+   5. STANDARD FOOTER (Web View - Compact)
    ========================================= */
 .standard-footer {
     width: 100%;
     background-color: #f8f9fa;
     border-top: 1px solid #dee2e6;
-    padding: 30px 20px;
+    padding: 10px 0; /* Compact padding */
     text-align: center;
     margin-top: auto;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
-.footer-content p { margin: 0; line-height: 1.5; }
+.footer-inner { max-width: 100%; padding: 0 15px; }
 
-/* Specific Styling from Screenshot */
-.f-copyright { color: #6c757d; font-weight: 700; font-size: 14px; margin-bottom: 4px !important; }
-.f-author { color: #212529; font-weight: 700; font-size: 14px; margin-bottom: 4px !important; }
-.f-creds { color: #6c757d; font-size: 14px; margin-bottom: 8px !important; }
-.f-warning { color: #a73c3c; /* Dark red */ font-weight: 700; font-size: 14px; }
+/* Compact fonts matching Picture 1 */
+.screen-footer-content .f-copyright {
+    color: #6c757d; font-weight: 700; margin: 0 0 2px 0; font-size: 11px;
+}
+.screen-footer-content .f-author {
+    color: #212529; font-weight: 700; margin: 0 0 2px 0; font-size: 11px;
+}
+.screen-footer-content .f-creds {
+    color: #6c757d; margin: 0 0 4px 0; font-size: 11px;
+}
+.screen-footer-content .f-warning {
+    color: #a73c3c; font-weight: 700; margin: 0; font-size: 11px;
+}
 
 #blank-qr-header, #qr-section { display: none; }
 
@@ -147,36 +144,85 @@ body {
 }
 
 /* =========================================
-   6. PRINT STYLES (Clean Layout)
+   6. PRINT STYLES (Strictly Picture 2 & 4)
    ========================================= */
 @media print {
     body { background: white; font-size: 12px; }
-    .no-print, #qr-section { display: none !important; }
+    
+    /* Hide ALL screen elements */
+    .no-print, #qr-section, .header, .nav-bar, .score-box { display: none !important; }
     
     .main-container { box-shadow: none; border: none; margin: 0; padding: 0; max-width: 100%; width: 100%; }
     
-    #blank-qr-header { display: block !important; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px dashed #999; }
+    /* --- HEADER (Picture 2: IPOS Left / QR Right) --- */
+    #blank-qr-header { 
+        display: flex !important; 
+        justify-content: space-between; 
+        align-items: center;
+        margin-bottom: 20px; 
+        padding-bottom: 10px; 
+        border-bottom: 2px solid #333;
+    }
+    .print-only-title {
+        margin: 0 !important;
+        font-size: 28px !important;
+        font-weight: bold;
+        color: #333;
+    }
+    #blank-qr-header > div { /* QR Container */
+        border: none !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center;
+        gap: 10px;
+    }
+    /* Hide text inside QR container (optional, based on visual) or Keep minimal */
+    #blank-qr-header h4, #blank-qr-header small { display: none !important; }
+
+    /* --- FORM FLATTENING --- */
+    .scale-opt label { background: white !important; border: 1px solid #333 !important; color: #000 !important; height: 35px !important; }
+    .scale-opt input:checked + label { border-color: #333 !important; color: #000 !important; }
     .page-break { page-break-after: always; display: block; height: 1px; }
 
-    /* Flatten Radio Buttons */
-    .scale-opt label { background: white !important; border: 1px solid #333 !important; color: #000 !important; height: 35px !important; box-shadow: none; }
-    .scale-opt input:checked + label { border-color: #333 !important; color: #000 !important; }
-
-    /* Footer for Print (Shows Branding + Standard Text) */
+    /* --- FOOTER (Picture 4: Split Layout) --- */
     .standard-footer {
-        position: fixed; bottom: 0; left: 0; width: 100%;
-        background: white; border-top: 2px solid #333; padding: 10px 40px;
-        text-align: right; z-index: 1000;
+        position: static;
+        background: transparent;
+        border: none;
+        padding: 30px 0 0 0;
+        margin-top: 20px;
     }
     
-    /* Reveal Print Branding */
-    #print-branding-container { display: block !important; width: 100%; text-align: right; }
-    .print-logo-row { display: flex; justify-content: flex-end; margin-bottom: 5px; }
-    .print-footer-logo { height: 25px; margin-left: 10px; }
-    #print-inst-name { font-size: 12px; color: #000; display: block; }
-    #print-inst-contact { font-size: 10px; color: #555; }
-    .print-divider { border: 0; border-bottom: 1px solid #ccc; margin: 5px 0 5px auto; width: 100%; }
+    .screen-footer-content { display: none !important; }
+    .footer-inner { padding: 0; max-width: 100%; }
+
+    /* The Split Container */
+    #print-branding-container { display: block !important; width: 100%; }
     
-    /* Scale down footer text for print */
-    .footer-content p { text-align: right; font-size: 10px; }
+    .print-branding-flex {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    /* Left Side: Logos */
+    .print-logo-row { display: flex; align-items: center; gap: 15px; }
+    .print-footer-logo { height: 45px; width: auto; }
+    
+    /* Right Side: Info */
+    .print-info-col { text-align: right; }
+    #print-inst-name { font-size: 16px; color: #000; display: block; margin-bottom: 3px; font-weight: bold; }
+    #print-inst-contact { font-size: 13px; color: #444; }
+    
+    /* Center Bottom: Copyright */
+    .print-copyright-line {
+        text-align: center;
+        font-size: 9px;
+        color: #999;
+        margin-top: 10px;
+        border-top: 1px solid #eee;
+        padding-top: 5px;
+    }
 }
