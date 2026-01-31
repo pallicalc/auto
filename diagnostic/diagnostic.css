@@ -108,13 +108,13 @@ body {
 .score-val { font-size: 24px; font-weight: 800; color: #00c6f7; }
 
 /* =========================================
-   5. STANDARD FOOTER (Web View - Compact)
+   5. STANDARD FOOTER (Web View)
    ========================================= */
 .standard-footer {
     width: 100%;
     background-color: #f8f9fa;
     border-top: 1px solid #dee2e6;
-    padding: 10px 0; /* Compact padding */
+    padding: 15px 0;
     text-align: center;
     margin-top: auto;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
@@ -122,19 +122,10 @@ body {
 
 .footer-inner { max-width: 100%; padding: 0 15px; }
 
-/* Compact fonts matching Picture 1 */
-.screen-footer-content .f-copyright {
-    color: #6c757d; font-weight: 700; margin: 0 0 2px 0; font-size: 11px;
-}
-.screen-footer-content .f-author {
-    color: #212529; font-weight: 700; margin: 0 0 2px 0; font-size: 11px;
-}
-.screen-footer-content .f-creds {
-    color: #6c757d; margin: 0 0 4px 0; font-size: 11px;
-}
-.screen-footer-content .f-warning {
-    color: #a73c3c; font-weight: 700; margin: 0; font-size: 11px;
-}
+.screen-footer-content .f-copyright { color: #6c757d; font-weight: 700; margin: 0 0 2px 0; font-size: 12px; }
+.screen-footer-content .f-author { color: #212529; font-weight: 700; margin: 0 0 2px 0; font-size: 12px; }
+.screen-footer-content .f-creds { color: #6c757d; margin: 0 0 5px 0; font-size: 12px; }
+.screen-footer-content .f-warning { color: #a73c3c; font-weight: 700; margin: 0; font-size: 12px; }
 
 #blank-qr-header, #qr-section { display: none; }
 
@@ -144,85 +135,70 @@ body {
 }
 
 /* =========================================
-   6. PRINT STYLES (Strictly Picture 2 & 4)
+   6. PRINT STYLES (2-Page Optimization)
    ========================================= */
 @media print {
-    body { background: white; font-size: 12px; }
+    /* Base font reduction */
+    body { background: white; font-size: 10px; } 
     
-    /* Hide ALL screen elements */
-    .no-print, #qr-section, .header, .nav-bar, .score-box { display: none !important; }
+    /* Hide non-print elements */
+    .no-print, #qr-section, .header { display: none !important; }
     
+    /* Reset container */
     .main-container { box-shadow: none; border: none; margin: 0; padding: 0; max-width: 100%; width: 100%; }
     
-    /* --- HEADER (Picture 2: IPOS Left / QR Right) --- */
+    /* --- Compact Print Header --- */
     #blank-qr-header { 
-        display: flex !important; 
-        justify-content: space-between; 
-        align-items: center;
-        margin-bottom: 20px; 
-        padding-bottom: 10px; 
-        border-bottom: 2px solid #333;
+        display: flex !important; justify-content: space-between; align-items: center;
+        margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #eee;
     }
-    .print-only-title {
-        margin: 0 !important;
-        font-size: 28px !important;
-        font-weight: bold;
-        color: #333;
-    }
-    #blank-qr-header > div { /* QR Container */
-        border: none !important;
-        padding: 0 !important;
-        display: flex !important;
-        align-items: center;
-        gap: 10px;
-    }
-    /* Hide text inside QR container (optional, based on visual) or Keep minimal */
-    #blank-qr-header h4, #blank-qr-header small { display: none !important; }
+    .print-only-title { margin: 0; font-size: 18px; color: #333; }
+    #blank-qr-header > div { border: none !important; padding: 0 !important; gap: 5px !important; }
+    #blank-qr-header h4 { margin: 0 0 1px 0 !important; font-size: 11px !important; }
+    #blank-qr-header small { font-size: 9px !important; }
+    #blank-qrcode img { width: 60px !important; height: 60px !important; }
 
-    /* --- FORM FLATTENING --- */
-    .scale-opt label { background: white !important; border: 1px solid #333 !important; color: #000 !important; height: 35px !important; }
+    /* --- Ultra-Compact Form Layout --- */
+    .question-card { padding: 5px 10px; margin-bottom: 5px; border: none; border-bottom: 1px dotted #eee; border-radius: 0; }
+    .q-label { margin-bottom: 2px; font-size: 11px; }
+    .sub-label { margin-top: 4px; margin-bottom: 2px; font-size: 10px; }
+    .scale-container { margin: 2px 0; gap: 2px; }
+    
+    /* Flattened & Shortened Radio Buttons */
+    .scale-opt label { 
+        background: white !important; border: 1px solid #333 !important; 
+        color: #000 !important; height: 28px !important; /* Drastically reduced height */
+        font-size: 10px; line-height: 1;
+    }
+    .scale-desc { font-size: 7px; margin-top: 1px; }
     .scale-opt input:checked + label { border-color: #333 !important; color: #000 !important; }
+    
+    /* Page Break Utility */
     .page-break { page-break-after: always; display: block; height: 1px; }
 
-    /* --- FOOTER (Picture 4: Split Layout) --- */
+    /* --- Print Footer (Snug at Bottom) --- */
     .standard-footer {
-        position: static;
-        background: transparent;
-        border: none;
-        padding: 30px 0 0 0;
-        margin-top: 20px;
+        position: static; /* Flows after content */
+        background: transparent; border: none;
+        padding: 5px 0 0 0; /* Minimal padding */
+        text-align: left;
+        margin-top: 10px; /* Minimal margin to sit snug under content */
     }
     
     .screen-footer-content { display: none !important; }
-    .footer-inner { padding: 0; max-width: 100%; }
+    .footer-inner { padding: 0; }
 
-    /* The Split Container */
     #print-branding-container { display: block !important; width: 100%; }
+    .print-branding-top { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px; }
+    .print-logo-row { display: flex; align-items: center; gap: 5px; }
+    .print-footer-logo { height: 30px; width: auto; } 
     
-    .print-branding-flex {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        width: 100%;
-        margin-bottom: 10px;
-    }
-
-    /* Left Side: Logos */
-    .print-logo-row { display: flex; align-items: center; gap: 15px; }
-    .print-footer-logo { height: 45px; width: auto; }
+    .print-info-row { text-align: right; }
+    #print-inst-name { font-size: 12px; color: #333; display: block; margin-bottom: 0; }
+    #print-inst-contact { font-size: 9px; color: #666; }
     
-    /* Right Side: Info */
-    .print-info-col { text-align: right; }
-    #print-inst-name { font-size: 16px; color: #000; display: block; margin-bottom: 3px; font-weight: bold; }
-    #print-inst-contact { font-size: 13px; color: #444; }
-    
-    /* Center Bottom: Copyright */
     .print-copyright-line {
-        text-align: center;
-        font-size: 9px;
-        color: #999;
-        margin-top: 10px;
-        border-top: 1px solid #eee;
-        padding-top: 5px;
+        text-align: center; font-size: 8px; color: #999;
+        border-top: 1px solid #eee; padding-top: 4px;
     }
 }
