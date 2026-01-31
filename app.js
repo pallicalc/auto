@@ -20,7 +20,6 @@ window.addEventListener('load', async () => {
         firebaseApp = firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
         db = firebase.firestore();
-        // Initialize Functions if available (safeguard)
         if (firebase.functions) {
             functions = firebase.functions();
         }
@@ -34,13 +33,10 @@ function initApp() {
     updateCounters();
     setInterval(() => debounceCounters(), 30000);
     
-    // Standard listener for page loads/refreshes
+    // ✅ OBSERVER IS KING: Always listen, never block.
     auth.onAuthStateChanged((user) => {
-        // We only trigger this automatically if we aren't currently logging in 
-        // (The login button handles the manual trigger for immediate feedback)
-        if (!document.querySelector('.login-btn-submit[disabled]')) {
-            checkAuthState(user);
-        }
+        console.log("Auth State Changed:", user ? "User Logged In" : "User Logged Out");
+        checkAuthState(user);
     });
 
     setupEventListeners();
@@ -66,30 +62,27 @@ async function updateCounters() {
         if(iEl) iEl.textContent = instSnap.size;
     } catch(e) {
         console.error('Counter Error:', e);
-        const uEl = document.getElementById('total-users');
-        const iEl = document.getElementById('total-institutions');
-        if(uEl) uEl.textContent = "-";
-        if(iEl) iEl.textContent = "-";
     }
 }
 
-// ✅ ROBUST AUTH HANDLER (The Gatekeeper)
-// Returns a Promise so we can await it in the login button handler
+// ✅ ROBUST AUTH HANDLER
+// This function fetches data and updates the UI.
 async function checkAuthState(user) {
+    console.log("Checking Auth State for:", user?.email);
     currentUser = user;
     
-    // UI Elements
+    // Re-select elements every time to ensure freshness
     const userInfo = document.getElementById('user-info');
     const vipBadge = document.getElementById('user-tier-badge');
     const vipLock = document.getElementById('vip-lock-opioid');
     const actionBtns = document.getElementById('action-buttons');
     const toolsSection = document.getElementById('tools-section');
     const featureSection = document.getElementById('features-section');
-    const toolsTitle = document.querySelector('#tools-section h2');
 
     if (user) {
         // 1. Email Verification Check
         if (!user.emailVerified) {
+            console.warn("Email not verified");
             await auth.signOut();
             openLoginModal();
             const errDiv = document.getElementById('login-error-msg');
@@ -112,16 +105,15 @@ async function checkAuthState(user) {
                 // 🛑 GATEKEEPER LOGIC
                 if (instId) {
                     try {
-                        // Attempt to read the institution document
                         const instDoc = await db.collection('institutions').doc(instId).get();
                         
-                        // Check A: Read succeeded, check status field manually
+                        // Check A: Status
                         if (instDoc.exists && instDoc.data().status === 'suspended') {
                             handleSuspension(userData, instDoc.data().name);
-                            return; // STOP: Do not load tools
+                            return; 
                         }
                         
-                        // ✅ ACTIVE: Load Custom Ratios for Staff
+                        // ✅ ACTIVE: Load Custom Ratios
                         if (userData.role === 'institutionUser' && instDoc.exists) {
                             const instData = instDoc.data();
                             if (instData.customRatios) {
@@ -131,49 +123,49 @@ async function checkAuthState(user) {
                         }
 
                     } catch (err) {
-                        // Check B: Read FAILED (Security Rules blocked it)
-                        // This implies the institution IS suspended because rules block 'get' on suspended docs
+                        // Check B: Blocked by Rules
                         console.warn("Institution Blocked (Suspended):", err);
                         handleSuspension(userData, userData.institutionName || "your institution");
-                        return; // STOP: Do not load tools
+                        return; 
                     }
                 }
 
-                // 🟢 ACTIVE ACCOUNT (Proceed if not suspended)
-                
-                // If Admin -> Redirect to Dashboard
                 if (userData.role === 'institutionAdmin') {
                     window.location.href = 'Admin.html';
                     return;
                 }
 
-                // Determine VIP Status
                 isVipUser = userData.billingStatus === 'trial-free-lifetime' || 
                             userData.billingStatus === 'active-first-year' || 
                             userData.role === 'institutionUser';
             }
 
-            // Update UI for Active User
+            console.log("Profile Loaded. Updating UI...");
             updateUIForLogin(userData, user.email, false);
             
         } catch(e) {
             console.error('Profile Load Error:', e);
-            // Fallback: show basic UI even if DB fails
+            // Fallback: Show logged in state even if DB fetch fails
             updateUIForLogin({}, user.email, false);
         }
         
     } else {
         // ✅ LOGOUT STATE
+        console.log("Resetting UI to Logout state");
         localStorage.removeItem('palliCalc_customRatios');
         localStorage.removeItem('palliCalc_institutionName');
 
-        if (userInfo) userInfo.innerHTML = '<button id="login-btn" class="login-btn" aria-label="Login to access calculators">🔐 Login</button>';
+        // Force reset User Info Button
+        if (userInfo) {
+            userInfo.innerHTML = '<button id="login-btn" class="login-btn" aria-label="Login to access calculators">🔐 Login</button>';
+        }
         
         if (actionBtns) actionBtns.classList.remove('hidden');
         
+        // Force reset Tools Section
         if (toolsSection) {
             toolsSection.classList.remove('visible');
-            toolsSection.style.display = ''; // Reset CSS
+            toolsSection.style.display = 'none'; // Ensure it hides
             toolsSection.innerHTML = `
                 <h2 id="tools-title"
                     style="text-align:center;font-size:24px;font-weight:700;color:#1e293b;margin-bottom:20px;"
@@ -203,11 +195,11 @@ async function checkAuthState(user) {
                 `;
         }
 
-        if (featureSection) featureSection.style.display = '';
+        if (featureSection) featureSection.style.display = 'block';
         if (vipBadge) vipBadge.style.display = 'none';
         if (vipLock) vipLock.style.display = 'none';
 
-        // Re-attach login listener since we replaced the button HTML
+        // Re-attach login listener
         const newLoginBtn = document.getElementById('login-btn');
         if (newLoginBtn) newLoginBtn.addEventListener('click', openLoginModal);
     }
@@ -241,6 +233,7 @@ function updateUIForLogin(userData, email, isSuspended) {
     let welcomeText = `Welcome, ${displayName}`;
     if (isVipUser) welcomeText += ' PRO';
 
+    // 1. UPDATE HEADER
     if (userInfo) {
         userInfo.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
@@ -253,14 +246,15 @@ function updateUIForLogin(userData, email, isSuspended) {
         if(logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     }
 
+    // 2. HIDE MARKETING SECTIONS
     if (actionBtns) actionBtns.classList.add('hidden');
     if (featureSection) featureSection.style.display = 'none';
     
-    // Only show standard tools if NOT suspended
+    // 3. SHOW TOOLS (If not suspended)
     if (!isSuspended) {
         if (toolsSection) {
             toolsSection.classList.add('visible');
-            toolsSection.style.display = 'grid'; 
+            toolsSection.style.display = 'grid'; // Force display grid
         }
         if (toolsTitle) toolsTitle.textContent = '🛠️ Tools Available';
         if (vipBadge) vipBadge.style.display = isVipUser ? 'inline' : 'none';
@@ -279,15 +273,13 @@ function showSuspensionNotice(instName) {
                 <p style="color: #475569; margin-bottom: 15px;">
                     The premium features for <strong>${instName}</strong> are currently unavailable.
                 </p>
-                
                 <div id="notify-action-area" style="margin-top: 20px;">
-                    <button id="notify-admin-btn" class="btn btn-outline-secondary" style="font-size: 13px; border-radius: 20px; padding: 8px 20px; cursor: pointer; background: #fff; border: 1px solid #94a3b8; color: #475569;">
+                    <button id="notify-admin-btn" class="btn btn-outline-secondary">
                         <i class="bi bi-envelope"></i> Notify Admin
                     </button>
                 </div>
             </div>
         `;
-        
         toolsSection.classList.add('visible');
         toolsSection.style.display = 'block'; 
 
@@ -296,26 +288,14 @@ function showSuspensionNotice(instName) {
             btn.addEventListener('click', async function() {
                 const originalText = btn.innerHTML;
                 btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
-                
+                btn.innerHTML = 'Sending...';
                 try {
-                    if (!firebase.functions) throw new Error("Functions SDK not loaded");
                     const sendReminder = firebase.functions().httpsCallable('sendSuspensionReminder');
                     await sendReminder();
-                    
-                    document.getElementById('notify-action-area').innerHTML = `
-                        <div style="color: #475569; background: #f1f5f9; padding: 15px; border-radius: 8px; margin-top: 10px;">
-                            <i class="bi bi-send-check"></i> <strong>Notification Sent</strong><br>
-                            Your admin has been updated.
-                        </div>
-                    `;
+                    document.getElementById('notify-action-area').innerHTML = `<div style="color:green">Notification Sent</div>`;
                 } catch (error) {
                     console.error("Reminder Failed:", error);
-                    btn.innerHTML = '❌ Failed. Try again.';
-                    setTimeout(() => {
-                        btn.disabled = false;
-                        btn.innerHTML = originalText;
-                    }, 3000);
+                    btn.innerHTML = 'Failed';
                 }
             });
         }
@@ -357,10 +337,10 @@ function setupEventListeners() {
                 localStorage.setItem('palliCalcLoginPassword', password);
                 
                 // 2. 🔥 FORCE UI UPDATE & WAIT FOR IT 🔥
-                // This ensures the data is fetched BEFORE we close the modal
+                console.log("Login success, forcing UI update...");
                 await checkAuthState(userCredential.user);
                 
-                // 3. Close modal only after UI is ready
+                // 3. Close modal
                 closeLoginModal();
             } catch (error) {
                 console.error("Login Error:", error.code);

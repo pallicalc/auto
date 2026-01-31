@@ -276,3 +276,98 @@ body {
         padding: 10px 0;
     }
 }
+/* --- diagnostic.css (Append this) --- */
+
+/* NEW: Standard Footer Styles (Matches Education) */
+.standard-footer {
+    width: 100%;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    padding: 30px 20px;
+    font-family: sans-serif;
+    font-size: 11px;
+    color: #6c757d;
+    text-align: center;
+    margin-top: auto; /* Pushes to bottom */
+}
+
+.footer-inner {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.footer-disclaimer {
+    border-top: 1px solid #e9ecef; 
+    margin-top: 15px; 
+    padding-top: 15px; 
+    font-style: italic; 
+    line-height: 1.5;
+}
+
+/* OLD FOOTER REMOVAL (Just in case) */
+.legal-footer { display: none !important; }
+
+/* PRINT SPECIFIC BRANDING (The "PDF Footer") */
+@media print {
+    /* Hide the Standard Footer background to save ink, but show content */
+    .standard-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: white;
+        border-top: 2px solid #333;
+        padding: 10px 40px;
+        text-align: right; /* Align right like the Education PDF */
+    }
+
+    .footer-inner {
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    /* Show the Institution Branding Block */
+    #print-branding-container {
+        display: block !important;
+        margin-bottom: 10px;
+        text-align: right;
+        width: 100%;
+    }
+
+    .print-logo-row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-bottom: 5px;
+    }
+
+    .print-footer-logo {
+        height: 25px;
+        width: auto;
+    }
+
+    #print-inst-name { font-size: 12px; color: #000; }
+    #print-inst-contact { font-size: 10px; color: #555; }
+
+    .print-divider {
+        border: 0;
+        border-bottom: 1px solid #ccc;
+        margin: 5px 0 10px auto;
+        width: 100%;
+    }
+
+    /* Small Copyright Text */
+    .standard-footer p, 
+    .standard-footer .author-info, 
+    .standard-footer .footer-disclaimer {
+        font-size: 9px;
+        color: #888;
+        text-align: right;
+        width: 100%;
+        margin: 0;
+        border: none;
+        padding: 0;
+    }
+}
