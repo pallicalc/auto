@@ -48,12 +48,12 @@
             <div class="print-page-1">
                 
                 <div class="question-card">
-                    <label class="q-label">Q1. Main concerns (Past 3 days):</label>
+                    <label class="q-label">Q1. What have been your main concerns or problems over the past 3 days?</label>
                     <textarea class="form-control" id="q1_input" rows="3" style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" placeholder="List concerns..."></textarea>
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q2. How have these symptoms affected you?</label>
+                    <label class="q-label">Q2. Below is a list of symptoms, which you may or may not have experienced. For each symptom, please tick the box that best describes how it has affected you over the past 3 days.</label>
                     
                     <label class="sub-label">Pain</label>
                     <div class="scale-container">
@@ -73,7 +73,7 @@
                         <div class="scale-opt"><input type="radio" name="sob" value="4" id="sob_4"><label for="sob_4">4<div class="scale-desc">Over- whelm.</div></label></div>
                     </div>
 
-                    <label class="sub-label">Weakness</label>
+                    <label class="sub-label">Weakness or lack of energy</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="weak" value="0" id="weak_0"><label for="weak_0">0<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="weak" value="1" id="weak_1"><label for="weak_1">1</label></div>
@@ -82,7 +82,7 @@
                         <div class="scale-opt"><input type="radio" name="weak" value="4" id="weak_4"><label for="weak_4">4<div class="scale-desc">Over- whelm.</div></label></div>
                     </div>
 
-                    <label class="sub-label">Nausea</label>
+                    <label class="sub-label">Nausea (feeling like you are going to be sick)</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="nau" value="0" id="nau_0"><label for="nau_0">0<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="nau" value="1" id="nau_1"><label for="nau_1">1</label></div>
@@ -91,7 +91,7 @@
                         <div class="scale-opt"><input type="radio" name="nau" value="4" id="nau_4"><label for="nau_4">4<div class="scale-desc">Over- whelm.</div></label></div>
                     </div>
 
-                    <label class="sub-label">Vomiting</label>
+                    <label class="sub-label">Vomiting (being sick)</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="vom" value="0" id="vom_0"><label for="vom_0">0<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="vom" value="1" id="vom_1"><label for="vom_1">1</label></div>
@@ -118,7 +118,7 @@
                         <div class="scale-opt"><input type="radio" name="con" value="4" id="con_4"><label for="con_4">4<div class="scale-desc">Over- whelm.</div></label></div>
                     </div>
 
-                    <label class="sub-label">Sore/Dry Mouth</label>
+                    <label class="sub-label">Sore or Dry Mouth</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="mou" value="0" id="mou_0"><label for="mou_0">0<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="mou" value="1" id="mou_1"><label for="mou_1">1</label></div>
@@ -149,6 +149,7 @@
                         <label class="q-label" style="margin-bottom: 15px;">Please list any other symptoms not mentioned above, and tick one box to show how they have affected you over the past 3 days.</label>
 
                         <div class="other-symptom-row">
+                            <span class="other-num" style="font-weight:bold; margin-right:5px;">1.</span>
                             <input type="text" id="other_sym_1_label" class="form-control other-input" maxlength="20" placeholder="e.g. Itchiness">
                             <div class="scale-container other-scale">
                                 <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="0" id="oth1_0"><label for="oth1_0">0</label></div>
@@ -160,7 +161,8 @@
                         </div>
 
                         <div class="other-symptom-row">
-                            <input type="text" id="other_sym_2_label" class="form-control other-input" maxlength="20" placeholder="e.g. Symptom 2">
+                            <span class="other-num" style="font-weight:bold; margin-right:5px;">2.</span>
+                            <input type="text" id="other_sym_2_label" class="form-control other-input" maxlength="20" placeholder="">
                             <div class="scale-container other-scale">
                                 <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="0" id="oth2_0"><label for="oth2_0">0</label></div>
                                 <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="1" id="oth2_1"><label for="oth2_1">1</label></div>
@@ -171,7 +173,8 @@
                         </div>
 
                         <div class="other-symptom-row">
-                            <input type="text" id="other_sym_3_label" class="form-control other-input" maxlength="20" placeholder="e.g. Symptom 3">
+                            <span class="other-num" style="font-weight:bold; margin-right:5px;">3.</span>
+                            <input type="text" id="other_sym_3_label" class="form-control other-input" maxlength="20" placeholder="">
                             <div class="scale-container other-scale">
                                 <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="0" id="oth3_0"><label for="oth3_0">0</label></div>
                                 <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="1" id="oth3_1"><label for="oth3_1">1</label></div>
@@ -189,7 +192,7 @@
 
             <div class="print-page-2">
                 <div class="question-card">
-                    <label class="q-label">Q3. Feeling anxious/worried about illness?</label>
+                    <label class="q-label">Q3. Over the past 3 days, have you been feeling anxious or worried about your illness or treatment?</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="anxious" value="0" id="anx_0"><label for="anx_0">0<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="anxious" value="1" id="anx_1"><label for="anx_1">1</label></div>
@@ -200,7 +203,7 @@
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q4. Family/friends anxious about you?</label>
+                    <label class="q-label">Q4. Over the past 3 days, have any of your family or friends been anxious or worried about you?</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="family" value="0" id="fam_0"><label for="fam_0">0<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="family" value="1" id="fam_1"><label for="fam_1">1</label></div>
@@ -211,7 +214,7 @@
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q5. Feeling depressed?</label>
+                    <label class="q-label">Q5. Over the past 3 days, have you been feeling depressed?</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="depressed" value="0" id="dep_0"><label for="dep_0">0<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="depressed" value="1" id="dep_1"><label for="dep_1">1</label></div>
@@ -222,7 +225,7 @@
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q6. Have you felt at peace?</label>
+                    <label class="q-label">Q6. Over the past 3 days, have you felt at peace?</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="peace" value="4" id="pea_0"><label for="pea_0">4<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="peace" value="3" id="pea_1"><label for="pea_1">3</label></div>
@@ -233,7 +236,7 @@
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q7. Able to share feelings?</label>
+                    <label class="q-label">Q7. Over the past 3 days, have you been able to share how you are feeling with your family or friends?</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="share" value="4" id="sha_0"><label for="sha_0">4<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="share" value="3" id="sha_1"><label for="sha_1">3</label></div>
@@ -244,7 +247,7 @@
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q8. Had enough information?</label>
+                    <label class="q-label">Q8. Over the past 3 days, have you had as much information as you wanted?</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="info" value="4" id="inf_0"><label for="inf_0">4<div class="scale-desc">Not at all</div></label></div>
                         <div class="scale-opt"><input type="radio" name="info" value="3" id="inf_1"><label for="inf_1">3</label></div>
@@ -255,7 +258,7 @@
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q9. Practical problems addressed?</label>
+                    <label class="q-label">Q9. Over the past 3 days, have any practical problems resulting from your illness been addressed? (such as financial or personal)</label>
                     <div class="scale-container">
                         <div class="scale-opt"><input type="radio" name="practical" value="4" id="pra_0"><label for="pra_0">4<div class="scale-desc">Not addressed</div></label></div>
                         <div class="scale-opt"><input type="radio" name="practical" value="3" id="pra_1"><label for="pra_1">3</label></div>
@@ -266,7 +269,7 @@
                 </div>
 
                 <div class="question-card">
-                    <label class="q-label">Q10. How did you complete this?</label>
+                    <label class="q-label">Q10. How did you complete this questionnaire?</label>
                     <select id="completion_mode" class="form-select" style="font-size:14px; padding:8px; width:100%; border:1px solid #ced4da; border-radius:6px;">
                         <option value="0">On my own</option>
                         <option value="1">With help from a friend or relative</option>
