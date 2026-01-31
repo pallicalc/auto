@@ -1,4 +1,4 @@
-// --- diagnostic.js (Synced with Education Logic) ---
+// --- diagnostic.js (Final Optimized & Verified) ---
 
 const firebaseConfig = {
     apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
@@ -9,42 +9,46 @@ const firebaseConfig = {
     appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
 };
 
-// Initialize Firebase only once
+// Initialize Firebase (Check prevents double-init errors)
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Global context
+// Global State
 let context = { mode: 'personal', instId: null };
 
-// --- 1. INITIALIZATION ---
+// --- 1. INITIALIZATION & SETUP ---
 document.addEventListener('DOMContentLoaded', async () => {
-    
-    // Display Date
+    // A. Inject the Custom Footer (Matches your screenshot)
+    injectStandardFooter();
+
+    // B. Set Date
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
-    // Listeners
+    // C. Attach Score Calculator
     const form = document.getElementById('iposForm');
     if(form) form.addEventListener('change', calculateTotalScore);
 
-    // --- LOGIC FROM EDUCATION.JS ---
+    // D. Handle Institution/User Logic
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
 
     if (ref) {
+        // Shared Mode (Scanned QR)
         context.mode = 'shared'; 
         context.instId = ref;
         
         const backLink = document.getElementById('backLink');
         if (backLink) backLink.href = `../../diagnostic.html?ref=${ref}`;
 
-        // QR for blank form
+        // Generate "Blank Form" QR (for sharing)
         const blankQr = document.getElementById("blank-qrcode");
         if(blankQr) new QRCode(blankQr, { text: window.location.href, width: 90, height: 90 });
 
         await loadInstitutionHeader();
     } else {
+        // Personal/Admin Mode
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 try {
@@ -54,9 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         context.instId = snap.data().institutionId;
                         await loadInstitutionHeader();
                     }
-                } catch (e) {
-                    console.error("User Auth Error:", e);
-                }
+                } catch (e) { console.error("User Auth Error:", e); }
             }
             if (context.mode === 'personal') {
                 loadPersonalHeader();
@@ -65,7 +67,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// --- 2. HEADER LOGIC (EXACT COPY OF EDUCATION.JS) ---
+// --- 2. HEADER & FOOTER INJECTION ---
+
+function injectStandardFooter() {
+    const footerHTML = `
+        <footer class="standard-footer">
+            <div class="footer-inner">
+                <div class="print-branding" id="print-branding-container" style="display:none;">
+                    <div class="print-logo-row" id="print-logo-row"></div>
+                    <div class="print-info-row">
+                        <strong id="print-inst-name"></strong>
+                        <span id="print-inst-contact"></span>
+                    </div>
+                    <hr class="print-divider">
+                </div>
+
+                <div class="footer-content">
+                    <p class="f-copyright">&copy; 2026 Alivioscript Solutions</p>
+                    <p class="f-author">Author: Alison Chai</p>
+                    <p class="f-creds">RPh (M'sia): 9093 | GPhC (UK): 2077838</p>
+                    <p class="f-warning">For professional use only. Verify all results.</p>
+                </div>
+            </div>
+        </footer>
+    `;
+
+    // Replace any existing footer
+    const existing = document.querySelector('footer');
+    if(existing) existing.remove();
+
+    document.body.insertAdjacentHTML('beforeend', footerHTML);
+}
+
+// --- 3. BRANDING LOGIC (Synced with Education.js) ---
 
 async function loadInstitutionHeader() {
     if (!context.instId) return;
@@ -74,35 +108,22 @@ async function loadInstitutionHeader() {
         if (doc.exists) { 
             const data = doc.data();
             
-            // 🛑 CRITICAL TWEAK: CHECK SUSPENSION STATUS
+            // Suspension Check
             if (data.status === 'suspended') {
-                console.log("Institution suspended. Wiping branding data.");
                 localStorage.removeItem('cached_inst_' + context.instId);
                 localStorage.removeItem('institutionSettings');
                 return; 
             }
 
-            // --- CACHE FOR OFFLINE ---
+            // Cache & Render
             localStorage.setItem('cached_inst_' + context.instId, JSON.stringify(data));
-            
-            // Sync with general settings
-            localStorage.setItem('institutionSettings', JSON.stringify({
-                name: data.headerName || data.name,
-                contact: data.headerContact || data.contact,
-                logos: data.headerLogos || (data.logo ? [data.logo] : []),
-                logo: data.logo
-            }));
-
-            renderHeader(data); 
+            saveSettingsToLocal(data);
+            applyBranding(data); 
         }
     } catch (e) { 
-        console.warn("Header Fetch Error (Switching to Offline Cache):", e);
+        // Offline Fallback
         const cached = localStorage.getItem('cached_inst_' + context.instId);
-        if (cached) {
-            renderHeader(JSON.parse(cached));
-        } else {
-            loadPersonalHeader();
-        }
+        if (cached) applyBranding(JSON.parse(cached));
     }
 }
 
@@ -110,72 +131,58 @@ function loadPersonalHeader() {
     const settingsStr = localStorage.getItem('institutionSettings');
     if (settingsStr) {
         try {
-            const settings = JSON.parse(settingsStr);
-            const data = {
-                headerName: settings.name,
-                headerContact: settings.contact,
-                headerLogos: settings.logos || (settings.logo ? [settings.logo] : []),
-                logo: settings.logo 
-            };
-            renderHeader(data);
-        } catch (e) { console.error("Local Storage Parse Error", e); }
+            const s = JSON.parse(settingsStr);
+            applyBranding({ headerName: s.name, headerContact: s.contact, headerLogos: s.logos, logo: s.logo });
+        } catch (e) {}
     }
 }
 
-function renderHeader(data) {
-    // 1. Render Top Header (Screen)
-    const container = document.getElementById('inst-header-container');
-    const nameEl = document.getElementById('inst-name-display');
-    const contactEl = document.getElementById('inst-contact-display');
-    const logoEl = document.getElementById('inst-logo-img');
+function saveSettingsToLocal(data) {
+    localStorage.setItem('institutionSettings', JSON.stringify({
+        name: data.headerName || data.name,
+        contact: data.headerContact || data.contact,
+        logos: data.headerLogos || (data.logo ? [data.logo] : []),
+        logo: data.logo
+    }));
+}
 
+function applyBranding(data) {
     const name = data.headerName || data.name;
-    if (name && nameEl) nameEl.textContent = name;
-
+    const logos = data.headerLogos || (data.logo ? [data.logo] : []);
     const contact = data.headerContact || data.contact;
-    if (contact && contactEl) contactEl.textContent = contact;
-    
-    const logoSrc = (data.headerLogos && data.headerLogos.length > 0) ? data.headerLogos[0] : data.logo;
-    
-    if (logoSrc && logoEl && container) { 
-        logoEl.src = logoSrc; 
-        logoEl.style.display = 'block'; 
-        container.style.display = 'flex'; 
+    const logoSrc = logos.length > 0 ? logos[0] : null;
+
+    // A. Apply to Header
+    if(name) document.getElementById('inst-name-display').textContent = name;
+    if(contact) document.getElementById('inst-contact-display').textContent = contact;
+    if(logoSrc) {
+        const el = document.getElementById('inst-logo-img');
+        if(el) { el.src = logoSrc; el.style.display = 'block'; }
+        document.getElementById('inst-header-container').style.display = 'flex';
     }
 
-    // 2. Render Print Footer (Hidden on screen, visible on PDF)
-    updatePrintFooter(name, contact, data.headerLogos || [logoSrc]);
-}
-
-// Helper to populate the Print Footer
-function updatePrintFooter(name, contact, logos) {
-    const footerName = document.getElementById('footer-print-name');
-    const footerContact = document.getElementById('footer-print-contact');
-    const footerLogos = document.getElementById('footer-print-logos');
-
-    if (footerName && name) footerName.innerText = name;
-    if (footerContact && contact) footerContact.innerText = contact;
-
-    if (footerLogos && logos && logos.length > 0) {
-        footerLogos.innerHTML = '';
-        logos.forEach(src => {
-            if(src) {
-                const img = document.createElement('img');
-                img.src = src;
-                img.style.height = '25px';
-                img.style.marginRight = '10px';
-                footerLogos.appendChild(img);
-            }
+    // B. Apply to Print Footer
+    if(name) document.getElementById('print-inst-name').textContent = name;
+    if(contact) document.getElementById('print-inst-contact').textContent = " | " + contact;
+    
+    const logoRow = document.getElementById('print-logo-row');
+    if(logos.length > 0 && logoRow) {
+        logoRow.innerHTML = '';
+        logos.forEach(url => {
+            const img = document.createElement('img');
+            img.src = url;
+            img.className = 'print-footer-logo';
+            logoRow.appendChild(img);
         });
     }
 }
 
-// --- 3. SCORING & UTILITIES ---
+// --- 4. FORM LOGIC (Scoring & QR) ---
 
 function calculateTotalScore() {
     let total = 0;
-    const checkedInputs = document.querySelectorAll('#iposForm input[type="radio"]:checked');
-    checkedInputs.forEach(input => {
+    // Sum all checked radio buttons
+    document.querySelectorAll('#iposForm input[type="radio"]:checked').forEach(input => {
         total += parseInt(input.value);
     });
     const display = document.getElementById('total-score-display');
@@ -189,6 +196,7 @@ function generateQR() {
         return el ? parseInt(el.value) : 0;
     };
 
+    // Construct Payload (Matches your HTML IDs exactly)
     const payload = {
         t: "IPOS",
         d: Date.now(),
@@ -212,6 +220,7 @@ function generateQR() {
         m: document.getElementById('completion_mode').value
     };
 
+    // Render QR
     const qrDiv = document.getElementById("qrcode");
     qrDiv.innerHTML = "";
     new QRCode(qrDiv, { text: JSON.stringify(payload), width: 200, height: 200 });

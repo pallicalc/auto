@@ -1,39 +1,41 @@
-/* --- diagnostic.css (Compact Version) --- */
-
-/* 1. GLOBAL RESET */
+/* =========================================
+   1. GLOBAL RESET & LAYOUT
+   ========================================= */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: #f0f2f5;
     color: #343a40;
-    line-height: 1.4; /* Tighter line height */
+    line-height: 1.4;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    margin: 0;
-    font-size: 14px; /* Slightly smaller base font */
+    font-size: 14px;
 }
 
-/* 2. MAIN CONTAINER */
 .main-container {
     flex: 1;
     width: 100%;
     max-width: 800px;
     margin: 15px auto;
     background: white;
-    padding: 20px; /* Reduced padding */
+    padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.05);
 }
 
-/* 3. HEADERS & BRANDING */
+/* =========================================
+   2. HEADER (Matches Education.css)
+   ========================================= */
 .header {
-    margin: -20px -20px 20px -20px; /* Adjusted bleed */
-    border-radius: 12px 12px 0 0;
-    padding: 15px; /* Much slimmer header */
+    margin: -20px -20px 24px -20px; 
+    border-radius: 12px 12px 24px 24px; 
+    padding: 24px 20px; 
     color: white;
-    text-align: center;
+    position: relative;
+    overflow: hidden;
+    text-align: left; 
 }
 
 .header-ipos {
@@ -41,389 +43,140 @@ body {
     box-shadow: 0 4px 12px rgba(0, 97, 242, 0.2);
 }
 
-.header h1 { font-size: 1.4rem; margin-bottom: 2px; font-weight: 700; }
-.header p { opacity: 0.95; font-size: 0.85rem; margin: 0; }
+.header h1 { 
+    font-size: 26px; 
+    font-weight: 700; 
+    margin: 0 0 10px 0; 
+    line-height: 1.2;
+}
 
+.header p { font-size: 14px; opacity: 0.95; margin: 0; }
+
+/* Institution Header (Hidden by default) */
 .inst-header-container {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
+    display: none; 
+    align-items: center; gap: 12px; 
+    margin-bottom: 16px; padding-bottom: 16px; 
+    border-bottom: 1px solid rgba(255,255,255,0.3);
 }
-.inst-logo {
-    width: 40px; height: 40px; /* Smaller logo */
-    object-fit: contain;
-    background: white;
-    border-radius: 6px;
-    padding: 2px;
-}
-.inst-info h3 { font-size: 0.95rem; margin: 0; font-weight: 700; }
-.inst-info p { font-size: 0.75rem; margin: 0; opacity: 0.9; }
 
-/* 4. NAVIGATION */
+.inst-logo {
+    max-height: 50px; max-width: 50px; width: auto;
+    border-radius: 8px; background: white; padding: 2px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.inst-info h3 { font-size: 16px; font-weight: 700; margin: 0; line-height: 1.2; }
+.inst-info p { font-size: 13px; margin: 2px 0 0 0; opacity: 0.9; }
+
+/* =========================================
+   3. NAVIGATION & BUTTONS
+   ========================================= */
 .nav-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding: 0 5px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 15px; padding: 0 5px;
 }
 .nav-link {
-    text-decoration: none;
-    color: #6c757d;
-    font-weight: 600;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+    text-decoration: none; color: #6c757d; font-weight: 600;
+    font-size: 0.85rem; display: flex; align-items: center; gap: 5px;
 }
-
-/* 5. QUESTION CARDS */
-.question-card {
-    background: #fff;
-    border-radius: 8px;
-    padding: 10px 15px; /* Tighter internal padding */
-    margin-bottom: 12px; /* Less space between cards */
-    border: 1px solid #eef2f6;
-    break-inside: avoid;
-}
-.q-label { 
-    font-weight: 700; 
-    color: #2c3e50; 
-    margin-bottom: 8px; 
-    display: block; 
-    font-size: 14px; 
-}
-.sub-label {
-    display: block;
-    font-weight: 600;
-    font-size: 13px;
-    margin-bottom: 4px;
-    color: #495057;
-    margin-top: 8px;
-}
-
-/* 6. SCALE RADIO BUTTONS (COMPACT) */
-.scale-container { 
-    display: flex; 
-    justify-content: space-between; 
-    gap: 3px; 
-    margin-top: 5px; 
-    margin-bottom: 5px; 
-}
-.scale-opt { flex: 1; text-align: center; position: relative; }
-
-.scale-opt input { 
-    position: absolute; top: 0; left: 0; margin: 0;
-    opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; 
-}
-
-.scale-opt label {
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    height: 38px; /* SHORTER BUTTONS to save space */
-    background: #f8f9fa; 
-    border: 1px solid #dee2e6; 
-    border-radius: 6px;
-    color: #6c757d; 
-    font-weight: 700; 
-    transition: all 0.2s; 
-    font-size: 12px; 
-    line-height: 1;
-}
-.scale-opt input:checked + label {
-    background: #e3f2fd; border-color: #0061f2; color: #0061f2;
-    box-shadow: 0 2px 5px rgba(0,97,242,0.15);
-}
-.scale-desc { font-size: 8px; font-weight: 400; margin-top: 2px; }
-
-/* 7. SCORE & BUTTONS */
-.score-box {
-    background: #2c3e50;
-    color: white;
-    padding: 15px;
-    border-radius: 10px;
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.score-title { font-size: 13px; opacity: 0.9; text-transform: uppercase; }
-.score-val { font-size: 24px; font-weight: 800; color: #00c6f7; }
-
 .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 50px;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    font-size: 0.95rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 20px; border: none; border-radius: 50px; font-weight: 600;
+    cursor: pointer; text-decoration: none; font-size: 0.95rem;
 }
 .btn-buccal { background: linear-gradient(135deg, #0061f2 0%, #00c6f7 100%); color: white; }
 .btn-pdf { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; }
 
-/* 8. LOADING & PRINT */
-#pdf-loading {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(255,255,255,0.95); z-index: 9999;
-    display: none; flex-direction: column;
-    justify-content: center; align-items: center;
+/* =========================================
+   4. FORM ELEMENTS
+   ========================================= */
+.question-card {
+    background: #fff; border-radius: 8px; padding: 10px 15px;
+    margin-bottom: 12px; border: 1px solid #eef2f6; break-inside: avoid;
 }
+.q-label { font-weight: 700; color: #2c3e50; margin-bottom: 8px; display: block; font-size: 14px; }
+.sub-label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; color: #495057; margin-top: 8px; }
 
-.blank-mode .scale-opt label { background: white !important; border: 1px solid #333 !important; color: #ccc !important; }
-#blank-qr-header, #qr-section { display: none; }
-#qr-section { text-align: center; margin-top: 20px; border: 2px solid #28a745; padding: 10px; border-radius: 10px; }
-#blank-qr-header { text-align: center; margin-bottom: 15px; border-bottom: 2px dashed #ccc; padding-bottom: 10px; }
+/* Scale Radio Buttons */
+.scale-container { display: flex; justify-content: space-between; gap: 3px; margin: 5px 0; }
+.scale-opt { flex: 1; text-align: center; position: relative; }
+.scale-opt input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; margin: 0; top: 0; left: 0; }
+.scale-opt label {
+    display: flex; flex-direction: column; justify-content: center; height: 38px;
+    background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;
+    color: #6c757d; font-weight: 700; transition: all 0.2s; font-size: 12px;
+}
+.scale-opt input:checked + label { background: #e3f2fd; border-color: #0061f2; color: #0061f2; }
+.scale-desc { font-size: 8px; font-weight: 400; margin-top: 2px; }
 
-/* 9. FOOTER & MEDIA */
-.legal-footer {
+/* Score Box */
+.score-box {
+    background: #2c3e50; color: white; padding: 15px; border-radius: 10px;
+    margin-top: 20px; display: flex; justify-content: space-between; align-items: center;
+}
+.score-title { font-size: 13px; opacity: 0.9; text-transform: uppercase; }
+.score-val { font-size: 24px; font-weight: 800; color: #00c6f7; }
+
+/* =========================================
+   5. FOOTER (Matches Uploaded Image)
+   ========================================= */
+.standard-footer {
     width: 100%;
-    margin-top: 20px;
-    padding: 15px 0;
-    border-top: 1px solid #dee2e6;
-    text-align: center;
     background-color: #f8f9fa;
-    color: #6c757d;
+    border-top: 1px solid #dee2e6;
+    padding: 30px 20px;
+    text-align: center;
+    margin-top: auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
-.copyright-text { display: block; font-size: 10px; font-weight: bold; margin-bottom: 2px; }
-.author-info { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; font-size: 10px; }
-.legal-warning { display: block; color: #B22222; font-weight: 600; font-size: 10px; margin-top: 2px; }
 
-/* PDF Clean Mode (Applied during generation) */
-.pdf-clean-mode .main-container { box-shadow: none; margin: 0; padding: 0; width: 100%; max-width: 100%; }
-.pdf-clean-mode body { background: white; }
+.footer-content p { margin: 0; line-height: 1.5; }
+
+/* Specific Styling from Screenshot */
+.f-copyright { color: #6c757d; font-weight: 700; font-size: 14px; margin-bottom: 4px !important; }
+.f-author { color: #212529; font-weight: 700; font-size: 14px; margin-bottom: 4px !important; }
+.f-creds { color: #6c757d; font-size: 14px; margin-bottom: 8px !important; }
+.f-warning { color: #a73c3c; /* Dark red */ font-weight: 700; font-size: 14px; }
+
+#blank-qr-header, #qr-section { display: none; }
 
 @media (max-width: 600px) {
     .main-container { margin: 0; border-radius: 0; padding: 15px; max-width: 100%; }
     .header { margin: -15px -15px 15px -15px; border-radius: 0; }
 }
 
+/* =========================================
+   6. PRINT STYLES (Clean Layout)
+   ========================================= */
 @media print {
-    body { background: white; }
-    .no-print, .legal-footer { display: none !important; }
-    .main-container { box-shadow: none; margin: 0; padding: 0; width: 100%; max-width: 100%; }
-}/* --- diagnostic.css (Compact + Print Fixes) --- */
-
-/* ... (Keep 1-8 same as before) ... */
-
-/* 9. PRINT SETTINGS (Add/Replace this section at the bottom) */
-@media print {
-    body { 
-        background: white; 
-        font-size: 12px; /* Smaller font for A4 */
-    }
+    body { background: white; font-size: 12px; }
+    .no-print, #qr-section { display: none !important; }
     
-    .no-print { display: none !important; }
+    .main-container { box-shadow: none; border: none; margin: 0; padding: 0; max-width: 100%; width: 100%; }
     
-    /* Show the Blank QR Header ONLY when printing */
-    #blank-qr-header { 
-        display: block !important; 
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 2px dashed #999;
-    }
+    #blank-qr-header { display: block !important; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px dashed #999; }
+    .page-break { page-break-after: always; display: block; height: 1px; }
 
-    /* Hide the Result QR Area */
-    #qr-section { display: none !important; }
+    /* Flatten Radio Buttons */
+    .scale-opt label { background: white !important; border: 1px solid #333 !important; color: #000 !important; height: 35px !important; box-shadow: none; }
+    .scale-opt input:checked + label { border-color: #333 !important; color: #000 !important; }
 
-    /* Force Page Break */
-    .page-break { 
-        page-break-after: always; 
-        display: block; 
-        height: 1px; 
-    }
-
-    /* Clean Layout */
-    .main-container {
-        box-shadow: none;
-        border: none;
-        margin: 0;
-        padding: 0;
-        max-width: 100%;
-        width: 100%;
-    }
-
-    /* Force Radio Buttons to look empty/printable */
-    .scale-opt label {
-        background: white !important;
-        border: 1px solid #333 !important;
-        color: #000 !important;
-        height: 35px !important;
-        box-shadow: none !important;
-    }
-    
-    /* IMPORTANT: Hide checked state so form looks blank */
-    .scale-opt input:checked + label {
-        background: white !important;
-        border-color: #333 !important;
-        color: #000 !important;
-    }
-
-    /* Footer adjustments */
-    .legal-footer {
-        position: fixed;
-        bottom: 0;
-        border-top: 1px solid #ccc;
-        padding: 10px 0;
-    }
-}
-/* --- diagnostic.css (Append this) --- */
-
-/* NEW: Standard Footer Styles (Matches Education) */
-.standard-footer {
-    width: 100%;
-    background-color: #f8f9fa;
-    border-top: 1px solid #dee2e6;
-    padding: 30px 20px;
-    font-family: sans-serif;
-    font-size: 11px;
-    color: #6c757d;
-    text-align: center;
-    margin-top: auto; /* Pushes to bottom */
-}
-
-.footer-inner {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.footer-disclaimer {
-    border-top: 1px solid #e9ecef; 
-    margin-top: 15px; 
-    padding-top: 15px; 
-    font-style: italic; 
-    line-height: 1.5;
-}
-
-/* OLD FOOTER REMOVAL (Just in case) */
-.legal-footer { display: none !important; }
-
-/* PRINT SPECIFIC BRANDING (The "PDF Footer") */
-@media print {
-    /* Hide the Standard Footer background to save ink, but show content */
+    /* Footer for Print (Shows Branding + Standard Text) */
     .standard-footer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: white;
-        border-top: 2px solid #333;
-        padding: 10px 40px;
-        text-align: right; /* Align right like the Education PDF */
+        position: fixed; bottom: 0; left: 0; width: 100%;
+        background: white; border-top: 2px solid #333; padding: 10px 40px;
+        text-align: right; z-index: 1000;
     }
-
-    .footer-inner {
-        max-width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-    }
-
-    /* Show the Institution Branding Block */
-    #print-branding-container {
-        display: block !important;
-        margin-bottom: 10px;
-        text-align: right;
-        width: 100%;
-    }
-
-    .print-logo-row {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-bottom: 5px;
-    }
-
-    .print-footer-logo {
-        height: 25px;
-        width: auto;
-    }
-
-    #print-inst-name { font-size: 12px; color: #000; }
+    
+    /* Reveal Print Branding */
+    #print-branding-container { display: block !important; width: 100%; text-align: right; }
+    .print-logo-row { display: flex; justify-content: flex-end; margin-bottom: 5px; }
+    .print-footer-logo { height: 25px; margin-left: 10px; }
+    #print-inst-name { font-size: 12px; color: #000; display: block; }
     #print-inst-contact { font-size: 10px; color: #555; }
-
-    .print-divider {
-        border: 0;
-        border-bottom: 1px solid #ccc;
-        margin: 5px 0 10px auto;
-        width: 100%;
-    }
-
-    /* Small Copyright Text */
-    .standard-footer p, 
-    .standard-footer .author-info, 
-    .standard-footer .footer-disclaimer {
-        font-size: 9px;
-        color: #888;
-        text-align: right;
-        width: 100%;
-        margin: 0;
-        border: none;
-        padding: 0;
-    }
-}/* --- diagnostic.css (Append this for Footer Logic) --- */
-
-/* PRINT BRANDING (Hidden by Default) */
-#print-branding-container {
-    display: none;
-}
-
-@media print {
-    /* 1. Hide Standard Elements */
-    .no-print { display: none !important; }
-
-    /* 2. Position Footer at Bottom */
-    .legal-footer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: white;
-        border-top: 2px solid #333;
-        padding: 10px 40px;
-        z-index: 1000;
-        text-align: right;
-    }
-
-    /* 3. Show Branding Section */
-    #print-branding-container {
-        display: block !important;
-        text-align: right;
-        width: 100%;
-    }
-
-    /* 4. Branding Styles (Education PDF Match) */
-    .print-logo-row {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        margin-bottom: 5px;
-    }
+    .print-divider { border: 0; border-bottom: 1px solid #ccc; margin: 5px 0 5px auto; width: 100%; }
     
-    #footer-print-name {
-        font-size: 12px;
-        color: #000;
-        display: block;
-    }
-    
-    #footer-print-contact {
-        font-size: 10px;
-        color: #555;
-    }
-
-    .print-divider {
-        border: 0;
-        border-bottom: 1px solid #ccc;
-        margin: 5px 0 5px auto;
-        width: 100%;
-    }
+    /* Scale down footer text for print */
+    .footer-content p { text-align: right; font-size: 10px; }
 }
