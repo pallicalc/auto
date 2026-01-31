@@ -1,4 +1,4 @@
-// --- diagnostic.js ---
+// --- diagnostic.js (Cleaned - No PDF Hacks) ---
 
 const firebaseConfig = {
     apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
@@ -16,55 +16,19 @@ const auth = firebase.auth();
 let context = { mode: 'personal', instId: null };
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // 1. INJECT FOOTER ONLY
     injectStandardFooter();
 
+    // 2. STANDARD FORM LOGIC
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
     const form = document.getElementById('iposForm');
     if(form) form.addEventListener('change', calculateTotalScore);
 
+    // 3. AUTH & INSTITUTION LOGIC
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
-
-    // --- 1. PREPARE PRINT HEADER (Title + Subtitle) ---
-    const blankQrHeader = document.getElementById('blank-qr-header');
-    if (blankQrHeader) {
-        const textContainer = document.createElement('div');
-        textContainer.className = 'print-header-text';
-        
-        const printTitle = document.createElement('h1');
-        printTitle.innerText = 'IPOS Assessment';
-        printTitle.className = 'print-only-title';
-        
-        const printSubtitle = document.createElement('p');
-        printSubtitle.innerText = 'Integrated Palliative care Outcome Scale';
-        printSubtitle.className = 'print-only-subtitle';
-
-        textContainer.appendChild(printTitle);
-        textContainer.appendChild(printSubtitle);
-        blankQrHeader.insertBefore(textContainer, blankQrHeader.firstChild);
-    }
-
-    // --- 2. PREPARE PRINT Q2 HEADER (Scale Labels) ---
-    // This inserts the row "Not at all ... Overwhelmingly" at the top of Q2
-    const q2Card = document.querySelector('.print-page-1 .question-card:nth-of-type(2)');
-    if (q2Card) {
-        const headerRow = document.createElement('div');
-        headerRow.className = 'print-q2-header-row';
-        headerRow.innerHTML = `
-            <div class="p-spacer"></div> <div class="p-scale-labels">
-                <span>Not at all</span>
-                <span>Slightly</span>
-                <span>Moderately</span>
-                <span>Severely</span>
-                <span>Overwhelmingly</span>
-            </div>
-        `;
-        // Insert after the main Q2 label
-        const qLabel = q2Card.querySelector('.q-label');
-        if (qLabel) qLabel.parentNode.insertBefore(headerRow, qLabel.nextSibling);
-    }
 
     if (ref) {
         context.mode = 'shared'; 
@@ -73,7 +37,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const backLink = document.getElementById('backLink');
         if (backLink) backLink.href = `../../diagnostic.html?ref=${ref}`;
 
-        // QR SIZE set to 100 as requested
         const blankQr = document.getElementById("blank-qrcode");
         if(blankQr) new QRCode(blankQr, { text: window.location.href, width: 100, height: 100 }); 
 
@@ -100,32 +63,18 @@ function injectStandardFooter() {
     const footerHTML = `
         <footer class="standard-footer">
             <div class="footer-inner">
-                <div class="print-branding" id="print-branding-container" style="display:none;">
-                    <div class="print-branding-row">
-                        <div class="footer-left" id="print-logo-row"></div>
-                        <div class="footer-right">
-                            <strong id="print-inst-name"></strong>
-                            <div id="print-inst-contact"></div>
-                        </div>
-                    </div>
-                    <div class="print-copyright-line">
-                        &copy; 2026 Alivioscript Solutions | PalliCalc™
-                    </div>
+                <p style="margin: 0 0 5px; font-weight: bold; color: #343a40;">&copy; 2026 Alivioscript Solutions</p>
+                <div class="author-info">
+                    Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838
                 </div>
-
-                <div class="screen-footer-content">
-                    <p class="f-copyright">&copy; 2026 Alivioscript Solutions</p>
-                    <p class="f-author">Author: Alison Chai</p>
-                    <p class="f-creds">RPh (M'sia): 9093 | GPhC (UK): 2077838</p>
-                    <p class="f-warning">For professional use only. Verify all results.</p>
+                <div class="footer-disclaimer">
+                    <strong>Disclaimer:</strong> This tool is for professional clinical use.
                 </div>
             </div>
         </footer>
     `;
-
     const existing = document.querySelector('footer');
     if(existing) existing.remove();
-
     document.body.insertAdjacentHTML('beforeend', footerHTML);
 }
 
@@ -177,7 +126,6 @@ function applyBranding(data) {
     const contact = data.headerContact || data.contact;
     const logoSrc = logos[0];
 
-    // Screen
     if(name) document.getElementById('inst-name-display').textContent = name;
     if(contact) document.getElementById('inst-contact-display').textContent = contact;
     if(logoSrc) {
@@ -185,23 +133,9 @@ function applyBranding(data) {
         if(el) { el.src = logoSrc; el.style.display = 'block'; }
         document.getElementById('inst-header-container').style.display = 'flex';
     }
-
-    // Print Footer
-    if(name) document.getElementById('print-inst-name').textContent = name;
-    if(contact) document.getElementById('print-inst-contact').textContent = "Contact: " + contact;
-    const logoRow = document.getElementById('print-logo-row');
-    if(logos.length > 0 && logoRow) {
-        logoRow.innerHTML = '';
-        logos.forEach(url => {
-            const img = document.createElement('img');
-            img.src = url;
-            img.className = 'print-footer-logo';
-            logoRow.appendChild(img);
-        });
-    }
 }
 
-// --- UTILITIES ---
+// --- SCORING & UTILITIES ---
 function calculateTotalScore() {
     let total = 0;
     document.querySelectorAll('#iposForm input[type="radio"]:checked').forEach(input => {
@@ -217,8 +151,22 @@ function generateQR() {
         const el = document.querySelector(`input[name="${name}"]:checked`);
         return el ? parseInt(el.value) : 0;
     };
+
+    // Collect data for 3 "Other" rows
+    const otherSymptoms = [];
+    for (let i = 1; i <= 3; i++) {
+        const labelEl = document.getElementById(`other_sym_${i}_label`);
+        const label = labelEl ? labelEl.value.substring(0, 20) : "";
+        const val = getVal(`other_sym_${i}_val`);
+        if (label || val > 0) {
+            otherSymptoms.push({ l: label, v: val });
+        }
+    }
+
     const payload = {
-        t: "IPOS", d: Date.now(), score: calculateTotalScore(),
+        t: "IPOS",
+        d: Date.now(),
+        score: calculateTotalScore(),
         q1: document.getElementById('q1_input').value.substring(0, 100),
         s: { 
             p: getVal('pain'), s: getVal('sob'), w: getVal('weak'),
@@ -226,16 +174,24 @@ function generateQR() {
             c: getVal('con'), m: getVal('mou'), d: getVal('dro'),
             mb: getVal('mob')
         },
-        o: { l: document.getElementById('other_sym_label').value.substring(0,20), v: getVal('other_sym_val') },
-        p: { a: getVal('anxious'), f: getVal('family'), d: getVal('depressed'), pe: getVal('peace'), sh: getVal('share'), i: getVal('info'), pr: getVal('practical') },
+        o: otherSymptoms, 
+        p: { 
+            a: getVal('anxious'), f: getVal('family'), d: getVal('depressed'),
+            pe: getVal('peace'), sh: getVal('share'), i: getVal('info'),
+            pr: getVal('practical')
+        },
         m: document.getElementById('completion_mode').value
     };
+
     const qrDiv = document.getElementById("qrcode");
     qrDiv.innerHTML = "";
     new QRCode(qrDiv, { text: JSON.stringify(payload), width: 200, height: 200 });
+
     const section = document.getElementById('qr-section');
     section.style.display = 'block';
     section.scrollIntoView({behavior: 'smooth'});
 }
 
-function printBlankForm() { window.print(); }
+function printBlankForm() {
+    window.print(); 
+}
