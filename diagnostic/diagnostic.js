@@ -216,11 +216,11 @@ function injectStandardFooter() {
     const existing = document.querySelector('footer');
     if(existing) existing.remove();
     document.body.insertAdjacentHTML('beforeend', `
-        <footer class="standard-footer">
-            <div class="footer-inner">
-                <p style="margin: 0 0 5px; font-weight: bold; color: #343a40;">&copy; 2026 Alivioscript Solutions</p>
-                <div class="author-info">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</div>
-                <div class="footer-disclaimer"><strong>Disclaimer:</strong> This tool is for professional clinical use.</div>
+<footer class="standard-footer" style="padding: 15px 10px; background: transparent; border-top: none;">
+            <div class="footer-inner" style="line-height: 1.4;">
+                <p style="margin: 0; font-weight: bold; color: #495057;">&copy; 2026 Alivioscript Solutions</p>
+                <p style="margin: 2px 0; color: #6c757d;">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+                <p style="margin: 2px 0; font-weight: bold; color: #dc3545;">For professional use only. Verify all results.</p>
             </div>
         </footer>
     `);
