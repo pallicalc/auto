@@ -47,6 +47,10 @@
         .badge-dt   { background: #dc3545; }
         .form-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .form-control { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        
+        /* NEW DROPDOWN STYLE */
+        .phase-select { width: 100%; padding: 12px; border: 2px solid var(--primary); border-radius: 8px; background: #f0f7ff; font-weight: 600; color: var(--primary); cursor: pointer; font-size: 1rem; }
+
         .clinical-summary { background: #f8f9fa; border-radius: 6px; padding: 10px; max-height: 250px; overflow-y: auto; border: 1px solid #eee; }
         .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef; font-size: 0.95rem; }
         .summary-row:last-child { border-bottom: none; }
@@ -123,6 +127,17 @@
             </div>
         </div>
 
+        <div class="step-card" style="border: 2px solid #cfe2ff;">
+            <span class="step-label" style="color:#0d6efd;">3. KPI Phase (For Reports)</span>
+            <select id="kpi_timing" class="phase-select">
+                <option value="Admission">Admission (Day 0)</option>
+                <option value="Day 3 Review">Day 3 Review</option>
+                <option value="Day 7 Review">Day 7 Review</option>
+                <option value="Discharge">Discharge</option>
+                <option value="Ad-hoc">Ad-hoc / Other</option>
+            </select>
+        </div>
+
         <button onclick="transferToCloud()" class="btn-action btn-primary">
             <i class="bi bi-cloud-upload-fill"></i> Send to Google Form
         </button>
@@ -147,7 +162,7 @@
 
     let savedLinks = {}; 
     let currentData = null;
-    let html5QrCode; // Use Html5Qrcode (Pro Mode) instead of Scanner
+    let html5QrCode; // Use Html5Qrcode (Pro Mode)
 
     const DISPLAY_LABELS = {
         Q2a: 'Pain', Q2b: 'Breath', Q2c: 'Weakness', Q2d: 'Nausea', Q2e: 'Vomiting',
@@ -184,7 +199,7 @@
         }
     });
 
-    // --- NEW: Camera 1 Default Logic ---
+    // --- Camera 1 Default Logic (UNTOUCHED) ---
     async function startCamera() {
         html5QrCode = new Html5Qrcode("reader");
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
@@ -194,25 +209,19 @@
             if (cameras && cameras.length > 0) {
                 // LOGIC: Find a camera with 'back' in the name, or just use the first one
                 const backCamera = cameras.find(c => c.label.toLowerCase().includes('back')) || cameras[0];
-                
-                // Start that specific camera
                 await html5QrCode.start(backCamera.id, config, onScanSuccess);
             } else {
-                // Fallback for devices that don't allow camera enumeration
                 await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess);
             }
         } catch (err) {
             console.error("Camera access failed", err);
-            // Don't alert immediately, user might just want to use gallery
         }
     }
 
-    // --- NEW: Gallery Upload Logic ---
+    // --- Gallery Upload Logic (UNTOUCHED) ---
     document.getElementById('qr-input-file').addEventListener('change', e => {
         if (e.target.files.length == 0) return;
         const imageFile = e.target.files[0];
-        
-        // Scan the file directly
         html5QrCode.scanFile(imageFile, true)
             .then(decodedText => onScanSuccess(decodedText))
             .catch(err => alert("Error scanning file: QR code not found in image."));
@@ -226,7 +235,6 @@
 
             if (data.t) {
                 currentData = data;
-                // Stop the camera so it doesn't keep running in background
                 if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop();
                 renderDashboard(data);
             } else {
@@ -272,6 +280,10 @@
         if (!currentData) return;
         const ptName = document.getElementById('pt_name').value;
         const ptID = document.getElementById('pt_id').value;
+        
+        // --- NEW: GRAB THE KPI PHASE ---
+        const kpiPhase = document.getElementById('kpi_timing').value;
+
         if (!ptID) { alert("Please enter a Patient ID (MRN)."); return; }
 
         const typeKey = currentData.t.toLowerCase(); 
@@ -289,6 +301,9 @@
         for (let [key, val] of Object.entries(currentData)) {
             if (!ignoredKeys.includes(key)) report += `${key}: ${val} | `;
         }
+
+        // --- NEW: ADD KPI PHASE TO REPORT ---
+        report += `Phase: ${kpiPhase} | `;
 
         // DOCTOR AUDIT (INTACT)
         const currentUser = firebase.auth().currentUser;
