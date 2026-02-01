@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IPOS Assessment | PalliCalc</title>
+    
+    <link rel="stylesheet" href="../diagnostic.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="../diagnostic.js"></script>
+</head>
+<body>
+
+    <div id="pdf-loading">
+        <div style="text-align:center">
+            <div style="display:inline-block; width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; font-weight: bold;">正在准备 PDF...</p>
+        </div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } #pdf-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; }</style>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="header header-ipos">
+            <div id="inst-header-container" class="inst-header-container">
+                <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+                <div class="inst-info"><h3 id="inst-name-display"></h3><p id="inst-contact-display"></p></div>
+            </div>
+            <h1>综合慈怀疗护结果量表 (IPOS)</h1>
+            <p>请清楚地填写并打勾适合您的答案。您的答案将能帮助我们不断地改善您与他人的医疗护理。谢谢。</p>
+        </div>
+
+        <div id="blank-qr-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:20px; border: 2px dashed #ccc; padding: 15px; border-radius: 8px;">
+                <div id="blank-qrcode"></div>
+                <div style="text-align:left;">
+                    <h4 style="margin:0; color:#0061f2;">扫描开始</h4>
+                    <small>请扫描此二维码，在您的手机上填写问卷。</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-bar no-print">
+            <a href="../../diagnostic.html" class="nav-link" id="backLink"><i class="bi bi-arrow-left"></i> 返回</a>
+            <div class="nav-link" style="color:#6c757d; cursor:default;"><i class="bi bi-calendar-event"></i> <span id="dateDisplay"></span></div>
+        </div>
+
+        <form id="iposForm">
+            
+           <div class="question-card">
+    <label class="q-label">Q1. 在过去的三天内，您主要面对的问题或担忧是什么（健康、财务、幸福感等）？</label>
+    
+    <textarea class="form-control" id="q1_input" rows="3" maxlength="100" 
+              style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" 
+              placeholder="请在此填写..." 
+              oninput="updateCharCount(this)"></textarea>
+    
+    <small id="char-count" style="display:block; text-align:right; color:#6c757d; font-size:12px; margin-top:4px;">
+        0/100
+    </small>
+</div>
+            <div class="question-card">
+                <label class="q-label">Q2. 以下是您已经经历或未经历的症状列表。对于每一个症状，请勾选一个最能描述过去3天它对您影响的方格。</label>
+                
+                <label class="sub-label">疼痛</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="pain" value="0" id="pain_0"><label for="pain_0">0<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="pain" value="1" id="pain_1"><label for="pain_1">1<div class="scale-desc">有一点</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="pain" value="2" id="pain_2"><label for="pain_2">2<div class="scale-desc">有些</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="pain" value="3" id="pain_3"><label for="pain_3">3<div class="scale-desc">相当</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="pain" value="4" id="pain_4"><label for="pain_4">4<div class="scale-desc">非常</div></label></div>
+                </div>
+
+                <label class="sub-label">呼吸短促</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="sob" value="0" id="sob_0"><label for="sob_0">0<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="sob" value="1" id="sob_1"><label for="sob_1">1<div class="scale-desc">有一点</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="sob" value="2" id="sob_2"><label for="sob_2">2<div class="scale-desc">有些</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="sob" value="3" id="sob_3"><label for="sob_3">3<div class="scale-desc">相当</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="sob" value="4" id="sob_4"><label for="sob_4">4<div class="scale-desc">非常</div></label></div>
+                </div>
+
+                <label class="sub-label">虚弱或缺乏体力</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="weak" value="0" id="weak_0"><label for="weak_0">0<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="weak" value="1" id="weak_1"><label for="weak_1">1<div class="scale-desc">有一点</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="weak" value="2" id="weak_2"><label for="weak_2">2<div class="scale-desc">有些</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="weak" value="3" id="weak_3"><label for="weak_3">3<div class="scale-desc">相当</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="weak" value="4" id="weak_4"><label for="weak_4">4<div class="scale-desc">非常</div></label></div>
+                </div>
+
+                <label class="sub-label">反胃</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="nau" value="0" id="nau_0"><label for="nau_0">0<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="nau" value="1" id="nau_1"><label for="nau_1">1<div class="scale-desc">有一点</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="nau" value="2" id="nau_2"><label for="nau_2">2<div class="scale-desc">有些</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="nau" value="3" id="nau_3"><label for="nau_3">3<div class="scale-desc">相当</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="nau" value="4" id="nau_4"><label for="nau_4">4<div class="scale-desc">非常</div></label></div>
+                </div>
+
+                <label class="sub-label">呕吐</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="vom" value="0" id="vom_0"><label for="vom_0">0<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="vom" value="1" id="vom_1"><label for="vom_1">1<div class="scale-desc">有一点</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="vom" value="2" id="vom_2"><label for="vom_2">2<div class="scale-desc">有些</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="vom" value="3" id="vom_3"><label for="vom_3">3<div class="scale-desc">相当</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="vom" value="4" id="vom_4"><label for="vom_4">4<div class="scale-desc">非常</div></label></div>
+                </div>
+
+                <label class="sub-label">食欲不佳</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="app" value="0" id="app_0"><label for="app_0">0<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="app" value="1" id="app_1"><label for="app_1">1<div class="scale-desc">有一点</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="app" value="2" id="app_2"><label for="app_2">2<div class="scale-desc">有些</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="app" value="3" id="app_3"><label for="app_3">3<div class="scale-desc">相当</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="app" value="4" id="app_4"><label for="app_4">4<div class="scale-desc">非常</div></label></div>
+                </div>
+
+                <label class="sub-label">便秘</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="con" value="0" id="con_0"><label for="con_0">0<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="con" value="1" id="con_1"><label for="con_1">1<div class="scale-desc">有一点</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="con" value="2" id="con_2"><label for="con_2">2<div class="scale-desc">有些</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="con" value="3" id="con_3"><label for="con_3">3<div class="scale-desc">相当</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="con" value="4" id="con_4"><label for="con_4">4<div class="scale-desc">非常</div></label></div>
+                </div>
+
+                <label class="sub-label">口疮或口干</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="mou" value="0" id="mou_0"><label for="mou_0">0<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mou" value="1" id="mou_1"><label for="mou_1">1<div class="scale-desc">有一点</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mou" value="2" id="mou_2"><label for="mou_2">2<div class="scale-desc">有些</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mou" value="3" id="mou_3"><label for="mou_3">3<div class="scale-desc">相当</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mou" value="4" id="mou_4"><label for="mou_4">4<div class="scale-desc">非常</div></label></div>
+                </div>
+
+                <label class="sub-label">昏昏欲睡</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="dro" value="0" id="dro_0"><label for="dro_0">0<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="dro" value="1" id="dro_1"><label for="dro_1">1<div class="scale-desc">有一点</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="dro" value="2" id="dro_2"><label for="dro_2">2<div class="scale-desc">有些</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="dro" value="3" id="dro_3"><label for="dro_3">3<div class="scale-desc">相当</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="dro" value="4" id="dro_4"><label for="dro_4">4<div class="scale-desc">非常</div></label></div>
+                </div>
+
+                <label class="sub-label">行动不便</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="mob" value="0" id="mob_0"><label for="mob_0">0<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mob" value="1" id="mob_1"><label for="mob_1">1<div class="scale-desc">有一点</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mob" value="2" id="mob_2"><label for="mob_2">2<div class="scale-desc">有些</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mob" value="3" id="mob_3"><label for="mob_3">3<div class="scale-desc">相当</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mob" value="4" id="mob_4"><label for="mob_4">4<div class="scale-desc">非常</div></label></div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top" style="margin-top:20px; border-top:1px solid #eee;">
+                    <label class="q-label">请列出以上没有提到的其他症状，并勾选一个最能描述过去3天它对您影响的方格。</label>
+
+                    <div class="other-symptom-row">
+                        <input type="text" id="other_sym_1_label" class="form-control other-input" maxlength="20" placeholder="例如：瘙痒" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        <div class="scale-container">
+                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="0" id="oth1_0"><label for="oth1_0">0<div class="scale-desc">一点也不</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="1" id="oth1_1"><label for="oth1_1">1<div class="scale-desc">有一点</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="2" id="oth1_2"><label for="oth1_2">2<div class="scale-desc">有些</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="3" id="oth1_3"><label for="oth1_3">3<div class="scale-desc">相当</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="4" id="oth1_4"><label for="oth1_4">4<div class="scale-desc">非常</div></label></div>
+                        </div>
+                    </div>
+
+                    <div class="other-symptom-row">
+                        <input type="text" id="other_sym_2_label" class="form-control other-input" maxlength="20" placeholder="例如：症状 2" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        <div class="scale-container">
+                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="0" id="oth2_0"><label for="oth2_0">0<div class="scale-desc">一点也不</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="1" id="oth2_1"><label for="oth2_1">1<div class="scale-desc">有一点</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="2" id="oth2_2"><label for="oth2_2">2<div class="scale-desc">有些</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="3" id="oth2_3"><label for="oth2_3">3<div class="scale-desc">相当</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="4" id="oth2_4"><label for="oth2_4">4<div class="scale-desc">非常</div></label></div>
+                        </div>
+                    </div>
+
+                    <div class="other-symptom-row">
+                        <input type="text" id="other_sym_3_label" class="form-control other-input" maxlength="20" placeholder="例如：症状 3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        <div class="scale-container">
+                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="0" id="oth3_0"><label for="oth3_0">0<div class="scale-desc">一点也不</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="1" id="oth3_1"><label for="oth3_1">1<div class="scale-desc">有一点</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="2" id="oth3_2"><label for="oth3_2">2<div class="scale-desc">有些</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="3" id="oth3_3"><label for="oth3_3">3<div class="scale-desc">相当</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="4" id="oth3_4"><label for="oth3_4">4<div class="scale-desc">非常</div></label></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">在过去三天: Q3. 您是否因为您的病情或治疗而感到焦虑或担忧？</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="anxious" value="0" id="anx_0"><label for="anx_0">0<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="anxious" value="1" id="anx_1"><label for="anx_1">1<div class="scale-desc">偶尔</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="anxious" value="2" id="anx_2"><label for="anx_2">2<div class="scale-desc">有时</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="anxious" value="3" id="anx_3"><label for="anx_3">3<div class="scale-desc">经常</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="anxious" value="4" id="anx_4"><label for="anx_4">4<div class="scale-desc">总是</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">在过去三天: Q4. 您的家人或朋友是否有为您感到焦虑或担忧？</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="family" value="0" id="fam_0"><label for="fam_0">0<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="family" value="1" id="fam_1"><label for="fam_1">1<div class="scale-desc">偶尔</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="family" value="2" id="fam_2"><label for="fam_2">2<div class="scale-desc">有时</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="family" value="3" id="fam_3"><label for="fam_3">3<div class="scale-desc">经常</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="family" value="4" id="fam_4"><label for="fam_4">4<div class="scale-desc">总是</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">在过去三天: Q5. 您是否感到忧郁？</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="depressed" value="0" id="dep_0"><label for="dep_0">0<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="depressed" value="1" id="dep_1"><label for="dep_1">1<div class="scale-desc">偶尔</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="depressed" value="2" id="dep_2"><label for="dep_2">2<div class="scale-desc">有时</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="depressed" value="3" id="dep_3"><label for="dep_3">3<div class="scale-desc">经常</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="depressed" value="4" id="dep_4"><label for="dep_4">4<div class="scale-desc">总是</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">在过去三天: Q6. 您感到心情平静吗？</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="peace" value="4" id="pea_0"><label for="pea_0">4<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="peace" value="3" id="pea_1"><label for="pea_1">3<div class="scale-desc">偶尔</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="peace" value="2" id="pea_2"><label for="pea_2">2<div class="scale-desc">有时</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="peace" value="1" id="pea_3"><label for="pea_3">1<div class="scale-desc">经常</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="peace" value="0" id="pea_4"><label for="pea_4">0<div class="scale-desc">总是</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">在过去三天: Q7. 您是否能如您所愿的与家人或朋友分享您的感受？</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="share" value="4" id="sha_0"><label for="sha_0">4<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="share" value="3" id="sha_1"><label for="sha_1">3<div class="scale-desc">偶尔</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="share" value="2" id="sha_2"><label for="sha_2">2<div class="scale-desc">有时</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="share" value="1" id="sha_3"><label for="sha_3">1<div class="scale-desc">经常</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="share" value="0" id="sha_4"><label for="sha_4">0<div class="scale-desc">总是</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">在过去三天: Q8. 您是否拥有您想要得到的信息？</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="info" value="4" id="inf_0"><label for="inf_0">4<div class="scale-desc">一点也不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="info" value="3" id="inf_1"><label for="inf_1">3<div class="scale-desc">偶尔</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="info" value="2" id="inf_2"><label for="inf_2">2<div class="scale-desc">有时</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="info" value="1" id="inf_3"><label for="inf_3">1<div class="scale-desc">经常</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="info" value="0" id="inf_4"><label for="inf_4">0<div class="scale-desc">总是</div></label></div>
+                </div>
+            </div>
+
+<div class="question-card">
+    <label class="q-label">Q9. 您是否已经解决任何因您的病情所导致的实际问题？（如财务或私人方面）</label>
+    <div class="scale-container">
+        <div class="scale-opt">
+            <input type="radio" name="practical" value="4" id="pra_0">
+            <label for="pra_0">4<div class="scale-desc">问题完全没解决</div></label>
+        </div>
+        <div class="scale-opt">
+            <input type="radio" name="practical" value="3" id="pra_1">
+            <label for="pra_1">3<div class="scale-desc">问题几乎没解决</div></label>
+        </div>
+        <div class="scale-opt">
+            <input type="radio" name="practical" value="2" id="pra_2">
+            <label for="pra_2">2<div class="scale-desc">有些问题已解决</div></label>
+        </div>
+        <div class="scale-opt">
+            <input type="radio" name="practical" value="1" id="pra_3">
+            <label for="pra_3">1<div class="scale-desc">大部分的问题已解决</div></label>
+        </div>
+        <div class="scale-opt">
+            <input type="radio" name="practical" value="0" id="pra_4">
+            <label for="pra_4">0<div class="scale-desc">问题已解决/没有问题</div></label>
+        </div>
+    </div>
+</div>
+
+
+            <div class="question-card">
+                <label class="q-label">Q10. 您是如何完成这份问卷？</label>
+                <select id="completion_mode" class="form-select" style="font-size:14px; padding:8px; width:100%; border:1px solid #ced4da; border-radius:6px;">
+                    <option value="0">自己作答</option>
+                    <option value="1">在朋友或亲戚的帮助下</option>
+                    <option value="2">在工作人员的帮助下</option>
+                </select>
+            </div>
+
+            <div class="score-box no-print">
+                <div><div class="score-title">IPOS 总分</div><small style="opacity:0.7">分数越高 = 症状困扰越严重</small></div>
+                <div class="score-val" id="total-score-display">0</div>
+            </div>
+
+            <div id="qr-section">
+                <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:8px; border-radius:6px; margin-bottom:8px; font-size:12px;">
+                    <i class="bi bi-check-circle-fill"></i> <strong>结果已准备好！</strong>
+                    <p style="margin:0; font-size:13px;">请将此二维码出示给您的医生。</p>
+                </div>
+                <div id="qrcode-container" style="background:white; padding:8px; border-radius:8px; display:inline-block;">
+                    <div id="qrcode"></div>
+                    <div style="font-size:9px; color:#999; margin-top:4px;">IPOS 安全载荷</div>
+                </div>
+            </div>
+
+            <div class="action-buttons no-print" style="margin-top:20px; display:flex; gap:8px; flex-direction:column;">
+                <button type="button" class="btn btn-buccal" onclick="generateQR()" style="width:100%;">
+                    <i class="bi bi-qr-code-scan"></i> 生成结果二维码
+                </button>
+                <button type="button" class="btn btn-pdf" onclick="printPDF()" style="width:100%;">
+                    <i class="bi bi-printer"></i> 打印空白表格
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+    <script>
+        async function printPDF() {
+            const loading = document.getElementById('pdf-loading');
+            loading.style.display = 'flex';
+            
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert("请允许弹出窗口以查看 PDF。");
+                loading.style.display = 'none';
+                return;
+            }
+            printWindow.document.write('请稍候，正在生成 PDF...');
+
+            try {
+                // A. GET DATA
+                let footerData = { name: "PalliCalc Patient Education", contact: "", logos: [] };
+                if (window.context && window.context.instId) {
+                    const cached = localStorage.getItem('cached_inst_' + window.context.instId);
+                    if (cached) {
+                        const d = JSON.parse(cached);
+                        footerData = { 
+                            name: d.headerName || d.name, 
+                            contact: d.headerContact || d.contact, 
+                            logos: d.headerLogos || (d.logo ? [d.logo] : [])
+                        };
+                    }
+                } else {
+                    const s = localStorage.getItem('institutionSettings');
+                    if (s) {
+                        const parsed = JSON.parse(s);
+                        footerData = { name: parsed.name, contact: parsed.contact, logos: parsed.logos || [parsed.logo] };
+                    }
+                }
+
+                const { PDFDocument, rgb, StandardFonts } = PDFLib;
+                const pdfUrl = 'ch.pdf?v=' + Date.now();
+                
+                const existingPdfBytes = await fetch(pdfUrl).then(res => {
+                    if (!res.ok) throw new Error("未找到 ch.pdf 文件！");
+                    return res.arrayBuffer();
+                });
+
+                const pdfDoc = await PDFDocument.load(existingPdfBytes);
+                const newPdf = await PDFDocument.create();
+                
+                const helveticaFont = await newPdf.embedFont(StandardFonts.Helvetica);
+                const helveticaBold = await newPdf.embedFont(StandardFonts.HelveticaBold);
+
+                const pageIndices = pdfDoc.getPageIndices(); 
+                const embeddedPages = await newPdf.embedPdf(pdfDoc, pageIndices);
+
+                const A4_W = 595.28; 
+                const A4_H = 841.89;
+                const FOOTER_H = 80;
+
+                for (const page of embeddedPages) {
+                    const newPage = newPdf.addPage([A4_W, A4_H]);
+                    
+                    const scale = Math.min(A4_W / page.width, (A4_H - FOOTER_H) / page.height);
+                    const w = page.width * scale;
+                    const h = page.height * scale;
+                    newPage.drawPage(page, { x: (A4_W - w)/2, y: FOOTER_H, width: w, height: h });
+
+                    const lineY = FOOTER_H - 10;
+                    newPage.drawLine({ 
+                        start: {x: 30, y: lineY}, 
+                        end: {x: A4_W-30, y: lineY}, 
+                        thickness: 0.5, 
+                        color: rgb(0.6, 0.6, 0.6) 
+                    });
+
+                    let currentX = 30;
+                    if (footerData.logos && footerData.logos.length > 0) {
+                        for (const logoUrl of footerData.logos) {
+                            try {
+                                if (!logoUrl) continue;
+                                const logoBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
+                                let logoImg;
+                                if (logoUrl.toLowerCase().includes('png')) logoImg = await newPdf.embedPng(logoBytes);
+                                else logoImg = await newPdf.embedJpg(logoBytes);
+
+                                const lScale = 35 / logoImg.height;
+                                const lWidth = logoImg.width * lScale;
+                                
+                                newPage.drawImage(logoImg, {
+                                    x: currentX,
+                                    y: lineY - 45,
+                                    width: lWidth,
+                                    height: 35
+                                });
+                                currentX += lWidth + 15;
+                            } catch (e) { console.warn("Logo Error", e); }
+                        }
+                    }
+
+                    const nameStr = footerData.name || "PalliCalc Patient Education";
+                    const contactStr = footerData.contact ? `Contact: ${footerData.contact}` : "";
+                    
+                    const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
+                    newPage.drawText(nameStr, { 
+                        x: A4_W - 30 - nameWidth, 
+                        y: lineY - 25, 
+                        size: 12, 
+                        font: helveticaBold, 
+                        color: rgb(0.2, 0.2, 0.2) 
+                    });
+
+                    if (contactStr) {
+                        const contactWidth = helveticaFont.widthOfTextAtSize(contactStr, 10);
+                        newPage.drawText(contactStr, { 
+                            x: A4_W - 30 - contactWidth, 
+                            y: lineY - 40, 
+                            size: 10, 
+                            font: helveticaFont, 
+                            color: rgb(0.4, 0.4, 0.4) 
+                        });
+                    }
+
+                    const copyText = "© 2026 Alivioscript Solutions | PalliCalc™";
+                    const copyWidth = helveticaFont.widthOfTextAtSize(copyText, 8);
+                    newPage.drawText(copyText, {
+                        x: (A4_W - copyWidth) / 2,
+                        y: 10,
+                        size: 8,
+                        font: helveticaFont,
+                        color: rgb(0.6, 0.6, 0.6)
+                    });
+                }
+
+                const pdfBytes = await newPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                printWindow.location.href = URL.createObjectURL(blob);
+
+            } catch (e) {
+                printWindow.close();
+                alert("错误: " + e.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

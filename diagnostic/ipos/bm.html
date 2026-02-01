@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IPOS Assessment | PalliCalc</title>
+    
+    <link rel="stylesheet" href="../diagnostic.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="../diagnostic.js"></script>
+</head>
+<body>
+
+    <div id="pdf-loading">
+        <div style="text-align:center">
+            <div style="display:inline-block; width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; font-weight: bold;">Menyediakan PDF...</p>
+        </div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } #pdf-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; }</style>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="header header-ipos">
+            <div id="inst-header-container" class="inst-header-container">
+                <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+                <div class="inst-info"><h3 id="inst-name-display"></h3><p id="inst-contact-display"></p></div>
+            </div>
+            <h1>Penilaian IPOS</h1>
+            <p>Skala Hasil Penjagaan Paliatif Bersepadu</p>
+        </div>
+
+        <div id="blank-qr-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:20px; border: 2px dashed #ccc; padding: 15px; border-radius: 8px;">
+                <div id="blank-qrcode"></div>
+                <div style="text-align:left;">
+                    <h4 style="margin:0; color:#0061f2;">Imbas untuk Mula</h4>
+                    <small>Imbas kod ini untuk mengisi borang di telefon anda.</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-bar no-print">
+            <a href="../../diagnostic.html" class="nav-link" id="backLink"><i class="bi bi-arrow-left"></i> Kembali</a>
+            <div class="nav-link" style="color:#6c757d; cursor:default;"><i class="bi bi-calendar-event"></i> <span id="dateDisplay"></span></div>
+        </div>
+
+        <form id="iposForm">
+            
+           <div class="question-card">
+    <label class="q-label">S1. Apakah yang menjadi masalah / masalah-masalah utama atau kerisauan anda dalam 3 hari kebelakangan ini?</label>
+    
+    <textarea class="form-control" id="q1_input" rows="3" maxlength="100" 
+              style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" 
+              placeholder="Senaraikan kerisauan..." 
+              oninput="updateCharCount(this)"></textarea>
+    
+    <small id="char-count" style="display:block; text-align:right; color:#6c757d; font-size:12px; margin-top:4px;">
+        0/100
+    </small>
+</div>
+            <div class="question-card">
+                <label class="q-label">S2. Di bawah adalah senarai gejala fizikal yang anda mungkin pernah / tidak pernah alami. Untuk setiap gejala, sila tandakan (√) pada satu kotak yang paling sesuai menggambarkan bagaimana ia telah memberi kesan kepada anda dalam 3 hari kebelakangan ini.</label>
+                
+                <label class="sub-label">Sakit</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="pain" value="0" id="pain_0"><label for="pain_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="pain" value="1" id="pain_1"><label for="pain_1">1<div class="scale-desc">Sedikit</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="pain" value="2" id="pain_2"><label for="pain_2">2<div class="scale-desc">Sederhana</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="pain" value="3" id="pain_3"><label for="pain_3">3<div class="scale-desc">Teruk</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="pain" value="4" id="pain_4"><label for="pain_4">4<div class="scale-desc">Sangat teruk</div></label></div>
+                </div>
+
+                <label class="sub-label">Sesak nafas / sukar bernafas</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="sob" value="0" id="sob_0"><label for="sob_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="sob" value="1" id="sob_1"><label for="sob_1">1<div class="scale-desc">Sedikit</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="sob" value="2" id="sob_2"><label for="sob_2">2<div class="scale-desc">Sederhana</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="sob" value="3" id="sob_3"><label for="sob_3">3<div class="scale-desc">Teruk</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="sob" value="4" id="sob_4"><label for="sob_4">4<div class="scale-desc">Sangat teruk</div></label></div>
+                </div>
+
+                <label class="sub-label">Lesu atau kurang tenaga / keletihan</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="weak" value="0" id="weak_0"><label for="weak_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="weak" value="1" id="weak_1"><label for="weak_1">1<div class="scale-desc">Sedikit</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="weak" value="2" id="weak_2"><label for="weak_2">2<div class="scale-desc">Sederhana</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="weak" value="3" id="weak_3"><label for="weak_3">3<div class="scale-desc">Teruk</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="weak" value="4" id="weak_4"><label for="weak_4">4<div class="scale-desc">Sangat teruk</div></label></div>
+                </div>
+
+                <label class="sub-label">Loya (rasa nak muntah)</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="nau" value="0" id="nau_0"><label for="nau_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="nau" value="1" id="nau_1"><label for="nau_1">1<div class="scale-desc">Sedikit</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="nau" value="2" id="nau_2"><label for="nau_2">2<div class="scale-desc">Sederhana</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="nau" value="3" id="nau_3"><label for="nau_3">3<div class="scale-desc">Teruk</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="nau" value="4" id="nau_4"><label for="nau_4">4<div class="scale-desc">Sangat teruk</div></label></div>
+                </div>
+
+                <label class="sub-label">Muntah</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="vom" value="0" id="vom_0"><label for="vom_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="vom" value="1" id="vom_1"><label for="vom_1">1<div class="scale-desc">Sedikit</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="vom" value="2" id="vom_2"><label for="vom_2">2<div class="scale-desc">Sederhana</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="vom" value="3" id="vom_3"><label for="vom_3">3<div class="scale-desc">Teruk</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="vom" value="4" id="vom_4"><label for="vom_4">4<div class="scale-desc">Sangat teruk</div></label></div>
+                </div>
+
+                <label class="sub-label">Kurang selera makan</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="app" value="0" id="app_0"><label for="app_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="app" value="1" id="app_1"><label for="app_1">1<div class="scale-desc">Sedikit</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="app" value="2" id="app_2"><label for="app_2">2<div class="scale-desc">Sederhana</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="app" value="3" id="app_3"><label for="app_3">3<div class="scale-desc">Teruk</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="app" value="4" id="app_4"><label for="app_4">4<div class="scale-desc">Sangat teruk</div></label></div>
+                </div>
+
+                <label class="sub-label">Sembelit</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="con" value="0" id="con_0"><label for="con_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="con" value="1" id="con_1"><label for="con_1">1<div class="scale-desc">Sedikit</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="con" value="2" id="con_2"><label for="con_2">2<div class="scale-desc">Sederhana</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="con" value="3" id="con_3"><label for="con_3">3<div class="scale-desc">Teruk</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="con" value="4" id="con_4"><label for="con_4">4<div class="scale-desc">Sangat teruk</div></label></div>
+                </div>
+
+                <label class="sub-label">Mulut sakit atau kering</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="mou" value="0" id="mou_0"><label for="mou_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mou" value="1" id="mou_1"><label for="mou_1">1<div class="scale-desc">Sedikit</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mou" value="2" id="mou_2"><label for="mou_2">2<div class="scale-desc">Sederhana</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mou" value="3" id="mou_3"><label for="mou_3">3<div class="scale-desc">Teruk</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mou" value="4" id="mou_4"><label for="mou_4">4<div class="scale-desc">Sangat teruk</div></label></div>
+                </div>
+
+                <label class="sub-label">Mengantuk</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="dro" value="0" id="dro_0"><label for="dro_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="dro" value="1" id="dro_1"><label for="dro_1">1<div class="scale-desc">Sedikit</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="dro" value="2" id="dro_2"><label for="dro_2">2<div class="scale-desc">Sederhana</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="dro" value="3" id="dro_3"><label for="dro_3">3<div class="scale-desc">Teruk</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="dro" value="4" id="dro_4"><label for="dro_4">4<div class="scale-desc">Sangat teruk</div></label></div>
+                </div>
+
+                <label class="sub-label">Sukar bergerak / sukar berjalan</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="mob" value="0" id="mob_0"><label for="mob_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mob" value="1" id="mob_1"><label for="mob_1">1<div class="scale-desc">Sedikit</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mob" value="2" id="mob_2"><label for="mob_2">2<div class="scale-desc">Sederhana</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mob" value="3" id="mob_3"><label for="mob_3">3<div class="scale-desc">Teruk</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="mob" value="4" id="mob_4"><label for="mob_4">4<div class="scale-desc">Sangat teruk</div></label></div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top" style="margin-top:20px; border-top:1px solid #eee;">
+                    <label class="q-label">Sila senaraikan gejala fizikal lain yang tidak disebut di atas, dan tandakan (√) pada satu kotak yang menunjukkan bagaimana ia telah memberi kesan kepada anda dalam 3 hari kebelakangan ini.</label>
+
+                    <div class="other-symptom-row">
+                        <input type="text" id="other_sym_1_label" class="form-control other-input" maxlength="20" placeholder="cth. Gatal-gatal" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        <div class="scale-container">
+                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="0" id="oth1_0"><label for="oth1_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="1" id="oth1_1"><label for="oth1_1">1<div class="scale-desc">Sedikit</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="2" id="oth1_2"><label for="oth1_2">2<div class="scale-desc">Sederhana</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="3" id="oth1_3"><label for="oth1_3">3<div class="scale-desc">Teruk</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="4" id="oth1_4"><label for="oth1_4">4<div class="scale-desc">Sangat teruk</div></label></div>
+                        </div>
+                    </div>
+
+                    <div class="other-symptom-row">
+                        <input type="text" id="other_sym_2_label" class="form-control other-input" maxlength="20" placeholder="cth. Gejala 2" style="width:100%; padding:8px; border:1px solid:#ccc; border-radius:4px;">
+                        <div class="scale-container">
+                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="0" id="oth2_0"><label for="oth2_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="1" id="oth2_1"><label for="oth2_1">1<div class="scale-desc">Sedikit</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="2" id="oth2_2"><label for="oth2_2">2<div class="scale-desc">Sederhana</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="3" id="oth2_3"><label for="oth2_3">3<div class="scale-desc">Teruk</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="4" id="oth2_4"><label for="oth2_4">4<div class="scale-desc">Sangat teruk</div></label></div>
+                        </div>
+                    </div>
+
+                    <div class="other-symptom-row">
+                        <input type="text" id="other_sym_3_label" class="form-control other-input" maxlength="20" placeholder="cth. Gejala 3" style="width:100%; padding:8px; border:1px solid:#ccc; border-radius:4px;">
+                        <div class="scale-container">
+                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="0" id="oth3_0"><label for="oth3_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="1" id="oth3_1"><label for="oth3_1">1<div class="scale-desc">Sedikit</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="2" id="oth3_2"><label for="oth3_2">2<div class="scale-desc">Sederhana</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="3" id="oth3_3"><label for="oth3_3">3<div class="scale-desc">Teruk</div></label></div>
+                            <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="4" id="oth3_4"><label for="oth3_4">4<div class="scale-desc">Sangat teruk</div></label></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">Dalam 3 hari kebelakangan ini: S3. Pernahkah anda berasa cemas atau risau tentang penyakit atau rawatan anda?</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="anxious" value="0" id="anx_0"><label for="anx_0">0<div class="scale-desc">Tidak langsung</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="anxious" value="1" id="anx_1"><label for="anx_1">1<div class="scale-desc">Jarang-jarang</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="anxious" value="2" id="anx_2"><label for="anx_2">2<div class="scale-desc">Kadang-kadang</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="anxious" value="3" id="anx_3"><label for="anx_3">3<div class="scale-desc">Kebanyakan masa</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="anxious" value="4" id="anx_4"><label for="anx_4">4<div class="scale-desc">Setiap masa</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">Dalam 3 hari kebelakangan ini: S4. Pernahkah mana-mana ahli keluarga atau rakan anda berasa cemas atau risau tentang anda?</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="family" value="0" id="fam_0"><label for="fam_0">0<div class="scale-desc">Tidak langsung</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="family" value="1" id="fam_1"><label for="fam_1">1<div class="scale-desc">Jarang-jarang</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="family" value="2" id="fam_2"><label for="fam_2">2<div class="scale-desc">Kadang-kadang</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="family" value="3" id="fam_3"><label for="fam_3">3<div class="scale-desc">Kebanyakan masa</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="family" value="4" id="fam_4"><label for="fam_4">4<div class="scale-desc">Setiap masa</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">Dalam 3 hari kebelakangan ini: S5. Pernahkah anda berasa murung?</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="depressed" value="0" id="dep_0"><label for="dep_0">0<div class="scale-desc">Tidak langsung</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="depressed" value="1" id="dep_1"><label for="dep_1">1<div class="scale-desc">Jarang-jarang</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="depressed" value="2" id="dep_2"><label for="dep_2">2<div class="scale-desc">Kadang-kadang</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="depressed" value="3" id="dep_3"><label for="dep_3">3<div class="scale-desc">Kebanyakan masa</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="depressed" value="4" id="dep_4"><label for="dep_4">4<div class="scale-desc">Setiap masa</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">Dalam 3 hari kebelakangan ini: S6. Pernahkah anda berasa tenang?</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="peace" value="4" id="pea_0"><label for="pea_0">4<div class="scale-desc">Tidak langsung</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="peace" value="3" id="pea_1"><label for="pea_1">3<div class="scale-desc">Jarang-jarang</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="peace" value="2" id="pea_2"><label for="pea_2">2<div class="scale-desc">Kadang-kadang</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="peace" value="1" id="pea_3"><label for="pea_3">1<div class="scale-desc">Kebanyakan masa</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="peace" value="0" id="pea_4"><label for="pea_4">0<div class="scale-desc">Setiap masa</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">Dalam 3 hari kebelakangan ini: S7. Pernahkah anda dapat berkongsi perasaan anda bersama ahli keluarga atau rakan-rakan sebanyak mana yang anda mahukan?</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="share" value="4" id="sha_0"><label for="sha_0">4<div class="scale-desc">Tidak langsung</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="share" value="3" id="sha_1"><label for="sha_1">3<div class="scale-desc">Jarang-jarang</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="share" value="2" id="sha_2"><label for="sha_2">2<div class="scale-desc">Kadang-kadang</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="share" value="1" id="sha_3"><label for="sha_3">1<div class="scale-desc">Kebanyakan masa</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="share" value="0" id="sha_4"><label for="sha_4">0<div class="scale-desc">Setiap masa</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">Dalam 3 hari kebelakangan ini: S8. Adakah anda telah mendapat sebanyak maklumat yang anda mahukan?</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="info" value="4" id="inf_0"><label for="inf_0">4<div class="scale-desc">Tidak langsung</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="info" value="3" id="inf_1"><label for="inf_1">3<div class="scale-desc">Jarang-jarang</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="info" value="2" id="inf_2"><label for="inf_2">2<div class="scale-desc">Kadang-kadang</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="info" value="1" id="inf_3"><label for="inf_3">1<div class="scale-desc">Kebanyakan masa</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="info" value="0" id="inf_4"><label for="inf_4">0<div class="scale-desc">Setiap masa</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">S9. Adakah sebarang masalah praktikal yang timbul akibat penyakit anda telah dapat ditangani? (seperti masalah kewangan atau peribadi)</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="practical" value="4" id="pra_0"><label for="pra_0">4<div class="scale-desc">Masalah langsung tidak ditangani</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="practical" value="3" id="pra_1"><label for="pra_1">3<div class="scale-desc">Masalah kebanyakan-nya tidak ditangani</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="practical" value="2" id="pra_2"><label for="pra_2">2<div class="scale-desc">Masalah sebahagian-nya ditangani</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="practical" value="1" id="pra_3"><label for="pra_3">1<div class="scale-desc">Masalah kebanyakan-nya ditangani</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="practical" value="0" id="pra_4"><label for="pra_4">0<div class="scale-desc">Masalah ditangani / tiada masalah</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">S10. Bagaimanakah anda melengkapkan soal selidik ini?</label>
+                <select id="completion_mode" class="form-select" style="font-size:14px; padding:8px; width:100%; border:1px solid #ced4da; border-radius:6px;">
+                    <option value="0">Diri sendiri</option>
+                    <option value="1">Dengan bantuan rakan atau saudara</option>
+                    <option value="2">Dengan bantuan ahli kakitangan</option>
+                </select>
+            </div>
+
+            <div class="score-box no-print">
+                <div><div class="score-title">Jumlah Skor IPOS</div><small style="opacity:0.7">Lebih tinggi = Lebih tertekan</small></div>
+                <div class="score-val" id="total-score-display">0</div>
+            </div>
+
+            <div id="qr-section">
+                <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:8px; border-radius:6px; margin-bottom:8px; font-size:12px;">
+                    <i class="bi bi-check-circle-fill"></i> <strong>Keputusan Sedia!</strong>
+                    <p style="margin:0; font-size:13px;">Tunjukkan kod QR ini kepada doktor anda.</p>
+                </div>
+                <div id="qrcode-container" style="background:white; padding:8px; border-radius:8px; display:inline-block;">
+                    <div id="qrcode"></div>
+                    <div style="font-size:9px; color:#999; margin-top:4px;">Muatan Selamat IPOS</div>
+                </div>
+            </div>
+
+            <div class="action-buttons no-print" style="margin-top:20px; display:flex; gap:8px; flex-direction:column;">
+                <button type="button" class="btn btn-buccal" onclick="generateQR()" style="width:100%;">
+                    <i class="bi bi-qr-code-scan"></i> Jana Kod QR Keputusan
+                </button>
+                <button type="button" class="btn btn-pdf" onclick="printPDF()" style="width:100%;">
+                    <i class="bi bi-printer"></i> Cetak Borang Kosong
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+    <script>
+        async function printPDF() {
+            const loading = document.getElementById('pdf-loading');
+            loading.style.display = 'flex';
+            
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert("Sila benarkan 'popup' untuk melihat PDF.");
+                loading.style.display = 'none';
+                return;
+            }
+            printWindow.document.write('Sila tunggu, PDF sedang dijana...');
+
+            try {
+                // A. GET DATA
+                let footerData = { name: "PalliCalc Patient Education", contact: "", logos: [] };
+                if (window.context && window.context.instId) {
+                    const cached = localStorage.getItem('cached_inst_' + window.context.instId);
+                    if (cached) {
+                        const d = JSON.parse(cached);
+                        footerData = { 
+                            name: d.headerName || d.name, 
+                            contact: d.headerContact || d.contact, 
+                            logos: d.headerLogos || (d.logo ? [d.logo] : [])
+                        };
+                    }
+                } else {
+                    const s = localStorage.getItem('institutionSettings');
+                    if (s) {
+                        const parsed = JSON.parse(s);
+                        footerData = { name: parsed.name, contact: parsed.contact, logos: parsed.logos || [parsed.logo] };
+                    }
+                }
+
+                // B. LOAD PDF (Force Cache Busting with '?v=timestamp')
+                const { PDFDocument, rgb, StandardFonts } = PDFLib;
+                
+                // CRITICAL FIX: Append timestamp to force new download
+                const pdfUrl = 'bm.pdf?v=' + Date.now();
+                
+                const existingPdfBytes = await fetch(pdfUrl).then(res => {
+                    if (!res.ok) throw new Error("Fail bm.pdf tidak dijumpai!");
+                    return res.arrayBuffer();
+                });
+
+                const pdfDoc = await PDFDocument.load(existingPdfBytes);
+                const newPdf = await PDFDocument.create();
+                
+                const helveticaFont = await newPdf.embedFont(StandardFonts.Helvetica);
+                const helveticaBold = await newPdf.embedFont(StandardFonts.HelveticaBold);
+
+                // CRITICAL FIX: Explicitly embed ALL pages by index
+                const pageIndices = pdfDoc.getPageIndices(); 
+                const embeddedPages = await newPdf.embedPdf(pdfDoc, pageIndices);
+
+                const A4_W = 595.28; 
+                const A4_H = 841.89;
+                const FOOTER_H = 80;
+
+                // C. STAMP FOOTER (Iterates through ALL pages)
+                for (const page of embeddedPages) {
+                    const newPage = newPdf.addPage([A4_W, A4_H]);
+                    
+                    // 1. Content
+                    const scale = Math.min(A4_W / page.width, (A4_H - FOOTER_H) / page.height);
+                    const w = page.width * scale;
+                    const h = page.height * scale;
+                    newPage.drawPage(page, { x: (A4_W - w)/2, y: FOOTER_H, width: w, height: h });
+
+                    // 2. Line
+                    const lineY = FOOTER_H - 10;
+                    newPage.drawLine({ 
+                        start: {x: 30, y: lineY}, 
+                        end: {x: A4_W-30, y: lineY}, 
+                        thickness: 0.5, 
+                        color: rgb(0.6, 0.6, 0.6) 
+                    });
+
+                    // 3. LOGOS (LEFT)
+                    let currentX = 30;
+                    if (footerData.logos && footerData.logos.length > 0) {
+                        for (const logoUrl of footerData.logos) {
+                            try {
+                                if (!logoUrl) continue;
+                                const logoBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
+                                let logoImg;
+                                if (logoUrl.toLowerCase().includes('png')) logoImg = await newPdf.embedPng(logoBytes);
+                                else logoImg = await newPdf.embedJpg(logoBytes);
+
+                                const lScale = 35 / logoImg.height;
+                                const lWidth = logoImg.width * lScale;
+                                
+                                newPage.drawImage(logoImg, {
+                                    x: currentX,
+                                    y: lineY - 45,
+                                    width: lWidth,
+                                    height: 35
+                                });
+                                currentX += lWidth + 15;
+                            } catch (e) { console.warn("Logo Error", e); }
+                        }
+                    }
+
+                    // 4. TEXT (RIGHT)
+                    const nameStr = footerData.name || "PalliCalc Patient Education";
+                    const contactStr = footerData.contact ? `Contact: ${footerData.contact}` : "";
+                    
+                    const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
+                    newPage.drawText(nameStr, { 
+                        x: A4_W - 30 - nameWidth, 
+                        y: lineY - 25, 
+                        size: 12, 
+                        font: helveticaBold, 
+                        color: rgb(0.2, 0.2, 0.2) 
+                    });
+
+                    if (contactStr) {
+                        const contactWidth = helveticaFont.widthOfTextAtSize(contactStr, 10);
+                        newPage.drawText(contactStr, { 
+                            x: A4_W - 30 - contactWidth, 
+                            y: lineY - 40, 
+                            size: 10, 
+                            font: helveticaFont, 
+                            color: rgb(0.4, 0.4, 0.4) 
+                        });
+                    }
+
+                    // 5. COPYRIGHT (CENTER)
+                    const copyText = "© 2026 Alivioscript Solutions | PalliCalc™";
+                    const copyWidth = helveticaFont.widthOfTextAtSize(copyText, 8);
+                    newPage.drawText(copyText, {
+                        x: (A4_W - copyWidth) / 2,
+                        y: 10,
+                        size: 8,
+                        font: helveticaFont,
+                        color: rgb(0.6, 0.6, 0.6)
+                    });
+                }
+
+                const pdfBytes = await newPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                printWindow.location.href = URL.createObjectURL(blob);
+
+            } catch (e) {
+                printWindow.close();
+                alert("Ralat: " + e.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
