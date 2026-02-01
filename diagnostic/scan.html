@@ -31,7 +31,7 @@
 
         /* SCANNER UI */
         #scan-screen { position: relative; background: black; }
-        .scanner-wrapper { position: relative; width: 100%; height: 350px; overflow: hidden; }
+        .scanner-wrapper { position: relative; width: 100%; height: 350px; overflow: hidden; background: #000; }
         #reader { width: 100%; height: 100%; object-fit: cover; }
         .scan-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); pointer-events: none; display: flex; align-items: center; justify-content: center; }
         .scan-box { width: 250px; height: 250px; border: 2px solid rgba(255,255,255,0.7); border-radius: 16px; position: relative; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); }
@@ -84,12 +84,21 @@
                 Only premium institution users can submit data. Admins must save the Master Form links in the setup page first.
             </div>
         </div>
+
+        <input type="file" id="qr-input-file" accept="image/*" style="display:none">
+
         <div class="scanner-wrapper">
             <div id="reader"></div>
             <div class="scan-overlay"><div class="scan-box"></div></div>
         </div>
-        <div style="background: white; padding: 15px; text-align: center; color: #666; border-top: 1px solid #eee;">
-            <i class="bi bi-camera-video"></i> Point camera at patient's QR code
+
+        <div style="background: white; padding: 20px; text-align: center; border-top: 1px solid #eee;">
+            <p style="color: #666; margin-bottom: 12px; font-size: 0.9rem;">
+                <i class="bi bi-camera-video"></i> Point camera at patient's QR code
+            </p>
+            <button onclick="document.getElementById('qr-input-file').click()" class="btn-action" style="background:#eef2f5; color:#0d6efd; margin:0 auto; width: auto; padding: 10px 20px;">
+                <i class="bi bi-image"></i> Upload from Gallery
+            </button>
         </div>
     </div>
 
@@ -138,7 +147,7 @@
 
     let savedLinks = {}; 
     let currentData = null;
-    let html5QrcodeScanner;
+    let html5QrCode; // Use Html5Qrcode (Pro Mode) instead of Scanner
 
     const DISPLAY_LABELS = {
         Q2a: 'Pain', Q2b: 'Breath', Q2c: 'Weakness', Q2d: 'Nausea', Q2e: 'Vomiting',
@@ -165,7 +174,7 @@
                 }
                 
                 document.getElementById('loading-overlay').style.display = 'none';
-                startScanner();
+                startCamera();
 
             } catch (e) {
                 alert("Error loading config: " + e.message);
@@ -175,10 +184,39 @@
         }
     });
 
-    function startScanner() {
-        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250}, aspectRatio: 1.0 }, false);
-        html5QrcodeScanner.render(onScanSuccess);
+    // --- NEW: Camera 1 Default Logic ---
+    async function startCamera() {
+        html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        try {
+            const cameras = await Html5Qrcode.getCameras();
+            if (cameras && cameras.length > 0) {
+                // LOGIC: Find a camera with 'back' in the name, or just use the first one
+                const backCamera = cameras.find(c => c.label.toLowerCase().includes('back')) || cameras[0];
+                
+                // Start that specific camera
+                await html5QrCode.start(backCamera.id, config, onScanSuccess);
+            } else {
+                // Fallback for devices that don't allow camera enumeration
+                await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess);
+            }
+        } catch (err) {
+            console.error("Camera access failed", err);
+            // Don't alert immediately, user might just want to use gallery
+        }
     }
+
+    // --- NEW: Gallery Upload Logic ---
+    document.getElementById('qr-input-file').addEventListener('change', e => {
+        if (e.target.files.length == 0) return;
+        const imageFile = e.target.files[0];
+        
+        // Scan the file directly
+        html5QrCode.scanFile(imageFile, true)
+            .then(decodedText => onScanSuccess(decodedText))
+            .catch(err => alert("Error scanning file: QR code not found in image."));
+    });
 
     function onScanSuccess(decodedText) {
         try {
@@ -188,7 +226,8 @@
 
             if (data.t) {
                 currentData = data;
-                html5QrcodeScanner.clear();
+                // Stop the camera so it doesn't keep running in background
+                if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop();
                 renderDashboard(data);
             } else {
                 alert("Unknown QR Code format.");
@@ -215,6 +254,7 @@
         }
 
         for (const [key, val] of Object.entries(data)) {
+            // 'd' (timestamp) is excluded here from VIEW, but not from REPORT
             if (['t', 'd', 'score', 'Q1'].includes(key)) continue;
             const label = DISPLAY_LABELS[key] || key;
             const numVal = parseInt(val);
@@ -243,12 +283,14 @@
         }
 
         let report = "";
+        // 'd' is NOT in this list, so the timestamp is sent!
         const ignoredKeys = ['t', 'score']; 
         
         for (let [key, val] of Object.entries(currentData)) {
             if (!ignoredKeys.includes(key)) report += `${key}: ${val} | `;
         }
 
+        // DOCTOR AUDIT (INTACT)
         const currentUser = firebase.auth().currentUser;
         if (currentUser && currentUser.email) {
             report += `ScannedBy: ${currentUser.email} | `;
