@@ -8,8 +8,8 @@
     }
     // Adjust path based on where this script runs. 
     // If diagnostic.js is in a subfolder, use '../favicon.png'
-    link.href = '/favicon.png';
-     
+    link.href = '../../favicon.png';
+
 })();
 // --- FIREBASE CONFIG ---
 const firebaseConfig = {
