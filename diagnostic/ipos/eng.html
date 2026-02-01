@@ -57,10 +57,18 @@
 
         <form id="iposForm">
             
-            <div class="question-card">
-                <label class="q-label">Q1. What have been your main problems or concerns over the past 3 days?</label>
-<textarea class="form-control" id="q1_input" rows="3" maxlength="100" style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" placeholder="List concerns..."></textarea>            </div>
-
+           <div class="question-card">
+    <label class="q-label">Q1. What have been your main problems or concerns over the past 3 days?</label>
+    
+    <textarea class="form-control" id="q1_input" rows="3" maxlength="100" 
+              style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" 
+              placeholder="List concerns..." 
+              oninput="updateCharCount(this)"></textarea>
+    
+    <small id="char-count" style="display:block; text-align:right; color:#6c757d; font-size:12px; margin-top:4px;">
+        0/100
+    </small>
+</div>
             <div class="question-card">
                 <label class="q-label">Q2. Below is a list of symptoms, which you may or may not have experienced. For each symptom, please tick one box that best describes how it has affected you over the past 3 days.  </label>
                 
