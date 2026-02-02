@@ -397,7 +397,6 @@
   <script>
     let auth, db;
 
-    // --- 1. DEFAULT PLACEHOLDERS ---
     let LIVE_REG_PRICES = {
         malaysia: { personal: 0, institutionUser: 0, admin_reg: 0, admin_premium: 0 },
         international: { personal: 0, institutionUser: 0, admin_reg: 0, admin_premium: 0 }
@@ -436,7 +435,6 @@
         }
     }
 
-    // New function to reveal payment fields
     window.showPaymentFields = function() {
         document.getElementById('payment-input-container').style.display = 'block';
         document.getElementById('proceed-payment-btn').style.display = 'none';
@@ -453,7 +451,6 @@
         const emailInput = document.getElementById('email');
         const premiumToggle = document.getElementById('wantsPremium');
 
-        // Modal Logic
         const infoBtn = document.getElementById('role-info-btn');
         const modal = document.getElementById('info-modal');
         const closeModal = document.getElementById('close-modal');
@@ -461,9 +458,7 @@
         if(closeModal) closeModal.addEventListener('click', () => { modal.style.display = 'none'; });
         if(modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
 
-        // --- 2. UI & PRICING LOGIC ---
         function updateUI() {
-            // Role Card Styling
             document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
             const selected = document.querySelector('input[name="role"]:checked');
             if(selected) selected.closest('.role-card').classList.add('selected');
@@ -477,14 +472,12 @@
             const geo = isMalaysia ? 'malaysia' : 'international';
             const prices = LIVE_REG_PRICES[geo] || LIVE_REG_PRICES['international'];
 
-            // Show/Hide Inst Fields
             document.getElementById('inst-user-section').style.display = role === 'institutionUser' ? 'block' : 'none';
             document.getElementById('inst-admin-section').style.display = role === 'institutionAdmin' ? 'block' : 'none';
             
             instSelect.required = (role === 'institutionUser');
             document.getElementById('institution-name').required = (role === 'institutionAdmin');
 
-            // --- PRICING CALCULATION ---
             const pricingBox = document.getElementById('pricing-section');
             const premOptions = document.getElementById('premium-options');
             const currencySpan = document.getElementById('currencySymbol');
@@ -523,22 +516,15 @@
 
             totalSpan.textContent = total;
 
-            // Logic for the Payment Gate
             if (total > 0) {
-                // If money is involved, show the Proceed button, hide the inputs initially
-                // We reset the display logic here to ensure if user switches roles, the gate closes again
-                // But if the inputs are ALREADY open, we keep them open? 
-                // Better safety: Always close the gate on price change to prevent stale data
                 proceedBtn.style.display = 'block';
                 payInputs.style.display = 'none';
             } else {
-                // No money involved
                 proceedBtn.style.display = 'none';
                 payInputs.style.display = 'none';
             }
         }
 
-        // Listeners
         roleInputs.forEach(r => r.addEventListener('change', updateUI));
         countrySelect.addEventListener('change', updateUI);
         emailInput.addEventListener('input', updateUI);
@@ -581,7 +567,6 @@
             }
         }
 
-        // --- 3. SUBMIT LOGIC ---
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
@@ -650,6 +635,7 @@
                 if (role === 'institutionAdmin' && !isMoH && total === 0) billStatus = 'active-first-year';
                 if (total > 0) billStatus = 'active';
 
+                // SAVE DATA TO FIREBASE (With Fixed Amount)
                 await db.collection('users').doc(uid).set({
                     username: document.getElementById('username').value,
                     email: email,
@@ -661,6 +647,9 @@
                     billingStatus: billStatus,
                     trustStatus: total > 0 ? 'pending-verification' : 'verified',
                     paymentReference: paymentRef || "N/A",
+                    
+                    registrationAmount: total, // <--- FIXED: Now saves the amount
+
                     requestEInvoice: document.getElementById('requestEInvoice').checked,
                     manualDiscount: manualDiscount,
                     promoCode: promo,
@@ -686,7 +675,6 @@
             }
         });
 
-        // --- 4. UPDATED RECEIPT GENERATORS ---
         window.generateInvoice = function() {
             printDoc("PRO-FORMA INVOICE", "DuitNow / Stripe", "Please attach your proof of payment to this document.");
         };
@@ -716,17 +704,17 @@
                     <strong>Payable To:</strong> Alivioscript Solutions<br><strong>Method:</strong> ${payInfo}
                 </div>
                 <table class="table table-bordered">
-                    <tr><th>Description</th><th class="text-end">Amount</th></tr>
-                    <tr><td>Account Activation Fee</td><td class="text-end fw-bold">${curr} ${amt}</td></tr>
+                    <tr><th>Description</th><th class=\"text-end\">Amount</th></tr>
+                    <tr><td>Account Activation Fee</td><td class=\"text-end fw-bold\">${curr} ${amt}</td></tr>
                 </table>
                 
-                <div class="verification-notice">
+                <div class=\"verification-notice\">
                     <strong>STATUS: PENDING VERIFICATION</strong><br>
                     Note: ${note}<br><br>
                     <em>PalliCalc operates on a trust system. Immediate access is granted upon registration; however, accounts will be suspended if payment verification fails.</em>
                 </div>
 
-                <p class="text-center text-muted mt-5 small">
+                <p class=\"text-center text-muted mt-5 small\">
                     For support, contact support@pallicalc.com<br>
                     Alison Chai, RPh: 9093
                 </p>
@@ -735,7 +723,7 @@
             win.document.close();
         }
 
-        updateUI(); // Run once on load
+        updateUI(); 
     });
   </script>
 </body>

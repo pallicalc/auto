@@ -102,8 +102,7 @@
 </footer>
 
 <script>
-    // --- 1. DEFINE SUPER ADMINS ---
-    // Only these emails can see this page. Everyone else is kicked out.
+    // --- 1. SUPER ADMINS ---
     const SUPER_ADMINS = [
         "chai.alison@moh.gov.my"
     ];
@@ -111,17 +110,12 @@
     // --- 2. AUTH GUARD ---
     auth.onAuthStateChanged(user => {
         if (!user) {
-            // Not logged in -> Go to Login
             window.location.href = '../index.html';
         } else {
             const email = user.email.toLowerCase().trim();
-            
-            // Check if email is in the allowed list
             if (SUPER_ADMINS.includes(email)) {
-                // Allowed! Load data
                 loadAuditQueue();
             } else {
-                // Not allowed -> Kick back to Dashboard
                 alert("⛔ ACCESS DENIED: You do not have Super Admin permissions.");
                 window.location.href = '../admin.html';
             }
@@ -147,29 +141,42 @@
             let html = '';
             snap.forEach(doc => {
                 const d = doc.data();
-                const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-GB') : 'N/A';
                 
-                let amountDisplay = "N/A";
-                let typeBadge = '<span class="badge bg-secondary">Unknown</span>';
+                // --- TIMESTAMP LOGIC ---
+                const tReg = d.createdAt ? d.createdAt.toDate().getTime() : 0;
+                const tRen = d.lastRenewalDate ? d.lastRenewalDate.toDate().getTime() : 0;
+                
+                // If Renewal is newer (by > 1 min), treat as Renewal
+                const isRenewal = (tRen > tReg + 60000); 
+                const displayTime = isRenewal ? tRen : tReg;
+                const actionDate = new Date(displayTime).toLocaleDateString('en-GB');
 
-                if (d.upgradeAmount) {
-                    amountDisplay = d.upgradeAmount;
-                    typeBadge = '<span class="badge bg-warning text-dark">Upgrade</span>';
-                } else if (d.renewalAmount) {
-                    amountDisplay = d.renewalAmount;
+                let amountDisplay = "-";
+                let typeBadge = '';
+
+                if (isRenewal) {
                     typeBadge = '<span class="badge bg-info text-dark">Renewal</span>';
+                    amountDisplay = (d.renewalAmount !== undefined) ? d.renewalAmount : "0";
                 } else {
-                    amountDisplay = "-"; 
                     typeBadge = '<span class="badge bg-success">Registration</span>';
+                    // FIXED: Now checks for 'registrationAmount', falls back to '-' if missing
+                    amountDisplay = (d.registrationAmount !== undefined) ? d.registrationAmount : "-"; 
                 }
+
+                // FIXED: Logic to create the LHDN Badge
+                const eInvoiceBadge = d.requestEInvoice 
+                    ? '<span class="badge bg-danger ms-1" style="font-size:0.6rem">LHDN Invoice</span>' 
+                    : '';
 
                 html += `
                 <tr>
                     <td class="ps-4">
                         <div class="d-flex align-items-center">
-                            <div class="me-3">${typeBadge}</div>
+                            <div class="me-3" style="min-width: 80px;">${typeBadge}</div>
                             <div>
-                                <div class="fw-bold text-dark">${d.username || 'Unknown User'}</div>
+                                <div class="fw-bold text-dark">
+                                    ${d.username || 'Unknown User'}
+                                    ${eInvoiceBadge} </div>
                                 <div class="small text-muted">${d.email}</div>
                                 <div class="small text-primary fst-italic" style="font-size:0.75rem">${d.institutionName || 'Personal'}</div>
                             </div>
@@ -177,10 +184,10 @@
                     </td>
                     <td><span class="badge bg-light text-dark border font-monospace px-2 py-2">${d.paymentReference || 'N/A'}</span></td>
                     <td><span class="fw-bold text-dark">${amountDisplay}</span></td>
-                    <td class="small text-muted">${date}</td>
+                    <td class="small text-muted">${actionDate}</td>
                     <td class="text-end pe-4">
-                        <button class="btn btn-action btn-outline-danger me-2" onclick="rejectUser('${doc.id}')"><i class="bi bi-x-lg"></i></button>
-                        <button class="btn btn-action btn-success" onclick="verifyUser('${doc.id}')"><i class="bi bi-check-lg"></i></button>
+                        <button class="btn btn-action btn-outline-danger me-2" onclick="rejectUser('${doc.id}')" title="Reject"><i class="bi bi-x-lg"></i></button>
+                        <button class="btn btn-action btn-success" onclick="verifyUser('${doc.id}')" title="Verify"><i class="bi bi-check-lg"></i></button>
                     </td>
                 </tr>`;
             });
@@ -193,7 +200,7 @@
     }
 
     async function verifyUser(uid) {
-        if (!confirm("Confirm payment is valid?")) return;
+        if (!confirm("Confirm payment is valid? This will activate the user.")) return;
         try {
             await db.collection('users').doc(uid).update({ trustStatus: 'verified' });
             loadAuditQueue();

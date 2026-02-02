@@ -23,7 +23,6 @@
         .date-badge.active { background: #d1e7dd; color: #0f5132; }
         .date-badge.expired { background: #f8d7da; color: #842029; }
 
-        /* --- NEW STYLES FOR DOCS --- */
         .doc-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
         .btn-small-outline {
             flex: 1; 
@@ -95,7 +94,7 @@
 
                 <div class="card renewal-card mb-4">
                     <div class="card-header bg-white py-3 border-bottom">
-                        <h6 class="fw-bold mb-0 text-primary">Extend Subscription (12 Months)</h6>
+                        <h6 class="fw-bold mb-0 text-primary">Extend Subscription (1 Year)</h6>
                     </div>
                     <div class="card-body p-4">
                         
@@ -173,10 +172,21 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Payment Reference / Receipt No.</label>
                             <input type="text" id="paymentRef" class="form-control form-control-lg" placeholder="e.g. DuitNow Ref 123456">
-                            
                             <div class="form-text text-success fw-bold small mt-1" id="zeroPayMsg" style="display:none;">
                                 <i class="bi bi-check-circle"></i> Total is 0. Please enter "WAIVER" or "PROMO" above.
                             </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px; padding-top:10px; border-top:1px dashed #cbd5e1;">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="requestEInvoice">
+                                <label class="form-check-label small text-secondary" for="requestEInvoice">
+                                    Request Official LHDN e-Invoice (Sent in 30 days)
+                                </label>
+                            </div>
+                            <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 4px; padding-left: 24px; margin-bottom: 0;">
+                                If you forgot to tick this, email <strong>support@pallicalc.com</strong>. <br>Response may take up to 60 days.
+                            </p>
                         </div>
 
                         <button id="btnSubmit" class="btn btn-success w-100 py-3 fw-bold shadow-sm">
@@ -201,19 +211,12 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // ==========================================
-    // 1. DYNAMIC PRICING (REPLACED HARDCODED CONST)
-    // ==========================================
+    // --- CONFIG & STATE ---
     let LIVE_RENEWAL_PRICES = {
-        malaysia: { 
-            tier1: 200, tier2: 500, tier3: 1000, premium_annual: 500 
-        },
-        international: { 
-            tier1: 200, tier2: 500, tier3: 1000, premium_annual: 500 
-        }
+        malaysia: { tier1: 200, tier2: 500, tier3: 1000, premium_annual: 500 },
+        international: { tier1: 200, tier2: 500, tier3: 1000, premium_annual: 500 }
     };
 
-    // --- STATE ---
     let state = {
         basePrice: 0,
         premiumPrice: 0,
@@ -223,31 +226,21 @@
         manualDiscount: 0 
     };
 
-    // --- NEW FETCH FUNCTION ---
+    // --- FETCH PRICES ---
     async function fetchLivePrices() {
         try {
             const doc = await db.collection('setting').doc('renewal').get();
-            if (doc.exists) {
-                LIVE_RENEWAL_PRICES = doc.data();
-                console.log("Prices loaded from Firestore");
-            } else {
-                console.warn("Using default prices (doc not found)");
-            }
-        } catch(e) {
-            console.error("DB Fetch Error:", e);
-        }
+            if (doc.exists) LIVE_RENEWAL_PRICES = doc.data();
+        } catch(e) { console.error("Price fetch error:", e); }
     }
 
-    // --- INITIALIZATION ---
+    // --- MAIN INIT ---
     auth.onAuthStateChanged(async user => {
         if (!user) return window.location.href = '../index.html';
 
         try {
-            // 1. Parallel Fetch: User Data & Pricing (UPDATED LOGIC)
             const userDocPromise = db.collection('users').doc(user.uid).get();
-            const pricesPromise = fetchLivePrices(); // Call the new fetcher
-            
-            // Wait for BOTH to finish before proceeding
+            const pricesPromise = fetchLivePrices();
             const [userDoc] = await Promise.all([userDocPromise, pricesPromise]);
             const userData = userDoc.data();
 
@@ -257,47 +250,42 @@
                 return;
             }
 
-            // 2. Fetch Staff Count
+            // Staff Count
             const staffSnap = await db.collection('users').where('institutionId', '==', userData.institutionId || 'none').get();
             const count = staffSnap.size || 1;
 
-            // 3. Determine Region & Prices using LIVE_RENEWAL_PRICES
+            // Region & Currency
             const isMY = (userData.country === 'Malaysia');
             state.currency = isMY ? 'RM' : 'USD';
             const geo = isMY ? 'malaysia' : 'international';
-            
-            // Safe access to the price map
             const prices = LIVE_RENEWAL_PRICES[geo] || LIVE_RENEWAL_PRICES['international'];
             
-            // Set Base Price by Tier from LIVE DATA
+            // Base Price Logic
             if (count <= 10) state.basePrice = prices.tier1;
             else if (count <= 50) state.basePrice = prices.tier2;
             else state.basePrice = prices.tier3;
 
-            // Set Premium Price from LIVE DATA
             state.premiumPrice = prices.premium_annual;
-
-            // 4. Other State Setup
             state.manualDiscount = userData.manualDiscount || 0;
+            
+            // Expiry Date Logic
             if (userData.subscriptionEnd) state.currentExpiry = userData.subscriptionEnd.toDate();
             else state.currentExpiry = new Date();
 
-            // 5. Populate UI
+            // Populate UI
             document.querySelectorAll('.currencySymbol').forEach(el => el.textContent = state.currency);
             document.getElementById('instName').textContent = (userData.username || "User") + "'s Institution";
             document.getElementById('staffCountLabel').textContent = count;
             document.getElementById('tierNum').textContent = (count > 50) ? 3 : (count > 10 ? 2 : 1);
-            
             document.getElementById('basePriceDisplay').textContent = state.basePrice;
             document.getElementById('premiumPriceDisplay').textContent = state.premiumPrice;
 
-            // Show Discount Badge
             if (state.manualDiscount > 0) {
                 document.getElementById('discountRow').classList.remove('d-none');
                 document.getElementById('discountDisplay').textContent = state.manualDiscount;
             }
 
-            // Expiry Badge
+            // Update Badge
             const now = new Date();
             const badge = document.getElementById('currentExpiryBadge');
             badge.textContent = state.currentExpiry.toLocaleDateString('en-GB');
@@ -316,7 +304,6 @@
             document.getElementById('renewalContent').classList.remove('d-none');
 
         } catch (e) {
-            console.error(e);
             alert("Error loading data: " + e.message);
         }
     });
@@ -330,11 +317,8 @@
 
     function calculateTotals() {
         const wantsPremium = document.getElementById('premiumToggle').checked;
-        
-        // 1. Subtotal
         let subtotal = state.basePrice + (wantsPremium ? state.premiumPrice : 0);
-
-        // 2. Discount
+        
         let discountAmt = 0;
         if (state.manualDiscount > 0) {
             discountAmt = subtotal * (state.manualDiscount / 100);
@@ -342,20 +326,16 @@
         let total = subtotal - discountAmt;
         if (total < 0) total = 0;
 
-        // 3. UI
         document.getElementById('totalDisplay').textContent = total.toFixed(2);
         
-        // Zero Pay Logic
         const msg = document.getElementById('zeroPayMsg');
         if (total === 0) msg.style.display = 'block';
         else msg.style.display = 'none';
 
-        // Styling
         const box = document.getElementById('premiumBox');
         if (wantsPremium) box.classList.add('selected');
         else box.classList.remove('selected');
 
-        // Date Logic
         const now = new Date();
         let baseDate = (state.currentExpiry > now) ? state.currentExpiry : now;
         let nextDate = new Date(baseDate.getTime());
@@ -365,30 +345,78 @@
         document.getElementById('previewNewDate').textContent = nextDate.toLocaleDateString('en-GB');
     }
 
-    // --- NEW: UI FLOW LOGIC ---
     function showPaymentSection() {
         document.getElementById('proceedBtn').style.display = 'none';
         document.getElementById('paymentSection').style.display = 'block';
         document.getElementById('paymentSection').scrollIntoView({ behavior: 'smooth' });
     }
 
-    // --- NEW: DOCUMENT GENERATORS ---
-    window.generateInvoice = function() {
-        // Construct description
-        let desc = "Annual Renewal: Base Admin License";
-        if(document.getElementById('premiumToggle').checked) {
-            desc += " + Premium Data Bridge";
-        }
+    // --- SUBMIT LOGIC (SIMPLIFIED) ---
+    document.getElementById('btnSubmit').addEventListener('click', async () => {
+        const ref = document.getElementById('paymentRef').value.trim();
+        const wantsPremium = document.getElementById('premiumToggle').checked;
+        const requestEInvoice = document.getElementById('requestEInvoice').checked;
+        const total = parseFloat(document.getElementById('totalDisplay').textContent);
         
-        const note = "Payment Pending. Please attach proof of payment to this document.";
-        printDoc("PRO-FORMA INVOICE", "DuitNow / Stripe", note, desc);
+        if (total > 0 && !ref) return alert("Please enter your payment reference number.");
+        if (total === 0 && !ref) return alert("Please enter 'WAIVER' or 'PROMO' in the reference box.");
+
+        if(!confirm("Confirm Renewal? Access will be extended immediately.")) return;
+
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+
+        try {
+            const uid = auth.currentUser.uid;
+
+            // Simplified Update: Only lastRenewalDate and isPremium are strictly enforced
+            await db.collection('users').doc(uid).update({
+                subscriptionEnd: firebase.firestore.Timestamp.fromDate(state.newExpiry),
+                isPremium: wantsPremium, // Directly set based on user choice
+                billingStatus: 'active',
+                trustStatus: 'pending-verification', 
+                paymentReference: ref, 
+                requestEInvoice: requestEInvoice,
+                lastRenewalDate: firebase.firestore.FieldValue.serverTimestamp(),
+                renewalAmount: total
+            });
+
+            // Hide Forms & Show Success Message IN-PLACE
+            document.getElementById('paymentSection').style.display = 'none';
+            document.querySelector('.renewal-card:nth-child(2)').style.display = 'none'; // Hide Price Card
+            
+            const container = document.getElementById('renewalContent');
+            const successDiv = document.createElement('div');
+            successDiv.className = 'text-center py-5 animate__animated animate__fadeIn';
+            successDiv.innerHTML = `
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                <h3 class="fw-bold mt-3">Renewal Successful!</h3>
+                <p class="text-muted">Your subscription has been extended to ${state.newExpiry.toLocaleDateString('en-GB')}.</p>
+                <div class="alert alert-info small text-start mx-auto" style="max-width: 400px;">
+                    <strong>Note:</strong> Verification is pending. Immediate access granted via Trust System.
+                </div>
+                <a href="../admin.html" class="btn btn-primary mt-3 px-4">Back to Dashboard</a>
+            `;
+            container.appendChild(successDiv);
+
+        } catch (e) {
+            alert("Error: " + e.message);
+            btn.disabled = false;
+            btn.innerText = "Submit & Extend Instantly";
+        }
+    });
+
+    // --- DOC GENERATORS ---
+    window.generateInvoice = function() {
+        let desc = "Annual Renewal: Base Admin License";
+        if(document.getElementById('premiumToggle').checked) desc += " + Premium Data Bridge";
+        printDoc("PRO-FORMA INVOICE", "DuitNow / Stripe", "Payment Pending. Please attach proof of payment to this document.", desc);
     };
 
     window.generateInstantReceipt = function() {
         const ref = document.getElementById('paymentRef').value || "PENDING";
-        const desc = "Annual Subscription Renewal";
-        const note = "Keep this as your pro-forma proof of transaction.";
-        printDoc("INSTANT RECEIPT", `Payment Ref: ${ref}`, note, desc);
+        printDoc("INSTANT RECEIPT", `Payment Ref: ${ref}`, "Keep this as your pro-forma proof of transaction.", "Annual Subscription Renewal");
     };
 
     function printDoc(title, payInfo, note, description) {
@@ -419,60 +447,16 @@
                 <tr><th>Description</th><th class="text-end">Amount</th></tr>
                 <tr><td>${description}</td><td class="text-end fw-bold">${curr} ${amt}</td></tr>
             </table>
-            
             <div class="verification-notice">
                 <strong>STATUS: PENDING VERIFICATION</strong><br>
                 Note: ${note}<br><br>
                 <em>PalliCalc operates on a trust system. Immediate extension is granted; however, accounts will be suspended if payment verification fails.</em>
             </div>
-
-            <p class="text-center text-muted mt-5 small">
-                For support, contact support@pallicalc.com<br>
-                Alison Chai, RPh: 9093
-            </p>
+            <p class="text-center text-muted mt-5 small">For support, contact support@pallicalc.com<br>Alison Chai, RPh: 9093</p>
             </body></html>
         `);
         win.document.close();
     }
-
-    // --- SUBMIT ---
-    document.getElementById('btnSubmit').addEventListener('click', async () => {
-        const ref = document.getElementById('paymentRef').value.trim();
-        const wantsPremium = document.getElementById('premiumToggle').checked;
-        const total = parseFloat(document.getElementById('totalDisplay').textContent);
-        
-        if (total > 0 && !ref) return alert("Please enter your payment reference number.");
-        if (total === 0 && !ref) return alert("Please enter 'WAIVER' or 'PROMO' in the reference box.");
-
-        if(!confirm("Confirm Renewal? Access will be extended immediately.")) return;
-
-        const btn = document.getElementById('btnSubmit');
-        btn.disabled = true;
-        btn.innerText = "Processing...";
-
-        try {
-            const uid = auth.currentUser.uid;
-
-            await db.collection('users').doc(uid).update({
-                subscriptionEnd: firebase.firestore.Timestamp.fromDate(state.newExpiry),
-                isPremium: wantsPremium,
-                billingStatus: 'active',
-                trustStatus: 'pending-verification', 
-                paymentReference: ref, 
-                lastRenewalDate: firebase.firestore.FieldValue.serverTimestamp(),
-                renewalAmount: total
-            });
-
-            alert("Success! Extended to " + state.newExpiry.toLocaleDateString('en-GB') + ".");
-            window.location.href = "../admin.html";
-
-        } catch (e) {
-            alert("Error: " + e.message);
-            btn.disabled = false;
-            btn.innerText = "Submit & Extend Instantly";
-        }
-    });
-
 </script>
 </body>
 </html>
