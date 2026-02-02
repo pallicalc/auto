@@ -169,7 +169,7 @@
     let savedLinks = {}; 
     let currentData = null;
     let html5QrCode; 
-    let isCameraRunning = false; // Flag to track camera state
+    let isCameraRunning = false; 
 
     const DISPLAY_LABELS = {
         Q2a: 'Pain', Q2b: 'Breath', Q2c: 'Weakness', Q2d: 'Nausea', Q2e: 'Vomiting',
@@ -206,24 +206,39 @@
         }
     });
 
-    // --- CAMERA LOGIC (ROBUST FOR MOBILE) ---
+    // --- NEW: HD CAMERA & AUTO-FOCUS LOGIC ---
     async function startCamera() {
         if(!html5QrCode) {
             html5QrCode = new Html5Qrcode("reader");
         }
 
-        const config = { 
+        const qrConfig = { 
             fps: 10, 
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0 
+            qrbox: { width: 250, height: 250 } 
+        };
+        
+        // This is the "Secret Sauce" for sharp video:
+        // 1. Request HD (1280x720) - this forces the phone to use the good lens.
+        // 2. focusMode: continuous - attempts to keep focus sharp.
+        const videoConstraints = { 
+            facingMode: "environment",
+            width: { min: 640, ideal: 1280, max: 1920 },
+            height: { min: 480, ideal: 720, max: 1080 },
+            focusMode: "continuous" 
         };
 
         try {
-            // "environment" tells the phone to use the main back camera automatically
-            await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess);
+            await html5QrCode.start(videoConstraints, qrConfig, onScanSuccess);
             isCameraRunning = true;
         } catch (err) {
             console.error("Camera access failed", err);
+            // Fallback for older phones if HD fails
+            try {
+                await html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess);
+                isCameraRunning = true;
+            } catch(e) {
+                console.error("Fallback failed", e);
+            }
         }
     }
 
@@ -234,17 +249,15 @@
         const imageFile = e.target.files[0];
         document.getElementById('gallery-status').style.display = 'block';
 
-        // STOP the live camera first!
         if (html5QrCode && isCameraRunning) {
             try {
                 await html5QrCode.stop();
                 isCameraRunning = false;
             } catch (err) {
-                console.log("Camera was already stopped or failed to stop");
+                console.log("Camera stop warning", err);
             }
         }
 
-        // Re-init if needed
         if(!html5QrCode) {
             html5QrCode = new Html5Qrcode("reader");
         }
@@ -257,7 +270,6 @@
             .catch(err => {
                 document.getElementById('gallery-status').style.display = 'none';
                 alert("Error scanning file. Try a clearer image.");
-                // Turn camera back on so the user isn't stuck
                 startCamera();
             });
     });
@@ -270,14 +282,13 @@
 
             if (data.t) {
                 currentData = data;
-                // Stop camera to save battery
                 if (html5QrCode && isCameraRunning) {
                     html5QrCode.stop().then(() => { isCameraRunning = false; });
                 }
                 renderDashboard(data);
             } else {
                 alert("Unknown QR Code format.");
-                startCamera(); // Restart if bad code
+                startCamera(); 
             }
         } catch (e) { 
             console.warn("Invalid QR", e);
@@ -321,7 +332,6 @@
         const ptName = document.getElementById('pt_name').value;
         const ptID = document.getElementById('pt_id').value;
         
-        // GRAB KPI PHASE & REMARK
         const kpiPhase = document.getElementById('kpi_timing').value;
         const remark = document.getElementById('clinical_remark').value;
 
@@ -342,10 +352,7 @@
             if (!ignoredKeys.includes(key)) report += `${key}: ${val} | `;
         }
 
-        // ADD KPI PHASE TO REPORT
         report += `Phase: ${kpiPhase} | `;
-        
-        // ADD REMARK TO REPORT (IF EXISTS)
         if (remark) {
             report += `Note: ${remark} | `;
         }
