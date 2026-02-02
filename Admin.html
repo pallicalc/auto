@@ -277,7 +277,7 @@
                 if (superCard) superCard.classList.remove('d-none');
             }
 
-            // 4. Premium & Upgrade Logic
+            // 4. Premium & Upgrade Logic (CORRECTED)
             try {
                 const doc = await window.db.collection('users').doc(user.uid).get();
                 if (doc.exists) {
@@ -288,22 +288,21 @@
                     const upgradeCard = document.getElementById('upgradePremiumCard');
                     const billingCard = document.getElementById('billingCard');
 
+                    // 4a. Upgrade Card Visibility
+                    // Show Upgrade card ONLY if they are NOT premium yet
                     if (isPremium) {
-                        // User IS Premium (Private or MOH):
-                        // Hide Upgrade (they have it), Show Billing (to manage it)
                         upgradeCard?.classList.add('d-none');
-                        billingCard?.classList.remove('d-none');
                     } else {
-                        // User is NOT Premium (Private or MOH):
-                        // Show Upgrade Card to everyone
                         upgradeCard?.classList.remove('d-none');
-                        
-                        // Billing Card:
-                        // Show for private users (renewal needed)
-                        // Hide for non-premium Gov (usually Free Lifetime)
-                        if (!isGov) {
-                            billingCard?.classList.remove('d-none');
-                        }
+                    }
+
+                    // 4b. Billing/Renewal Card Visibility
+                    // HIDE for ALL Govt/MOH (regardless of premium status)
+                    // SHOW for private users (Premium or not - they need to see billing)
+                    if (isGov) {
+                        billingCard?.classList.add('d-none');
+                    } else {
+                        billingCard?.classList.remove('d-none');
                     }
                 }
             } catch (e) { 

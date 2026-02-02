@@ -63,11 +63,31 @@
       margin-right: 5px;
     }
 
+    /* Loading Overlay */
     #loadingOverlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(255,255,255,0.9); z-index: 9999;
       display: flex; flex-direction: column;
       justify-content: center; align-items: center;
+    }
+
+    /* New Premium Lock Overlay */
+    #premiumOverlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #f8f9fa; z-index: 10000;
+      display: none; /* Hidden by default */
+      flex-direction: column;
+      justify-content: center; align-items: center;
+    }
+    
+    .premium-msg-card {
+        background: white;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        text-align: center;
+        max-width: 450px;
+        border: 1px solid #e9ecef;
     }
   </style>
 </head>
@@ -75,10 +95,32 @@
 
   <div id="loadingOverlay">
     <div class="spinner-border text-primary mb-3" role="status"></div>
-    <div class="text-muted fw-bold">Loading Configuration...</div>
+    <div class="text-muted fw-bold">Verifying Access...</div>
   </div>
 
-  <div class="container px-3">
+  <div id="premiumOverlay">
+    <div class="premium-msg-card">
+        <div class="mb-3">
+            <i class="bi bi-gem text-warning" style="font-size: 3.5rem;"></i>
+        </div>
+        <h3 class="fw-bold text-dark mb-2">Premium Feature</h3>
+        <p class="text-muted mb-4">
+            Diagnostic Tool Configuration is exclusively available to Premium Institution Admins. 
+            <br><br>
+            <span class="small text-secondary">Upgrade to enable QR Data Transfer and Custom Diagnostic Links.</span>
+        </p>
+        <div class="d-grid gap-2">
+            <a href="../upgrade.html" class="btn btn-warning fw-bold text-dark py-2">
+                Upgrade Now <i class="bi bi-arrow-right"></i>
+            </a>
+            <a href="../admin.html" class="btn btn-outline-secondary py-2">
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+  </div>
+
+  <div class="container px-3" id="mainContent" style="display:none;">
     <div class="main-container">
       
       <div class="header-bar">
@@ -86,7 +128,7 @@
           <h4 class="mb-0 fw-bold"><i class="bi bi-clipboard-pulse"></i> Diagnostic Configuration</h4>
           <small class="opacity-75">Link your Google Forms here</small>
         </div>
-        <a href="../Admin.html" class="btn btn-outline-light btn-sm">
+        <a href="../admin.html" class="btn btn-outline-light btn-sm">
           <i class="bi bi-arrow-left"></i> Back to Dashboard
         </a>
       </div>
@@ -228,7 +270,7 @@
         document.getElementById('configForm').addEventListener('submit', saveLinks);
     });
 
-    /* ================= AUTH CHECK ================= */
+    /* ================= AUTH CHECK & PREMIUM GATE ================= */
     auth.onAuthStateChanged(async user => {
       if (!user) {
         window.location.href = "../index.html";
@@ -236,14 +278,39 @@
       }
       try {
         const snap = await db.collection("users").doc(user.uid).get();
-        if (!snap.exists || snap.data().role !== "institutionAdmin") {
-          alert("Access Denied.");
-          window.location.href = "../index.html";
+        
+        if (!snap.exists) {
+            alert("User profile not found.");
+            window.location.href = "../index.html";
+            return;
+        }
+
+        const data = snap.data();
+
+        // 1. Role Check
+        if (data.role !== "institutionAdmin") {
+          alert("Access Denied: Only Institution Admins can access this page.");
+          window.location.href = "../admin.html";
           return;
         }
-        currentInstitutionId = snap.data().institutionId;
+
+        // 2. PREMIUM CHECK
+        if (!data.isPremium) {
+            // Hide Loader
+            document.getElementById("loadingOverlay").style.display = "none";
+            // Show Premium Lock Screen
+            document.getElementById("premiumOverlay").style.display = "flex";
+            // Do NOT load main content
+            return; 
+        }
+
+        // 3. Success - Load Content
+        currentInstitutionId = data.institutionId;
         await loadLinksFromFirebase();
+        
         document.getElementById("loadingOverlay").style.display = "none";
+        document.getElementById("mainContent").style.display = "block"; // Reveal content
+
       } catch (e) {
         console.error(e);
         alert("Error loading profile: " + e.message);
@@ -259,7 +326,7 @@
             // Key mapping matches the keys used in SAVE logic
             if(data.ipos) document.getElementById('link_ipos').value = data.ipos;
             if(data.hads) document.getElementById('link_hads').value = data.hads;
-            if(data.dt)   document.getElementById('link_distress').value = data.dt; // Load 'dt' into 'link_distress' box
+            if(data.dt)   document.getElementById('link_distress').value = data.dt; 
         }
       } catch (e) {
         console.error("Load Failed:", e);
@@ -287,11 +354,11 @@
         const cred = firebase.auth.EmailAuthProvider.credential(user.email, password);
         await user.reauthenticateWithCredential(cred);
 
-        // 2. Gather Data (CORRECTED MAPPING)
+        // 2. Gather Data
         const links = {
             ipos: document.getElementById('link_ipos').value.trim(),
             hads: document.getElementById('link_hads').value.trim(),
-            dt:   document.getElementById('link_distress').value.trim() // Corrected: ID matches HTML, Key matches Scanner
+            dt:   document.getElementById('link_distress').value.trim()
         };
 
         // 3. Save to Firebase
