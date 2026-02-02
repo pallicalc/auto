@@ -34,7 +34,8 @@
         .scanner-wrapper { position: relative; width: 100%; height: 350px; overflow: hidden; background: #000; }
         #reader { width: 100%; height: 100%; object-fit: cover; }
         .scan-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); pointer-events: none; display: flex; align-items: center; justify-content: center; }
-        .scan-box { width: 250px; height: 250px; border: 2px solid rgba(255,255,255,0.7); border-radius: 16px; position: relative; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); }
+        /* Adjusted scan box for mobile responsiveness */
+        .scan-box { width: 70%; height: 0; padding-bottom: 70%; border: 2px solid rgba(255,255,255,0.7); border-radius: 16px; position: relative; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); }
         .scan-box::after { content: ''; position: absolute; top: 10px; left: 10px; right: 10px; height: 2px; background: #00c6f7; box-shadow: 0 0 4px #00c6f7; animation: scanLine 2s infinite ease-in-out; }
 
         /* RESULT WORKFLOW */
@@ -103,6 +104,7 @@
             <button onclick="document.getElementById('qr-input-file').click()" class="btn-action" style="background:#eef2f5; color:#0d6efd; margin:0 auto; width: auto; padding: 10px 20px;">
                 <i class="bi bi-image"></i> Upload from Gallery
             </button>
+            <p id="gallery-status" style="display:none; color:var(--primary); font-weight:bold; margin-top:10px;">Processing Image...</p>
         </div>
     </div>
 
@@ -162,7 +164,8 @@
 
     let savedLinks = {}; 
     let currentData = null;
-    let html5QrCode; // Use Html5Qrcode (Pro Mode)
+    let html5QrCode; 
+    let isCameraRunning = false; // Flag to track camera state
 
     const DISPLAY_LABELS = {
         Q2a: 'Pain', Q2b: 'Breath', Q2c: 'Weakness', Q2d: 'Nausea', Q2e: 'Vomiting',
@@ -199,32 +202,62 @@
         }
     });
 
-    // --- Camera 1 Default Logic (UNTOUCHED) ---
+    // --- FIX 1: SIMPLER & STRONGER CAMERA START ---
     async function startCamera() {
-        html5QrCode = new Html5Qrcode("reader");
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        if(!html5QrCode) {
+            html5QrCode = new Html5Qrcode("reader");
+        }
+
+        // Standard Mobile Config
+        const config = { 
+            fps: 10, 
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0 
+        };
 
         try {
-            const cameras = await Html5Qrcode.getCameras();
-            if (cameras && cameras.length > 0) {
-                // LOGIC: Find a camera with 'back' in the name, or just use the first one
-                const backCamera = cameras.find(c => c.label.toLowerCase().includes('back')) || cameras[0];
-                await html5QrCode.start(backCamera.id, config, onScanSuccess);
-            } else {
-                await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess);
-            }
+            // "environment" tells the phone to use the main back camera automatically
+            // This is safer than manually finding ID, which fails on some phones.
+            await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess);
+            isCameraRunning = true;
         } catch (err) {
             console.error("Camera access failed", err);
         }
     }
 
-    // --- Gallery Upload Logic (UNTOUCHED) ---
-    document.getElementById('qr-input-file').addEventListener('change', e => {
+    // --- FIX 2: STOP CAMERA BEFORE READING FILE ---
+    document.getElementById('qr-input-file').addEventListener('change', async e => {
         if (e.target.files.length == 0) return;
+        
         const imageFile = e.target.files[0];
+        document.getElementById('gallery-status').style.display = 'block';
+
+        // STOP the live camera first!
+        if (html5QrCode && isCameraRunning) {
+            try {
+                await html5QrCode.stop();
+                isCameraRunning = false;
+            } catch (err) {
+                console.log("Camera was already stopped or failed to stop");
+            }
+        }
+
+        // Re-init if needed
+        if(!html5QrCode) {
+            html5QrCode = new Html5Qrcode("reader");
+        }
+
         html5QrCode.scanFile(imageFile, true)
-            .then(decodedText => onScanSuccess(decodedText))
-            .catch(err => alert("Error scanning file: QR code not found in image."));
+            .then(decodedText => {
+                document.getElementById('gallery-status').style.display = 'none';
+                onScanSuccess(decodedText);
+            })
+            .catch(err => {
+                document.getElementById('gallery-status').style.display = 'none';
+                alert("Error scanning file. Try a clearer image.");
+                // Turn camera back on so the user isn't stuck
+                startCamera();
+            });
     });
 
     function onScanSuccess(decodedText) {
@@ -235,12 +268,18 @@
 
             if (data.t) {
                 currentData = data;
-                if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop();
+                // Stop camera to save battery
+                if (html5QrCode && isCameraRunning) {
+                    html5QrCode.stop().then(() => { isCameraRunning = false; });
+                }
                 renderDashboard(data);
             } else {
                 alert("Unknown QR Code format.");
+                startCamera(); // Restart if bad code
             }
-        } catch (e) { console.warn("Invalid QR", e); }
+        } catch (e) { 
+            console.warn("Invalid QR", e);
+        }
     }
 
     function renderDashboard(data) {
@@ -262,7 +301,6 @@
         }
 
         for (const [key, val] of Object.entries(data)) {
-            // 'd' (timestamp) is excluded here from VIEW, but not from REPORT
             if (['t', 'd', 'score', 'Q1'].includes(key)) continue;
             const label = DISPLAY_LABELS[key] || key;
             const numVal = parseInt(val);
@@ -281,7 +319,7 @@
         const ptName = document.getElementById('pt_name').value;
         const ptID = document.getElementById('pt_id').value;
         
-        // --- NEW: GRAB THE KPI PHASE ---
+        // GRAB KPI PHASE
         const kpiPhase = document.getElementById('kpi_timing').value;
 
         if (!ptID) { alert("Please enter a Patient ID (MRN)."); return; }
@@ -295,17 +333,15 @@
         }
 
         let report = "";
-        // 'd' is NOT in this list, so the timestamp is sent!
         const ignoredKeys = ['t', 'score']; 
         
         for (let [key, val] of Object.entries(currentData)) {
             if (!ignoredKeys.includes(key)) report += `${key}: ${val} | `;
         }
 
-        // --- NEW: ADD KPI PHASE TO REPORT ---
+        // ADD KPI PHASE TO REPORT
         report += `Phase: ${kpiPhase} | `;
 
-        // DOCTOR AUDIT (INTACT)
         const currentUser = firebase.auth().currentUser;
         if (currentUser && currentUser.email) {
             report += `ScannedBy: ${currentUser.email} | `;
