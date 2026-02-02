@@ -93,6 +93,10 @@
 
         <input type="file" id="qr-input-file" accept="image/*" style="display:none">
 
+        <p id="camera-error" style="display:none; color:#dc3545; background:#fff; padding:10px; text-align:center; font-weight:bold;">
+            Camera Error. Please try refreshing or check permissions.
+        </p>
+
         <div class="scanner-wrapper">
             <div id="reader"></div>
             <div class="scan-overlay"><div class="scan-box"></div></div>
@@ -206,38 +210,39 @@
         }
     });
 
-    // --- NEW: HD CAMERA & AUTO-FOCUS LOGIC ---
+    // --- BULLETPROOF CAMERA LOGIC ---
     async function startCamera() {
         if(!html5QrCode) {
             html5QrCode = new Html5Qrcode("reader");
         }
 
-        const qrConfig = { 
-            fps: 10, 
-            qrbox: { width: 250, height: 250 } 
-        };
+        const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
         
-        // This is the "Secret Sauce" for sharp video:
-        // 1. Request HD (1280x720) - this forces the phone to use the good lens.
-        // 2. focusMode: continuous - attempts to keep focus sharp.
+        // Strategy: "Environment" is priority. 
+        // We remove the strict 'focusMode' that crashes some phones.
+        // We gently ask for resolution, but allow the phone to ignore it if needed.
         const videoConstraints = { 
             facingMode: "environment",
-            width: { min: 640, ideal: 1280, max: 1920 },
-            height: { min: 480, ideal: 720, max: 1080 },
-            focusMode: "continuous" 
+            width: { ideal: 1280 }, // Ask nicely for HD, don't force it
+            height: { ideal: 720 } 
         };
 
         try {
             await html5QrCode.start(videoConstraints, qrConfig, onScanSuccess);
             isCameraRunning = true;
+            document.getElementById('camera-error').style.display = 'none';
         } catch (err) {
-            console.error("Camera access failed", err);
-            // Fallback for older phones if HD fails
+            console.error("HD Camera failed, trying Basic Mode...", err);
+            
+            // FALLBACK: Use simple "back camera" request with NO resolution constraints
             try {
                 await html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess);
                 isCameraRunning = true;
-            } catch(e) {
-                console.error("Fallback failed", e);
+                document.getElementById('camera-error').style.display = 'none';
+            } catch(e2) {
+                console.error("All camera attempts failed", e2);
+                document.getElementById('camera-error').style.display = 'block';
+                document.getElementById('camera-error').innerText = "Camera Blocked. Please reset permissions or use Gallery Upload.";
             }
         }
     }
