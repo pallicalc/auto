@@ -18,26 +18,39 @@
         body { font-family: 'Inter', sans-serif; background: #eef2f5; margin: 0; padding: 20px; color: var(--text-dark); }
         .main-container { max-width: 600px; margin: 0 auto; background: white; border-radius: var(--border-radius); box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; min-height:500px; position: relative; }
 
-        /* HEADER */
         .app-header { background: white; padding: 20px; text-align: center; border-bottom: 1px solid #eee; }
         .app-header h1 { margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-dark); }
         .app-header p { margin: 5px 0 0; font-size: 0.9rem; color: #6c757d; }
         .status-dot { height: 10px; width: 10px; background-color: #ccc; border-radius: 50%; display: inline-block; margin-right: 5px; }
         .status-online { background-color: #198754; box-shadow: 0 0 5px #198754; }
 
-        /* PREMIUM NOTICE */
         .premium-note { background: #fff8e1; border: 1px solid #ffe082; padding: 12px; margin: 15px; border-radius: 8px; font-size: 0.85rem; color: #856404; display: flex; gap: 10px; align-items: flex-start; }
         .premium-note i { font-size: 1.1rem; color: #f57f17; }
 
-        /* SCANNER UI */
         #scan-screen { position: relative; background: black; }
         .scanner-wrapper { position: relative; width: 100%; height: 350px; overflow: hidden; background: #000; }
         #reader { width: 100%; height: 100%; object-fit: cover; }
+        
         .scan-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); pointer-events: none; display: flex; align-items: center; justify-content: center; }
-        .scan-box { width: 250px; height: 250px; border: 2px solid rgba(255,255,255,0.7); border-radius: 16px; position: relative; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); }
+        .scan-box { width: 200px; height: 200px; border: 2px solid rgba(255,255,255,0.9); border-radius: 12px; position: relative; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); }
         .scan-box::after { content: ''; position: absolute; top: 10px; left: 10px; right: 10px; height: 2px; background: #00c6f7; box-shadow: 0 0 4px #00c6f7; animation: scanLine 2s infinite ease-in-out; }
 
-        /* RESULT WORKFLOW */
+        /* SWITCH CAMERA BUTTON */
+        #switch-cam-btn {
+            position: absolute; bottom: 20px; right: 20px; z-index: 50;
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.5); color: white;
+            padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* NEW: TROUBLESHOOTING BOX */
+        .help-tip {
+            margin: 15px; background: #f8f9fa; border-left: 4px solid #6c757d; 
+            padding: 12px; font-size: 0.9rem; color: #495057; text-align: left;
+            line-height: 1.6;
+        }
+
         #result-screen { display: none; padding: 20px; animation: slideUp 0.3s ease-out; }
         .step-card { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
         .step-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #adb5bd; margin-bottom: 8px; display: block; }
@@ -45,17 +58,18 @@
         .badge-ipos { background: #0061f2; }
         .badge-hads { background: #6f42c1; }
         .badge-dt   { background: #dc3545; }
+        
         .form-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .form-control { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-        
-        /* NEW DROPDOWN STYLE */
         .phase-select { width: 100%; padding: 12px; border: 2px solid var(--primary); border-radius: 8px; background: #f0f7ff; font-weight: 600; color: var(--primary); cursor: pointer; font-size: 1rem; }
+        .remark-input { width: 100%; padding: 10px; border: 1px dashed var(--primary); border-radius: 6px; margin-top: 8px; font-size: 0.95rem; background: #fff; }
 
         .clinical-summary { background: #f8f9fa; border-radius: 6px; padding: 10px; max-height: 250px; overflow-y: auto; border: 1px solid #eee; }
         .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef; font-size: 0.95rem; }
         .summary-row:last-child { border-bottom: none; }
         .val-high { color: var(--danger); font-weight: 800; }
         .val-normal { color: var(--text-dark); font-weight: 600; }
+
         .btn-action { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2); }
         .btn-secondary { background: #e9ecef; color: var(--text-dark); }
@@ -69,7 +83,6 @@
 <body>
 
 <div class="main-container">
-    
     <div id="loading-overlay">
         <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
         <p style="margin-top:15px; font-weight:600; color:#666;">Connecting to Clinic...</p>
@@ -91,18 +104,31 @@
 
         <input type="file" id="qr-input-file" accept="image/*" style="display:none">
 
+        <div id="camera-error" style="display:none; color:#721c24; background:#f8d7da; padding:15px; text-align:center; border-radius:8px; margin:10px;">
+            <strong>Camera Blocked</strong><br>
+            Please go to <strong>Settings > Apps > Chrome</strong> and allow Camera.
+        </div>
+
         <div class="scanner-wrapper">
             <div id="reader"></div>
             <div class="scan-overlay"><div class="scan-box"></div></div>
+            
+            <button id="switch-cam-btn" onclick="cycleCamera()">
+                <i class="bi bi-arrow-repeat"></i> Switch Cam
+            </button>
+        </div>
+
+        <div class="help-tip">
+            • <strong>Blurry?</strong> <i class="bi bi-arrow-right"></i> Tap <strong>Switch Cam</strong><br>
+            • <strong>Blocked?</strong> <i class="bi bi-arrow-right"></i> Check <strong>Permissions</strong><br>
+            • <strong>Stuck?</strong> <i class="bi bi-arrow-right"></i> Upload from <strong>Gallery</strong>
         </div>
 
         <div style="background: white; padding: 20px; text-align: center; border-top: 1px solid #eee;">
-            <p style="color: #666; margin-bottom: 12px; font-size: 0.9rem;">
-                <i class="bi bi-camera-video"></i> Point camera at patient's QR code
-            </p>
             <button onclick="document.getElementById('qr-input-file').click()" class="btn-action" style="background:#eef2f5; color:#0d6efd; margin:0 auto; width: auto; padding: 10px 20px;">
                 <i class="bi bi-image"></i> Upload from Gallery
             </button>
+            <p id="gallery-status" style="display:none; color:var(--primary); font-weight:bold; margin-top:10px;">Processing Image...</p>
         </div>
     </div>
 
@@ -128,7 +154,7 @@
         </div>
 
         <div class="step-card" style="border: 2px solid #cfe2ff;">
-            <span class="step-label" style="color:#0d6efd;">3. KPI Phase (For Reports)</span>
+            <span class="step-label" style="color:#0d6efd;">3. Clinical Context</span>
             <select id="kpi_timing" class="phase-select">
                 <option value="Admission">Admission (Day 0)</option>
                 <option value="Day 3 Review">Day 3 Review</option>
@@ -136,6 +162,7 @@
                 <option value="Discharge">Discharge</option>
                 <option value="Ad-hoc">Ad-hoc / Other</option>
             </select>
+            <input type="text" id="clinical_remark" class="remark-input" placeholder="Add Note (e.g. Start Mirtazapine)">
         </div>
 
         <button onclick="transferToCloud()" class="btn-action btn-primary">
@@ -162,7 +189,10 @@
 
     let savedLinks = {}; 
     let currentData = null;
-    let html5QrCode; // Use Html5Qrcode (Pro Mode)
+    let html5QrCode; 
+    let isCameraRunning = false;
+    let availableCameras = [];
+    let currentCameraIndex = 0;
 
     const DISPLAY_LABELS = {
         Q2a: 'Pain', Q2b: 'Breath', Q2c: 'Weakness', Q2d: 'Nausea', Q2e: 'Vomiting',
@@ -189,7 +219,7 @@
                 }
                 
                 document.getElementById('loading-overlay').style.display = 'none';
-                startCamera();
+                initCameraSystem();
 
             } catch (e) {
                 alert("Error loading config: " + e.message);
@@ -199,32 +229,87 @@
         }
     });
 
-    // --- Camera 1 Default Logic (UNTOUCHED) ---
-    async function startCamera() {
-        html5QrCode = new Html5Qrcode("reader");
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    // --- MANUAL CAMERA SWITCHING LOGIC ---
+    async function initCameraSystem() {
+        if(!html5QrCode) {
+            html5QrCode = new Html5Qrcode("reader");
+        }
 
         try {
-            const cameras = await Html5Qrcode.getCameras();
-            if (cameras && cameras.length > 0) {
-                // LOGIC: Find a camera with 'back' in the name, or just use the first one
-                const backCamera = cameras.find(c => c.label.toLowerCase().includes('back')) || cameras[0];
-                await html5QrCode.start(backCamera.id, config, onScanSuccess);
+            availableCameras = await Html5Qrcode.getCameras();
+            if (availableCameras && availableCameras.length > 0) {
+                currentCameraIndex = availableCameras.length - 1; 
+                startCameraByIndex(currentCameraIndex);
             } else {
-                await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess);
+                startBasicMode();
             }
         } catch (err) {
-            console.error("Camera access failed", err);
+            console.error("Error enumerating cameras", err);
+            startBasicMode(); 
         }
     }
 
-    // --- Gallery Upload Logic (UNTOUCHED) ---
-    document.getElementById('qr-input-file').addEventListener('change', e => {
+    async function startCameraByIndex(index) {
+        if (html5QrCode && isCameraRunning) {
+            await html5QrCode.stop();
+        }
+
+        const cameraId = availableCameras[index].id;
+        const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        try {
+            await html5QrCode.start(cameraId, qrConfig, onScanSuccess);
+            isCameraRunning = true;
+            document.getElementById('camera-error').style.display = 'none';
+        } catch (err) {
+            console.error("Failed to start camera " + index, err);
+            startBasicMode();
+        }
+    }
+
+    async function cycleCamera() {
+        if (availableCameras.length < 2) {
+            alert("Only one camera detected on this device.");
+            return;
+        }
+        currentCameraIndex++;
+        if (currentCameraIndex >= availableCameras.length) {
+            currentCameraIndex = 0;
+        }
+        startCameraByIndex(currentCameraIndex);
+    }
+
+    async function startBasicMode() {
+        try {
+            await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+            isCameraRunning = true;
+            document.getElementById('switch-cam-btn').style.display = 'none'; 
+        } catch (e) {
+            document.getElementById('camera-error').style.display = 'block';
+        }
+    }
+
+    // --- GALLERY LOGIC ---
+    document.getElementById('qr-input-file').addEventListener('change', async e => {
         if (e.target.files.length == 0) return;
         const imageFile = e.target.files[0];
+        document.getElementById('gallery-status').style.display = 'block';
+
+        if (html5QrCode && isCameraRunning) {
+            try { await html5QrCode.stop(); isCameraRunning = false; } catch (err) {}
+        }
+        if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+
         html5QrCode.scanFile(imageFile, true)
-            .then(decodedText => onScanSuccess(decodedText))
-            .catch(err => alert("Error scanning file: QR code not found in image."));
+            .then(decodedText => {
+                document.getElementById('gallery-status').style.display = 'none';
+                onScanSuccess(decodedText);
+            })
+            .catch(err => {
+                document.getElementById('gallery-status').style.display = 'none';
+                alert("Error scanning file. Try a clearer image.");
+                initCameraSystem(); 
+            });
     });
 
     function onScanSuccess(decodedText) {
@@ -235,12 +320,16 @@
 
             if (data.t) {
                 currentData = data;
-                if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop();
+                if (html5QrCode && isCameraRunning) {
+                    html5QrCode.stop().then(() => { isCameraRunning = false; });
+                }
                 renderDashboard(data);
             } else {
                 alert("Unknown QR Code format.");
             }
-        } catch (e) { console.warn("Invalid QR", e); }
+        } catch (e) { 
+            console.warn("Invalid QR", e);
+        }
     }
 
     function renderDashboard(data) {
@@ -251,23 +340,18 @@
         badge.textContent = data.t;
         badge.className = `badge-pill badge-${data.t.toLowerCase()}`;
         document.getElementById('total-score').textContent = data.score || 0;
-
         const container = document.getElementById('clinical-preview');
         let html = "";
-
         if (data.Q1) {
             html += `<div style="padding-bottom:10px; margin-bottom:10px; border-bottom:1px dashed #ccc; font-style:italic; font-size:0.9rem; color:#666;">
                         <strong>Q1 Concern:</strong> "${data.Q1}"
                      </div>`;
         }
-
         for (const [key, val] of Object.entries(data)) {
-            // 'd' (timestamp) is excluded here from VIEW, but not from REPORT
             if (['t', 'd', 'score', 'Q1'].includes(key)) continue;
             const label = DISPLAY_LABELS[key] || key;
             const numVal = parseInt(val);
             const isHigh = (!isNaN(numVal) && numVal >= 3);
-            
             html += `<div class="summary-row">
                         <span>${label}</span>
                         <span class="${isHigh ? 'val-high' : 'val-normal'}">${val}</span>
@@ -280,12 +364,10 @@
         if (!currentData) return;
         const ptName = document.getElementById('pt_name').value;
         const ptID = document.getElementById('pt_id').value;
-        
-        // --- NEW: GRAB THE KPI PHASE ---
         const kpiPhase = document.getElementById('kpi_timing').value;
+        const remark = document.getElementById('clinical_remark').value;
 
         if (!ptID) { alert("Please enter a Patient ID (MRN)."); return; }
-
         const typeKey = currentData.t.toLowerCase(); 
         let targetUrl = savedLinks[typeKey];
 
@@ -295,21 +377,15 @@
         }
 
         let report = "";
-        // 'd' is NOT in this list, so the timestamp is sent!
         const ignoredKeys = ['t', 'score']; 
-        
         for (let [key, val] of Object.entries(currentData)) {
             if (!ignoredKeys.includes(key)) report += `${key}: ${val} | `;
         }
-
-        // --- NEW: ADD KPI PHASE TO REPORT ---
         report += `Phase: ${kpiPhase} | `;
+        if (remark) report += `Note: ${remark} | `;
 
-        // DOCTOR AUDIT (INTACT)
         const currentUser = firebase.auth().currentUser;
-        if (currentUser && currentUser.email) {
-            report += `ScannedBy: ${currentUser.email} | `;
-        }
+        if (currentUser && currentUser.email) report += `ScannedBy: ${currentUser.email} | `;
 
         targetUrl = targetUrl
             .replace('MAGIC_ID', encodeURIComponent(ptID))
