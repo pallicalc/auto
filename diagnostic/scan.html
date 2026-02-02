@@ -31,7 +31,6 @@
         .scanner-wrapper { position: relative; width: 100%; height: 350px; overflow: hidden; background: #000; }
         #reader { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Adjusted scan box - smaller for sharper focus target */
         .scan-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); pointer-events: none; display: flex; align-items: center; justify-content: center; }
         .scan-box { width: 200px; height: 200px; border: 2px solid rgba(255,255,255,0.9); border-radius: 12px; position: relative; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); }
         .scan-box::after { content: ''; position: absolute; top: 10px; left: 10px; right: 10px; height: 2px; background: #00c6f7; box-shadow: 0 0 4px #00c6f7; animation: scanLine 2s infinite ease-in-out; }
@@ -89,7 +88,10 @@
 
         <input type="file" id="qr-input-file" accept="image/*" style="display:none">
 
-        <p id="camera-status" style="display:none; color:#dc3545; background:#fff; padding:10px; text-align:center; font-weight:bold;"></p>
+        <div id="camera-error" style="display:none; color:#721c24; background:#f8d7da; padding:15px; text-align:center; border-radius:8px; margin:10px;">
+            <strong>Camera Blocked</strong><br>
+            Please go to <strong>Settings > Apps > Chrome (or Safari)</strong> and allow Camera.
+        </div>
 
         <div class="scanner-wrapper">
             <div id="reader"></div>
@@ -192,7 +194,7 @@
                 }
                 
                 document.getElementById('loading-overlay').style.display = 'none';
-                startSmartCamera();
+                startSimpleCamera();
 
             } catch (e) {
                 alert("Error loading config: " + e.message);
@@ -202,59 +204,26 @@
         }
     });
 
-    // --- THE SMART RESOLUTION LADDER (Fixes Blurry Camera) ---
-    async function startSmartCamera() {
+    // --- SIMPLE BACK CAMERA LOGIC ---
+    // No HD. No constraints. Just "Give me the back camera."
+    async function startSimpleCamera() {
         if(!html5QrCode) {
             html5QrCode = new Html5Qrcode("reader");
         }
 
-        const qrConfig = { fps: 15, qrbox: { width: 200, height: 200 } };
-        const statusMsg = document.getElementById('camera-status');
+        const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
 
-        // ATTEMPT 1: Try Full HD (Forces Main Lens 100%)
         try {
-            console.log("Attempting Full HD...");
-            await html5QrCode.start(
-                { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }, 
-                qrConfig, 
-                onScanSuccess
-            );
+            // "environment" = Back Camera. 
+            // We do NOT ask for width/height. We let the phone decide.
+            await html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess);
             isCameraRunning = true;
-            statusMsg.style.display = 'none';
-            return; // Success! We are using the main lens.
-        } catch (err1) {
-            console.warn("Full HD failed, trying HD...", err1);
-        }
-
-        // ATTEMPT 2: Try 720p (Forces Main Lens 95%)
-        try {
-            console.log("Attempting 720p...");
-            await html5QrCode.start(
-                { facingMode: "environment", width: { ideal: 1280 } }, 
-                qrConfig, 
-                onScanSuccess
-            );
-            isCameraRunning = true;
-            statusMsg.style.display = 'none';
-            return; 
-        } catch (err2) {
-            console.warn("720p failed, trying basic...", err2);
-        }
-
-        // ATTEMPT 3: Basic Fallback (Whatever works)
-        try {
-            console.log("Attempting Basic...");
-            await html5QrCode.start(
-                { facingMode: "environment" }, 
-                qrConfig, 
-                onScanSuccess
-            );
-            isCameraRunning = true;
-            statusMsg.style.display = 'none';
-        } catch (err3) {
-            console.error("All camera attempts failed.");
-            statusMsg.style.display = 'block';
-            statusMsg.innerText = "Camera Blocked. Please Reset Permissions (Lock Icon 🔒).";
+            document.getElementById('camera-error').style.display = 'none';
+        } catch (err) {
+            console.error("Back camera failed", err);
+            
+            // If that fails, show the big red box (User needs to fix permissions in settings)
+            document.getElementById('camera-error').style.display = 'block';
         }
     }
 
@@ -277,7 +246,7 @@
             .catch(err => {
                 document.getElementById('gallery-status').style.display = 'none';
                 alert("Error scanning file. Try a clearer image.");
-                startSmartCamera(); // Restart using the ladder
+                startSimpleCamera(); 
             });
     });
 
