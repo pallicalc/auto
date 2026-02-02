@@ -117,6 +117,17 @@
         color: #0ea5e9; 
         background: #f0f9ff;
     }
+
+    /* Warning box for printing receipt */
+    .print-warning {
+        background: #fff8e1; 
+        border: 1px solid #ffecb3; 
+        padding: 10px; 
+        border-radius: 8px; 
+        margin-bottom: 15px; 
+        font-size: 0.8rem; 
+        color: #856404;
+    }
   </style>
 </head>
 <body class="auth-body">
@@ -257,7 +268,16 @@
                 <span class="total-badge"><span id="currencySymbol">RM</span> <span id="totalDisplay">0</span></span>
             </div>
 
+            <button type="button" id="proceed-payment-btn" class="btn-primary" style="font-size: 0.9rem; padding: 10px; margin-top: 10px; background-color: #475569;" onclick="showPaymentFields()">
+                Confirm & Proceed to Payment
+            </button>
+
             <div id="payment-input-container" style="display:none;">
+                
+                <div class="print-warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i> <strong>Important:</strong> Please print/save your documents <strong>now</strong>. Automatic generation is not available after leaving this page.
+                </div>
+
                 <div class="doc-buttons">
                     <button type="button" class="btn-small-outline" onclick="generateInvoice()"><i class="bi bi-file-text"></i> Invoice</button>
                     <button type="button" class="btn-small-outline" onclick="generateInstantReceipt()"><i class="bi bi-printer"></i> Receipt</button>
@@ -274,6 +294,9 @@
                         <input type="checkbox" id="requestEInvoice" style="margin-right:8px;">
                         Request Official LHDN e-Invoice (Sent in 30 days)
                     </label>
+                    <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 4px; padding-left: 24px;">
+                        If you forgot to tick this, email <strong>support@pallicalc.com</strong>. <br>Response may take up to 60 days.
+                    </p>
                 </div>
             </div>
         </div>
@@ -375,7 +398,6 @@
     let auth, db;
 
     // --- 1. DEFAULT PLACEHOLDERS ---
-    // These start as 0. If they change, it means Firebase connected successfully.
     let LIVE_REG_PRICES = {
         malaysia: { personal: 0, institutionUser: 0, admin_reg: 0, admin_premium: 0 },
         international: { personal: 0, institutionUser: 0, admin_reg: 0, admin_premium: 0 }
@@ -399,12 +421,9 @@
       } catch(e) { console.error("Firebase Init Error:", e); }
     }
 
-    // --- FETCH LIVE PRICES FROM FIREBASE ---
     async function fetchLivePrices() {
         try {
-            // FIX APPLIED HERE: using 'setting' (singular) to match your DB
             const doc = await db.collection('setting').doc('registration').get();
-            
             if (doc.exists) {
                 LIVE_REG_PRICES = doc.data();
                 console.log("Prices successfully loaded from Firebase");
@@ -417,10 +436,14 @@
         }
     }
 
+    // New function to reveal payment fields
+    window.showPaymentFields = function() {
+        document.getElementById('payment-input-container').style.display = 'block';
+        document.getElementById('proceed-payment-btn').style.display = 'none';
+    };
+
     document.addEventListener('DOMContentLoaded', async () => {
         await initFirebase();
-        
-        // Fetch prices immediately
         await fetchLivePrices();
         
         const form = document.getElementById('register-form');
@@ -450,12 +473,8 @@
             const email = emailInput.value.trim().toLowerCase();
             const isMoH = email.endsWith('@moh.gov.my');
             
-            // Check if Country uses RM or USD
-            // Note: If 'Select country...' is active, default to Malaysia logic (RM)
             const isMalaysia = (country === 'Malaysia' || country === 'Select country...'); 
             const geo = isMalaysia ? 'malaysia' : 'international';
-            
-            // Safe access to pricing data
             const prices = LIVE_REG_PRICES[geo] || LIVE_REG_PRICES['international'];
 
             // Show/Hide Inst Fields
@@ -468,15 +487,15 @@
             // --- PRICING CALCULATION ---
             const pricingBox = document.getElementById('pricing-section');
             const premOptions = document.getElementById('premium-options');
-            const payInputs = document.getElementById('payment-input-container');
             const currencySpan = document.getElementById('currencySymbol');
             const totalSpan = document.getElementById('totalDisplay');
             const freqLabel = document.getElementById('paymentFrequency');
+            const proceedBtn = document.getElementById('proceed-payment-btn');
+            const payInputs = document.getElementById('payment-input-container');
 
             let total = 0;
             currencySpan.textContent = isMalaysia ? 'RM' : 'USD';
 
-            // Universal MOH Logic: MOH users have NO registration fee for Personal/InstUser
             if (role === 'personal') {
                 total = isMoH ? 0 : prices.personal;
                 pricingBox.style.display = total > 0 ? 'block' : 'none';
@@ -494,11 +513,9 @@
                 premOptions.style.display = 'block';
 
                 if (isMoH) {
-                    // MOH Admin: Reg is 0, only pay if Premium selected
                     total = premiumToggle.checked ? prices.admin_premium : 0;
                     freqLabel.textContent = "Lifetime Activation (MOH Special)";
                 } else {
-                    // Private Admin: Reg Fee + Premium Fee
                     total = prices.admin_reg + (premiumToggle.checked ? prices.admin_premium : 0);
                     freqLabel.textContent = premiumToggle.checked ? "Registration + Premium Bridge" : "Registration Fee Only";
                 }
@@ -506,10 +523,17 @@
 
             totalSpan.textContent = total;
 
-            // Only show payment inputs if money is involved
+            // Logic for the Payment Gate
             if (total > 0) {
-                payInputs.style.display = 'block';
+                // If money is involved, show the Proceed button, hide the inputs initially
+                // We reset the display logic here to ensure if user switches roles, the gate closes again
+                // But if the inputs are ALREADY open, we keep them open? 
+                // Better safety: Always close the gate on price change to prevent stale data
+                proceedBtn.style.display = 'block';
+                payInputs.style.display = 'none';
             } else {
+                // No money involved
+                proceedBtn.style.display = 'none';
                 payInputs.style.display = 'none';
             }
         }
@@ -520,14 +544,12 @@
         emailInput.addEventListener('input', updateUI);
         premiumToggle.addEventListener('change', updateUI);
 
-        // Occupation Other Logic
         document.getElementById('occupation').addEventListener('change', (e) => {
             const isOther = e.target.value === 'Other';
             document.getElementById('occupation-other').style.display = isOther ? 'block' : 'none';
             document.getElementById('occupation-other').required = isOther;
         });
 
-        // Country Load Logic
         countrySelect.addEventListener('change', async () => {
             const isOther = countrySelect.value === 'Other';
             document.getElementById('country-other').style.display = isOther ? 'block' : 'none';
@@ -535,8 +557,7 @@
             
             const country = isOther ? document.getElementById('country-other').value : countrySelect.value;
             if(country && country !== 'Other') await loadInstitutions(country);
-            
-            updateUI(); // Re-run pricing to check currency & geo
+            updateUI(); 
         });
 
         async function loadInstitutions(country) {
@@ -575,36 +596,29 @@
                 const password = document.getElementById('password').value;
                 const confirm = document.getElementById('confirm-password').value;
                 const role = document.querySelector('input[name="role"]:checked').value;
-                
-                // Handle Country
                 const countryVal = countrySelect.value;
                 const country = countryVal === 'Other' ? document.getElementById('country-other').value : countryVal;
                 
-                // Handle Pricing / Trust
                 const total = parseInt(document.getElementById('totalDisplay').textContent);
                 const paymentRef = document.getElementById('paymentRef').value.trim();
 
                 if(password !== confirm) throw new Error("Passwords do not match");
                 if(password.length < 6) throw new Error("Password too short");
 
-                // Trust Check
                 if (total > 0) {
                     if (!paymentRef) throw new Error("Please enter Payment Reference Number.");
                     const dupeCheck = await db.collection('users').where('paymentReference', '==', paymentRef).get();
                     if (!dupeCheck.empty) throw new Error("This Reference Number is already in use.");
                 }
 
-                // Create Auth
                 const cred = await auth.createUserWithEmailAndPassword(email, password);
                 const uid = cred.user.uid;
 
-                // Flags
                 const isMoH = email.endsWith('@moh.gov.my');
                 const promo = document.getElementById('promo-code').value.trim().toUpperCase();
                 let isPremium = false;
                 let manualDiscount = 0;
 
-                // Beta/Waiver Logic
                 if (isMoH && promo === 'BETAMOH2026') {
                     manualDiscount = 100;
                     isPremium = true;
@@ -612,7 +626,6 @@
                     isPremium = true;
                 }
 
-                // Institution Logic
                 let instId = null;
                 let instName = null;
 
@@ -633,12 +646,10 @@
                     if(!instId) throw new Error("Please select an institution.");
                 }
 
-                // Billing Status Logic
                 let billStatus = 'trial-free-lifetime';
-                if (role === 'institutionAdmin' && !isMoH && total === 0) billStatus = 'active-first-year'; // Special case for pure trial if no money
+                if (role === 'institutionAdmin' && !isMoH && total === 0) billStatus = 'active-first-year';
                 if (total > 0) billStatus = 'active';
 
-                // Save User
                 await db.collection('users').doc(uid).set({
                     username: document.getElementById('username').value,
                     email: email,
@@ -646,8 +657,6 @@
                     occupation: document.getElementById('occupation').value,
                     country: country,
                     isMoH: isMoH,
-                    
-                    // Trust & Billing
                     isPremium: isPremium,
                     billingStatus: billStatus,
                     trustStatus: total > 0 ? 'pending-verification' : 'verified',
@@ -656,7 +665,6 @@
                     manualDiscount: manualDiscount,
                     promoCode: promo,
                     subscriptionEnd: (!isMoH && role === 'institutionAdmin') ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)) : null,
-
                     institutionId: instId,
                     institutionName: instName,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -678,13 +686,13 @@
             }
         });
 
-        // --- 4. RECEIPT GENERATORS ---
+        // --- 4. UPDATED RECEIPT GENERATORS ---
         window.generateInvoice = function() {
-            printDoc("PRO-FORMA INVOICE", "DuitNow / Stripe", "Include this with payment.");
+            printDoc("PRO-FORMA INVOICE", "DuitNow / Stripe", "Please attach your proof of payment to this document.");
         };
         window.generateInstantReceipt = function() {
             const ref = document.getElementById('paymentRef').value || "PENDING";
-            printDoc("INSTANT RECEIPT", `Payment Ref: ${ref}`, "Pro-forma receipt.");
+            printDoc("INSTANT RECEIPT", `Payment Ref: ${ref}`, "Keep this as your pro-forma proof of transaction.");
         };
 
         function printDoc(title, payInfo, note) {
@@ -694,7 +702,11 @@
             win.document.write(`
                 <html><head><title>${title}</title>
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-                <style>body{padding:40px;font-family:sans-serif}.header{border-bottom:2px solid #0ea5e9;margin-bottom:30px}</style>
+                <style>
+                    body{padding:40px;font-family:sans-serif}
+                    .header{border-bottom:2px solid #0ea5e9;margin-bottom:30px}
+                    .verification-notice{border: 2px solid #dc3545; padding: 15px; border-radius: 8px; margin-top: 20px; color: #b91c1c; font-size: 0.9rem;}
+                </style>
                 </head><body onload="window.print()">
                 <div class="header d-flex justify-content-between">
                     <div><h2 style="color:#0ea5e9">PalliCalc</h2><small>Alivioscript Solutions</small></div>
@@ -703,8 +715,21 @@
                 <div class="p-4 bg-light rounded mb-4">
                     <strong>Payable To:</strong> Alivioscript Solutions<br><strong>Method:</strong> ${payInfo}
                 </div>
-                <table class="table table-bordered"><tr><td>Activation Fee</td><td class="text-end fw-bold">${curr} ${amt}</td></tr></table>
-                <p class="text-center text-muted mt-5 small">${note}<br>Alison Chai, RPh: 9093</p>
+                <table class="table table-bordered">
+                    <tr><th>Description</th><th class="text-end">Amount</th></tr>
+                    <tr><td>Account Activation Fee</td><td class="text-end fw-bold">${curr} ${amt}</td></tr>
+                </table>
+                
+                <div class="verification-notice">
+                    <strong>STATUS: PENDING VERIFICATION</strong><br>
+                    Note: ${note}<br><br>
+                    <em>PalliCalc operates on a trust system. Immediate access is granted upon registration; however, accounts will be suspended if payment verification fails.</em>
+                </div>
+
+                <p class="text-center text-muted mt-5 small">
+                    For support, contact support@pallicalc.com<br>
+                    Alison Chai, RPh: 9093
+                </p>
                 </body></html>
             `);
             win.document.close();
