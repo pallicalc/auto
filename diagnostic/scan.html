@@ -35,13 +35,19 @@
         .scan-box { width: 200px; height: 200px; border: 2px solid rgba(255,255,255,0.9); border-radius: 12px; position: relative; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); }
         .scan-box::after { content: ''; position: absolute; top: 10px; left: 10px; right: 10px; height: 2px; background: #00c6f7; box-shadow: 0 0 4px #00c6f7; animation: scanLine 2s infinite ease-in-out; }
 
-        /* SWITCH CAMERA BUTTON (Floating) */
+        /* SWITCH CAMERA BUTTON */
         #switch-cam-btn {
             position: absolute; bottom: 20px; right: 20px; z-index: 50;
             background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
             border: 1px solid rgba(255,255,255,0.5); color: white;
             padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer;
             display: flex; align-items: center; gap: 8px;
+        }
+
+        /* NEW: TROUBLESHOOTING BOX */
+        .help-tip {
+            margin: 15px; background: #f8f9fa; border-left: 4px solid #6c757d; 
+            padding: 10px; font-size: 0.85rem; color: #555; text-align: left;
         }
 
         #result-screen { display: none; padding: 20px; animation: slideUp 0.3s ease-out; }
@@ -111,10 +117,14 @@
             </button>
         </div>
 
+        <div class="help-tip">
+            <strong>Can't Scan?</strong><br>
+            • <strong>Blurry?</strong> Tap "Switch Cam" to use the other lens.<br>
+            • <strong>Blocked?</strong> Check phone settings permissions.<br>
+            • <strong>Still stuck?</strong> Use "Upload from Gallery" below.
+        </div>
+
         <div style="background: white; padding: 20px; text-align: center; border-top: 1px solid #eee;">
-            <p style="color: #666; margin-bottom: 12px; font-size: 0.9rem;">
-                <i class="bi bi-camera-video"></i> Point camera at patient's QR code
-            </p>
             <button onclick="document.getElementById('qr-input-file').click()" class="btn-action" style="background:#eef2f5; color:#0d6efd; margin:0 auto; width: auto; padding: 10px 20px;">
                 <i class="bi bi-image"></i> Upload from Gallery
             </button>
@@ -226,21 +236,16 @@
         }
 
         try {
-            // Get list of ALL cameras
             availableCameras = await Html5Qrcode.getCameras();
-            
             if (availableCameras && availableCameras.length > 0) {
-                // If we have back cameras, try to start with the last one (often the main one)
-                // If there's only 1, index 0 is used.
                 currentCameraIndex = availableCameras.length - 1; 
                 startCameraByIndex(currentCameraIndex);
             } else {
-                // No camera list found, fallback to basic mode
                 startBasicMode();
             }
         } catch (err) {
             console.error("Error enumerating cameras", err);
-            startBasicMode(); // Fallback
+            startBasicMode(); 
         }
     }
 
@@ -258,7 +263,6 @@
             document.getElementById('camera-error').style.display = 'none';
         } catch (err) {
             console.error("Failed to start camera " + index, err);
-            // If specific ID fails, fallback
             startBasicMode();
         }
     }
@@ -268,13 +272,10 @@
             alert("Only one camera detected on this device.");
             return;
         }
-        
-        // Go to next camera
         currentCameraIndex++;
         if (currentCameraIndex >= availableCameras.length) {
             currentCameraIndex = 0;
         }
-        
         startCameraByIndex(currentCameraIndex);
     }
 
@@ -282,7 +283,7 @@
         try {
             await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
             isCameraRunning = true;
-            document.getElementById('switch-cam-btn').style.display = 'none'; // Hide button if we can't switch
+            document.getElementById('switch-cam-btn').style.display = 'none'; 
         } catch (e) {
             document.getElementById('camera-error').style.display = 'block';
         }
