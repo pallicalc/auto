@@ -54,6 +54,12 @@
             font-size: 0.85rem; 
             color: #856404;
         }
+
+        /* --- FIX FOR CLICK CONFLICT --- */
+        /* This prevents the checkbox itself from capturing clicks, letting the parent div handle it */
+        .pointer-events-none { 
+            pointer-events: none; 
+        }
     </style>
 </head>
 <body>

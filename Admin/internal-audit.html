@@ -19,9 +19,7 @@
           appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995",
           measurementId: "G-6G9C984F8E"
       };
-      if (!firebase.apps.length) {
-          firebase.initializeApp(firebaseConfig);
-      }
+      if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
       const db = firebase.firestore();
       const auth = firebase.auth();
     </script>
@@ -31,11 +29,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        body { 
-            display: flex; flex-direction: column; min-height: 100vh; 
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
-            font-family: 'Inter', sans-serif; margin: 0;
-        }
+        body { display: flex; flex-direction: column; min-height: 100vh; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); font-family: 'Inter', sans-serif; margin: 0; }
         .main-content { flex: 1; width: 100%; padding-top: 40px; }
         .audit-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); background: white; margin-bottom: 20px; }
         .card-header { background: white; border-bottom: 1px solid #e2e8f0; padding: 20px; font-weight: 600; }
@@ -142,28 +136,40 @@
             snap.forEach(doc => {
                 const d = doc.data();
                 
-                // --- TIMESTAMP LOGIC ---
+                // --- SMART TIMESTAMP LOGIC (UPDATED) ---
+                // We compare timestamps to find the most recent activity
                 const tReg = d.createdAt ? d.createdAt.toDate().getTime() : 0;
+                const tUpg = d.lastUpgradeDate ? d.lastUpgradeDate.toDate().getTime() : 0;
                 const tRen = d.lastRenewalDate ? d.lastRenewalDate.toDate().getTime() : 0;
-                
-                // If Renewal is newer (by > 1 min), treat as Renewal
-                const isRenewal = (tRen > tReg + 60000); 
-                const displayTime = isRenewal ? tRen : tReg;
-                const actionDate = new Date(displayTime).toLocaleDateString('en-GB');
+
+                // Find the latest timestamp
+                const maxTime = Math.max(tReg, tUpg, tRen);
+                const actionDate = new Date(maxTime).toLocaleDateString('en-GB');
 
                 let amountDisplay = "-";
                 let typeBadge = '';
 
-                if (isRenewal) {
+                // Logic: Determine which action happened most recently
+                if (maxTime === tUpg && tUpg > 0) {
+                    // UPGRADE Logic
+                    typeBadge = '<span class="badge bg-warning text-dark">Upgrade</span>';
+                    amountDisplay = (d.upgradeAmount !== undefined) ? d.upgradeAmount : "0";
+                } 
+                else if (maxTime === tRen && tRen > 0) {
+                    // RENEWAL Logic
                     typeBadge = '<span class="badge bg-info text-dark">Renewal</span>';
                     amountDisplay = (d.renewalAmount !== undefined) ? d.renewalAmount : "0";
-                } else {
+                } 
+                else {
+                    // REGISTRATION Logic
                     typeBadge = '<span class="badge bg-success">Registration</span>';
-                    // FIXED: Now checks for 'registrationAmount', falls back to '-' if missing
-                    amountDisplay = (d.registrationAmount !== undefined) ? d.registrationAmount : "-"; 
+                    // Checks if registrationAmount exists (allows 0 or "Free")
+                    if (d.registrationAmount !== undefined && d.registrationAmount !== null) {
+                        amountDisplay = d.registrationAmount === 0 ? "Free" : d.registrationAmount;
+                    }
                 }
 
-                // FIXED: Logic to create the LHDN Badge
+                // E-Invoice Indicator
                 const eInvoiceBadge = d.requestEInvoice 
                     ? '<span class="badge bg-danger ms-1" style="font-size:0.6rem">LHDN Invoice</span>' 
                     : '';
@@ -176,7 +182,8 @@
                             <div>
                                 <div class="fw-bold text-dark">
                                     ${d.username || 'Unknown User'}
-                                    ${eInvoiceBadge} </div>
+                                    ${eInvoiceBadge} 
+                                </div>
                                 <div class="small text-muted">${d.email}</div>
                                 <div class="small text-primary fst-italic" style="font-size:0.75rem">${d.institutionName || 'Personal'}</div>
                             </div>
