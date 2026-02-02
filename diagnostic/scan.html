@@ -49,8 +49,9 @@
         .form-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .form-control { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
         
-        /* NEW DROPDOWN STYLE */
+        /* NEW DROPDOWN & INPUT STYLE */
         .phase-select { width: 100%; padding: 12px; border: 2px solid var(--primary); border-radius: 8px; background: #f0f7ff; font-weight: 600; color: var(--primary); cursor: pointer; font-size: 1rem; }
+        .remark-input { width: 100%; padding: 10px; border: 1px dashed var(--primary); border-radius: 6px; margin-top: 8px; font-size: 0.95rem; background: #fff; }
 
         .clinical-summary { background: #f8f9fa; border-radius: 6px; padding: 10px; max-height: 250px; overflow-y: auto; border: 1px solid #eee; }
         .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef; font-size: 0.95rem; }
@@ -130,7 +131,8 @@
         </div>
 
         <div class="step-card" style="border: 2px solid #cfe2ff;">
-            <span class="step-label" style="color:#0d6efd;">3. KPI Phase (For Reports)</span>
+            <span class="step-label" style="color:#0d6efd;">3. Clinical Context</span>
+            
             <select id="kpi_timing" class="phase-select">
                 <option value="Admission">Admission (Day 0)</option>
                 <option value="Day 3 Review">Day 3 Review</option>
@@ -138,6 +140,8 @@
                 <option value="Discharge">Discharge</option>
                 <option value="Ad-hoc">Ad-hoc / Other</option>
             </select>
+
+            <input type="text" id="clinical_remark" class="remark-input" placeholder="Add Note (e.g. Start Mirtazapine)">
         </div>
 
         <button onclick="transferToCloud()" class="btn-action btn-primary">
@@ -202,13 +206,12 @@
         }
     });
 
-    // --- FIX 1: SIMPLER & STRONGER CAMERA START ---
+    // --- CAMERA LOGIC (ROBUST FOR MOBILE) ---
     async function startCamera() {
         if(!html5QrCode) {
             html5QrCode = new Html5Qrcode("reader");
         }
 
-        // Standard Mobile Config
         const config = { 
             fps: 10, 
             qrbox: { width: 250, height: 250 },
@@ -217,7 +220,6 @@
 
         try {
             // "environment" tells the phone to use the main back camera automatically
-            // This is safer than manually finding ID, which fails on some phones.
             await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess);
             isCameraRunning = true;
         } catch (err) {
@@ -225,7 +227,7 @@
         }
     }
 
-    // --- FIX 2: STOP CAMERA BEFORE READING FILE ---
+    // --- GALLERY LOGIC (PAUSE CAMERA FIRST) ---
     document.getElementById('qr-input-file').addEventListener('change', async e => {
         if (e.target.files.length == 0) return;
         
@@ -319,8 +321,9 @@
         const ptName = document.getElementById('pt_name').value;
         const ptID = document.getElementById('pt_id').value;
         
-        // GRAB KPI PHASE
+        // GRAB KPI PHASE & REMARK
         const kpiPhase = document.getElementById('kpi_timing').value;
+        const remark = document.getElementById('clinical_remark').value;
 
         if (!ptID) { alert("Please enter a Patient ID (MRN)."); return; }
 
@@ -341,6 +344,11 @@
 
         // ADD KPI PHASE TO REPORT
         report += `Phase: ${kpiPhase} | `;
+        
+        // ADD REMARK TO REPORT (IF EXISTS)
+        if (remark) {
+            report += `Note: ${remark} | `;
+        }
 
         const currentUser = firebase.auth().currentUser;
         if (currentUser && currentUser.email) {
