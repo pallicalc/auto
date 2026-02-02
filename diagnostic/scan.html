@@ -35,6 +35,15 @@
         .scan-box { width: 200px; height: 200px; border: 2px solid rgba(255,255,255,0.9); border-radius: 12px; position: relative; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); }
         .scan-box::after { content: ''; position: absolute; top: 10px; left: 10px; right: 10px; height: 2px; background: #00c6f7; box-shadow: 0 0 4px #00c6f7; animation: scanLine 2s infinite ease-in-out; }
 
+        /* SWITCH CAMERA BUTTON (Floating) */
+        #switch-cam-btn {
+            position: absolute; bottom: 20px; right: 20px; z-index: 50;
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.5); color: white;
+            padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+        }
+
         #result-screen { display: none; padding: 20px; animation: slideUp 0.3s ease-out; }
         .step-card { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
         .step-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #adb5bd; margin-bottom: 8px; display: block; }
@@ -90,12 +99,16 @@
 
         <div id="camera-error" style="display:none; color:#721c24; background:#f8d7da; padding:15px; text-align:center; border-radius:8px; margin:10px;">
             <strong>Camera Blocked</strong><br>
-            Please go to <strong>Settings > Apps > Chrome (or Safari)</strong> and allow Camera.
+            Please go to <strong>Settings > Apps > Chrome</strong> and allow Camera.
         </div>
 
         <div class="scanner-wrapper">
             <div id="reader"></div>
             <div class="scan-overlay"><div class="scan-box"></div></div>
+            
+            <button id="switch-cam-btn" onclick="cycleCamera()">
+                <i class="bi bi-arrow-repeat"></i> Switch Cam
+            </button>
         </div>
 
         <div style="background: white; padding: 20px; text-align: center; border-top: 1px solid #eee;">
@@ -167,7 +180,9 @@
     let savedLinks = {}; 
     let currentData = null;
     let html5QrCode; 
-    let isCameraRunning = false; 
+    let isCameraRunning = false;
+    let availableCameras = [];
+    let currentCameraIndex = 0;
 
     const DISPLAY_LABELS = {
         Q2a: 'Pain', Q2b: 'Breath', Q2c: 'Weakness', Q2d: 'Nausea', Q2e: 'Vomiting',
@@ -194,7 +209,7 @@
                 }
                 
                 document.getElementById('loading-overlay').style.display = 'none';
-                startSimpleCamera();
+                initCameraSystem();
 
             } catch (e) {
                 alert("Error loading config: " + e.message);
@@ -204,25 +219,71 @@
         }
     });
 
-    // --- SIMPLE BACK CAMERA LOGIC ---
-    // No HD. No constraints. Just "Give me the back camera."
-    async function startSimpleCamera() {
+    // --- MANUAL CAMERA SWITCHING LOGIC ---
+    async function initCameraSystem() {
         if(!html5QrCode) {
             html5QrCode = new Html5Qrcode("reader");
         }
 
+        try {
+            // Get list of ALL cameras
+            availableCameras = await Html5Qrcode.getCameras();
+            
+            if (availableCameras && availableCameras.length > 0) {
+                // If we have back cameras, try to start with the last one (often the main one)
+                // If there's only 1, index 0 is used.
+                currentCameraIndex = availableCameras.length - 1; 
+                startCameraByIndex(currentCameraIndex);
+            } else {
+                // No camera list found, fallback to basic mode
+                startBasicMode();
+            }
+        } catch (err) {
+            console.error("Error enumerating cameras", err);
+            startBasicMode(); // Fallback
+        }
+    }
+
+    async function startCameraByIndex(index) {
+        if (html5QrCode && isCameraRunning) {
+            await html5QrCode.stop();
+        }
+
+        const cameraId = availableCameras[index].id;
         const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
 
         try {
-            // "environment" = Back Camera. 
-            // We do NOT ask for width/height. We let the phone decide.
-            await html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess);
+            await html5QrCode.start(cameraId, qrConfig, onScanSuccess);
             isCameraRunning = true;
             document.getElementById('camera-error').style.display = 'none';
         } catch (err) {
-            console.error("Back camera failed", err);
-            
-            // If that fails, show the big red box (User needs to fix permissions in settings)
+            console.error("Failed to start camera " + index, err);
+            // If specific ID fails, fallback
+            startBasicMode();
+        }
+    }
+
+    async function cycleCamera() {
+        if (availableCameras.length < 2) {
+            alert("Only one camera detected on this device.");
+            return;
+        }
+        
+        // Go to next camera
+        currentCameraIndex++;
+        if (currentCameraIndex >= availableCameras.length) {
+            currentCameraIndex = 0;
+        }
+        
+        startCameraByIndex(currentCameraIndex);
+    }
+
+    async function startBasicMode() {
+        try {
+            await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+            isCameraRunning = true;
+            document.getElementById('switch-cam-btn').style.display = 'none'; // Hide button if we can't switch
+        } catch (e) {
             document.getElementById('camera-error').style.display = 'block';
         }
     }
@@ -246,7 +307,7 @@
             .catch(err => {
                 document.getElementById('gallery-status').style.display = 'none';
                 alert("Error scanning file. Try a clearer image.");
-                startSimpleCamera(); 
+                initCameraSystem(); 
             });
     });
 
@@ -264,7 +325,6 @@
                 renderDashboard(data);
             } else {
                 alert("Unknown QR Code format.");
-                // Note: We don't restart camera here to let user read the alert
             }
         } catch (e) { 
             console.warn("Invalid QR", e);
