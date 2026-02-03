@@ -137,6 +137,10 @@ function generateQR() {
         }
     }
 
+    // Note: Q6-Q9 inputs in HTML now have value="0" for 'Always/Addressed' (Good) 
+    // and value="4" for 'Not at all/Not Addressed' (Bad).
+    // Therefore, simple value extraction represents the Distress Score correctly.
+    
     const payload = {
         t: "IPOS",
         d: Date.now(),
@@ -180,6 +184,8 @@ function generateQR() {
 function calculateTotalScore() {
     let total = 0;
     document.querySelectorAll('#iposForm input[type="radio"]:checked').forEach(input => {
+        // Because Q6-Q9 HTML values are aligned with distress (0=Good, 4=Bad),
+        // we can simply sum all checked values.
         total += parseInt(input.value);
     });
     const display = document.getElementById('total-score-display');
