@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HADS Assessment Form</title>
+    <style>
+        :root {
+            --primary-color: #005f73;
+            --bg-color: #f4f7f6;
+            --border-color: #ddd;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        .instruction {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-left: 5px solid var(--primary-color);
+            margin-bottom: 30px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .question-text {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .options label {
+            display: block;
+            margin: 5px 0;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .options label:hover {
+            background-color: #f0f0f0;
+        }
+        input[type="radio"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        
+        /* Buttons */
+        .btn-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin: 0 10px;
+            transition: background 0.3s;
+        }
+        .calculate-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .calculate-btn:hover {
+            background-color: #004c5c;
+        }
+        .reset-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+        .reset-btn:hover {
+            background-color: #5a6268;
+        }
+
+        /* Results Section */
+        #results {
+            display: none; /* Hidden by default */
+            margin-top: 30px;
+            padding: 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        .score-val {
+            font-weight: bold;
+        }
+        .interpretation {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ccc;
+            font-size: 0.9em;
+        }
+        .normal { color: green; }
+        .borderline { color: orange; }
+        .abnormal { color: red; font-weight: bold; }
+
+        @media print {
+            .btn-container { display: none; }
+            body { background: white; }
+            .container { box-shadow: none; border: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Hospital Anxiety and Depression Scale (HADS)</h1>
+    <p class="subtitle">Clinicians use this to determine the levels of anxiety and depression that a patient is experiencing.</p>
+
+    <div class="instruction">
+        <strong>Instructions:</strong> Doctors are aware that emotions play an important part in most illnesses. Read each item and select the reply which comes closest to how you have been feeling in the past week. Don't take too long over your replies: your immediate reaction is usually best.
+    </div>
+
+    <form id="hadsForm">
+
+        <div class="question-block" data-type="A">
+            <span class="question-text">1. I feel tense or 'wound up':</span>
+            <div class="options">
+                <label><input type="radio" name="q1" value="3"> Most of the time</label>
+                <label><input type="radio" name="q1" value="2"> A lot of the time</label>
+                <label><input type="radio" name="q1" value="1"> From time to time, occasionally</label>
+                <label><input type="radio" name="q1" value="0"> Not at all</label>
+            </div>
+        </div>
+
+        <div class="question-block" data-type="D">
+            <span class="question-text">2. I still enjoy the things I used to enjoy:</span>
+            <div class="options">
+                <label><input type="radio" name="q2" value="0"> Definitely as much</label>
+                <label><input type="radio" name="q2" value="1"> Not quite so much</label>
+                <label><input type="radio" name="q2" value="2"> Only a little</label>
+                <label><input type="radio" name="q2" value="3"> Hardly at all</label>
+            </div>
+        </div>
+
+        <div class="question-block" data-type="A">
+            <span class="question-text">3. I get a sort of frightened feeling as if something awful is about to happen:</span>
+            <div class="options">
+                <label><input type="radio" name="q3" value="3"> Very definitely and quite badly</label>
+                <label><input type="radio" name="q3" value="2"> Yes, but not too badly</label>
+                <label><input type="radio" name="q3" value="1"> A little, but it doesn't worry me</label>
+                <label><input type="radio" name="q3" value="0"> Not at all</label>
+            </div>
+        </div>
+
+        <div class="question-block" data-type="D">
+            <span class="question-text">4. I can laugh and see the funny side of things:</span>
+            <div class="options">
+                <label><input type="radio" name="q4" value="0"> As much as I always could</label>
+                <label><input type="radio" name="q4" value="1"> Not quite so much now</label>
+                <label><input type="radio" name="q4" value="2"> Definitely not so much now</label>
+                <label><input type="radio" name="q4" value="3"> Not at all</label>
+            </div>
+        </div>
+
+        <div class="question-block" data-type="A">
+            <span class="question-text">5. Worrying thoughts go through my mind:</span>
+            <div class="options">
+                <label><input type="radio" name="q5" value="3"> A great deal of the time</label>
+                <label><input type="radio" name="q5" value="2"> A lot of the time</label>
+                <label><input type="radio" name="q5" value="1"> From time to time, but not too often</label>
+                <label><input type="radio" name="q5" value="0"> Only occasionally</label>
+            </div>
+        </div>
+
+        <div class="question-block" data-type="D">
+            <span class="question-text">6. I feel cheerful:</span>
+            <div class="options">
+                <label><input type="radio" name="q6" value="3"> Not at all</label>
+                <label><input type="radio" name="q6" value="2"> Not often</label>
+                <label><input type="radio" name="q6" value="1"> Sometimes</label>
+                <label><input type="radio" name="q6" value="0"> Most of the time</label>
+            </div>
+        </div>
+
+        <div class="question-block" data-type="A">
+            <span class="question-text">7. I can sit at ease and feel relaxed:</span>
+            <div class="options">
+                <label><input type="radio" name="q7" value="0"> Definitely</label>
+                <label><input type="radio" name="q7" value="1"> Usually</label>
+                <label><input type="radio" name="q7" value="2"> Not often</label>
+                <label><input type="radio" name="q7" value="3"> Not at all</label>
+            </div>
+        </div>
+
+        <div class="question-block" data-type="D">
+            <span class="question-text">8. I feel as if I am slowed down:</span>
+            <div class="options">
+                <label><input type="radio" name="q8" value="3"> Nearly all the time</label>
+                <label><input type="radio" name="q8" value="2"> Very often</label>
+                <label><input type="radio" name="q8" value="1"> Sometimes</label>
+                <label><input type="radio" name="q8" value="0"> Not at all</label>
+            </div>
+        </div>
+
+        <div class="question-block" data-type="A">
+            <span class="question-text">9. I get a sort of frightened feeling like 'butterflies' in the stomach:</span>
+            <div class="options">
+                <label><input type="radio" name="q9" value="0"> Not at all</label>
+                <label><input type="radio" name="q9" value="1"> Occasionally</label>
+                <label><input type="radio" name="q9" value="2"> Quite often</label>
+                <label><input type="radio" name="q9" value="3"> Very often</label>
+            </div>
+        </div>
+
+        <div class="question-block" data-type="D">
+            <span class="question-text">10. I have lost interest in my appearance:</span>
+            <div class="options">
+                <label><input type="radio" name="q10" value="3"> Definitely</label>
+                <label><input type="radio" name="q10" value="2"> I don't take as much care as I should</label>
+                <label><input type="radio" name="q10" value="1"> I may not take quite as much care</label>
+                <label><input type="radio" name="q10" value="0"> I take just as much care as ever</label>
+            </div>
+        </div>
+
+        <div class="question-block" data-type="A">
+            <span class="question-text">11. I feel restless as if I have to be on the move:</span>
+            <div class="options">
+                <label><input type="radio" name="q11" value="3"> Very much indeed</label>
+                <label><input type="radio" name="q11" value="2"> Quite a lot</label>
+                <label><input type="radio" name="q11" value="1"> Not very much</label>
+                <label><input type="radio" name="q11" value="0"> Not at all</label>
+            </div>
+        </div>
+
+        <div class="question-block" data-type="D">
+            <span class="question-text">12. I look forward with enjoyment to things:</span>
+            <div class="options">
+                <label><input type="radio" name="q12" value="0"> As much as I ever did</label>
+                <label><input type="radio" name="q12" value="1"> Rather less than I used to</label>
+                <label><input type="radio" name="q12" value="2"> Definitely less than I used to</label>
+                <label><input type="radio" name="q12" value="3"> Hardly at all</label>
+            </div>
+        </div>
+
+        <div class="question-block" data-type="A">
+            <span class="question-text">13. I get sudden feelings of panic:</span>
+            <div class="options">
+                <label><input type="radio" name="q13" value="3"> Very often indeed</label>
+                <label><input type="radio" name="q13" value="2"> Quite often</label>
+                <label><input type="radio" name="q13" value="1"> Not very often</label>
+                <label><input type="radio" name="q13" value="0"> Not at all</label>
+            </div>
+        </div>
+
+        <div class="question-block" data-type="D">
+            <span class="question-text">14. I can enjoy a good book or radio or TV program:</span>
+            <div class="options">
+                <label><input type="radio" name="q14" value="0"> Often</label>
+                <label><input type="radio" name="q14" value="1"> Sometimes</label>
+                <label><input type="radio" name="q14" value="2"> Not often</label>
+                <label><input type="radio" name="q14" value="3"> Very seldom</label>
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <button type="button" class="calculate-btn" onclick="calculateScore()">Calculate Score</button>
+            <button type="button" class="reset-btn" onclick="resetForm()">Reset Form</button>
+        </div>
+
+    </form>
+
+    <div id="results">
+        <h2>Assessment Results</h2>
+        <div class="score-row">
+            <span>Anxiety Score (A):</span>
+            <span id="scoreA" class="score-val">0</span>
+        </div>
+        <div class="score-row">
+            <span>Depression Score (D):</span>
+            <span id="scoreD" class="score-val">0</span>
+        </div>
+        
+        <div class="interpretation">
+            <h3>Interpretation Guide</h3>
+            <p><strong>0 - 7:</strong> Normal</p>
+            <p><strong>8 - 10:</strong> Borderline Abnormal</p>
+            <p><strong>11 - 21:</strong> Abnormal (Case)</p>
+            <br>
+            <p style="font-size: 0.85em; color: #555;"><em>Note: The HADS is a screening tool, not a diagnosis. High scores usually require further evaluation by a qualified professional.</em></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calculateScore() {
+        // Question IDs for Anxiety and Depression
+        const anxietyQs = ['q1', 'q3', 'q5', 'q7', 'q9', 'q11', 'q13'];
+        const depressionQs = ['q2', 'q4', 'q6', 'q8', 'q10', 'q12', 'q14'];
+
+        let scoreA = 0;
+        let scoreD = 0;
+        let allAnswered = true;
+
+        // Calculate Anxiety
+        anxietyQs.forEach(q => {
+            const selected = document.querySelector(`input[name="${q}"]:checked`);
+            if (selected) {
+                scoreA += parseInt(selected.value);
+            } else {
+                allAnswered = false;
+            }
+        });
+
+        // Calculate Depression
+        depressionQs.forEach(q => {
+            const selected = document.querySelector(`input[name="${q}"]:checked`);
+            if (selected) {
+                scoreD += parseInt(selected.value);
+            } else {
+                allAnswered = false;
+            }
+        });
+
+        if (!allAnswered) {
+            alert("Please answer all questions before calculating.");
+            return;
+        }
+
+        // Display results
+        const resultBox = document.getElementById('results');
+        const spanA = document.getElementById('scoreA');
+        const spanD = document.getElementById('scoreD');
+
+        resultBox.style.display = 'block';
+        spanA.innerText = scoreA + " (" + getSeverity(scoreA) + ")";
+        spanD.innerText = scoreD + " (" + getSeverity(scoreD) + ")";
+
+        // Color coding
+        spanA.className = 'score-val ' + getSeverityClass(scoreA);
+        spanD.className = 'score-val ' + getSeverityClass(scoreD);
+        
+        // Scroll to bottom
+        resultBox.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function getSeverity(score) {
+        if (score <= 7) return "Normal";
+        if (score <= 10) return "Borderline";
+        return "Abnormal";
+    }
+
+    function getSeverityClass(score) {
+        if (score <= 7) return "normal";
+        if (score <= 10) return "borderline";
+        return "abnormal";
+    }
+
+    function resetForm() {
+        document.getElementById('hadsForm').reset();
+        document.getElementById('results').style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
