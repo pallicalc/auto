@@ -90,13 +90,17 @@ body {
 .scale-container { display: flex; justify-content: space-between; gap: 5px; margin: 10px 0; }
 .scale-opt { flex: 1; text-align: center; position: relative; }
 .scale-opt input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; left:0; top:0; }
+
+/* MODIFIED: Numbers are now small (8px) and unbolded to shift focus to words */
 .scale-opt label {
     display: flex; flex-direction: column; justify-content: center; height: 45px;
     background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;
-    color: #6c757d; font-weight: 700; transition: all 0.2s; font-size: 14px;
+    color: #6c757d; font-weight: 400; transition: all 0.2s; font-size: 8px;
 }
 .scale-opt input:checked + label { background: #e3f2fd; border-color: #0061f2; color: #0061f2; }
-.scale-desc { font-size: 10px; font-weight: 400; margin-top: 2px; line-height: 1; }
+
+/* MODIFIED: Descriptions are now larger (11px) and BOLD to be the main visual cue */
+.scale-desc { font-size: 11px; font-weight: 700; margin-top: 2px; line-height: 1.1; }
 
 .score-box {
     background: #2c3e50; color: white; padding: 20px; border-radius: 12px;
