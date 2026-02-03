@@ -58,7 +58,7 @@
         <form id="iposForm">
             
            <div class="question-card">
-    <label class="q-label">S1. Apakah yang menjadi masalah / masalah-masalah utama atau kerisauan anda dalam 3 hari kebelakangan ini?</label>
+    <label class="q-label" for="q1_input">S1. Apakah yang menjadi masalah / masalah-masalah utama atau kerisauan anda dalam 3 hari kebelakangan ini?</label>
     
     <textarea class="form-control" id="q1_input" rows="3" maxlength="100" 
               style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" 
@@ -166,7 +166,7 @@
                     <label class="q-label">Sila senaraikan gejala fizikal lain yang tidak disebut di atas, dan tandakan (√) pada satu kotak yang menunjukkan bagaimana ia telah memberi kesan kepada anda dalam 3 hari kebelakangan ini.</label>
 
                     <div class="other-symptom-row">
-                        <input type="text" id="other_sym_1_label" class="form-control other-input" maxlength="20" placeholder="cth. Gatal-gatal" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        <input type="text" id="other_sym_1_label" aria-label="Gejala Lain 1" class="form-control other-input" maxlength="20" placeholder="cth. Gatal-gatal" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                         <div class="scale-container">
                             <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="0" id="oth1_0"><label for="oth1_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
                             <div class="scale-opt"><input type="radio" name="other_sym_1_val" value="1" id="oth1_1"><label for="oth1_1">1<div class="scale-desc">Sedikit</div></label></div>
@@ -177,7 +177,7 @@
                     </div>
 
                     <div class="other-symptom-row">
-                        <input type="text" id="other_sym_2_label" class="form-control other-input" maxlength="20" placeholder="cth. Gejala 2" style="width:100%; padding:8px; border:1px solid:#ccc; border-radius:4px;">
+                        <input type="text" id="other_sym_2_label" aria-label="Gejala Lain 2" class="form-control other-input" maxlength="20" placeholder="cth. Gejala 2" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                         <div class="scale-container">
                             <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="0" id="oth2_0"><label for="oth2_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
                             <div class="scale-opt"><input type="radio" name="other_sym_2_val" value="1" id="oth2_1"><label for="oth2_1">1<div class="scale-desc">Sedikit</div></label></div>
@@ -188,7 +188,7 @@
                     </div>
 
                     <div class="other-symptom-row">
-                        <input type="text" id="other_sym_3_label" class="form-control other-input" maxlength="20" placeholder="cth. Gejala 3" style="width:100%; padding:8px; border:1px solid:#ccc; border-radius:4px;">
+                        <input type="text" id="other_sym_3_label" aria-label="Gejala Lain 3" class="form-control other-input" maxlength="20" placeholder="cth. Gejala 3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                         <div class="scale-container">
                             <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="0" id="oth3_0"><label for="oth3_0">0<div class="scale-desc">Tidak sama sekali</div></label></div>
                             <div class="scale-opt"><input type="radio" name="other_sym_3_val" value="1" id="oth3_1"><label for="oth3_1">1<div class="scale-desc">Sedikit</div></label></div>
@@ -278,7 +278,7 @@
             </div>
 
             <div class="question-card">
-                <label class="q-label">S10. Bagaimanakah anda melengkapkan soal selidik ini?</label>
+                <label class="q-label" for="completion_mode">S10. Bagaimanakah anda melengkapkan soal selidik ini?</label>
                 <select id="completion_mode" class="form-select" style="font-size:14px; padding:8px; width:100%; border:1px solid #ced4da; border-radius:6px;">
                     <option value="0">Diri sendiri</option>
                     <option value="1">Dengan bantuan rakan atau saudara</option>
