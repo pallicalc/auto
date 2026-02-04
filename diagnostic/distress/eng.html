@@ -18,6 +18,123 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script src="../diagnostic.js"></script>
+
+    <style>
+        /* --- CUSTOM STYLES FOR THERMOMETER LAYOUT --- */
+        .thermo-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: stretch; 
+            gap: 20px;
+            padding: 10px 0;
+            min-height: 450px;
+        }
+
+        /* Left Column: The Scale */
+        .scale-column {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-end; 
+            padding-right: 10px;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .scale-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 35px;
+        }
+
+        .scale-row label {
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .scale-row input[type="radio"] {
+            transform: scale(1.5);
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .label-text {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+            margin-top: 5px;
+        }
+        .text-extreme { color: #d32f2f; font-weight: 800; }
+        .text-none { color: #2e7d32; font-weight: 800; }
+
+        /* Right Column: The Image */
+        .image-column {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .thermo-img {
+            height: 100%;
+            max-height: 480px; 
+            width: auto;
+            object-fit: contain;
+        }
+
+        /* --- STYLES FOR YES/NO PROBLEM LIST --- */
+        .section-header { 
+            background: #f8f9fa; 
+            padding: 10px 15px; 
+            margin: 20px -20px 10px -20px; 
+            font-weight: 700; 
+            color: #0061f2; 
+            font-size: 14px; 
+            text-transform: uppercase; 
+            border-left: 4px solid #0061f2;
+        }
+        
+        .yes-no-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px 0; 
+            border-bottom: 1px solid #f0f0f0; 
+        }
+        .yes-no-row:last-child { border-bottom: none; }
+        
+        .yn-label { 
+            font-size: 15px; 
+            color: #333; 
+            flex: 1; 
+            padding-right: 10px; 
+        }
+        
+        .yn-options { 
+            display: flex; 
+            gap: 8px; 
+            width: 140px; 
+        }
+
+        .yn-btn {
+            flex: 1;
+            position: relative;
+            text-align: center;
+        }
+        .yn-btn input {
+            position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; left:0; top:0;
+        }
+        .yn-btn label {
+            display: flex; justify-content: center; align-items: center; height: 35px;
+            background: #fff; border: 1px solid #dee2e6; border-radius: 6px;
+            color: #6c757d; font-weight: 600; font-size: 13px; transition: all 0.2s;
+        }
+        /* Color coding: Yes=1 (Redish), No=0 (Greenish) */
+        .yn-btn input:checked + label.lbl-no { background: #e8f5e9; border-color: #2e7d32; color: #2e7d32; } 
+        .yn-btn input:checked + label.lbl-yes { background: #ffebee; border-color: #c62828; color: #c62828; }
+
+    </style>
 </head>
 <body>
 
@@ -60,63 +177,65 @@
             <div class="question-card">
                 <label class="q-label">Q1. Please circle the number (0-10) that best describes how much distress you have been experiencing in the past week, including today.</label>
                 
-                <div class="scale-container" style="flex-wrap: wrap;">
-                    <div class="scale-opt"><input type="radio" name="distress_score" value="0" id="ds_0"><label for="ds_0">0<div class="scale-desc">No Distress</div></label></div>
-                    <div class="scale-opt"><input type="radio" name="distress_score" value="1" id="ds_1"><label for="ds_1">1</label></div>
-                    <div class="scale-opt"><input type="radio" name="distress_score" value="2" id="ds_2"><label for="ds_2">2</label></div>
-                    <div class="scale-opt"><input type="radio" name="distress_score" value="3" id="ds_3"><label for="ds_3">3</label></div>
-                    <div class="scale-opt"><input type="radio" name="distress_score" value="4" id="ds_4"><label for="ds_4">4</label></div>
-                    <div class="scale-opt"><input type="radio" name="distress_score" value="5" id="ds_5"><label for="ds_5">5</label></div>
-                    <div class="scale-opt"><input type="radio" name="distress_score" value="6" id="ds_6"><label for="ds_6">6</label></div>
-                    <div class="scale-opt"><input type="radio" name="distress_score" value="7" id="ds_7"><label for="ds_7">7</label></div>
-                    <div class="scale-opt"><input type="radio" name="distress_score" value="8" id="ds_8"><label for="ds_8">8</label></div>
-                    <div class="scale-opt"><input type="radio" name="distress_score" value="9" id="ds_9"><label for="ds_9">9</label></div>
-                    <div class="scale-opt"><input type="radio" name="distress_score" value="10" id="ds_10"><label for="ds_10">10<div class="scale-desc" style="color:#d32f2f;">Extreme</div></label></div>
+                <div class="thermo-wrapper">
+                    <div class="scale-column">
+                        <div class="label-text text-extreme">Extreme Distress</div>
+                        
+                        <div class="scale-row"><label for="ds_10">10</label><input type="radio" name="distress_score" value="10" id="ds_10"></div>
+                        <div class="scale-row"><label for="ds_9">9</label><input type="radio" name="distress_score" value="9" id="ds_9"></div>
+                        <div class="scale-row"><label for="ds_8">8</label><input type="radio" name="distress_score" value="8" id="ds_8"></div>
+                        <div class="scale-row"><label for="ds_7">7</label><input type="radio" name="distress_score" value="7" id="ds_7"></div>
+                        <div class="scale-row"><label for="ds_6">6</label><input type="radio" name="distress_score" value="6" id="ds_6"></div>
+                        <div class="scale-row"><label for="ds_5">5</label><input type="radio" name="distress_score" value="5" id="ds_5"></div>
+                        <div class="scale-row"><label for="ds_4">4</label><input type="radio" name="distress_score" value="4" id="ds_4"></div>
+                        <div class="scale-row"><label for="ds_3">3</label><input type="radio" name="distress_score" value="3" id="ds_3"></div>
+                        <div class="scale-row"><label for="ds_2">2</label><input type="radio" name="distress_score" value="2" id="ds_2"></div>
+                        <div class="scale-row"><label for="ds_1">1</label><input type="radio" name="distress_score" value="1" id="ds_1"></div>
+                        <div class="scale-row"><label for="ds_0">0</label><input type="radio" name="distress_score" value="0" id="ds_0"></div>
+
+                        <div class="label-text text-none">No Distress</div>
+                    </div>
+
+                    <div class="image-column">
+                        <img src="1.jpg" alt="Thermometer Visual" class="thermo-img">
+                    </div>
                 </div>
             </div>
 
             <div class="question-card">
-                <label class="q-label">Q2. Problem List: Have you had concerns about any of the items below in the past week, including today?</label>
+                <label class="q-label">Problem List: Have you had concerns about any of the items below in the past week, including today?</label>
                 
-                <style>
-                    .yes-no-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
-                    .yes-no-row:last-child { border-bottom: none; }
-                    .yn-label { font-size: 15px; color: #333; flex: 1; padding-right: 10px; }
-                    .yn-options { display: flex; gap: 5px; width: 100px; }
-                    .section-header { background: #f8f9fa; padding: 8px; margin: 15px -20px 10px -20px; font-weight: 700; color: #0061f2; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
-                </style>
-
-                <div class="section-header" style="margin-top:0;">Physical Concerns</div>
+                <div class="section-header" style="margin-top:0;">Q2. Physical Concerns</div>
                 <div id="physical-section"></div>
 
-                <div class="section-header">Emotional Concerns</div>
+                <div class="section-header">Q3. Emotional Concerns</div>
                 <div id="emotional-section"></div>
 
-                <div class="section-header">Practical Concerns</div>
+                <div class="section-header">Q4. Practical Concerns</div>
                 <div id="practical-section"></div>
 
-                <div class="section-header">Social Concerns</div>
+                <div class="section-header">Q5. Social Concerns</div>
                 <div id="social-section"></div>
 
-                <div class="section-header">Spiritual / Religious</div>
+                <div class="section-header">Q6. Spiritual / Religious</div>
                 <div id="spiritual-section"></div>
 
             </div>
 
             <div class="question-card">
-                <label class="q-label">Other Concerns:</label>
+                <label class="q-label">Q7. Other Concerns:</label>
                 <textarea class="form-control" id="other_concerns" rows="3" maxlength="200" 
                           style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" 
                           placeholder="Please describe any other concerns..." 
                           oninput="updateCharCount(this)"></textarea>
                 <small id="char-count" style="display:block; text-align:right; color:#6c757d; font-size:12px; margin-top:4px;">
-                    0/200
+                    0/200 characters used
                 </small>
             </div>
 
             <div class="score-box no-print">
                 <div><div class="score-title">Distress Score</div><small style="opacity:0.7">0 (No Distress) to 10 (Extreme)</small></div>
-                <div class="score-val" id="total-score-display">0</div>
+                <div class="score-val" id="total-score-display">--</div>
             </div>
 
             <div id="qr-section">
@@ -143,56 +262,55 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURATION: List of Questions ---
+        // --- 1. CONFIGURATION: List of Questions mapped to PDF Content ---
+        
         const physicalItems = [
-            {id:'phy_pain', l:'Pain'}, {id:'phy_sleep', l:'Sleep'}, {id:'phy_fatigue', l:'Fatigue'}, 
-            {id:'phy_tobacco', l:'Tobacco use'}, {id:'phy_substance', l:'Substance use'}, 
-            {id:'phy_mem', l:'Memory/Concentration'}, {id:'phy_sex', l:'Sexual health'}, 
-            {id:'phy_eat', l:'Changes in eating'}, {id:'phy_abil', l:'Loss of physical abilities'}
+            {l:'Pain'}, {l:'Sleep'}, {l:'Fatigue'}, {l:'Tobacco use'}, {l:'Substance use'}, 
+            {l:'Memory/Concentration'}, {l:'Sexual health'}, {l:'Changes in eating'}, {l:'Loss of physical abilities'}
         ];
+        
         const emotionalItems = [
-            {id:'emo_worry', l:'Worry or anxiety'}, {id:'emo_sad', l:'Sadness or depression'}, 
-            {id:'emo_int', l:'Loss of interest'}, {id:'emo_grief', l:'Grief or loss'}, 
-            {id:'emo_fear', l:'Fear'}, {id:'emo_lone', l:'Loneliness'}, 
-            {id:'emo_anger', l:'Anger'}, {id:'emo_app', l:'Changes in appearance'}, 
-            {id:'emo_worth', l:'Worthlessness/Burden'}
+            {l:'Worry or anxiety'}, {l:'Sadness or depression'}, {l:'Loss of interest'}, 
+            {l:'Grief or loss'}, {l:'Fear'}, {l:'Loneliness'}, 
+            {l:'Anger'}, {l:'Changes in appearance'}, {l:'Worthlessness/Burden'}
         ];
+        
         const practicalItems = [
-            {id:'prac_self', l:'Taking care of myself'}, {id:'prac_others', l:'Taking care of others'}, 
-            {id:'prac_safe', l:'Safety'}, {id:'prac_work', l:'Work'}, {id:'prac_school', l:'School'}, 
-            {id:'prac_house', l:'Housing/Utilities'}, {id:'prac_fin', l:'Finances'}, 
-            {id:'prac_ins', l:'Insurance'}, {id:'prac_trans', l:'Transportation'}, 
-            {id:'prac_child', l:'Child care'}, {id:'prac_food', l:'Having enough food'}, 
-            {id:'prac_med', l:'Access to medicine'}, {id:'prac_tx', l:'Treatment decisions'}
+            {l:'Taking care of myself'}, {l:'Taking care of others'}, {l:'Safety'}, 
+            {l:'Work'}, {l:'School'}, {l:'Housing/Utilities'}, {l:'Finances'}, 
+            {l:'Insurance'}, {l:'Transportation'}, {l:'Child care'}, 
+            {l:'Having enough food'}, {l:'Access to medicine'}, {l:'Treatment decisions'}
         ];
+        
         const socialItems = [
-            {id:'soc_spouse', l:'Rel. w/ spouse/partner'}, {id:'soc_child', l:'Rel. w/ children'}, 
-            {id:'soc_fam', l:'Rel. w/ family'}, {id:'soc_friend', l:'Rel. w/ friends'}, 
-            {id:'soc_team', l:'Comm. w/ health team'}, {id:'soc_fert', l:'Ability to have children'}, 
-            {id:'soc_disc', l:'Prejudice/Discrimination'}
+            {l:'Rel. w/ spouse/partner'}, {l:'Rel. w/ children'}, {l:'Rel. w/ family'}, 
+            {l:'Rel. w/ friends'}, {l:'Comm. w/ health team'}, {l:'Ability to have children'}, 
+            {l:'Prejudice/Discrimination'}
         ];
+        
         const spiritualItems = [
-            {id:'spir_mean', l:'Meaning or purpose'}, {id:'spir_faith', l:'Changes in faith/beliefs'}, 
-            {id:'spir_death', l:'Death, dying, afterlife'}, {id:'spir_conf', l:'Conflict beliefs/treatment'}, 
-            {id:'spir_sacred', l:'Rel. w/ the sacred'}, {id:'spir_rit', l:'Ritual or dietary needs'}
+            {l:'Meaning or purpose'}, {l:'Changes in faith/beliefs'}, {l:'Death, dying, afterlife'}, 
+            {l:'Conflict beliefs/treatment'}, {l:'Rel. w/ the sacred'}, {l:'Ritual or dietary needs'}
         ];
 
-        // --- 2. INITIALIZATION: Build the Form Dynamically ---
-        function renderYesNoItems(items, containerId) {
+        // --- 2. INITIALIZATION: Build the Form Dynamically with Unique IDs ---
+
+        function renderYesNoItems(items, containerId, prefix) {
             const container = document.getElementById(containerId);
             let html = '';
-            items.forEach(item => {
+            items.forEach((item, index) => {
+                const uniqueName = `${prefix}_${index}`;
                 html += `
                 <div class="yes-no-row">
                     <div class="yn-label">${item.l}</div>
                     <div class="yn-options">
-                        <div class="scale-opt" style="flex:1;">
-                            <input type="radio" name="${item.id}" value="0" id="${item.id}_0" checked>
-                            <label for="${item.id}_0">No</label>
+                        <div class="yn-btn">
+                            <input type="radio" name="${uniqueName}" value="0" id="${uniqueName}_no">
+                            <label for="${uniqueName}_no" class="lbl-no">No</label>
                         </div>
-                        <div class="scale-opt" style="flex:1;">
-                            <input type="radio" name="${item.id}" value="1" id="${item.id}_1">
-                            <label for="${item.id}_1" style="font-weight:bold;">Yes</label>
+                        <div class="yn-btn">
+                            <input type="radio" name="${uniqueName}" value="1" id="${uniqueName}_yes">
+                            <label for="${uniqueName}_yes" class="lbl-yes">Yes</label>
                         </div>
                     </div>
                 </div>`;
@@ -201,62 +319,73 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            renderYesNoItems(physicalItems, 'physical-section');
-            renderYesNoItems(emotionalItems, 'emotional-section');
-            renderYesNoItems(practicalItems, 'practical-section');
-            renderYesNoItems(socialItems, 'social-section');
-            renderYesNoItems(spiritualItems, 'spiritual-section');
+            renderYesNoItems(physicalItems, 'physical-section', 'phy');
+            renderYesNoItems(emotionalItems, 'emotional-section', 'emo');
+            renderYesNoItems(practicalItems, 'practical-section', 'prac');
+            renderYesNoItems(socialItems, 'social-section', 'soc');
+            renderYesNoItems(spiritualItems, 'spiritual-section', 'spir');
             
-            // Re-attach listeners for the new inputs
             const form = document.getElementById('iposForm');
             if(form) form.addEventListener('change', calculateTotalScore);
         });
 
         // --- 3. LOGIC ---
         function calculateTotalScore() {
-            // For Distress Thermometer, the Score is just Question 1 (0-10)
             let total = 0;
             const scoreEl = document.querySelector('input[name="distress_score"]:checked');
-            if (scoreEl) total = parseInt(scoreEl.value);
-
             const display = document.getElementById('total-score-display');
-            if(display) display.innerText = total;
             
-            // Visual feedback on yes/no items (optional)
-            // We could count total problems here if needed, but per request, we display the thermometer score.
+            if (scoreEl) {
+                total = parseInt(scoreEl.value);
+                display.innerText = total;
+            } else {
+                display.innerText = "--";
+            }
             return total;
         }
 
         function updateCharCount(textarea) {
             const maxLength = textarea.getAttribute('maxlength');
             const currentLength = textarea.value.length;
-            const counter = textarea.nextElementSibling; // The <small> tag
-            counter.innerText = `${currentLength}/${maxLength}`;
+            const counter = textarea.nextElementSibling;
+            counter.innerText = `${currentLength}/${maxLength} characters used`;
         }
 
         function generateQR() {
-            // Helper to get value
+            // Helper to get value. Returns null if nothing selected, 0 for No, 1 for Yes.
             const getVal = (name) => {
                 const el = document.querySelector(`input[name="${name}"]:checked`);
-                return el ? parseInt(el.value) : 0;
+                return el ? parseInt(el.value) : null; 
             };
 
-            // Build payload
+            // Alphabet generator for suffixes (a, b, c...)
+            const getSuffix = (i) => String.fromCharCode(97 + i); 
+
+            // Initialize Payload
+            // UPDATED TAG HERE: t: "dt"
             const payload = {
-                t: "NCCN-DT",
+                t: "dt", 
                 d: Date.now(),
-                score: getVal('distress_score'),
-                other: document.getElementById('other_concerns').value.substring(0, 200),
-                probs: {} // Object to hold the yes/no answers
+                Q1: getVal('distress_score') // Q1 = Score
             };
 
-            // Populate Checklists
-            const allLists = [...physicalItems, ...emotionalItems, ...practicalItems, ...socialItems, ...spiritualItems];
-            allLists.forEach(item => {
-                // To save space in QR, we only map if YES (1)
-                // Or we can map all. Let's map all for consistency.
-                payload.probs[item.id] = getVal(item.id);
-            });
+            // Map PHYSICAL items to Q2a, Q2b, Q2c...
+            physicalItems.forEach((_, i) => { payload[`Q2${getSuffix(i)}`] = getVal(`phy_${i}`); });
+
+            // Map EMOTIONAL items to Q3a, Q3b...
+            emotionalItems.forEach((_, i) => { payload[`Q3${getSuffix(i)}`] = getVal(`emo_${i}`); });
+
+            // Map PRACTICAL items to Q4a, Q4b...
+            practicalItems.forEach((_, i) => { payload[`Q4${getSuffix(i)}`] = getVal(`prac_${i}`); });
+
+            // Map SOCIAL items to Q5a, Q5b...
+            socialItems.forEach((_, i) => { payload[`Q5${getSuffix(i)}`] = getVal(`soc_${i}`); });
+
+            // Map SPIRITUAL items to Q6a, Q6b...
+            spiritualItems.forEach((_, i) => { payload[`Q6${getSuffix(i)}`] = getVal(`spir_${i}`); });
+
+            // Map OTHER text to Q7
+            payload['Q7'] = document.getElementById('other_concerns').value.substring(0, 200);
 
             const qrDiv = document.getElementById("qrcode");
             qrDiv.innerHTML = "";
@@ -270,8 +399,6 @@
             section.scrollIntoView({behavior: 'smooth'});
         }
 
-        // Overwrite printPDF to default window.print since we don't have a background PDF
-        // If you have a specific PDF background, you can uncomment the logic from ipos.html
         function printPDF() {
             window.print();
         }
