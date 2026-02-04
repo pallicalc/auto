@@ -4,55 +4,93 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AKPS Calculator</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
     <style>
-        :root {
-            --primary-blue: #0056b3;
-            --bg-color: #f0f2f5;
-            --card-color: #ffffff;
-            --text-main: #333;
-            --text-muted: #666;
-            --border-radius: 8px;
-            --transition-speed: 0.2s;
-        }
+        /* =========================================
+           1. GLOBAL RESET & LAYOUT (Standard Theme)
+           ========================================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            padding-bottom: 100px; /* Space for sticky footer */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #343a40;
             line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-size: 16px; 
         }
 
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
+        .main-container {
+            flex: 1;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         }
 
-        /* Header */
-        header {
-            text-align: center;
-            margin-bottom: 25px;
-            background: var(--card-color);
-            padding: 20px;
-            border-radius: var(--border-radius);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        /* =========================================
+           2. HEADER & BRANDING
+           ========================================= */
+        .header {
+            margin: -30px -30px 30px -30px; 
+            border-radius: 12px 12px 24px 24px; 
+            padding: 30px; 
+            color: white;
+            position: relative;
+            overflow: hidden;
+            text-align: left; 
         }
 
-        h1 {
-            margin: 0 0 5px 0;
-            color: var(--primary-blue);
-            font-size: 1.5rem;
+        .header-ipos {
+            background: linear-gradient(135deg, #0061f2 0%, #00c6f7 100%);
+            box-shadow: 0 4px 12px rgba(0, 97, 242, 0.2);
         }
 
-        .citation {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 5px;
-        }
+        .header h1 { font-size: 28px; font-weight: 700; margin: 0 0 10px 0; line-height: 1.2; }
+        .header p { font-size: 16px; opacity: 0.95; margin: 0; }
 
-        /* List Styling */
+        .inst-header-container {
+            display: none; align-items: center; gap: 15px; margin-bottom: 20px;
+            padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.3);
+        }
+        .inst-logo {
+            max-height: 60px; max-width: 60px; width: auto;
+            border-radius: 8px; background: white; padding: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .inst-info h3 { font-size: 18px; font-weight: 700; margin: 0; line-height: 1.2; }
+        .inst-info p { font-size: 14px; margin: 2px 0 0 0; opacity: 0.9; }
+
+        /* =========================================
+           3. NAVIGATION & UI
+           ========================================= */
+        .nav-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding: 0 5px;
+        }
+        .nav-link {
+            text-decoration: none; color: #6c757d; font-weight: 600;
+            font-size: 14px; display: flex; align-items: center; gap: 5px;
+        }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 12px 24px; border: none; border-radius: 50px; font-weight: 600;
+            cursor: pointer; text-decoration: none; font-size: 16px;
+        }
+        .btn-reset { background: #6c757d; color: white; }
+
+        /* =========================================
+           4. AKPS SPECIFIC CARDS
+           ========================================= */
         .akps-list {
             list-style: none;
             padding: 0;
@@ -60,245 +98,311 @@
         }
 
         .akps-item {
-            background: var(--card-color);
+            background: #fff;
+            border: 1px solid #eef2f6;
             margin-bottom: 10px;
-            padding: 15px 20px;
-            border-radius: var(--border-radius);
-            border: 2px solid transparent;
+            padding: 15px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all var(--transition-speed);
+            transition: all 0.2s;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: relative;
         }
 
+        /* Hover Effect */
         .akps-item:hover {
-            border-color: #b3d7ff;
+            border-color: #0061f2;
             background-color: #f8fbff;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
         /* Selected State */
         .akps-item.selected {
-            border-color: var(--primary-blue);
-            background-color: #e7f1ff;
-            box-shadow: 0 4px 6px rgba(0,86,179,0.15);
+            border-color: #0061f2;
+            background-color: #e3f2fd;
+            box-shadow: 0 4px 10px rgba(0, 97, 242, 0.15);
         }
 
         .score-badge {
             background-color: #e9ecef;
-            color: var(--text-main);
-            font-weight: bold;
-            font-size: 1.2rem;
-            min-width: 60px;
-            height: 60px;
+            color: #6c757d;
+            font-weight: 800;
+            font-size: 18px;
+            min-width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 20px;
+            margin-right: 15px;
             flex-shrink: 0;
-            transition: background-color var(--transition-speed);
+            transition: all 0.2s;
         }
 
         .akps-item.selected .score-badge {
-            background-color: var(--primary-blue);
+            background-color: #0061f2;
             color: white;
         }
 
         .desc {
             flex-grow: 1;
-            font-size: 1rem;
+            font-size: 15px;
+            color: #495057;
+        }
+        
+        .akps-item.selected .desc {
+            color: #004085;
+            font-weight: 500;
         }
 
-        /* Sticky Footer for Result */
-        .result-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            padding: 15px 20px;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
-            transform: translateY(100%);
-            transition: transform 0.3s ease-out;
+        /* Result Box */
+        .score-box {
+            background: #2c3e50; color: white; padding: 20px; border-radius: 12px;
+            margin-top: 30px; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; bottom: 20px; z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-
-        .result-bar.active {
-            transform: translateY(0);
-        }
-
-        .result-text {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .result-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .result-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary-blue);
-        }
-
-        .reset-btn {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .reset-btn:hover {
-            background: #5a6268;
-        }
-
-        .disclaimer {
+        .score-title { font-size: 14px; opacity: 0.9; text-transform: uppercase; }
+        .score-val { font-size: 32px; font-weight: 800; color: #00c6f7; }
+        
+        /* Footer */
+        .standard-footer {
+            width: 100%;
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 30px 20px;
+            font-family: sans-serif;
+            font-size: 11px;
+            color: #6c757d;
             text-align: center;
-            font-size: 0.75rem;
-            color: #999;
-            margin-top: 30px;
-            padding: 0 20px;
+            margin-top: auto;
         }
+        .footer-inner { max-width: 600px; margin: 0 auto; }
 
-        /* Mobile Optimization */
         @media (max-width: 600px) {
-            .score-badge {
-                min-width: 50px;
-                height: 50px;
-                font-size: 1rem;
-                margin-right: 15px;
-            }
-            .akps-item {
-                padding: 12px 15px;
-            }
-            h1 { font-size: 1.25rem; }
+            .main-container { margin: 0; border-radius: 0; padding: 15px; }
+            .header { margin: -15px -15px 15px -15px; border-radius: 0; }
+            .akps-item { padding: 12px; }
+            .score-badge { min-width: 40px; height: 40px; font-size: 16px; margin-right: 10px; }
+            .desc { font-size: 14px; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>AKPS Calculator</h1>
-        <div style="font-weight: 500; margin-bottom: 5px;">Australia-modified Karnofsky Performance Status</div>
-        <div class="citation">Based on Abernethy et al. (2005) definitions</div>
-    </header>
+    <div class="main-container">
+        <div class="header header-ipos">
+            <div class="inst-header-container" id="inst-header-container">
+                <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display: none;">
+                <div class="inst-info">
+                    <h3 id="inst-name-display"></h3>
+                    <p id="inst-contact-display"></p>
+                </div>
+            </div>
+            
+            <h1>AKPS Calculator</h1>
+            <p>Australia-modified Karnofsky Performance Status</p>
+            <p style="font-size: 12px; opacity: 0.8; margin-top: 5px;">Based on Abernethy et al. (2005) definitions</p>
+        </div>
 
-    <ul class="akps-list" id="akpsList">
-        <li class="akps-item" onclick="selectScore(100)">
-            <div class="score-badge">100</div>
-            <div class="desc">Normal; no complaints; no evidence of disease</div>
-        </li>
-        <li class="akps-item" onclick="selectScore(90)">
-            <div class="score-badge">90</div>
-            <div class="desc">Able to carry on normal activity; minor signs or symptoms of disease</div>
-        </li>
-        <li class="akps-item" onclick="selectScore(80)">
-            <div class="score-badge">80</div>
-            <div class="desc">Normal activity with effort; some signs or symptoms of disease</div>
-        </li>
-        <li class="akps-item" onclick="selectScore(70)">
-            <div class="score-badge">70</div>
-            <div class="desc">Cares for self; unable to carry on normal activity or to do active work</div>
-        </li>
-        <li class="akps-item" onclick="selectScore(60)">
-            <div class="score-badge">60</div>
-            <div class="desc">Requires occasional assistance, but is able to care for most of his personal needs</div>
-        </li>
-        <li class="akps-item" onclick="selectScore(50)">
-            <div class="score-badge">50</div>
-            <div class="desc">Requires considerable assistance and frequent medical care</div>
-        </li>
-        <li class="akps-item" onclick="selectScore(40)">
-            <div class="score-badge">40</div>
-            <div class="desc">In bed more than 50% of the time</div>
-        </li>
-        <li class="akps-item" onclick="selectScore(30)">
-            <div class="score-badge">30</div>
-            <div class="desc">Almost completely bedfast</div>
-        </li>
-        <li class="akps-item" onclick="selectScore(20)">
-            <div class="score-badge">20</div>
-            <div class="desc">Totally bedfast and requiring extensive nursing care by professionals and/or family</div>
-        </li>
-        <li class="akps-item" onclick="selectScore(10)">
-            <div class="score-badge">10</div>
-            <div class="desc">Comatose or barely rousable</div>
-        </li>
-        <li class="akps-item" onclick="selectScore(0)">
-            <div class="score-badge">0</div>
-            <div class="desc">Dead</div>
-        </li>
-    </ul>
+        <div class="nav-bar">
+            <a href="javascript:history.back()" class="nav-link">
+                <span>&#8592; Back</span>
+            </a>
+            <div id="dateDisplay" style="font-size: 14px; color: #6c757d; font-weight: 600;"></div>
+        </div>
 
-    <div class="disclaimer">
-        Disclaimer: This tool is for clinical reference only and should not replace professional medical judgment. 
+        <div id="akpsList" class="akps-list">
+            <div class="akps-item" onclick="selectScore(100)">
+                <div class="score-badge">100</div>
+                <div class="desc">Normal; no complaints; no evidence of disease</div>
+            </div>
+            
+            <div class="akps-item" onclick="selectScore(90)">
+                <div class="score-badge">90</div>
+                <div class="desc">Able to carry on normal activity; minor signs or symptoms of disease</div>
+            </div>
+
+            <div class="akps-item" onclick="selectScore(80)">
+                <div class="score-badge">80</div>
+                <div class="desc">Normal activity with effort; some signs or symptoms of disease</div>
+            </div>
+
+            <div class="akps-item" onclick="selectScore(70)">
+                <div class="score-badge">70</div>
+                <div class="desc">Cares for self; unable to carry on normal activity or to do active work</div>
+            </div>
+
+            <div class="akps-item" onclick="selectScore(60)">
+                <div class="score-badge">60</div>
+                <div class="desc">Requires occasional assistance, but is able to care for most of his personal needs</div>
+            </div>
+
+            <div class="akps-item" onclick="selectScore(50)">
+                <div class="score-badge">50</div>
+                <div class="desc">Requires considerable assistance and frequent medical care</div>
+            </div>
+
+            <div class="akps-item" onclick="selectScore(40)">
+                <div class="score-badge">40</div>
+                <div class="desc">In bed more than 50% of the time</div>
+            </div>
+
+            <div class="akps-item" onclick="selectScore(30)">
+                <div class="score-badge">30</div>
+                <div class="desc">Almost completely bedfast</div>
+            </div>
+
+            <div class="akps-item" onclick="selectScore(20)">
+                <div class="score-badge">20</div>
+                <div class="desc">Totally bedfast and requiring extensive nursing care by professionals and/or family</div>
+            </div>
+
+            <div class="akps-item" onclick="selectScore(10)">
+                <div class="score-badge">10</div>
+                <div class="desc">Comatose or barely rousable</div>
+            </div>
+
+            <div class="akps-item" onclick="selectScore(0)">
+                <div class="score-badge">0</div>
+                <div class="desc">Dead</div>
+            </div>
+        </div>
+
+        <div class="score-box" id="resultBar" style="display: none;">
+            <div>
+                <div class="score-title">Selected Score</div>
+                <div id="interp-display" style="font-size: 13px; color: #e3f2fd;">Status</div>
+            </div>
+            <div class="score-val" id="displayScore">--</div>
+            <button type="button" class="btn btn-reset" style="margin-left: 15px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);" onclick="resetSelection()">Reset</button>
+        </div>
+        
     </div>
-</div>
 
-<div class="result-bar" id="resultBar">
-    <div class="result-text">
-        <span class="result-label">Selected Score</span>
-        <span class="result-value" id="displayScore">--</span>
-    </div>
-    <button class="reset-btn" onclick="resetSelection()">Reset</button>
-</div>
+    <script>
+        // --- 1. FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
+            authDomain: "pallicalc-eabdc.firebaseapp.com",
+            projectId: "pallicalc-eabdc",
+            storageBucket: "pallicalc-eabdc.firebasestorage.app",
+            messagingSenderId: "347532270864",
+            appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
+        };
+        
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
 
-<script>
-    function selectScore(score) {
-        // 1. Remove 'selected' class from all items
-        const items = document.querySelectorAll('.akps-item');
-        items.forEach(item => item.classList.remove('selected'));
+        // --- 2. INIT ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
+            injectStandardFooter();
 
-        // 2. Add 'selected' class to the clicked item
-        // Find the item that contains the clicked score
-        // (We iterate through items to find the one matching the text content of the badge)
-        items.forEach(item => {
-            const badgeValue = item.querySelector('.score-badge').innerText;
-            if (parseInt(badgeValue) === score) {
-                item.classList.add('selected');
-            }
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            
+            if (ref) await loadInstitutionHeader(ref);
+            else loadPersonalHeader();
         });
 
-        // 3. Update the sticky footer
-        const resultBar = document.getElementById('resultBar');
-        const displayScore = document.getElementById('displayScore');
-        
-        displayScore.innerText = score;
-        resultBar.classList.add('active');
+        // --- 3. LOGIC ---
+        function selectScore(score) {
+            // Remove 'selected' from all
+            document.querySelectorAll('.akps-item').forEach(item => item.classList.remove('selected'));
 
-        // Optional: Color code the result text based on severity
-        if(score >= 80) displayScore.style.color = "#28a745"; // Green
-        else if(score >= 50) displayScore.style.color = "#fd7e14"; // Orange
-        else displayScore.style.color = "#dc3545"; // Red
-    }
+            // Find clicked item (hacky but reliable: match text in badge)
+            const badges = document.querySelectorAll('.score-badge');
+            badges.forEach(badge => {
+                if(parseInt(badge.innerText) === score) {
+                    badge.parentElement.classList.add('selected');
+                }
+            });
 
-    function resetSelection() {
-        // Remove highlighting
-        const items = document.querySelectorAll('.akps-item');
-        items.forEach(item => item.classList.remove('selected'));
+            // Update Result Bar
+            const resultBar = document.getElementById('resultBar');
+            const displayScore = document.getElementById('displayScore');
+            const interp = document.getElementById('interp-display');
+            
+            displayScore.innerText = score;
+            
+            // Text color logic
+            if(score >= 70) {
+                displayScore.style.color = "#00c6f7"; // Blue/Teal
+                interp.innerText = "Able to care for self";
+            } else if (score >= 50) {
+                displayScore.style.color = "#fbd38d"; // Yellow/Orange
+                interp.innerText = "Requires assistance";
+            } else {
+                displayScore.style.color = "#feb2b2"; // Red
+                interp.innerText = "Disabled / Bedfast";
+            }
 
-        // Hide result bar
-        document.getElementById('resultBar').classList.remove('active');
-        
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-</script>
+            resultBar.style.display = 'flex';
+        }
 
+        function resetSelection() {
+            document.querySelectorAll('.akps-item').forEach(item => item.classList.remove('selected'));
+            document.getElementById('resultBar').style.display = 'none';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- 4. BRANDING HELPERS ---
+        async function loadInstitutionHeader(instId) {
+            try {
+                if (typeof firebase === 'undefined') return;
+                const db = firebase.firestore();
+                const doc = await db.collection('institutions').doc(instId).get();
+                if (doc.exists && doc.data().status !== 'suspended') { 
+                    applyBranding(normalizeBranding(doc.data())); 
+                }
+            } catch (e) { 
+                const cached = localStorage.getItem('cached_inst_' + instId);
+                if (cached) applyBranding(normalizeBranding(JSON.parse(cached)));
+            }
+        }
+
+        function loadPersonalHeader() {
+            const settingsStr = localStorage.getItem('institutionSettings');
+            if (settingsStr) try { applyBranding(JSON.parse(settingsStr)); } catch (e) {}
+        }
+
+        function normalizeBranding(data) {
+            const logos = data.headerLogos || (data.logo ? [data.logo] : []);
+            return {
+                name: data.headerName || data.name || "",
+                contact: data.headerContact || data.contact || "",
+                logo: logos.length > 0 ? logos[0] : null
+            };
+        }
+
+        function applyBranding({ name, contact, logo }) {
+            if(name) document.getElementById('inst-name-display').textContent = name;
+            if(contact) document.getElementById('inst-contact-display').textContent = contact;
+            if(logo) {
+                const el = document.getElementById('inst-logo-img');
+                const container = document.getElementById('inst-header-container');
+                if(el) { el.src = logo; el.style.display = 'block'; }
+                if(container) container.style.display = 'flex';
+            }
+        }
+
+        function injectStandardFooter() {
+            const existing = document.querySelector('footer');
+            if(existing) existing.remove();
+            document.body.insertAdjacentHTML('beforeend', `
+                <footer class="standard-footer">
+                    <div class="footer-inner">
+                        <p style="margin: 0; font-weight: bold; color: #495057;">&copy; 2026 Alivioscript Solutions</p>
+                        <p style="margin: 2px 0; color: #6c757d;">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+                        <p style="margin: 2px 0; font-weight: bold; color: #dc3545;">For professional use only. Verify all results.</p>
+                    </div>
+                </footer>
+            `);
+        }
+    </script>
 </body>
 </html>

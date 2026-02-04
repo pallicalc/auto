@@ -3,336 +3,473 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RUG-ADL Calculator</title>
+    <title>RDOS Calculator</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --accent-color: #3498db;
-            --bg-color: #f8f9fa;
-            --card-bg: #ffffff;
-            --border-radius: 8px;
-        }
+        /* =========================================
+           1. GLOBAL RESET & LAYOUT (Your CSS)
+           ========================================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            padding-bottom: 120px; /* Space for footer */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #343a40;
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-size: 16px; 
         }
 
-        .container {
+        .main-container {
+            flex: 1;
+            width: 100%;
             max-width: 800px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
+            margin: 20px auto;
             background: white;
-            padding: 20px;
-            border-radius: var(--border-radius);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            border-top: 5px solid var(--accent-color);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         }
 
-        h1 { margin: 0; color: var(--primary-color); }
-        .subtitle { color: #666; font-size: 0.9em; margin-top: 5px; }
-
-        /* Card Styling */
-        .adl-card {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border-left: 5px solid transparent;
-            transition: transform 0.2s;
-        }
-
-        .adl-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .adl-card.completed {
-            border-left-color: var(--accent-color);
-        }
-
-        .category-title {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-
-        .icon { margin-right: 10px; font-size: 1.2em; }
-
-        /* Radio Styling */
-        .option-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .radio-label {
-            display: flex;
-            align-items: flex-start;
-            padding: 10px;
-            border: 1px solid #eee;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .radio-label:hover {
-            background-color: #f1f8ff;
-            border-color: var(--accent-color);
-        }
-
-        input[type="radio"] {
-            margin-top: 4px;
-            margin-right: 12px;
-            transform: scale(1.2);
-        }
-
-        input[type="radio"]:checked + span {
-            font-weight: 600;
-            color: var(--accent-color);
-        }
-
-        /* Sticky Footer */
-        .result-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--primary-color);
+        /* =========================================
+           2. HEADER & BRANDING
+           ========================================= */
+        .header {
+            margin: -30px -30px 30px -30px; 
+            border-radius: 12px 12px 24px 24px; 
+            padding: 30px; 
             color: white;
-            padding: 15px 20px;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
+            position: relative;
+            overflow: hidden;
+            text-align: left; 
         }
 
-        .result-info {
-            display: flex;
-            flex-direction: column;
+        .header-ipos {
+            background: linear-gradient(135deg, #0061f2 0%, #00c6f7 100%);
+            box-shadow: 0 4px 12px rgba(0, 97, 242, 0.2);
         }
 
-        .total-score {
-            font-size: 1.8em;
-            font-weight: bold;
-        }
+        .header h1 { font-size: 28px; font-weight: 700; margin: 0 0 10px 0; line-height: 1.2; }
+        .header p { font-size: 16px; opacity: 0.95; margin: 0; }
 
-        .score-range {
-            font-size: 0.8em;
-            opacity: 0.8;
+        .inst-header-container {
+            display: none; align-items: center; gap: 15px; margin-bottom: 20px;
+            padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.3);
         }
+        .inst-logo {
+            max-height: 60px; max-width: 60px; width: auto;
+            border-radius: 8px; background: white; padding: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .inst-info h3 { font-size: 18px; font-weight: 700; margin: 0; line-height: 1.2; }
+        .inst-info p { font-size: 14px; margin: 2px 0 0 0; opacity: 0.9; }
 
-        button.reset-btn {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.4);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
+        /* =========================================
+           3. NAVIGATION & UI
+           ========================================= */
+        .nav-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding: 0 5px;
         }
+        .nav-link {
+            text-decoration: none; color: #6c757d; font-weight: 600;
+            font-size: 14px; display: flex; align-items: center; gap: 5px;
+        }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 12px 24px; border: none; border-radius: 50px; font-weight: 600;
+            cursor: pointer; text-decoration: none; font-size: 16px;
+        }
+        .btn-buccal { background: linear-gradient(135deg, #0061f2 0%, #00c6f7 100%); color: white; }
+        .btn-reset { background: #6c757d; color: white; }
+
+        /* =========================================
+           4. FORM ELEMENTS
+           ========================================= */
+        .question-card {
+            background: #fff; border-radius: 8px; padding: 15px 20px;
+            margin-bottom: 20px; border: 1px solid #eef2f6;
+        }
+        .q-label { font-weight: 700; color: #2c3e50; margin-bottom: 10px; display: block; font-size: 16px; }
+        .sub-label { display: block; font-weight: 600; font-size: 15px; margin-bottom: 8px; color: #495057; margin-top: 15px; }
+        .helper-text { display: block; font-size: 12px; color: #8898aa; margin-bottom: 10px; font-style: italic;}
+
+        .scale-container { display: flex; justify-content: space-between; gap: 5px; margin: 10px 0; }
+        .scale-opt { flex: 1; text-align: center; position: relative; }
+        .scale-opt input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; left:0; top:0; }
+
+        .scale-opt label {
+            display: flex; flex-direction: column; justify-content: center; height: 55px; /* Slightly taller for RDOS text */
+            background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;
+            color: #6c757d; font-weight: 400; transition: all 0.2s; font-size: 8px;
+        }
+        .scale-opt input:checked + label { background: #e3f2fd; border-color: #0061f2; color: #0061f2; }
         
-        button.reset-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
+        /* Highlight specific for severe items */
+        .scale-opt input[data-severity="high"]:checked + label { background: #fce8e8; border-color: #dc3545; color: #dc3545; }
 
-        .helper-text {
-            font-size: 0.85em;
-            color: #777;
-            margin-left: 28px; /* Align with text */
-            margin-top: -5px;
-            margin-bottom: 5px;
-            display: block;
+        .scale-desc { font-size: 12px; font-weight: 700; margin-top: 0; line-height: 1.2; }
+        .scale-val-tiny { font-size: 9px; opacity: 0.6; margin-top: 2px; }
+
+        .score-box {
+            background: #2c3e50; color: white; padding: 20px; border-radius: 12px;
+            margin-top: 30px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .score-title { font-size: 14px; opacity: 0.9; text-transform: uppercase; }
+        .score-val { font-size: 32px; font-weight: 800; color: #00c6f7; }
+        .score-interp { font-size: 14px; text-align: right; margin-top: 5px; font-weight: 600; color: #e3f2fd; }
+
+        /* =========================================
+           5. FOOTER
+           ========================================= */
+        .standard-footer {
+            width: 100%;
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 30px 20px;
+            font-family: sans-serif;
+            font-size: 11px;
+            color: #6c757d;
+            text-align: center;
+            margin-top: auto;
+        }
+        .footer-inner { max-width: 600px; margin: 0 auto; }
+        
+        @media (max-width: 600px) {
+            .main-container { margin: 0; border-radius: 0; padding: 15px; }
+            .header { margin: -15px -15px 15px -15px; border-radius: 0; }
+            .scale-container { gap: 3px; }
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; }
+            .main-container { box-shadow: none; padding: 0; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>RUG-ADL Calculator</h1>
-        <div class="subtitle">Resource Utilization Groups - Activities of Daily Living</div>
-    </header>
-
-    <form id="rugForm">
-        
-        <div class="adl-card" id="card-bed">
-            <div class="category-title"><span class="icon">🛏️</span> Bed Mobility</div>
-            <div class="option-group">
-                <label class="radio-label">
-                    <input type="radio" name="bed" value="1" onclick="updateScore()">
-                    <span>(1) Independent / Supervision only</span>
-                </label>
-                
-                <label class="radio-label">
-                    <input type="radio" name="bed" value="3" onclick="updateScore()">
-                    <span>(3) Limited Assistance</span>
-                </label>
-                <small class="helper-text">Patient does majority of effort; staff guides limbs or provides non-weight bearing help.</small>
-
-                <label class="radio-label">
-                    <input type="radio" name="bed" value="4" onclick="updateScore()">
-                    <span>(4) Extensive Assistance / Total Dependence (1 Person)</span>
-                </label>
-                <small class="helper-text">Staff performs majority of effort or supports weight.</small>
-
-                <label class="radio-label">
-                    <input type="radio" name="bed" value="5" onclick="updateScore()">
-                    <span>(5) Total Dependence (2+ Persons)</span>
-                </label>
-                <small class="helper-text">Full staff performance requiring two or more people.</small>
+    <div class="main-container">
+        <div class="header header-ipos">
+            <div class="inst-header-container" id="inst-header-container">
+                <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display: none;">
+                <div class="inst-info">
+                    <h3 id="inst-name-display"></h3>
+                    <p id="inst-contact-display"></p>
+                </div>
             </div>
-        </div>
-
-        <div class="adl-card" id="card-toilet">
-            <div class="category-title"><span class="icon">🚽</span> Toileting</div>
-            <div class="option-group">
-                <label class="radio-label">
-                    <input type="radio" name="toilet" value="1" onclick="updateScore()">
-                    <span>(1) Independent / Supervision only</span>
-                </label>
-
-                <label class="radio-label">
-                    <input type="radio" name="toilet" value="3" onclick="updateScore()">
-                    <span>(3) Limited Assistance</span>
-                </label>
-                <small class="helper-text">Patient does majority; staff helps adjust clothes or hygiene.</small>
-
-                <label class="radio-label">
-                    <input type="radio" name="toilet" value="4" onclick="updateScore()">
-                    <span>(4) Extensive Assistance / Total Dependence (1 Person)</span>
-                </label>
-                <small class="helper-text">Staff performs majority of toileting hygiene/tasks.</small>
-
-                <label class="radio-label">
-                    <input type="radio" name="toilet" value="5" onclick="updateScore()">
-                    <span>(5) Total Dependence (2+ Persons)</span>
-                </label>
-                <small class="helper-text">Full performance by others; requires 2+ staff.</small>
-            </div>
-        </div>
-
-        <div class="adl-card" id="card-transfer">
-            <div class="category-title"><span class="icon">♿</span> Transfers</div>
-            <div class="option-group">
-                <label class="radio-label">
-                    <input type="radio" name="transfer" value="1" onclick="updateScore()">
-                    <span>(1) Independent / Supervision only</span>
-                </label>
-
-                <label class="radio-label">
-                    <input type="radio" name="transfer" value="3" onclick="updateScore()">
-                    <span>(3) Limited Assistance</span>
-                </label>
-                <small class="helper-text">Patient does majority; guided maneuvering of limbs.</small>
-
-                <label class="radio-label">
-                    <input type="radio" name="transfer" value="4" onclick="updateScore()">
-                    <span>(4) Extensive Assistance / Total Dependence (1 Person)</span>
-                </label>
-                <small class="helper-text">Staff supports weight; patient cannot transfer alone.</small>
-
-                <label class="radio-label">
-                    <input type="radio" name="transfer" value="5" onclick="updateScore()">
-                    <span>(5) Total Dependence (2+ Persons)</span>
-                </label>
-                <small class="helper-text">Requires mechanical lift or 2+ people.</small>
-            </div>
-        </div>
-
-        <div class="adl-card" id="card-eating">
-            <div class="category-title"><span class="icon">🍽️</span> Eating</div>
-            <div class="option-group">
-                <label class="radio-label">
-                    <input type="radio" name="eating" value="1" onclick="updateScore()">
-                    <span>(1) Independent / Supervision only</span>
-                </label>
-
-                <label class="radio-label">
-                    <input type="radio" name="eating" value="2" onclick="updateScore()">
-                    <span>(2) Limited Assistance</span>
-                </label>
-                <small class="helper-text">Patient does majority; staff helps guide utensil or open containers.</small>
-
-                <label class="radio-label">
-                    <input type="radio" name="eating" value="3" onclick="updateScore()">
-                    <span>(3) Extensive Assistance / Total Dependence</span>
-                </label>
-                <small class="helper-text">Staff feeds patient completely or performs majority of effort (IV/Tube feeding included if performed by nurse).</small>
-            </div>
-        </div>
-
-    </form>
-</div>
-
-<div class="result-bar">
-    <div class="result-info">
-        <span class="score-range">Score Range: 4 - 18</span>
-        <span class="total-score" id="totalScore">Total: --</span>
-    </div>
-    <button class="reset-btn" onclick="resetForm()">Reset</button>
-</div>
-
-<script>
-    function updateScore() {
-        let total = 0;
-        let count = 0;
-
-        // Array of input names and their parent card IDs
-        const categories = [
-            { name: 'bed', id: 'card-bed' },
-            { name: 'toilet', id: 'card-toilet' },
-            { name: 'transfer', id: 'card-transfer' },
-            { name: 'eating', id: 'card-eating' }
-        ];
-
-        categories.forEach(cat => {
-            const radios = document.getElementsByName(cat.name);
-            let selected = false;
-            for (let r of radios) {
-                if (r.checked) {
-                    total += parseInt(r.value);
-                    selected = true;
-                    count++;
-                }
-            }
             
-            // Visual feedback: Mark card as completed
-            const card = document.getElementById(cat.id);
-            if(selected) {
-                card.classList.add('completed');
+            <h1>RDOS Calculator</h1>
+            <p>Respiratory Distress Observation Scale</p>
+            <p style="font-size: 12px; opacity: 0.8; margin-top: 5px;">For patients unable to self-report dyspnea</p>
+        </div>
+
+        <div class="nav-bar no-print">
+            <a href="javascript:history.back()" class="nav-link">
+                <span>&#8592; Back</span>
+            </a>
+            <div id="dateDisplay" style="font-size: 14px; color: #6c757d; font-weight: 600;"></div>
+        </div>
+
+        <form id="rdosForm">
+
+            <div class="question-card">
+                <span class="q-label">1. Heart Rate</span>
+                <div class="scale-container">
+                    <div class="scale-opt">
+                        <input type="radio" name="hr" value="0" checked onchange="calcRDOS()">
+                        <label><span class="scale-desc">&lt; 90</span><span class="scale-val-tiny">bpm</span></label>
+                    </div>
+                    <div class="scale-opt">
+                        <input type="radio" name="hr" value="1" onchange="calcRDOS()">
+                        <label><span class="scale-desc">90 - 109</span><span class="scale-val-tiny">bpm</span></label>
+                    </div>
+                    <div class="scale-opt">
+                        <input type="radio" name="hr" value="2" data-severity="high" onchange="calcRDOS()">
+                        <label><span class="scale-desc">&gt; 109</span><span class="scale-val-tiny">bpm</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <span class="q-label">2. Respiratory Rate</span>
+                <div class="scale-container">
+                    <div class="scale-opt">
+                        <input type="radio" name="rr" value="0" checked onchange="calcRDOS()">
+                        <label><span class="scale-desc">&le; 18</span><span class="scale-val-tiny">breaths/min</span></label>
+                    </div>
+                    <div class="scale-opt">
+                        <input type="radio" name="rr" value="1" onchange="calcRDOS()">
+                        <label><span class="scale-desc">19 - 30</span><span class="scale-val-tiny">breaths/min</span></label>
+                    </div>
+                    <div class="scale-opt">
+                        <input type="radio" name="rr" value="2" data-severity="high" onchange="calcRDOS()">
+                        <label><span class="scale-desc">&gt; 30</span><span class="scale-val-tiny">breaths/min</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <span class="q-label">3. Restlessness</span>
+                <span class="helper-text">Non-purposeful movements</span>
+                <div class="scale-container">
+                    <div class="scale-opt">
+                        <input type="radio" name="restless" value="0" checked onchange="calcRDOS()">
+                        <label><span class="scale-desc">None</span></label>
+                    </div>
+                    <div class="scale-opt">
+                        <input type="radio" name="restless" value="1" onchange="calcRDOS()">
+                        <label><span class="scale-desc">Occasional</span></label>
+                    </div>
+                    <div class="scale-opt">
+                        <input type="radio" name="restless" value="2" data-severity="high" onchange="calcRDOS()">
+                        <label><span class="scale-desc">Frequent</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <span class="q-label">4. Paradoxical Breathing Pattern</span>
+                <span class="helper-text">Abdomen moves in when chest moves out</span>
+                <div class="scale-container">
+                    <div class="scale-opt">
+                        <input type="radio" name="paradox" value="0" checked onchange="calcRDOS()">
+                        <label><span class="scale-desc">No</span></label>
+                    </div>
+                    <div class="scale-opt">
+                        <input type="radio" name="paradox" value="2" data-severity="high" onchange="calcRDOS()">
+                        <label><span class="scale-desc">Yes</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <span class="q-label">5. Accessory Muscle Use</span>
+                <span class="helper-text">Rise of clavicle during inspiration</span>
+                <div class="scale-container">
+                    <div class="scale-opt">
+                        <input type="radio" name="muscle" value="0" checked onchange="calcRDOS()">
+                        <label><span class="scale-desc">None</span></label>
+                    </div>
+                    <div class="scale-opt">
+                        <input type="radio" name="muscle" value="1" onchange="calcRDOS()">
+                        <label><span class="scale-desc">Mild</span></label>
+                    </div>
+                    <div class="scale-opt">
+                        <input type="radio" name="muscle" value="2" data-severity="high" onchange="calcRDOS()">
+                        <label><span class="scale-desc">Severe</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <span class="q-label">6. Grunting at End-Expiration</span>
+                <span class="helper-text">Audible vocalization</span>
+                <div class="scale-container">
+                    <div class="scale-opt">
+                        <input type="radio" name="grunt" value="0" checked onchange="calcRDOS()">
+                        <label><span class="scale-desc">No</span></label>
+                    </div>
+                    <div class="scale-opt">
+                        <input type="radio" name="grunt" value="2" data-severity="high" onchange="calcRDOS()">
+                        <label><span class="scale-desc">Yes</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <span class="q-label">7. Nasal Flaring</span>
+                <span class="helper-text">Involuntary dilation of nostrils</span>
+                <div class="scale-container">
+                    <div class="scale-opt">
+                        <input type="radio" name="nasal" value="0" checked onchange="calcRDOS()">
+                        <label><span class="scale-desc">No</span></label>
+                    </div>
+                    <div class="scale-opt">
+                        <input type="radio" name="nasal" value="2" data-severity="high" onchange="calcRDOS()">
+                        <label><span class="scale-desc">Yes</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <span class="q-label">8. Look of Fear</span>
+                <span class="helper-text">Eyes wide open, facial tension, brow furrowed</span>
+                <div class="scale-container">
+                    <div class="scale-opt">
+                        <input type="radio" name="fear" value="0" checked onchange="calcRDOS()">
+                        <label><span class="scale-desc">No</span></label>
+                    </div>
+                    <div class="scale-opt">
+                        <input type="radio" name="fear" value="2" data-severity="high" onchange="calcRDOS()">
+                        <label><span class="scale-desc">Yes</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="score-box">
+                <div>
+                    <div class="score-title">Total RDOS Score</div>
+                    <div id="interp-display" class="score-interp" style="text-align: left; font-weight: normal; font-size: 13px; color: #81e6d9;">Comfort</div>
+                </div>
+                <div class="score-val" id="total-score-display">0</div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;" class="no-print">
+                 <button type="button" class="btn btn-reset" onclick="resetRDOS()">Reset Form</button>
+            </div>
+
+        </form>
+    </div>
+
+    <script>
+        // --- 1. FIREBASE CONFIG (Matching your diagnostic.js) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
+            authDomain: "pallicalc-eabdc.firebaseapp.com",
+            projectId: "pallicalc-eabdc",
+            storageBucket: "pallicalc-eabdc.firebasestorage.app",
+            messagingSenderId: "347532270864",
+            appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
+        };
+        
+        // Initialize Firebase if not already done
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // --- 2. LOGIC START ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Setup Date
+            const dateDisplay = document.getElementById('dateDisplay');
+            if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
+
+            // Inject Footer
+            injectStandardFooter();
+
+            // Check for Institution ID in URL (Ref) or LocalStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            
+            if (ref) {
+                // Accessed via Shared Link
+                await loadInstitutionHeader(ref);
             } else {
-                card.classList.remove('completed');
+                // Check local storage for previously cached settings (Doctor view)
+                loadPersonalHeader();
             }
+
+            // Run initial calc
+            calcRDOS();
         });
 
-        // Only show total if all 4 are selected
-        const resultDisplay = document.getElementById('totalScore');
-        if (count === 4) {
-            resultDisplay.innerText = "Total: " + total;
-        } else {
-            resultDisplay.innerText = "Total: --";
+        // --- 3. CALCULATION LOGIC ---
+        function calcRDOS() {
+            let total = 0;
+            const radios = document.querySelectorAll('input[type="radio"]:checked');
+            
+            radios.forEach(radio => {
+                total += parseInt(radio.value);
+            });
+
+            const scoreDisplay = document.getElementById('total-score-display');
+            const interpDisplay = document.getElementById('interp-display');
+            const scoreBox = document.querySelector('.score-box');
+
+            scoreDisplay.innerText = total;
+
+            // Interpretation Logic
+            if (total < 3) {
+                interpDisplay.innerText = "Comfort / No Distress";
+                interpDisplay.style.color = "#81e6d9"; // Light Teal
+            } else if (total === 3) {
+                interpDisplay.innerText = "Mild/Moderate Distress";
+                interpDisplay.style.color = "#fbd38d"; // Light Orange
+            } else {
+                interpDisplay.innerText = "Severe Respiratory Distress";
+                interpDisplay.style.color = "#feb2b2"; // Light Red
+            }
         }
-    }
 
-    function resetForm() {
-        document.getElementById('rugForm').reset();
-        document.querySelectorAll('.adl-card').forEach(c => c.classList.remove('completed'));
-        updateScore();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-</script>
+        function resetRDOS() {
+            document.getElementById('rdosForm').reset();
+            calcRDOS();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
+        // --- 4. HEADER & BRANDING LOGIC (Adapted from diagnostic.js) ---
+        async function loadInstitutionHeader(instId) {
+            try {
+                if (typeof firebase === 'undefined') throw new Error("Firebase SDK not loaded");
+                const db = firebase.firestore();
+                
+                // Try Fetch
+                const doc = await db.collection('institutions').doc(instId).get();
+                if (doc.exists) { 
+                    const data = doc.data();
+                    if (data.status === 'suspended') return; 
+
+                    const cleanData = normalizeBranding(data);
+                    applyBranding(cleanData); 
+                }
+            } catch (e) { 
+                console.warn("Fetch failed, checking cache...", e);
+                const cached = localStorage.getItem('cached_inst_' + instId);
+                if (cached) {
+                    applyBranding(normalizeBranding(JSON.parse(cached)));
+                }
+            }
+        }
+
+        function loadPersonalHeader() {
+            const settingsStr = localStorage.getItem('institutionSettings');
+            if (settingsStr) { 
+                try { applyBranding(JSON.parse(settingsStr)); } catch (e) {} 
+            }
+        }
+
+        function normalizeBranding(data) {
+            const logos = data.headerLogos || (data.logo ? [data.logo] : []);
+            return {
+                name: data.headerName || data.name || "",
+                contact: data.headerContact || data.contact || "",
+                logo: logos.length > 0 ? logos[0] : null
+            };
+        }
+
+        function applyBranding({ name, contact, logo }) {
+            if(name) {
+                document.getElementById('inst-name-display').textContent = name;
+                // Add to footer if needed
+            }
+            if(contact) document.getElementById('inst-contact-display').textContent = contact;
+            if(logo) {
+                const el = document.getElementById('inst-logo-img');
+                const container = document.getElementById('inst-header-container');
+                if(el) { el.src = logo; el.style.display = 'block'; }
+                if(container) container.style.display = 'flex';
+            }
+        }
+
+        function injectStandardFooter() {
+            const existing = document.querySelector('footer');
+            if(existing) existing.remove();
+            document.body.insertAdjacentHTML('beforeend', `
+                <footer class="standard-footer">
+                    <div class="footer-inner">
+                        <p style="margin: 0; font-weight: bold; color: #495057;">&copy; 2026 Alivioscript Solutions</p>
+                        <p style="margin: 2px 0; color: #6c757d;">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+                        <p style="margin: 2px 0; font-weight: bold; color: #dc3545;">For professional use only. Verify all results.</p>
+                    </div>
+                </footer>
+            `);
+        }
+    </script>
 </body>
 </html>
