@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLACC Pain Scale Calculator</title>
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* Form Styling */
+        .category {
+            margin-bottom: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .category-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .options {
+            padding: 10px;
+        }
+
+        .radio-group {
+            display: flex;
+            align-items: flex-start;
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .radio-group:last-child {
+            border-bottom: none;
+        }
+
+        .radio-group:hover {
+            background-color: #f9f9f9;
+        }
+
+        input[type="radio"] {
+            margin-top: 6px;
+            margin-right: 15px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        label {
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .score-val {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-right: 5px;
+        }
+
+        /* Results Section */
+        #results-area {
+            background-color: #e3f2fd;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            margin-top: 30px;
+            border: 1px solid #bbdefb;
+        }
+
+        .total-score {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .interpretation {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #444;
+        }
+
+        button.reset-btn {
+            display: block;
+            margin: 20px auto 0;
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        button.reset-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .disclaimer {
+            font-size: 0.75em;
+            color: #888;
+            margin-top: 30px;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            .total-score {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>FLACC Score Calculator</h1>
+        <p class="subtitle">Face, Legs, Activity, Cry, Consolability Scale</p>
+    </header>
+
+    <form id="flaccForm">
+        
+        <div class="category">
+            <div class="category-header">1. Face</div>
+            <div class="options">
+                <div class="radio-group" onclick="selectRadio('face', 0)">
+                    <input type="radio" name="face" id="face0" value="0" checked>
+                    <label for="face0"><span class="score-val">(0)</span> No particular expression or smile.</label>
+                </div>
+                <div class="radio-group" onclick="selectRadio('face', 1)">
+                    <input type="radio" name="face" id="face1" value="1">
+                    <label for="face1"><span class="score-val">(1)</span> Occasional grimace or frown, withdrawn, disinterested.</label>
+                </div>
+                <div class="radio-group" onclick="selectRadio('face', 2)">
+                    <input type="radio" name="face" id="face2" value="2">
+                    <label for="face2"><span class="score-val">(2)</span> Frequent to constant quivering chin, clenched jaw.</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="category">
+            <div class="category-header">2. Legs</div>
+            <div class="options">
+                <div class="radio-group" onclick="selectRadio('legs', 0)">
+                    <input type="radio" name="legs" id="legs0" value="0" checked>
+                    <label for="legs0"><span class="score-val">(0)</span> Normal position or relaxed.</label>
+                </div>
+                <div class="radio-group" onclick="selectRadio('legs', 1)">
+                    <input type="radio" name="legs" id="legs1" value="1">
+                    <label for="legs1"><span class="score-val">(1)</span> Uneasy, restless, tense.</label>
+                </div>
+                <div class="radio-group" onclick="selectRadio('legs', 2)">
+                    <input type="radio" name="legs" id="legs2" value="2">
+                    <label for="legs2"><span class="score-val">(2)</span> Kicking, or legs drawn up.</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="category">
+            <div class="category-header">3. Activity</div>
+            <div class="options">
+                <div class="radio-group" onclick="selectRadio('activity', 0)">
+                    <input type="radio" name="activity" id="activity0" value="0" checked>
+                    <label for="activity0"><span class="score-val">(0)</span> Lying quietly, normal position, moves easily.</label>
+                </div>
+                <div class="radio-group" onclick="selectRadio('activity', 1)">
+                    <input type="radio" name="activity" id="activity1" value="1">
+                    <label for="activity1"><span class="score-val">(1)</span> Squirming, shifting back and forth, tense.</label>
+                </div>
+                <div class="radio-group" onclick="selectRadio('activity', 2)">
+                    <input type="radio" name="activity" id="activity2" value="2">
+                    <label for="activity2"><span class="score-val">(2)</span> Arched, rigid or jerking.</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="category">
+            <div class="category-header">4. Cry</div>
+            <div class="options">
+                <div class="radio-group" onclick="selectRadio('cry', 0)">
+                    <input type="radio" name="cry" id="cry0" value="0" checked>
+                    <label for="cry0"><span class="score-val">(0)</span> No cry (awake or asleep).</label>
+                </div>
+                <div class="radio-group" onclick="selectRadio('cry', 1)">
+                    <input type="radio" name="cry" id="cry1" value="1">
+                    <label for="cry1"><span class="score-val">(1)</span> Moans or whimpers; occasional complaint.</label>
+                </div>
+                <div class="radio-group" onclick="selectRadio('cry', 2)">
+                    <input type="radio" name="cry" id="cry2" value="2">
+                    <label for="cry2"><span class="score-val">(2)</span> Crying steadily, screams or sobs, frequent complaints.</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="category">
+            <div class="category-header">5. Consolability</div>
+            <div class="options">
+                <div class="radio-group" onclick="selectRadio('consolability', 0)">
+                    <input type="radio" name="consolability" id="consolability0" value="0" checked>
+                    <label for="consolability0"><span class="score-val">(0)</span> Content, relaxed.</label>
+                </div>
+                <div class="radio-group" onclick="selectRadio('consolability', 1)">
+                    <input type="radio" name="consolability" id="consolability1" value="1">
+                    <label for="consolability1"><span class="score-val">(1)</span> Reassured by occasional touching, hugging or being talked to; distractible.</label>
+                </div>
+                <div class="radio-group" onclick="selectRadio('consolability', 2)">
+                    <input type="radio" name="consolability" id="consolability2" value="2">
+                    <label for="consolability2"><span class="score-val">(2)</span> Difficult to console or comfort.</label>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+    <div id="results-area">
+        <div>Total FLACC Score</div>
+        <span class="total-score" id="totalScore">0</span>
+        <div class="interpretation" id="interpretation">Relaxed and comfortable</div>
+    </div>
+
+    <button class="reset-btn" onclick="resetForm()">Reset Calculator</button>
+
+    <div class="disclaimer">
+        <strong>Disclaimer:</strong> This tool is for educational and informational purposes only and does not constitute medical advice. Standard interpretation: 0 = Relaxed; 1-3 = Mild discomfort; 4-6 = Moderate pain; 7-10 = Severe discomfort/pain.
+    </div>
+</div>
+
+<script>
+    // Main Calculation Function
+    function calculateFLACC() {
+        let total = 0;
+        
+        // Get values from all radio button groups
+        const groups = ['face', 'legs', 'activity', 'cry', 'consolability'];
+        
+        groups.forEach(group => {
+            const radios = document.getElementsByName(group);
+            for(let radio of radios) {
+                if(radio.checked) {
+                    total += parseInt(radio.value);
+                }
+            }
+        });
+
+        // Update the Display
+        const scoreDisplay = document.getElementById('totalScore');
+        const interpDisplay = document.getElementById('interpretation');
+        
+        scoreDisplay.innerText = total;
+
+        // Interpret the score
+        let text = "";
+        let color = "#333";
+
+        if (total === 0) {
+            text = "Relaxed and comfortable";
+            color = "#28a745"; // Green
+        } else if (total >= 1 && total <= 3) {
+            text = "Mild discomfort";
+            color = "#ffc107"; // Yellow/Orange
+            // Darken yellow for text readability
+            document.getElementById('results-area').style.color = "#333"; 
+        } else if (total >= 4 && total <= 6) {
+            text = "Moderate pain";
+            color = "#fd7e14"; // Orange
+        } else if (total >= 7 && total <= 10) {
+            text = "Severe discomfort or pain";
+            color = "#dc3545"; // Red
+        }
+
+        interpDisplay.innerText = text;
+        interpDisplay.style.color = color;
+    }
+
+    // Function to handle clicking anywhere on the row to select the radio
+    function selectRadio(groupName, value) {
+        // Find the specific radio button
+        const radios = document.getElementsByName(groupName);
+        for(let radio of radios) {
+            if(parseInt(radio.value) === value) {
+                radio.checked = true;
+                break;
+            }
+        }
+        // Trigger calculation immediately
+        calculateFLACC();
+    }
+
+    // Function to reset
+    function resetForm() {
+        document.getElementById('flaccForm').reset();
+        calculateFLACC();
+    }
+
+    // Add event listeners to all radio buttons for instant calculation
+    const allRadios = document.querySelectorAll('input[type="radio"]');
+    allRadios.forEach(radio => {
+        radio.addEventListener('change', calculateFLACC);
+    });
+
+    // Run once on load to ensure state is correct
+    calculateFLACC();
+</script>
+
+</body>
+</html>

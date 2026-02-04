@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AKPS Calculator</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --bg-color: #f0f2f5;
+            --card-color: #ffffff;
+            --text-main: #333;
+            --text-muted: #666;
+            --border-radius: 8px;
+            --transition-speed: 0.2s;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 100px; /* Space for sticky footer */
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            background: var(--card-color);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            margin: 0 0 5px 0;
+            color: var(--primary-blue);
+            font-size: 1.5rem;
+        }
+
+        .citation {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* List Styling */
+        .akps-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .akps-item {
+            background: var(--card-color);
+            margin-bottom: 10px;
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .akps-item:hover {
+            border-color: #b3d7ff;
+            background-color: #f8fbff;
+            transform: translateY(-1px);
+        }
+
+        /* Selected State */
+        .akps-item.selected {
+            border-color: var(--primary-blue);
+            background-color: #e7f1ff;
+            box-shadow: 0 4px 6px rgba(0,86,179,0.15);
+        }
+
+        .score-badge {
+            background-color: #e9ecef;
+            color: var(--text-main);
+            font-weight: bold;
+            font-size: 1.2rem;
+            min-width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            flex-shrink: 0;
+            transition: background-color var(--transition-speed);
+        }
+
+        .akps-item.selected .score-badge {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+
+        .desc {
+            flex-grow: 1;
+            font-size: 1rem;
+        }
+
+        /* Sticky Footer for Result */
+        .result-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+
+        .result-bar.active {
+            transform: translateY(0);
+        }
+
+        .result-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
+
+        .reset-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: #5a6268;
+        }
+
+        .disclaimer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 30px;
+            padding: 0 20px;
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 600px) {
+            .score-badge {
+                min-width: 50px;
+                height: 50px;
+                font-size: 1rem;
+                margin-right: 15px;
+            }
+            .akps-item {
+                padding: 12px 15px;
+            }
+            h1 { font-size: 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>AKPS Calculator</h1>
+        <div style="font-weight: 500; margin-bottom: 5px;">Australia-modified Karnofsky Performance Status</div>
+        <div class="citation">Based on Abernethy et al. (2005) definitions</div>
+    </header>
+
+    <ul class="akps-list" id="akpsList">
+        <li class="akps-item" onclick="selectScore(100)">
+            <div class="score-badge">100</div>
+            <div class="desc">Normal; no complaints; no evidence of disease</div>
+        </li>
+        <li class="akps-item" onclick="selectScore(90)">
+            <div class="score-badge">90</div>
+            <div class="desc">Able to carry on normal activity; minor signs or symptoms of disease</div>
+        </li>
+        <li class="akps-item" onclick="selectScore(80)">
+            <div class="score-badge">80</div>
+            <div class="desc">Normal activity with effort; some signs or symptoms of disease</div>
+        </li>
+        <li class="akps-item" onclick="selectScore(70)">
+            <div class="score-badge">70</div>
+            <div class="desc">Cares for self; unable to carry on normal activity or to do active work</div>
+        </li>
+        <li class="akps-item" onclick="selectScore(60)">
+            <div class="score-badge">60</div>
+            <div class="desc">Requires occasional assistance, but is able to care for most of his personal needs</div>
+        </li>
+        <li class="akps-item" onclick="selectScore(50)">
+            <div class="score-badge">50</div>
+            <div class="desc">Requires considerable assistance and frequent medical care</div>
+        </li>
+        <li class="akps-item" onclick="selectScore(40)">
+            <div class="score-badge">40</div>
+            <div class="desc">In bed more than 50% of the time</div>
+        </li>
+        <li class="akps-item" onclick="selectScore(30)">
+            <div class="score-badge">30</div>
+            <div class="desc">Almost completely bedfast</div>
+        </li>
+        <li class="akps-item" onclick="selectScore(20)">
+            <div class="score-badge">20</div>
+            <div class="desc">Totally bedfast and requiring extensive nursing care by professionals and/or family</div>
+        </li>
+        <li class="akps-item" onclick="selectScore(10)">
+            <div class="score-badge">10</div>
+            <div class="desc">Comatose or barely rousable</div>
+        </li>
+        <li class="akps-item" onclick="selectScore(0)">
+            <div class="score-badge">0</div>
+            <div class="desc">Dead</div>
+        </li>
+    </ul>
+
+    <div class="disclaimer">
+        Disclaimer: This tool is for clinical reference only and should not replace professional medical judgment. 
+    </div>
+</div>
+
+<div class="result-bar" id="resultBar">
+    <div class="result-text">
+        <span class="result-label">Selected Score</span>
+        <span class="result-value" id="displayScore">--</span>
+    </div>
+    <button class="reset-btn" onclick="resetSelection()">Reset</button>
+</div>
+
+<script>
+    function selectScore(score) {
+        // 1. Remove 'selected' class from all items
+        const items = document.querySelectorAll('.akps-item');
+        items.forEach(item => item.classList.remove('selected'));
+
+        // 2. Add 'selected' class to the clicked item
+        // Find the item that contains the clicked score
+        // (We iterate through items to find the one matching the text content of the badge)
+        items.forEach(item => {
+            const badgeValue = item.querySelector('.score-badge').innerText;
+            if (parseInt(badgeValue) === score) {
+                item.classList.add('selected');
+            }
+        });
+
+        // 3. Update the sticky footer
+        const resultBar = document.getElementById('resultBar');
+        const displayScore = document.getElementById('displayScore');
+        
+        displayScore.innerText = score;
+        resultBar.classList.add('active');
+
+        // Optional: Color code the result text based on severity
+        if(score >= 80) displayScore.style.color = "#28a745"; // Green
+        else if(score >= 50) displayScore.style.color = "#fd7e14"; // Orange
+        else displayScore.style.color = "#dc3545"; // Red
+    }
+
+    function resetSelection() {
+        // Remove highlighting
+        const items = document.querySelectorAll('.akps-item');
+        items.forEach(item => item.classList.remove('selected'));
+
+        // Hide result bar
+        document.getElementById('resultBar').classList.remove('active');
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>

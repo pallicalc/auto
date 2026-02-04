@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCCN Distress Thermometer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #004d40;
+            text-align: center;
+        }
+        .description {
+            font-style: italic;
+            background-color: #e0f2f1;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        fieldset {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        legend {
+            font-weight: bold;
+            color: #00796b;
+            padding: 0 5px;
+            font-size: 1.1em;
+        }
+        .instruction {
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: block;
+        }
+        /* Thermometer Scale Styling */
+        .scale-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .scale-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 5px;
+        }
+        .scale-label {
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+        .extreme { color: #d32f2f; font-weight: bold; }
+        .no-distress { color: #388e3c; font-weight: bold; }
+        
+        /* Yes/No Question Styling */
+        .question-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .question-row:last-child {
+            border-bottom: none;
+        }
+        .options {
+            min-width: 120px;
+            display: flex;
+            gap: 15px;
+        }
+        label {
+            cursor: pointer;
+        }
+        
+        /* Other Concerns */
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .char-count {
+            text-align: right;
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        button {
+            background-color: #00796b;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #004d40;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NCCN DISTRESS THERMOMETER</h1>
+    
+    <div class="description">
+        Distress is an unpleasant experience of a mental, physical, social, or spiritual nature. It can affect the way you think, feel, or act. Distress may make it harder to cope with having cancer, its symptoms, or its treatment.
+    </div>
+
+    <form>
+        <fieldset>
+            <legend>Distress Score</legend>
+            <span class="instruction">Please circle the number (0-10) that best describes how much distress you have been experiencing in the past week, including today.</span>
+            
+            <div class="scale-container">
+                <div class="scale-item">
+                    <input type="radio" id="score0" name="distress_score" value="0" required>
+                    <label for="score0">0</label>
+                    <span class="scale-label no-distress">No distress</span>
+                </div>
+                <div class="scale-item"><input type="radio" id="score1" name="distress_score" value="1"><label for="score1">1</label></div>
+                <div class="scale-item"><input type="radio" id="score2" name="distress_score" value="2"><label for="score2">2</label></div>
+                <div class="scale-item"><input type="radio" id="score3" name="distress_score" value="3"><label for="score3">3</label></div>
+                <div class="scale-item"><input type="radio" id="score4" name="distress_score" value="4"><label for="score4">4</label></div>
+                <div class="scale-item"><input type="radio" id="score5" name="distress_score" value="5"><label for="score5">5</label></div>
+                <div class="scale-item"><input type="radio" id="score6" name="distress_score" value="6"><label for="score6">6</label></div>
+                <div class="scale-item"><input type="radio" id="score7" name="distress_score" value="7"><label for="score7">7</label></div>
+                <div class="scale-item"><input type="radio" id="score8" name="distress_score" value="8"><label for="score8">8</label></div>
+                <div class="scale-item"><input type="radio" id="score9" name="distress_score" value="9"><label for="score9">9</label></div>
+                <div class="scale-item">
+                    <input type="radio" id="score10" name="distress_score" value="10">
+                    <label for="score10">10</label>
+                    <span class="scale-label extreme">Extreme distress</span>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="instruction" style="margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 10px;">
+            PROBLEM LIST: Have you had concerns about any of the items below in the past week, including today?
+        </div>
+
+        <fieldset>
+            <legend>Physical Concerns</legend>
+            <div class="question-row"><span>Pain</span><div class="options"><label><input type="radio" name="pain" value="yes"> Yes</label><label><input type="radio" name="pain" value="no"> No</label></div></div>
+            <div class="question-row"><span>Sleep</span><div class="options"><label><input type="radio" name="sleep" value="yes"> Yes</label><label><input type="radio" name="sleep" value="no"> No</label></div></div>
+            <div class="question-row"><span>Fatigue</span><div class="options"><label><input type="radio" name="fatigue" value="yes"> Yes</label><label><input type="radio" name="fatigue" value="no"> No</label></div></div>
+            <div class="question-row"><span>Tobacco use</span><div class="options"><label><input type="radio" name="tobacco" value="yes"> Yes</label><label><input type="radio" name="tobacco" value="no"> No</label></div></div>
+            <div class="question-row"><span>Substance use</span><div class="options"><label><input type="radio" name="substance" value="yes"> Yes</label><label><input type="radio" name="substance" value="no"> No</label></div></div>
+            <div class="question-row"><span>Memory or concentration</span><div class="options"><label><input type="radio" name="memory" value="yes"> Yes</label><label><input type="radio" name="memory" value="no"> No</label></div></div>
+            <div class="question-row"><span>Sexual health</span><div class="options"><label><input type="radio" name="sexual_health" value="yes"> Yes</label><label><input type="radio" name="sexual_health" value="no"> No</label></div></div>
+            <div class="question-row"><span>Changes in eating</span><div class="options"><label><input type="radio" name="eating" value="yes"> Yes</label><label><input type="radio" name="eating" value="no"> No</label></div></div>
+            <div class="question-row"><span>Loss or change of physical abilities</span><div class="options"><label><input type="radio" name="physical_abilities" value="yes"> Yes</label><label><input type="radio" name="physical_abilities" value="no"> No</label></div></div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Emotional Concerns</legend>
+            <div class="question-row"><span>Worry or anxiety</span><div class="options"><label><input type="radio" name="anxiety" value="yes"> Yes</label><label><input type="radio" name="anxiety" value="no"> No</label></div></div>
+            <div class="question-row"><span>Sadness or depression</span><div class="options"><label><input type="radio" name="depression" value="yes"> Yes</label><label><input type="radio" name="depression" value="no"> No</label></div></div>
+            <div class="question-row"><span>Loss of interest or enjoyment</span><div class="options"><label><input type="radio" name="interest" value="yes"> Yes</label><label><input type="radio" name="interest" value="no"> No</label></div></div>
+            <div class="question-row"><span>Grief or loss</span><div class="options"><label><input type="radio" name="grief" value="yes"> Yes</label><label><input type="radio" name="grief" value="no"> No</label></div></div>
+            <div class="question-row"><span>Fear</span><div class="options"><label><input type="radio" name="fear" value="yes"> Yes</label><label><input type="radio" name="fear" value="no"> No</label></div></div>
+            <div class="question-row"><span>Loneliness</span><div class="options"><label><input type="radio" name="loneliness" value="yes"> Yes</label><label><input type="radio" name="loneliness" value="no"> No</label></div></div>
+            <div class="question-row"><span>Anger</span><div class="options"><label><input type="radio" name="anger" value="yes"> Yes</label><label><input type="radio" name="anger" value="no"> No</label></div></div>
+            <div class="question-row"><span>Changes in appearance</span><div class="options"><label><input type="radio" name="appearance" value="yes"> Yes</label><label><input type="radio" name="appearance" value="no"> No</label></div></div>
+            <div class="question-row"><span>Feelings of worthlessness or being a burden</span><div class="options"><label><input type="radio" name="worthlessness" value="yes"> Yes</label><label><input type="radio" name="worthlessness" value="no"> No</label></div></div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Practical Concerns</legend>
+            <div class="question-row"><span>Taking care of myself</span><div class="options"><label><input type="radio" name="self_care" value="yes"> Yes</label><label><input type="radio" name="self_care" value="no"> No</label></div></div>
+            <div class="question-row"><span>Taking care of others</span><div class="options"><label><input type="radio" name="care_others" value="yes"> Yes</label><label><input type="radio" name="care_others" value="no"> No</label></div></div>
+            <div class="question-row"><span>Safety</span><div class="options"><label><input type="radio" name="safety" value="yes"> Yes</label><label><input type="radio" name="safety" value="no"> No</label></div></div>
+            <div class="question-row"><span>Work</span><div class="options"><label><input type="radio" name="work" value="yes"> Yes</label><label><input type="radio" name="work" value="no"> No</label></div></div>
+            <div class="question-row"><span>School</span><div class="options"><label><input type="radio" name="school" value="yes"> Yes</label><label><input type="radio" name="school" value="no"> No</label></div></div>
+            <div class="question-row"><span>Housing/Utilities</span><div class="options"><label><input type="radio" name="housing" value="yes"> Yes</label><label><input type="radio" name="housing" value="no"> No</label></div></div>
+            <div class="question-row"><span>Finances</span><div class="options"><label><input type="radio" name="finances" value="yes"> Yes</label><label><input type="radio" name="finances" value="no"> No</label></div></div>
+            <div class="question-row"><span>Insurance</span><div class="options"><label><input type="radio" name="insurance" value="yes"> Yes</label><label><input type="radio" name="insurance" value="no"> No</label></div></div>
+            <div class="question-row"><span>Transportation</span><div class="options"><label><input type="radio" name="transportation" value="yes"> Yes</label><label><input type="radio" name="transportation" value="no"> No</label></div></div>
+            <div class="question-row"><span>Child care</span><div class="options"><label><input type="radio" name="child_care" value="yes"> Yes</label><label><input type="radio" name="child_care" value="no"> No</label></div></div>
+            <div class="question-row"><span>Having enough food</span><div class="options"><label><input type="radio" name="food" value="yes"> Yes</label><label><input type="radio" name="food" value="no"> No</label></div></div>
+            <div class="question-row"><span>Access to medicine</span><div class="options"><label><input type="radio" name="medicine" value="yes"> Yes</label><label><input type="radio" name="medicine" value="no"> No</label></div></div>
+            <div class="question-row"><span>Treatment decisions</span><div class="options"><label><input type="radio" name="treatment_decisions" value="yes"> Yes</label><label><input type="radio" name="treatment_decisions" value="no"> No</label></div></div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Social Concerns</legend>
+            <div class="question-row"><span>Relationship with spouse or partner</span><div class="options"><label><input type="radio" name="spouse" value="yes"> Yes</label><label><input type="radio" name="spouse" value="no"> No</label></div></div>
+            <div class="question-row"><span>Relationship with children</span><div class="options"><label><input type="radio" name="children" value="yes"> Yes</label><label><input type="radio" name="children" value="no"> No</label></div></div>
+            <div class="question-row"><span>Relationship with family members</span><div class="options"><label><input type="radio" name="family" value="yes"> Yes</label><label><input type="radio" name="family" value="no"> No</label></div></div>
+            <div class="question-row"><span>Relationship with friends or coworkers</span><div class="options"><label><input type="radio" name="friends" value="yes"> Yes</label><label><input type="radio" name="friends" value="no"> No</label></div></div>
+            <div class="question-row"><span>Communication with health care team</span><div class="options"><label><input type="radio" name="healthcare_team" value="yes"> Yes</label><label><input type="radio" name="healthcare_team" value="no"> No</label></div></div>
+            <div class="question-row"><span>Ability to have children</span><div class="options"><label><input type="radio" name="fertility" value="yes"> Yes</label><label><input type="radio" name="fertility" value="no"> No</label></div></div>
+            <div class="question-row"><span>Prejudice or discrimination</span><div class="options"><label><input type="radio" name="discrimination" value="yes"> Yes</label><label><input type="radio" name="discrimination" value="no"> No</label></div></div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Spiritual or Religious Concerns</legend>
+            <div class="question-row"><span>Sense of meaning or purpose</span><div class="options"><label><input type="radio" name="meaning" value="yes"> Yes</label><label><input type="radio" name="meaning" value="no"> No</label></div></div>
+            <div class="question-row"><span>Changes in faith or beliefs</span><div class="options"><label><input type="radio" name="faith" value="yes"> Yes</label><label><input type="radio" name="faith" value="no"> No</label></div></div>
+            <div class="question-row"><span>Death, dying, or afterlife</span><div class="options"><label><input type="radio" name="death" value="yes"> Yes</label><label><input type="radio" name="death" value="no"> No</label></div></div>
+            <div class="question-row"><span>Conflict between beliefs and cancer treatments</span><div class="options"><label><input type="radio" name="belief_conflict" value="yes"> Yes</label><label><input type="radio" name="belief_conflict" value="no"> No</label></div></div>
+            <div class="question-row"><span>Relationship with the sacred</span><div class="options"><label><input type="radio" name="sacred" value="yes"> Yes</label><label><input type="radio" name="sacred" value="no"> No</label></div></div>
+            <div class="question-row"><span>Ritual or dietary needs</span><div class="options"><label><input type="radio" name="rituals" value="yes"> Yes</label><label><input type="radio" name="rituals" value="no"> No</label></div></div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Other Concerns</legend>
+            <label for="other_concerns">Other Concerns:</label>
+            <textarea id="other_concerns" name="other_concerns" rows="4" maxlength="200" placeholder="Please describe any other concerns..."></textarea>
+            <div class="char-count">Max 200 characters</div>
+        </fieldset>
+
+        <button type="submit">Submit Assessment</button>
+    </form>
+</div>
+
+<script>
+    // Optional script to show character count dynamically
+    const textArea = document.getElementById('other_concerns');
+    const charCountDisplay = document.querySelector('.char-count');
+    
+    textArea.addEventListener('input', function() {
+        const currentLength = this.value.length;
+        charCountDisplay.textContent = `${currentLength} / 200 characters used`;
+    });
+</script>
+
+</body>
+</html>
