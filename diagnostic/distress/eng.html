@@ -20,7 +20,7 @@
     <script src="../diagnostic.js"></script>
 
     <style>
-        /* --- CUSTOM STYLES FOR THERMOMETER LAYOUT --- */
+        /* --- THERMOMETER LAYOUT --- */
         .thermo-wrapper {
             display: flex;
             justify-content: center;
@@ -30,7 +30,6 @@
             min-height: 450px;
         }
 
-        /* Left Column: The Scale */
         .scale-column {
             display: flex;
             flex-direction: column;
@@ -48,16 +47,8 @@
             height: 35px;
         }
 
-        .scale-row label {
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        .scale-row input[type="radio"] {
-            transform: scale(1.5);
-            margin: 0;
-            cursor: pointer;
-        }
+        .scale-row label { font-size: 18px; cursor: pointer; }
+        .scale-row input[type="radio"] { transform: scale(1.5); margin: 0; cursor: pointer; }
 
         .label-text {
             font-size: 14px;
@@ -69,7 +60,6 @@
         .text-extreme { color: #d32f2f; font-weight: 800; }
         .text-none { color: #2e7d32; font-weight: 800; }
 
-        /* Right Column: The Image */
         .image-column {
             display: flex;
             align-items: center;
@@ -83,7 +73,7 @@
             object-fit: contain;
         }
 
-        /* --- STYLES FOR YES/NO PROBLEM LIST --- */
+        /* --- UPDATED YES/NO LIST STYLING --- */
         .section-header { 
             background: #f8f9fa; 
             padding: 10px 15px; 
@@ -98,7 +88,7 @@
         .yes-no-row { 
             display: flex; 
             justify-content: space-between; 
-            align-items: center; 
+            align-items: center; /* Centers items vertically if text wraps */
             padding: 12px 0; 
             border-bottom: 1px solid #f0f0f0; 
         }
@@ -109,12 +99,16 @@
             color: #333; 
             flex: 1; 
             padding-right: 10px; 
+            /* Text Wrapping Logic */
+            white-space: normal; 
+            line-height: 1.3;
         }
         
         .yn-options { 
             display: flex; 
-            gap: 8px; 
-            width: 140px; 
+            gap: 5px; 
+            width: 110px; /* Reduced width to give text more space */
+            flex-shrink: 0; /* Prevents buttons from squishing */
         }
 
         .yn-btn {
@@ -130,7 +124,7 @@
             background: #fff; border: 1px solid #dee2e6; border-radius: 6px;
             color: #6c757d; font-weight: 600; font-size: 13px; transition: all 0.2s;
         }
-        /* Color coding: Yes=1 (Redish), No=0 (Greenish) */
+        /* Color coding */
         .yn-btn input:checked + label.lbl-no { background: #e8f5e9; border-color: #2e7d32; color: #2e7d32; } 
         .yn-btn input:checked + label.lbl-yes { background: #ffebee; border-color: #c62828; color: #c62828; }
 
@@ -180,7 +174,6 @@
                 <div class="thermo-wrapper">
                     <div class="scale-column">
                         <div class="label-text text-extreme">Extreme Distress</div>
-                        
                         <div class="scale-row"><label for="ds_10">10</label><input type="radio" name="distress_score" value="10" id="ds_10"></div>
                         <div class="scale-row"><label for="ds_9">9</label><input type="radio" name="distress_score" value="9" id="ds_9"></div>
                         <div class="scale-row"><label for="ds_8">8</label><input type="radio" name="distress_score" value="8" id="ds_8"></div>
@@ -192,10 +185,8 @@
                         <div class="scale-row"><label for="ds_2">2</label><input type="radio" name="distress_score" value="2" id="ds_2"></div>
                         <div class="scale-row"><label for="ds_1">1</label><input type="radio" name="distress_score" value="1" id="ds_1"></div>
                         <div class="scale-row"><label for="ds_0">0</label><input type="radio" name="distress_score" value="0" id="ds_0"></div>
-
                         <div class="label-text text-none">No Distress</div>
                     </div>
-
                     <div class="image-column">
                         <img src="1.jpg" alt="Thermometer Visual" class="thermo-img">
                     </div>
@@ -262,17 +253,17 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURATION: List of Questions mapped to PDF Content ---
+        // --- CONFIGURATION: Full Text Labels from NCCN PDF ---
         
         const physicalItems = [
             {l:'Pain'}, {l:'Sleep'}, {l:'Fatigue'}, {l:'Tobacco use'}, {l:'Substance use'}, 
-            {l:'Memory/Concentration'}, {l:'Sexual health'}, {l:'Changes in eating'}, {l:'Loss of physical abilities'}
+            {l:'Memory or concentration'}, {l:'Sexual health'}, {l:'Changes in eating'}, {l:'Loss or change of physical abilities'}
         ];
         
         const emotionalItems = [
-            {l:'Worry or anxiety'}, {l:'Sadness or depression'}, {l:'Loss of interest'}, 
+            {l:'Worry or anxiety'}, {l:'Sadness or depression'}, {l:'Loss of interest or enjoyment'}, 
             {l:'Grief or loss'}, {l:'Fear'}, {l:'Loneliness'}, 
-            {l:'Anger'}, {l:'Changes in appearance'}, {l:'Worthlessness/Burden'}
+            {l:'Anger'}, {l:'Changes in appearance'}, {l:'Feelings of worthlessness or being a burden'}
         ];
         
         const practicalItems = [
@@ -283,18 +274,19 @@
         ];
         
         const socialItems = [
-            {l:'Rel. w/ spouse/partner'}, {l:'Rel. w/ children'}, {l:'Rel. w/ family'}, 
-            {l:'Rel. w/ friends'}, {l:'Comm. w/ health team'}, {l:'Ability to have children'}, 
-            {l:'Prejudice/Discrimination'}
+            {l:'Relationship with spouse or partner'}, {l:'Relationship with children'}, 
+            {l:'Relationship with family members'}, {l:'Relationship with friends or coworkers'}, 
+            {l:'Communication with health care team'}, {l:'Ability to have children'}, 
+            {l:'Prejudice or discrimination'}
         ];
         
         const spiritualItems = [
-            {l:'Meaning or purpose'}, {l:'Changes in faith/beliefs'}, {l:'Death, dying, afterlife'}, 
-            {l:'Conflict beliefs/treatment'}, {l:'Rel. w/ the sacred'}, {l:'Ritual or dietary needs'}
+            {l:'Sense of meaning or purpose'}, {l:'Changes in faith or beliefs'}, 
+            {l:'Death, dying, or afterlife'}, {l:'Conflict between beliefs and cancer treatments'}, 
+            {l:'Relationship with the sacred'}, {l:'Ritual or dietary needs'}
         ];
 
-        // --- 2. INITIALIZATION: Build the Form Dynamically with Unique IDs ---
-
+        // --- RENDER LOGIC ---
         function renderYesNoItems(items, containerId, prefix) {
             const container = document.getElementById(containerId);
             let html = '';
@@ -329,7 +321,6 @@
             if(form) form.addEventListener('change', calculateTotalScore);
         });
 
-        // --- 3. LOGIC ---
         function calculateTotalScore() {
             let total = 0;
             const scoreEl = document.querySelector('input[name="distress_score"]:checked');
@@ -352,45 +343,30 @@
         }
 
         function generateQR() {
-            // Helper to get value. Returns null if nothing selected, 0 for No, 1 for Yes.
             const getVal = (name) => {
                 const el = document.querySelector(`input[name="${name}"]:checked`);
                 return el ? parseInt(el.value) : null; 
             };
-
-            // Alphabet generator for suffixes (a, b, c...)
             const getSuffix = (i) => String.fromCharCode(97 + i); 
 
-            // Initialize Payload
-            // UPDATED TAG HERE: t: "dt"
+            // Identifier: "dt"
             const payload = {
                 t: "dt", 
                 d: Date.now(),
-                Q1: getVal('distress_score') // Q1 = Score
+                Q1: getVal('distress_score')
             };
 
-            // Map PHYSICAL items to Q2a, Q2b, Q2c...
             physicalItems.forEach((_, i) => { payload[`Q2${getSuffix(i)}`] = getVal(`phy_${i}`); });
-
-            // Map EMOTIONAL items to Q3a, Q3b...
             emotionalItems.forEach((_, i) => { payload[`Q3${getSuffix(i)}`] = getVal(`emo_${i}`); });
-
-            // Map PRACTICAL items to Q4a, Q4b...
             practicalItems.forEach((_, i) => { payload[`Q4${getSuffix(i)}`] = getVal(`prac_${i}`); });
-
-            // Map SOCIAL items to Q5a, Q5b...
             socialItems.forEach((_, i) => { payload[`Q5${getSuffix(i)}`] = getVal(`soc_${i}`); });
-
-            // Map SPIRITUAL items to Q6a, Q6b...
             spiritualItems.forEach((_, i) => { payload[`Q6${getSuffix(i)}`] = getVal(`spir_${i}`); });
 
-            // Map OTHER text to Q7
             payload['Q7'] = document.getElementById('other_concerns').value.substring(0, 200);
 
             const qrDiv = document.getElementById("qrcode");
             qrDiv.innerHTML = "";
             
-            // Generate QR
             const safeData = encodeURIComponent(JSON.stringify(payload));
             new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
 
@@ -399,9 +375,7 @@
             section.scrollIntoView({behavior: 'smooth'});
         }
 
-        function printPDF() {
-            window.print();
-        }
+        function printPDF() { window.print(); }
     </script>
 </body>
 </html>
