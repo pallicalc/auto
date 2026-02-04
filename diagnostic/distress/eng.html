@@ -47,27 +47,65 @@
             margin-bottom: 15px;
             display: block;
         }
-        /* Thermometer Scale Styling */
-        .scale-container {
+        
+        /* --- VERTICAL THERMOMETER STYLING --- */
+        .thermometer-wrapper {
             display: flex;
+            justify-content: center;
+            align-items: stretch;
+            height: 500px; /* Adjust based on the height of your 1.jpg */
+            padding: 20px 0;
+        }
+
+        /* Column for Text Labels (Extreme/No Distress) */
+        .label-column {
+            display: flex;
+            flex-direction: column;
             justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            margin: 20px 0;
+            text-align: right;
+            padding-right: 15px;
+            font-weight: bold;
+            padding-top: 10px;    /* Fine tune alignment with #10 */
+            padding-bottom: 10px; /* Fine tune alignment with #0 */
+        }
+        .extreme-text { color: #d32f2f; }
+        .no-distress-text { color: #388e3c; }
+
+        /* Column for Radio Buttons and Numbers */
+        .scale-column {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Spreads numbers evenly */
+            align-items: flex-end; /* Aligns numbers to the right near the image */
+            padding-right: 10px;
         }
         .scale-item {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            margin: 5px;
+            gap: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            height: 30px; /* Fixed height for consistency */
         }
-        .scale-label {
-            font-size: 0.8em;
-            margin-top: 5px;
+        .scale-item input {
+            transform: scale(1.3); /* Make radio buttons slightly larger */
+            margin: 0;
+            cursor: pointer;
         }
-        .extreme { color: #d32f2f; font-weight: bold; }
-        .no-distress { color: #388e3c; font-weight: bold; }
-        
+
+        /* Column for the Image */
+        .image-column {
+            display: flex;
+            align-items: center;
+        }
+        .thermometer-img {
+            height: 100%;       /* Fills the 500px container */
+            width: auto;        /* Maintains aspect ratio */
+            max-width: 150px;   /* Prevents it from getting too wide */
+            object-fit: contain;
+        }
+        /* --- END THERMOMETER STYLING --- */
+
         /* Yes/No Question Styling */
         .question-row {
             display: flex;
@@ -127,39 +165,44 @@
     <h1>NCCN DISTRESS THERMOMETER</h1>
     
     <div class="description">
-        Distress is an unpleasant experience of a mental, physical, social, or spiritual nature. It can affect the way you think, feel, or act. Distress may make it harder to cope with having cancer, its symptoms, or its treatment.
+        Distress is an unpleasant experience of a mental, physical, social, or spiritual nature. It can affect the way you think, feel, or act. [span_0](start_span)Distress may make it harder to cope with having cancer, its symptoms, or its treatment[span_0](end_span).
     </div>
 
     <form>
         <fieldset>
             <legend>Distress Score</legend>
-            <span class="instruction">Please circle the number (0-10) that best describes how much distress you have been experiencing in the past week, including today.</span>
+            [span_1](start_span)<span class="instruction">Please circle the number (0-10) that best describes how much distress you have been experiencing in the past week, including today[span_1](end_span).</span>
             
-            <div class="scale-container">
-                <div class="scale-item">
-                    <input type="radio" id="score0" name="distress_score" value="0" required>
-                    <label for="score0">0</label>
-                    <span class="scale-label no-distress">No distress</span>
+            <div class="thermometer-wrapper">
+                
+                <div class="label-column">
+                    <div class="extreme-text">Extreme distress</div>
+                    <div class="no-distress-text">No distress</div>
                 </div>
-                <div class="scale-item"><input type="radio" id="score1" name="distress_score" value="1"><label for="score1">1</label></div>
-                <div class="scale-item"><input type="radio" id="score2" name="distress_score" value="2"><label for="score2">2</label></div>
-                <div class="scale-item"><input type="radio" id="score3" name="distress_score" value="3"><label for="score3">3</label></div>
-                <div class="scale-item"><input type="radio" id="score4" name="distress_score" value="4"><label for="score4">4</label></div>
-                <div class="scale-item"><input type="radio" id="score5" name="distress_score" value="5"><label for="score5">5</label></div>
-                <div class="scale-item"><input type="radio" id="score6" name="distress_score" value="6"><label for="score6">6</label></div>
-                <div class="scale-item"><input type="radio" id="score7" name="distress_score" value="7"><label for="score7">7</label></div>
-                <div class="scale-item"><input type="radio" id="score8" name="distress_score" value="8"><label for="score8">8</label></div>
-                <div class="scale-item"><input type="radio" id="score9" name="distress_score" value="9"><label for="score9">9</label></div>
-                <div class="scale-item">
-                    <input type="radio" id="score10" name="distress_score" value="10">
-                    <label for="score10">10</label>
-                    <span class="scale-label extreme">Extreme distress</span>
+
+                <div class="scale-column">
+                    <div class="scale-item"><label for="s10">10</label> <input type="radio" id="s10" name="distress_score" value="10"></div>
+                    <div class="scale-item"><label for="s9">9</label> <input type="radio" id="s9" name="distress_score" value="9"></div>
+                    <div class="scale-item"><label for="s8">8</label> <input type="radio" id="s8" name="distress_score" value="8"></div>
+                    <div class="scale-item"><label for="s7">7</label> <input type="radio" id="s7" name="distress_score" value="7"></div>
+                    <div class="scale-item"><label for="s6">6</label> <input type="radio" id="s6" name="distress_score" value="6"></div>
+                    <div class="scale-item"><label for="s5">5</label> <input type="radio" id="s5" name="distress_score" value="5"></div>
+                    <div class="scale-item"><label for="s4">4</label> <input type="radio" id="s4" name="distress_score" value="4"></div>
+                    <div class="scale-item"><label for="s3">3</label> <input type="radio" id="s3" name="distress_score" value="3"></div>
+                    <div class="scale-item"><label for="s2">2</label> <input type="radio" id="s2" name="distress_score" value="2"></div>
+                    <div class="scale-item"><label for="s1">1</label> <input type="radio" id="s1" name="distress_score" value="1"></div>
+                    <div class="scale-item"><label for="s0">0</label> <input type="radio" id="s0" name="distress_score" value="0" required></div>
                 </div>
+
+                <div class="image-column">
+                    <img src="1.jpg" alt="Thermometer Diagram" class="thermometer-img">
+                </div>
+
             </div>
         </fieldset>
 
         <div class="instruction" style="margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 10px;">
-            PROBLEM LIST: Have you had concerns about any of the items below in the past week, including today?
+            [span_2](start_span)PROBLEM LIST: Have you had concerns about any of the items below in the past week, including today?[span_2](end_span)
         </div>
 
         <fieldset>
@@ -238,13 +281,27 @@
 </div>
 
 <script>
-    // Optional script to show character count dynamically
     const textArea = document.getElementById('other_concerns');
     const charCountDisplay = document.querySelector('.char-count');
+    const maxChars = 200;
+
+    // Initialize the text (Count Up: "0 / 200 characters used")
+    charCountDisplay.textContent = `0 / ${maxChars} characters used`;
     
     textArea.addEventListener('input', function() {
         const currentLength = this.value.length;
-        charCountDisplay.textContent = `${currentLength} / 200 characters used`;
+        
+        // Update the visual text (Counting up)
+        charCountDisplay.textContent = `${currentLength} / ${maxChars} characters used`;
+
+        // Optional: Change color if they hit the max
+        if (currentLength >= maxChars) {
+            charCountDisplay.style.color = 'red';
+            charCountDisplay.style.fontWeight = 'bold';
+        } else {
+            charCountDisplay.style.color = '#666';
+            charCountDisplay.style.fontWeight = 'normal';
+        }
     });
 </script>
 
