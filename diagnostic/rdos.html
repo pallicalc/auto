@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RUG-ADL Calculator</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 120px; /* Space for footer */
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-top: 5px solid var(--accent-color);
+        }
+
+        h1 { margin: 0; color: var(--primary-color); }
+        .subtitle { color: #666; font-size: 0.9em; margin-top: 5px; }
+
+        /* Card Styling */
+        .adl-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 5px solid transparent;
+            transition: transform 0.2s;
+        }
+
+        .adl-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .adl-card.completed {
+            border-left-color: var(--accent-color);
+        }
+
+        .category-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .icon { margin-right: 10px; font-size: 1.2em; }
+
+        /* Radio Styling */
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: flex-start;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .radio-label:hover {
+            background-color: #f1f8ff;
+            border-color: var(--accent-color);
+        }
+
+        input[type="radio"] {
+            margin-top: 4px;
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+
+        input[type="radio"]:checked + span {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        /* Sticky Footer */
+        .result-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .result-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .total-score {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .score-range {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        button.reset-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button.reset-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .helper-text {
+            font-size: 0.85em;
+            color: #777;
+            margin-left: 28px; /* Align with text */
+            margin-top: -5px;
+            margin-bottom: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>RUG-ADL Calculator</h1>
+        <div class="subtitle">Resource Utilization Groups - Activities of Daily Living</div>
+    </header>
+
+    <form id="rugForm">
+        
+        <div class="adl-card" id="card-bed">
+            <div class="category-title"><span class="icon">🛏️</span> Bed Mobility</div>
+            <div class="option-group">
+                <label class="radio-label">
+                    <input type="radio" name="bed" value="1" onclick="updateScore()">
+                    <span>(1) Independent / Supervision only</span>
+                </label>
+                
+                <label class="radio-label">
+                    <input type="radio" name="bed" value="3" onclick="updateScore()">
+                    <span>(3) Limited Assistance</span>
+                </label>
+                <small class="helper-text">Patient does majority of effort; staff guides limbs or provides non-weight bearing help.</small>
+
+                <label class="radio-label">
+                    <input type="radio" name="bed" value="4" onclick="updateScore()">
+                    <span>(4) Extensive Assistance / Total Dependence (1 Person)</span>
+                </label>
+                <small class="helper-text">Staff performs majority of effort or supports weight.</small>
+
+                <label class="radio-label">
+                    <input type="radio" name="bed" value="5" onclick="updateScore()">
+                    <span>(5) Total Dependence (2+ Persons)</span>
+                </label>
+                <small class="helper-text">Full staff performance requiring two or more people.</small>
+            </div>
+        </div>
+
+        <div class="adl-card" id="card-toilet">
+            <div class="category-title"><span class="icon">🚽</span> Toileting</div>
+            <div class="option-group">
+                <label class="radio-label">
+                    <input type="radio" name="toilet" value="1" onclick="updateScore()">
+                    <span>(1) Independent / Supervision only</span>
+                </label>
+
+                <label class="radio-label">
+                    <input type="radio" name="toilet" value="3" onclick="updateScore()">
+                    <span>(3) Limited Assistance</span>
+                </label>
+                <small class="helper-text">Patient does majority; staff helps adjust clothes or hygiene.</small>
+
+                <label class="radio-label">
+                    <input type="radio" name="toilet" value="4" onclick="updateScore()">
+                    <span>(4) Extensive Assistance / Total Dependence (1 Person)</span>
+                </label>
+                <small class="helper-text">Staff performs majority of toileting hygiene/tasks.</small>
+
+                <label class="radio-label">
+                    <input type="radio" name="toilet" value="5" onclick="updateScore()">
+                    <span>(5) Total Dependence (2+ Persons)</span>
+                </label>
+                <small class="helper-text">Full performance by others; requires 2+ staff.</small>
+            </div>
+        </div>
+
+        <div class="adl-card" id="card-transfer">
+            <div class="category-title"><span class="icon">♿</span> Transfers</div>
+            <div class="option-group">
+                <label class="radio-label">
+                    <input type="radio" name="transfer" value="1" onclick="updateScore()">
+                    <span>(1) Independent / Supervision only</span>
+                </label>
+
+                <label class="radio-label">
+                    <input type="radio" name="transfer" value="3" onclick="updateScore()">
+                    <span>(3) Limited Assistance</span>
+                </label>
+                <small class="helper-text">Patient does majority; guided maneuvering of limbs.</small>
+
+                <label class="radio-label">
+                    <input type="radio" name="transfer" value="4" onclick="updateScore()">
+                    <span>(4) Extensive Assistance / Total Dependence (1 Person)</span>
+                </label>
+                <small class="helper-text">Staff supports weight; patient cannot transfer alone.</small>
+
+                <label class="radio-label">
+                    <input type="radio" name="transfer" value="5" onclick="updateScore()">
+                    <span>(5) Total Dependence (2+ Persons)</span>
+                </label>
+                <small class="helper-text">Requires mechanical lift or 2+ people.</small>
+            </div>
+        </div>
+
+        <div class="adl-card" id="card-eating">
+            <div class="category-title"><span class="icon">🍽️</span> Eating</div>
+            <div class="option-group">
+                <label class="radio-label">
+                    <input type="radio" name="eating" value="1" onclick="updateScore()">
+                    <span>(1) Independent / Supervision only</span>
+                </label>
+
+                <label class="radio-label">
+                    <input type="radio" name="eating" value="2" onclick="updateScore()">
+                    <span>(2) Limited Assistance</span>
+                </label>
+                <small class="helper-text">Patient does majority; staff helps guide utensil or open containers.</small>
+
+                <label class="radio-label">
+                    <input type="radio" name="eating" value="3" onclick="updateScore()">
+                    <span>(3) Extensive Assistance / Total Dependence</span>
+                </label>
+                <small class="helper-text">Staff feeds patient completely or performs majority of effort (IV/Tube feeding included if performed by nurse).</small>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<div class="result-bar">
+    <div class="result-info">
+        <span class="score-range">Score Range: 4 - 18</span>
+        <span class="total-score" id="totalScore">Total: --</span>
+    </div>
+    <button class="reset-btn" onclick="resetForm()">Reset</button>
+</div>
+
+<script>
+    function updateScore() {
+        let total = 0;
+        let count = 0;
+
+        // Array of input names and their parent card IDs
+        const categories = [
+            { name: 'bed', id: 'card-bed' },
+            { name: 'toilet', id: 'card-toilet' },
+            { name: 'transfer', id: 'card-transfer' },
+            { name: 'eating', id: 'card-eating' }
+        ];
+
+        categories.forEach(cat => {
+            const radios = document.getElementsByName(cat.name);
+            let selected = false;
+            for (let r of radios) {
+                if (r.checked) {
+                    total += parseInt(r.value);
+                    selected = true;
+                    count++;
+                }
+            }
+            
+            // Visual feedback: Mark card as completed
+            const card = document.getElementById(cat.id);
+            if(selected) {
+                card.classList.add('completed');
+            } else {
+                card.classList.remove('completed');
+            }
+        });
+
+        // Only show total if all 4 are selected
+        const resultDisplay = document.getElementById('totalScore');
+        if (count === 4) {
+            resultDisplay.innerText = "Total: " + total;
+        } else {
+            resultDisplay.innerText = "Total: --";
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('rugForm').reset();
+        document.querySelectorAll('.adl-card').forEach(c => c.classList.remove('completed'));
+        updateScore();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
