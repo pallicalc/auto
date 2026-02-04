@@ -2,388 +2,510 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HADS Assessment Form</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HADS Assessment | PalliCalc</title>
+    
+    <link rel="stylesheet" href="../diagnostic.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="../diagnostic.js"></script>
+
     <style>
-        :root {
-            --primary-color: #005f73;
-            --bg-color: #f4f7f6;
-            --border-color: #ddd;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-        .subtitle {
-            text-align: center;
-            font-style: italic;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 0.9em;
-        }
-        .instruction {
-            background-color: #e8f4f8;
-            padding: 15px;
-            border-left: 5px solid var(--primary-color);
-            margin-bottom: 30px;
-        }
-        .question-block {
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .question-text {
-            font-weight: bold;
-            font-size: 1.1em;
-            margin-bottom: 10px;
-            display: block;
-        }
-        .options label {
-            display: block;
-            margin: 5px 0;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 4px;
-        }
-        .options label:hover {
-            background-color: #f0f0f0;
-        }
-        input[type="radio"] {
-            margin-right: 10px;
-            transform: scale(1.2);
-        }
+        /* HADS answers are longer text, so we adjust the scale boxes slightly */
+        .scale-desc { font-size: 10px; line-height: 1.1; padding: 0 2px; }
+        .scale-opt label { height: 60px; justify-content: flex-start; padding-top: 8px; }
+        .scale-val-indicator { font-size: 10px; color: #adb5bd; margin-bottom: 2px; }
         
-        /* Buttons */
-        .btn-container {
-            text-align: center;
-            margin-top: 30px;
-        }
-        button {
-            padding: 12px 25px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            margin: 0 10px;
-            transition: background 0.3s;
-        }
-        .calculate-btn {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        .calculate-btn:hover {
-            background-color: #004c5c;
-        }
-        .reset-btn {
-            background-color: #6c757d;
-            color: white;
-        }
-        .reset-btn:hover {
-            background-color: #5a6268;
-        }
-
-        /* Results Section */
-        #results {
-            display: none; /* Hidden by default */
-            margin-top: 30px;
-            padding: 20px;
-            border: 2px solid var(--primary-color);
-            border-radius: 8px;
-            background-color: #fff;
-        }
-        .score-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 1.2em;
-        }
-        .score-val {
-            font-weight: bold;
-        }
-        .interpretation {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #ccc;
-            font-size: 0.9em;
-        }
-        .normal { color: green; }
-        .borderline { color: orange; }
-        .abnormal { color: red; font-weight: bold; }
-
-        @media print {
-            .btn-container { display: none; }
-            body { background: white; }
-            .container { box-shadow: none; border: none; }
-        }
+        /* Split Score Box for A and D */
+        .score-box-split { display: flex; gap: 10px; margin-top: 30px; }
+        .score-card { flex: 1; background: #2c3e50; color: white; padding: 15px; border-radius: 12px; text-align: center; }
+        .score-card h4 { font-size: 12px; text-transform: uppercase; opacity: 0.8; margin-bottom: 5px; }
+        .score-card .val { font-size: 28px; font-weight: 800; color: #00c6f7; }
+        .score-card .severity { font-size: 11px; margin-top: 5px; color: #fff; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; }
+        
+        /* Coloring for severity */
+        .sev-normal { color: #28a745 !important; }
+        .sev-border { color: #ffc107 !important; }
+        .sev-case { color: #dc3545 !important; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Hospital Anxiety and Depression Scale (HADS)</h1>
-    <p class="subtitle">Clinicians use this to determine the levels of anxiety and depression that a patient is experiencing.</p>
-
-    <div class="instruction">
-        <strong>Instructions:</strong> Doctors are aware that emotions play an important part in most illnesses. Read each item and select the reply which comes closest to how you have been feeling in the past week. Don't take too long over your replies: your immediate reaction is usually best.
+    <div id="pdf-loading">
+        <div style="text-align:center">
+            <div style="display:inline-block; width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; font-weight: bold;">Preparing PDF...</p>
+        </div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } #pdf-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; }</style>
     </div>
 
-    <form id="hadsForm">
-
-        <div class="question-block" data-type="A">
-            <span class="question-text">1. I feel tense or 'wound up':</span>
-            <div class="options">
-                <label><input type="radio" name="q1" value="3"> Most of the time</label>
-                <label><input type="radio" name="q1" value="2"> A lot of the time</label>
-                <label><input type="radio" name="q1" value="1"> From time to time, occasionally</label>
-                <label><input type="radio" name="q1" value="0"> Not at all</label>
-            </div>
-        </div>
-
-        <div class="question-block" data-type="D">
-            <span class="question-text">2. I still enjoy the things I used to enjoy:</span>
-            <div class="options">
-                <label><input type="radio" name="q2" value="0"> Definitely as much</label>
-                <label><input type="radio" name="q2" value="1"> Not quite so much</label>
-                <label><input type="radio" name="q2" value="2"> Only a little</label>
-                <label><input type="radio" name="q2" value="3"> Hardly at all</label>
-            </div>
-        </div>
-
-        <div class="question-block" data-type="A">
-            <span class="question-text">3. I get a sort of frightened feeling as if something awful is about to happen:</span>
-            <div class="options">
-                <label><input type="radio" name="q3" value="3"> Very definitely and quite badly</label>
-                <label><input type="radio" name="q3" value="2"> Yes, but not too badly</label>
-                <label><input type="radio" name="q3" value="1"> A little, but it doesn't worry me</label>
-                <label><input type="radio" name="q3" value="0"> Not at all</label>
-            </div>
-        </div>
-
-        <div class="question-block" data-type="D">
-            <span class="question-text">4. I can laugh and see the funny side of things:</span>
-            <div class="options">
-                <label><input type="radio" name="q4" value="0"> As much as I always could</label>
-                <label><input type="radio" name="q4" value="1"> Not quite so much now</label>
-                <label><input type="radio" name="q4" value="2"> Definitely not so much now</label>
-                <label><input type="radio" name="q4" value="3"> Not at all</label>
-            </div>
-        </div>
-
-        <div class="question-block" data-type="A">
-            <span class="question-text">5. Worrying thoughts go through my mind:</span>
-            <div class="options">
-                <label><input type="radio" name="q5" value="3"> A great deal of the time</label>
-                <label><input type="radio" name="q5" value="2"> A lot of the time</label>
-                <label><input type="radio" name="q5" value="1"> From time to time, but not too often</label>
-                <label><input type="radio" name="q5" value="0"> Only occasionally</label>
-            </div>
-        </div>
-
-        <div class="question-block" data-type="D">
-            <span class="question-text">6. I feel cheerful:</span>
-            <div class="options">
-                <label><input type="radio" name="q6" value="3"> Not at all</label>
-                <label><input type="radio" name="q6" value="2"> Not often</label>
-                <label><input type="radio" name="q6" value="1"> Sometimes</label>
-                <label><input type="radio" name="q6" value="0"> Most of the time</label>
-            </div>
-        </div>
-
-        <div class="question-block" data-type="A">
-            <span class="question-text">7. I can sit at ease and feel relaxed:</span>
-            <div class="options">
-                <label><input type="radio" name="q7" value="0"> Definitely</label>
-                <label><input type="radio" name="q7" value="1"> Usually</label>
-                <label><input type="radio" name="q7" value="2"> Not often</label>
-                <label><input type="radio" name="q7" value="3"> Not at all</label>
-            </div>
-        </div>
-
-        <div class="question-block" data-type="D">
-            <span class="question-text">8. I feel as if I am slowed down:</span>
-            <div class="options">
-                <label><input type="radio" name="q8" value="3"> Nearly all the time</label>
-                <label><input type="radio" name="q8" value="2"> Very often</label>
-                <label><input type="radio" name="q8" value="1"> Sometimes</label>
-                <label><input type="radio" name="q8" value="0"> Not at all</label>
-            </div>
-        </div>
-
-        <div class="question-block" data-type="A">
-            <span class="question-text">9. I get a sort of frightened feeling like 'butterflies' in the stomach:</span>
-            <div class="options">
-                <label><input type="radio" name="q9" value="0"> Not at all</label>
-                <label><input type="radio" name="q9" value="1"> Occasionally</label>
-                <label><input type="radio" name="q9" value="2"> Quite often</label>
-                <label><input type="radio" name="q9" value="3"> Very often</label>
-            </div>
-        </div>
-
-        <div class="question-block" data-type="D">
-            <span class="question-text">10. I have lost interest in my appearance:</span>
-            <div class="options">
-                <label><input type="radio" name="q10" value="3"> Definitely</label>
-                <label><input type="radio" name="q10" value="2"> I don't take as much care as I should</label>
-                <label><input type="radio" name="q10" value="1"> I may not take quite as much care</label>
-                <label><input type="radio" name="q10" value="0"> I take just as much care as ever</label>
-            </div>
-        </div>
-
-        <div class="question-block" data-type="A">
-            <span class="question-text">11. I feel restless as if I have to be on the move:</span>
-            <div class="options">
-                <label><input type="radio" name="q11" value="3"> Very much indeed</label>
-                <label><input type="radio" name="q11" value="2"> Quite a lot</label>
-                <label><input type="radio" name="q11" value="1"> Not very much</label>
-                <label><input type="radio" name="q11" value="0"> Not at all</label>
-            </div>
-        </div>
-
-        <div class="question-block" data-type="D">
-            <span class="question-text">12. I look forward with enjoyment to things:</span>
-            <div class="options">
-                <label><input type="radio" name="q12" value="0"> As much as I ever did</label>
-                <label><input type="radio" name="q12" value="1"> Rather less than I used to</label>
-                <label><input type="radio" name="q12" value="2"> Definitely less than I used to</label>
-                <label><input type="radio" name="q12" value="3"> Hardly at all</label>
-            </div>
-        </div>
-
-        <div class="question-block" data-type="A">
-            <span class="question-text">13. I get sudden feelings of panic:</span>
-            <div class="options">
-                <label><input type="radio" name="q13" value="3"> Very often indeed</label>
-                <label><input type="radio" name="q13" value="2"> Quite often</label>
-                <label><input type="radio" name="q13" value="1"> Not very often</label>
-                <label><input type="radio" name="q13" value="0"> Not at all</label>
-            </div>
-        </div>
-
-        <div class="question-block" data-type="D">
-            <span class="question-text">14. I can enjoy a good book or radio or TV program:</span>
-            <div class="options">
-                <label><input type="radio" name="q14" value="0"> Often</label>
-                <label><input type="radio" name="q14" value="1"> Sometimes</label>
-                <label><input type="radio" name="q14" value="2"> Not often</label>
-                <label><input type="radio" name="q14" value="3"> Very seldom</label>
-            </div>
-        </div>
-
-        <div class="btn-container">
-            <button type="button" class="calculate-btn" onclick="calculateScore()">Calculate Score</button>
-            <button type="button" class="reset-btn" onclick="resetForm()">Reset Form</button>
-        </div>
-
-    </form>
-
-    <div id="results">
-        <h2>Assessment Results</h2>
-        <div class="score-row">
-            <span>Anxiety Score (A):</span>
-            <span id="scoreA" class="score-val">0</span>
-        </div>
-        <div class="score-row">
-            <span>Depression Score (D):</span>
-            <span id="scoreD" class="score-val">0</span>
-        </div>
+    <div class="main-container">
         
-        <div class="interpretation">
-            <h3>Interpretation Guide</h3>
-            <p><strong>0 - 7:</strong> Normal</p>
-            <p><strong>8 - 10:</strong> Borderline Abnormal</p>
-            <p><strong>11 - 21:</strong> Abnormal (Case)</p>
-            <br>
-            <p style="font-size: 0.85em; color: #555;"><em>Note: The HADS is a screening tool, not a diagnosis. High scores usually require further evaluation by a qualified professional.</em></p>
+        <div class="header header-ipos">
+            <div id="inst-header-container" class="inst-header-container">
+                <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+                <div class="inst-info"><h3 id="inst-name-display"></h3><p id="inst-contact-display"></p></div>
+            </div>
+            <h1>HADS Assessment</h1>
+            <p>Hospital Anxiety and Depression Scale</p>
         </div>
+
+        <div id="blank-qr-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:20px; border: 2px dashed #ccc; padding: 15px; border-radius: 8px;">
+                <div id="blank-qrcode"></div>
+                <div style="text-align:left;">
+                    <h4 style="margin:0; color:#0061f2;">Scan to Start</h4>
+                    <small>Scan this code to fill the form on your phone.</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-bar no-print">
+            <a href="../../diagnostic.html" class="nav-link" id="backLink"><i class="bi bi-arrow-left"></i> Back</a>
+            <div class="nav-link" style="color:#6c757d; cursor:default;"><i class="bi bi-calendar-event"></i> <span id="dateDisplay"></span></div>
+        </div>
+
+        <form id="hadsForm">
+            
+            <div class="alert alert-info" style="background:#e8f4f8; color:#005f73; border:none; font-size:14px; margin-bottom:20px;">
+                <i class="bi bi-info-circle"></i> Read each item and select the reply which comes closest to how you have been feeling in the <strong>past week</strong>.
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">1. I feel tense or 'wound up':</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q1" value="3" id="q1_3"><label for="q1_3"><span class="scale-val-indicator">3</span><div class="scale-desc">Most of the time</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q1" value="2" id="q1_2"><label for="q1_2"><span class="scale-val-indicator">2</span><div class="scale-desc">A lot of the time</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q1" value="1" id="q1_1"><label for="q1_1"><span class="scale-val-indicator">1</span><div class="scale-desc">From time to time</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q1" value="0" id="q1_0"><label for="q1_0"><span class="scale-val-indicator">0</span><div class="scale-desc">Not at all</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">2. I still enjoy the things I used to enjoy:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q2" value="0" id="q2_0"><label for="q2_0"><span class="scale-val-indicator">0</span><div class="scale-desc">Definitely as much</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q2" value="1" id="q2_1"><label for="q2_1"><span class="scale-val-indicator">1</span><div class="scale-desc">Not quite so much</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q2" value="2" id="q2_2"><label for="q2_2"><span class="scale-val-indicator">2</span><div class="scale-desc">Only a little</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q2" value="3" id="q2_3"><label for="q2_3"><span class="scale-val-indicator">3</span><div class="scale-desc">Hardly at all</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">3. I get a sort of frightened feeling as if something awful is about to happen:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q3" value="3" id="q3_3"><label for="q3_3"><span class="scale-val-indicator">3</span><div class="scale-desc">Very definitely</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q3" value="2" id="q3_2"><label for="q3_2"><span class="scale-val-indicator">2</span><div class="scale-desc">Yes, but not badly</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q3" value="1" id="q3_1"><label for="q3_1"><span class="scale-val-indicator">1</span><div class="scale-desc">A little / doesn't worry</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q3" value="0" id="q3_0"><label for="q3_0"><span class="scale-val-indicator">0</span><div class="scale-desc">Not at all</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">4. I can laugh and see the funny side of things:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q4" value="0" id="q4_0"><label for="q4_0"><span class="scale-val-indicator">0</span><div class="scale-desc">As much as always</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q4" value="1" id="q4_1"><label for="q4_1"><span class="scale-val-indicator">1</span><div class="scale-desc">Not quite so much</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q4" value="2" id="q4_2"><label for="q4_2"><span class="scale-val-indicator">2</span><div class="scale-desc">Definitely not much</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q4" value="3" id="q4_3"><label for="q4_3"><span class="scale-val-indicator">3</span><div class="scale-desc">Not at all</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">5. Worrying thoughts go through my mind:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q5" value="3" id="q5_3"><label for="q5_3"><span class="scale-val-indicator">3</span><div class="scale-desc">A great deal</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q5" value="2" id="q5_2"><label for="q5_2"><span class="scale-val-indicator">2</span><div class="scale-desc">A lot of the time</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q5" value="1" id="q5_1"><label for="q5_1"><span class="scale-val-indicator">1</span><div class="scale-desc">From time to time</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q5" value="0" id="q5_0"><label for="q5_0"><span class="scale-val-indicator">0</span><div class="scale-desc">Only occasionally</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">6. I feel cheerful:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q6" value="3" id="q6_3"><label for="q6_3"><span class="scale-val-indicator">3</span><div class="scale-desc">Not at all</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q6" value="2" id="q6_2"><label for="q6_2"><span class="scale-val-indicator">2</span><div class="scale-desc">Not often</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q6" value="1" id="q6_1"><label for="q6_1"><span class="scale-val-indicator">1</span><div class="scale-desc">Sometimes</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q6" value="0" id="q6_0"><label for="q6_0"><span class="scale-val-indicator">0</span><div class="scale-desc">Most of the time</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">7. I can sit at ease and feel relaxed:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q7" value="0" id="q7_0"><label for="q7_0"><span class="scale-val-indicator">0</span><div class="scale-desc">Definitely</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q7" value="1" id="q7_1"><label for="q7_1"><span class="scale-val-indicator">1</span><div class="scale-desc">Usually</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q7" value="2" id="q7_2"><label for="q7_2"><span class="scale-val-indicator">2</span><div class="scale-desc">Not often</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q7" value="3" id="q7_3"><label for="q7_3"><span class="scale-val-indicator">3</span><div class="scale-desc">Not at all</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">8. I feel as if I am slowed down:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q8" value="3" id="q8_3"><label for="q8_3"><span class="scale-val-indicator">3</span><div class="scale-desc">Nearly all the time</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q8" value="2" id="q8_2"><label for="q8_2"><span class="scale-val-indicator">2</span><div class="scale-desc">Very often</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q8" value="1" id="q8_1"><label for="q8_1"><span class="scale-val-indicator">1</span><div class="scale-desc">Sometimes</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q8" value="0" id="q8_0"><label for="q8_0"><span class="scale-val-indicator">0</span><div class="scale-desc">Not at all</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">9. I get a sort of frightened feeling like 'butterflies' in the stomach:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q9" value="0" id="q9_0"><label for="q9_0"><span class="scale-val-indicator">0</span><div class="scale-desc">Not at all</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q9" value="1" id="q9_1"><label for="q9_1"><span class="scale-val-indicator">1</span><div class="scale-desc">Occasionally</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q9" value="2" id="q9_2"><label for="q9_2"><span class="scale-val-indicator">2</span><div class="scale-desc">Quite often</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q9" value="3" id="q9_3"><label for="q9_3"><span class="scale-val-indicator">3</span><div class="scale-desc">Very often</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">10. I have lost interest in my appearance:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q10" value="3" id="q10_3"><label for="q10_3"><span class="scale-val-indicator">3</span><div class="scale-desc">Definitely</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q10" value="2" id="q10_2"><label for="q10_2"><span class="scale-val-indicator">2</span><div class="scale-desc">Don't take much care</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q10" value="1" id="q10_1"><label for="q10_1"><span class="scale-val-indicator">1</span><div class="scale-desc">Not quite as much</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q10" value="0" id="q10_0"><label for="q10_0"><span class="scale-val-indicator">0</span><div class="scale-desc">Take care as ever</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">11. I feel restless as if I have to be on the move:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q11" value="3" id="q11_3"><label for="q11_3"><span class="scale-val-indicator">3</span><div class="scale-desc">Very much indeed</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q11" value="2" id="q11_2"><label for="q11_2"><span class="scale-val-indicator">2</span><div class="scale-desc">Quite a lot</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q11" value="1" id="q11_1"><label for="q11_1"><span class="scale-val-indicator">1</span><div class="scale-desc">Not very much</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q11" value="0" id="q11_0"><label for="q11_0"><span class="scale-val-indicator">0</span><div class="scale-desc">Not at all</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">12. I look forward with enjoyment to things:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q12" value="0" id="q12_0"><label for="q12_0"><span class="scale-val-indicator">0</span><div class="scale-desc">As much as ever</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q12" value="1" id="q12_1"><label for="q12_1"><span class="scale-val-indicator">1</span><div class="scale-desc">Rather less</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q12" value="2" id="q12_2"><label for="q12_2"><span class="scale-val-indicator">2</span><div class="scale-desc">Definitely less</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q12" value="3" id="q12_3"><label for="q12_3"><span class="scale-val-indicator">3</span><div class="scale-desc">Hardly at all</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">13. I get sudden feelings of panic:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q13" value="3" id="q13_3"><label for="q13_3"><span class="scale-val-indicator">3</span><div class="scale-desc">Very often indeed</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q13" value="2" id="q13_2"><label for="q13_2"><span class="scale-val-indicator">2</span><div class="scale-desc">Quite often</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q13" value="1" id="q13_1"><label for="q13_1"><span class="scale-val-indicator">1</span><div class="scale-desc">Not very often</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q13" value="0" id="q13_0"><label for="q13_0"><span class="scale-val-indicator">0</span><div class="scale-desc">Not at all</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">14. I can enjoy a good book or radio or TV program:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q14" value="0" id="q14_0"><label for="q14_0"><span class="scale-val-indicator">0</span><div class="scale-desc">Often</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q14" value="1" id="q14_1"><label for="q14_1"><span class="scale-val-indicator">1</span><div class="scale-desc">Sometimes</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q14" value="2" id="q14_2"><label for="q14_2"><span class="scale-val-indicator">2</span><div class="scale-desc">Not often</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q14" value="3" id="q14_3"><label for="q14_3"><span class="scale-val-indicator">3</span><div class="scale-desc">Very seldom</div></label></div>
+                </div>
+            </div>
+
+            <div class="score-box-split no-print">
+                <div class="score-card">
+                    <h4>Anxiety (A)</h4>
+                    <div class="val" id="score-a-display">0</div>
+                    <div id="sev-a" class="severity">Normal</div>
+                </div>
+                <div class="score-card">
+                    <h4>Depression (D)</h4>
+                    <div class="val" id="score-d-display">0</div>
+                    <div id="sev-d" class="severity">Normal</div>
+                </div>
+            </div>
+
+            <div id="qr-section">
+                <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:8px; border-radius:6px; margin-bottom:8px; font-size:12px;">
+                    <i class="bi bi-check-circle-fill"></i> <strong>Result Ready!</strong>
+                    <p style="margin:0; font-size:13px;">Show this QR to your doctor.</p>
+                </div>
+                <div id="qrcode-container" style="background:white; padding:8px; border-radius:8px; display:inline-block;">
+                    <div id="qrcode"></div>
+                    <div style="font-size:9px; color:#999; margin-top:4px;">HADS Secure Payload</div>
+                </div>
+            </div>
+
+            <div class="action-buttons no-print" style="margin-top:20px; display:flex; gap:8px; flex-direction:column;">
+                <button type="button" class="btn btn-buccal" onclick="generateQR()" style="width:100%;">
+                    <i class="bi bi-qr-code-scan"></i> Generate Result QR
+                </button>
+                <button type="button" class="btn btn-pdf" onclick="printPDF()" style="width:100%;">
+                    <i class="bi bi-printer"></i> Print Blank Form
+                </button>
+            </div>
+        </form>
+
     </div>
-</div>
 
-<script>
-    function calculateScore() {
-        // Question IDs for Anxiety and Depression
-        const anxietyQs = ['q1', 'q3', 'q5', 'q7', 'q9', 'q11', 'q13'];
-        const depressionQs = ['q2', 'q4', 'q6', 'q8', 'q10', 'q12', 'q14'];
+    <script>
+        // Use existing context logic from your diagnostic.js structure
+        let hadsContext = { mode: 'personal', instId: null };
 
-        let scoreA = 0;
-        let scoreD = 0;
-        let allAnswered = true;
+        document.addEventListener('DOMContentLoaded', async () => {
+            const dateDisplay = document.getElementById('dateDisplay');
+            if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
-        // Calculate Anxiety
-        anxietyQs.forEach(q => {
-            const selected = document.querySelector(`input[name="${q}"]:checked`);
-            if (selected) {
-                scoreA += parseInt(selected.value);
+            const form = document.getElementById('hadsForm');
+            if(form) form.addEventListener('change', calculateHadsScore);
+
+            // Use the same URL params logic as your existing file to handle QR access
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+
+            if (ref) {
+                hadsContext.mode = 'shared'; 
+                hadsContext.instId = ref;
+                window.context = hadsContext; // Expose for PDF
+                await finalizeHadsSetup(ref);
             } else {
-                allAnswered = false;
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        try {
+                            const snap = await db.collection('users').doc(user.uid).get();
+                            if (snap.exists) {
+                                const userData = snap.data();
+                                if (['institutionUser', 'institutionAdmin'].includes(userData.role)) {
+                                    hadsContext.mode = 'institution'; 
+                                    hadsContext.instId = userData.institutionId;
+                                    window.context = hadsContext;
+                                }
+                            }
+                        } catch (e) { console.error("Auth Data Error:", e); }
+                    }
+                    finalizeHadsSetup(hadsContext.instId);
+                });
             }
         });
 
-        // Calculate Depression
-        depressionQs.forEach(q => {
-            const selected = document.querySelector(`input[name="${q}"]:checked`);
-            if (selected) {
-                scoreD += parseInt(selected.value);
-            } else {
-                allAnswered = false;
-            }
-        });
+        async function finalizeHadsSetup(instId) {
+            const blankQrHeader = document.getElementById('blank-qr-header');
+            const backButton = document.getElementById('backLink');
 
-        if (!allAnswered) {
-            alert("Please answer all questions before calculating.");
-            return;
+            if (hadsContext.mode === 'shared') {
+                if(blankQrHeader) blankQrHeader.style.display = 'none';
+                if(backButton) backButton.style.display = 'none';
+            } else {
+                if(blankQrHeader) {
+                    blankQrHeader.style.display = 'block';
+                    generateBlankFormQR(instId);
+                }
+                if(backButton) backButton.style.display = 'inline-flex';
+            }
+
+            // Reuse your existing function in diagnostic.js if available, 
+            // or rely on the logic inside diagnostic.js if it handles generic branding.
+            // Since this script is embedded, we can call functions from diagnostic.js
+            if (typeof loadInstitutionHeader === "function" && instId) {
+                await loadInstitutionHeader(instId);
+            } else if (typeof loadPersonalHeader === "function") {
+                loadPersonalHeader();
+            }
         }
 
-        // Display results
-        const resultBox = document.getElementById('results');
-        const spanA = document.getElementById('scoreA');
-        const spanD = document.getElementById('scoreD');
+        // --- CALCULATE SCORE ---
+        function calculateHadsScore() {
+            let scoreA = 0;
+            let scoreD = 0;
+            
+            // Anxiety Items: 1, 3, 5, 7, 9, 11, 13
+            const aItems = [1, 3, 5, 7, 9, 11, 13];
+            // Depression Items: 2, 4, 6, 8, 10, 12, 14
+            const dItems = [2, 4, 6, 8, 10, 12, 14];
 
-        resultBox.style.display = 'block';
-        spanA.innerText = scoreA + " (" + getSeverity(scoreA) + ")";
-        spanD.innerText = scoreD + " (" + getSeverity(scoreD) + ")";
+            aItems.forEach(i => {
+                const el = document.querySelector(`input[name="q${i}"]:checked`);
+                if(el) scoreA += parseInt(el.value);
+            });
 
-        // Color coding
-        spanA.className = 'score-val ' + getSeverityClass(scoreA);
-        spanD.className = 'score-val ' + getSeverityClass(scoreD);
-        
-        // Scroll to bottom
-        resultBox.scrollIntoView({ behavior: 'smooth' });
-    }
+            dItems.forEach(i => {
+                const el = document.querySelector(`input[name="q${i}"]:checked`);
+                if(el) scoreD += parseInt(el.value);
+            });
 
-    function getSeverity(score) {
-        if (score <= 7) return "Normal";
-        if (score <= 10) return "Borderline";
-        return "Abnormal";
-    }
+            // Update UI
+            document.getElementById('score-a-display').innerText = scoreA;
+            document.getElementById('score-d-display').innerText = scoreD;
 
-    function getSeverityClass(score) {
-        if (score <= 7) return "normal";
-        if (score <= 10) return "borderline";
-        return "abnormal";
-    }
+            // Update Severity Labels
+            updateSeverity('sev-a', scoreA);
+            updateSeverity('sev-d', scoreD);
 
-    function resetForm() {
-        document.getElementById('hadsForm').reset();
-        document.getElementById('results').style.display = 'none';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-</script>
+            return { A: scoreA, D: scoreD };
+        }
 
+        function updateSeverity(elId, score) {
+            const el = document.getElementById(elId);
+            el.classList.remove('sev-normal', 'sev-border', 'sev-case');
+            if (score <= 7) {
+                el.innerText = "Normal";
+                el.classList.add('sev-normal');
+            } else if (score <= 10) {
+                el.innerText = "Borderline";
+                el.classList.add('sev-border');
+            } else {
+                el.innerText = "Abnormal";
+                el.classList.add('sev-case');
+            }
+        }
+
+        // --- GENERATE QR ---
+        function generateQR() {
+            const scores = calculateHadsScore();
+            
+            const payload = {
+                t: "HADS",
+                d: Date.now(),
+                sA: scores.A,
+                sD: scores.D,
+                // Collect individual answers for records if needed
+                q: {}
+            };
+
+            for(let i=1; i<=14; i++) {
+                const el = document.querySelector(`input[name="q${i}"]:checked`);
+                payload.q[`q${i}`] = el ? parseInt(el.value) : null;
+            }
+
+            const qrDiv = document.getElementById("qrcode");
+            qrDiv.innerHTML = "";
+            
+            const safeData = encodeURIComponent(JSON.stringify(payload));
+            new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+
+            const section = document.getElementById('qr-section');
+            section.style.display = 'block';
+            section.scrollIntoView({behavior: 'smooth'});
+        }
+
+        // --- PRINT PDF ---
+        async function printPDF() {
+            const loading = document.getElementById('pdf-loading');
+            loading.style.display = 'flex';
+            
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert("Please allow 'popups' to view the PDF.");
+                loading.style.display = 'none';
+                return;
+            }
+            printWindow.document.write('Please wait, generating PDF...');
+
+            try {
+                // 1. Get Footer Data (Reusing your logic)
+                let footerData = { name: "HADS Assessment", contact: "", logos: [] };
+                if (window.context && window.context.instId) {
+                    const cached = localStorage.getItem('cached_inst_' + window.context.instId);
+                    if (cached) {
+                        const d = JSON.parse(cached);
+                        footerData = { 
+                            name: d.headerName || d.name, 
+                            contact: d.headerContact || d.contact, 
+                            logos: d.headerLogos || (d.logo ? [d.logo] : [])
+                        };
+                    }
+                }
+
+                // 2. Load HADS PDF (You need to ensure 'hads.pdf' exists in your folder)
+                const { PDFDocument, rgb, StandardFonts } = PDFLib;
+                // !!! IMPORTANT: You must upload a blank HADS PDF named 'hads.pdf' to your server !!!
+                const pdfUrl = 'hads.pdf?v=' + Date.now();
+                
+                let existingPdfBytes;
+                try {
+                    existingPdfBytes = await fetch(pdfUrl).then(res => {
+                        if (!res.ok) throw new Error("hads.pdf not found");
+                        return res.arrayBuffer();
+                    });
+                } catch(err) {
+                    // Fallback if file missing: Alert user
+                    alert("Error: 'hads.pdf' file is missing from the server.");
+                    printWindow.close();
+                    loading.style.display = 'none';
+                    return;
+                }
+
+                const pdfDoc = await PDFDocument.load(existingPdfBytes);
+                const newPdf = await PDFDocument.create();
+                
+                const helveticaFont = await newPdf.embedFont(StandardFonts.Helvetica);
+                const helveticaBold = await newPdf.embedFont(StandardFonts.HelveticaBold);
+                const pageIndices = pdfDoc.getPageIndices(); 
+                const embeddedPages = await newPdf.embedPdf(pdfDoc, pageIndices);
+
+                const A4_W = 595.28; 
+                const A4_H = 841.89;
+                const FOOTER_H = 80;
+
+                // 3. Stamp Footer
+                for (const page of embeddedPages) {
+                    const newPage = newPdf.addPage([A4_W, A4_H]);
+                    const scale = Math.min(A4_W / page.width, (A4_H - FOOTER_H) / page.height);
+                    const w = page.width * scale;
+                    const h = page.height * scale;
+                    newPage.drawPage(page, { x: (A4_W - w)/2, y: FOOTER_H, width: w, height: h });
+
+                    const lineY = FOOTER_H - 10;
+                    newPage.drawLine({ start: {x: 30, y: lineY}, end: {x: A4_W-30, y: lineY}, thickness: 0.5, color: rgb(0.6, 0.6, 0.6) });
+
+                    // Logos
+                    let currentX = 30;
+                    if (footerData.logos && footerData.logos.length > 0) {
+                        for (const logoUrl of footerData.logos) {
+                            try {
+                                if (!logoUrl) continue;
+                                const logoBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
+                                let logoImg;
+                                if (logoUrl.toLowerCase().includes('png')) logoImg = await newPdf.embedPng(logoBytes);
+                                else logoImg = await newPdf.embedJpg(logoBytes);
+                                const lScale = 35 / logoImg.height;
+                                const lWidth = logoImg.width * lScale;
+                                newPage.drawImage(logoImg, { x: currentX, y: lineY - 45, width: lWidth, height: 35 });
+                                currentX += lWidth + 15;
+                            } catch (e) {}
+                        }
+                    }
+
+                    // Text
+                    const nameStr = footerData.name || "HADS Assessment";
+                    const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
+                    newPage.drawText(nameStr, { x: A4_W - 30 - nameWidth, y: lineY - 25, size: 12, font: helveticaBold, color: rgb(0.2, 0.2, 0.2) });
+
+                    // Copyright
+                    const copyText = "© 2026 Alivioscript Solutions | PalliCalc™";
+                    const copyWidth = helveticaFont.widthOfTextAtSize(copyText, 8);
+                    newPage.drawText(copyText, { x: (A4_W - copyWidth) / 2, y: 10, size: 8, font: helveticaFont, color: rgb(0.6, 0.6, 0.6) });
+                }
+
+                const pdfBytes = await newPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                printWindow.location.href = URL.createObjectURL(blob);
+
+            } catch (e) {
+                printWindow.close();
+                alert("Error: " + e.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
