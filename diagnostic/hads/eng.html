@@ -16,45 +16,89 @@
     <script src="../diagnostic.js"></script>
 
     <style>
-        /* VERTICAL BUTTON LAYOUT (Mobile Friendly) */
-        .scale-container { display: flex; flex-direction: column; gap: 8px; margin: 15px 0 5px 0; }
-        .scale-opt { flex: none; width: 100%; text-align: left; }
+        /* --- iPad Optimized Styles --- */
         
+        .question-card {
+            padding: 20px; /* More breathing room */
+        }
+
+        .q-label {
+            font-size: 1.1rem; /* Larger question text */
+            margin-bottom: 15px;
+        }
+
+        .scale-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Space between options */
+        }
+
+        /* The clickable row */
         .scale-opt label {
-            display: flex; align-items: center; justify-content: flex-start;
-            min-height: 50px; padding: 12px 15px;
-            background: #fff; border: 1px solid #ced4da; border-radius: 8px;
-            color: #495057; font-weight: 500; font-size: 16px; transition: all 0.2s; 
+            display: flex;
+            flex-direction: row; /* Align horizontal */
+            align-items: center; /* Vertically center */
+            justify-content: flex-start; /* Align Left */
+            
+            width: 100%;
+            padding: 18px 20px; /* Large touch target */
+            
+            background: #fff;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            
+            cursor: pointer;
+            font-size: 18px; /* Bigger text for iPad */
+            font-weight: 500;
+            color: #495057;
+            text-align: left;
+            transition: all 0.2s ease;
         }
 
-        /* Radio Button Circle */
+        /* Hide the actual radio button but keep logic */
+        .scale-opt input[type="radio"] {
+            display: none; 
+        }
+
+        /* Create a custom radio circle on the left */
         .scale-opt label::before {
-            content: ''; display: inline-block; width: 20px; height: 20px;
-            margin-right: 15px; border: 2px solid #adb5bd; border-radius: 50%;
-            flex-shrink: 0; background: white;
+            content: '';
+            display: block;
+            width: 24px;
+            height: 24px;
+            margin-right: 20px; /* Space between circle and text */
+            border: 2px solid #adb5bd;
+            border-radius: 50%;
+            background: white;
+            flex-shrink: 0;
+            transition: all 0.2s;
         }
 
-        /* Checked State */
-        .scale-opt input:checked + label { 
-            background: #e7f1ff; border-color: #0061f2; color: #004085; 
-            box-shadow: 0 2px 4px rgba(0,97,242,0.1);
+        /* ACTIVE STATE (When selected) */
+        .scale-opt input:checked + label {
+            background-color: #e7f1ff; /* Light Blue Background */
+            border-color: #0061f2;     /* Blue Border */
+            color: #004085;            /* Dark Blue Text */
+            box-shadow: 0 4px 12px rgba(0, 97, 242, 0.15);
+            transform: translateY(-1px);
         }
+
+        /* Active Circle */
         .scale-opt input:checked + label::before {
-            background: #0061f2; border-color: #0061f2; box-shadow: inset 0 0 0 4px white;
+            background-color: #0061f2;
+            border-color: #0061f2;
+            box-shadow: inset 0 0 0 5px white; /* Makes it look like a donut */
         }
 
-        .scale-val-indicator { display: none; }
-        
-        /* SCORE BOX */
-        .score-box-split { display: flex; gap: 10px; margin-top: 30px; }
-        .score-card { flex: 1; background: #2c3e50; color: white; padding: 15px; border-radius: 12px; text-align: center; }
-        .score-card h4 { font-size: 12px; text-transform: uppercase; opacity: 0.8; margin-bottom: 5px; }
-        .score-card .val { font-size: 28px; font-weight: 800; color: #00c6f7; }
-        .score-card .severity { font-size: 11px; margin-top: 5px; color: #fff; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; }
-        
-        .sev-normal { color: #28a745 !important; }
-        .sev-border { color: #ffc107 !important; }
-        .sev-case { color: #dc3545 !important; }
+        /* Score Box */
+        .score-box-split { display: flex; gap: 15px; margin-top: 30px; }
+        .score-card { flex: 1; background: #2c3e50; color: white; padding: 20px; border-radius: 12px; text-align: center; }
+        .score-card .val { font-size: 32px; font-weight: 800; color: #00c6f7; }
+        .score-card .severity { font-size: 14px; margin-top: 5px; color: #fff; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 6px; display:inline-block;}
+
+        .sev-normal { background: #28a745 !important; }
+        .sev-border { background: #ffc107 !important; color: #333 !important; }
+        .sev-case { background: #dc3545 !important; }
     </style>
 </head>
 <body>
@@ -85,8 +129,8 @@
         </div>
 
         <form id="hadsForm">
-            <div class="alert alert-info" style="background:#e8f4f8; color:#005f73; border:none; font-size:14px; margin-bottom:20px;">
-                <i class="bi bi-info-circle"></i> Read each item and select the reply which comes closest to how you have been feeling in the <strong>past week</strong>.
+            <div class="alert alert-info" style="background:#e8f4f8; color:#005f73; border:none; font-size:16px; margin-bottom:20px; padding:15px; border-radius:8px;">
+                <i class="bi bi-info-circle-fill"></i> Read each item and tap the reply which comes closest to how you have been feeling in the <strong>past week</strong>.
             </div>
 
             <div class="question-card">
@@ -364,8 +408,6 @@
             const scores = calculateHadsScore();
 
             // 1. Create a Flat Payload (No nested objects)
-            // Note: We use lowercase 'q' keys (q1, q2...) to match generic scanner loops
-            // We format 'score' as a string so the scanner displays both A and D
             const payload = {
                 t: "HADS",
                 d: Date.now(),

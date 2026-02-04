@@ -2,308 +2,279 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NCCN Distress Thermometer</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        .container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #004d40;
-            text-align: center;
-        }
-        .description {
-            font-style: italic;
-            background-color: #e0f2f1;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        fieldset {
-            border: 1px solid #ddd;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-        legend {
-            font-weight: bold;
-            color: #00796b;
-            padding: 0 5px;
-            font-size: 1.1em;
-        }
-        .instruction {
-            font-weight: bold;
-            margin-bottom: 15px;
-            display: block;
-        }
-        
-        /* --- VERTICAL THERMOMETER STYLING --- */
-        .thermometer-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: stretch;
-            height: 500px; /* Adjust based on the height of your 1.jpg */
-            padding: 20px 0;
-        }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Distress Thermometer | PalliCalc</title>
+    
+    <link rel="stylesheet" href="../diagnostic.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-        /* Column for Text Labels (Extreme/No Distress) */
-        .label-column {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            text-align: right;
-            padding-right: 15px;
-            font-weight: bold;
-            padding-top: 10px;    /* Fine tune alignment with #10 */
-            padding-bottom: 10px; /* Fine tune alignment with #0 */
-        }
-        .extreme-text { color: #d32f2f; }
-        .no-distress-text { color: #388e3c; }
-
-        /* Column for Radio Buttons and Numbers */
-        .scale-column {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between; /* Spreads numbers evenly */
-            align-items: flex-end; /* Aligns numbers to the right near the image */
-            padding-right: 10px;
-        }
-        .scale-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1.2em;
-            font-weight: bold;
-            height: 30px; /* Fixed height for consistency */
-        }
-        .scale-item input {
-            transform: scale(1.3); /* Make radio buttons slightly larger */
-            margin: 0;
-            cursor: pointer;
-        }
-
-        /* Column for the Image */
-        .image-column {
-            display: flex;
-            align-items: center;
-        }
-        .thermometer-img {
-            height: 100%;       /* Fills the 500px container */
-            width: auto;        /* Maintains aspect ratio */
-            max-width: 150px;   /* Prevents it from getting too wide */
-            object-fit: contain;
-        }
-        /* --- END THERMOMETER STYLING --- */
-
-        /* Yes/No Question Styling */
-        .question-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .question-row:last-child {
-            border-bottom: none;
-        }
-        .options {
-            min-width: 120px;
-            display: flex;
-            gap: 15px;
-        }
-        label {
-            cursor: pointer;
-        }
-        
-        /* Other Concerns */
-        textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            resize: vertical;
-            font-family: inherit;
-        }
-        .char-count {
-            text-align: right;
-            font-size: 0.8em;
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        button {
-            background-color: #00796b;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            display: block;
-            width: 100%;
-            margin-top: 20px;
-        }
-        button:hover {
-            background-color: #004d40;
-        }
-    </style>
+    <script src="../diagnostic.js"></script>
 </head>
 <body>
 
-<div class="container">
-    <h1>NCCN DISTRESS THERMOMETER</h1>
-    
-    <div class="description">
-        Distress is an unpleasant experience of a mental, physical, social, or spiritual nature. It can affect the way you think, feel, or act. [span_0](start_span)Distress may make it harder to cope with having cancer, its symptoms, or its treatment[span_0](end_span).
+    <div id="pdf-loading">
+        <div style="text-align:center">
+            <div style="display:inline-block; width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; font-weight: bold;">Preparing PDF...</p>
+        </div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } #pdf-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; }</style>
     </div>
 
-    <form>
-        <fieldset>
-            <legend>Distress Score</legend>
-            [span_1](start_span)<span class="instruction">Please circle the number (0-10) that best describes how much distress you have been experiencing in the past week, including today[span_1](end_span).</span>
-            
-            <div class="thermometer-wrapper">
-                
-                <div class="label-column">
-                    <div class="extreme-text">Extreme distress</div>
-                    <div class="no-distress-text">No distress</div>
-                </div>
-
-                <div class="scale-column">
-                    <div class="scale-item"><label for="s10">10</label> <input type="radio" id="s10" name="distress_score" value="10"></div>
-                    <div class="scale-item"><label for="s9">9</label> <input type="radio" id="s9" name="distress_score" value="9"></div>
-                    <div class="scale-item"><label for="s8">8</label> <input type="radio" id="s8" name="distress_score" value="8"></div>
-                    <div class="scale-item"><label for="s7">7</label> <input type="radio" id="s7" name="distress_score" value="7"></div>
-                    <div class="scale-item"><label for="s6">6</label> <input type="radio" id="s6" name="distress_score" value="6"></div>
-                    <div class="scale-item"><label for="s5">5</label> <input type="radio" id="s5" name="distress_score" value="5"></div>
-                    <div class="scale-item"><label for="s4">4</label> <input type="radio" id="s4" name="distress_score" value="4"></div>
-                    <div class="scale-item"><label for="s3">3</label> <input type="radio" id="s3" name="distress_score" value="3"></div>
-                    <div class="scale-item"><label for="s2">2</label> <input type="radio" id="s2" name="distress_score" value="2"></div>
-                    <div class="scale-item"><label for="s1">1</label> <input type="radio" id="s1" name="distress_score" value="1"></div>
-                    <div class="scale-item"><label for="s0">0</label> <input type="radio" id="s0" name="distress_score" value="0" required></div>
-                </div>
-
-                <div class="image-column">
-                    <img src="1.jpg" alt="Thermometer Diagram" class="thermometer-img">
-                </div>
-
+    <div class="main-container">
+        
+        <div class="header header-ipos">
+            <div id="inst-header-container" class="inst-header-container">
+                <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+                <div class="inst-info"><h3 id="inst-name-display"></h3><p id="inst-contact-display"></p></div>
             </div>
-        </fieldset>
-
-        <div class="instruction" style="margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 10px;">
-            [span_2](start_span)PROBLEM LIST: Have you had concerns about any of the items below in the past week, including today?[span_2](end_span)
+            <h1>Distress Thermometer</h1>
+            <p>NCCN Distress Management Screening</p>
         </div>
 
-        <fieldset>
-            <legend>Physical Concerns</legend>
-            <div class="question-row"><span>Pain</span><div class="options"><label><input type="radio" name="pain" value="yes"> Yes</label><label><input type="radio" name="pain" value="no"> No</label></div></div>
-            <div class="question-row"><span>Sleep</span><div class="options"><label><input type="radio" name="sleep" value="yes"> Yes</label><label><input type="radio" name="sleep" value="no"> No</label></div></div>
-            <div class="question-row"><span>Fatigue</span><div class="options"><label><input type="radio" name="fatigue" value="yes"> Yes</label><label><input type="radio" name="fatigue" value="no"> No</label></div></div>
-            <div class="question-row"><span>Tobacco use</span><div class="options"><label><input type="radio" name="tobacco" value="yes"> Yes</label><label><input type="radio" name="tobacco" value="no"> No</label></div></div>
-            <div class="question-row"><span>Substance use</span><div class="options"><label><input type="radio" name="substance" value="yes"> Yes</label><label><input type="radio" name="substance" value="no"> No</label></div></div>
-            <div class="question-row"><span>Memory or concentration</span><div class="options"><label><input type="radio" name="memory" value="yes"> Yes</label><label><input type="radio" name="memory" value="no"> No</label></div></div>
-            <div class="question-row"><span>Sexual health</span><div class="options"><label><input type="radio" name="sexual_health" value="yes"> Yes</label><label><input type="radio" name="sexual_health" value="no"> No</label></div></div>
-            <div class="question-row"><span>Changes in eating</span><div class="options"><label><input type="radio" name="eating" value="yes"> Yes</label><label><input type="radio" name="eating" value="no"> No</label></div></div>
-            <div class="question-row"><span>Loss or change of physical abilities</span><div class="options"><label><input type="radio" name="physical_abilities" value="yes"> Yes</label><label><input type="radio" name="physical_abilities" value="no"> No</label></div></div>
-        </fieldset>
+        <div id="blank-qr-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:20px; border: 2px dashed #ccc; padding: 15px; border-radius: 8px;">
+                <div id="blank-qrcode"></div>
+                <div style="text-align:left;">
+                    <h4 style="margin:0; color:#0061f2;">Scan to Start</h4>
+                    <small>Scan this code to fill the form on your phone.</small>
+                </div>
+            </div>
+        </div>
 
-        <fieldset>
-            <legend>Emotional Concerns</legend>
-            <div class="question-row"><span>Worry or anxiety</span><div class="options"><label><input type="radio" name="anxiety" value="yes"> Yes</label><label><input type="radio" name="anxiety" value="no"> No</label></div></div>
-            <div class="question-row"><span>Sadness or depression</span><div class="options"><label><input type="radio" name="depression" value="yes"> Yes</label><label><input type="radio" name="depression" value="no"> No</label></div></div>
-            <div class="question-row"><span>Loss of interest or enjoyment</span><div class="options"><label><input type="radio" name="interest" value="yes"> Yes</label><label><input type="radio" name="interest" value="no"> No</label></div></div>
-            <div class="question-row"><span>Grief or loss</span><div class="options"><label><input type="radio" name="grief" value="yes"> Yes</label><label><input type="radio" name="grief" value="no"> No</label></div></div>
-            <div class="question-row"><span>Fear</span><div class="options"><label><input type="radio" name="fear" value="yes"> Yes</label><label><input type="radio" name="fear" value="no"> No</label></div></div>
-            <div class="question-row"><span>Loneliness</span><div class="options"><label><input type="radio" name="loneliness" value="yes"> Yes</label><label><input type="radio" name="loneliness" value="no"> No</label></div></div>
-            <div class="question-row"><span>Anger</span><div class="options"><label><input type="radio" name="anger" value="yes"> Yes</label><label><input type="radio" name="anger" value="no"> No</label></div></div>
-            <div class="question-row"><span>Changes in appearance</span><div class="options"><label><input type="radio" name="appearance" value="yes"> Yes</label><label><input type="radio" name="appearance" value="no"> No</label></div></div>
-            <div class="question-row"><span>Feelings of worthlessness or being a burden</span><div class="options"><label><input type="radio" name="worthlessness" value="yes"> Yes</label><label><input type="radio" name="worthlessness" value="no"> No</label></div></div>
-        </fieldset>
+        <div class="nav-bar no-print">
+            <a href="../../diagnostic.html" class="nav-link" id="backLink"><i class="bi bi-arrow-left"></i> Back</a>
+            <div class="nav-link" style="color:#6c757d; cursor:default;"><i class="bi bi-calendar-event"></i> <span id="dateDisplay"></span></div>
+        </div>
 
-        <fieldset>
-            <legend>Practical Concerns</legend>
-            <div class="question-row"><span>Taking care of myself</span><div class="options"><label><input type="radio" name="self_care" value="yes"> Yes</label><label><input type="radio" name="self_care" value="no"> No</label></div></div>
-            <div class="question-row"><span>Taking care of others</span><div class="options"><label><input type="radio" name="care_others" value="yes"> Yes</label><label><input type="radio" name="care_others" value="no"> No</label></div></div>
-            <div class="question-row"><span>Safety</span><div class="options"><label><input type="radio" name="safety" value="yes"> Yes</label><label><input type="radio" name="safety" value="no"> No</label></div></div>
-            <div class="question-row"><span>Work</span><div class="options"><label><input type="radio" name="work" value="yes"> Yes</label><label><input type="radio" name="work" value="no"> No</label></div></div>
-            <div class="question-row"><span>School</span><div class="options"><label><input type="radio" name="school" value="yes"> Yes</label><label><input type="radio" name="school" value="no"> No</label></div></div>
-            <div class="question-row"><span>Housing/Utilities</span><div class="options"><label><input type="radio" name="housing" value="yes"> Yes</label><label><input type="radio" name="housing" value="no"> No</label></div></div>
-            <div class="question-row"><span>Finances</span><div class="options"><label><input type="radio" name="finances" value="yes"> Yes</label><label><input type="radio" name="finances" value="no"> No</label></div></div>
-            <div class="question-row"><span>Insurance</span><div class="options"><label><input type="radio" name="insurance" value="yes"> Yes</label><label><input type="radio" name="insurance" value="no"> No</label></div></div>
-            <div class="question-row"><span>Transportation</span><div class="options"><label><input type="radio" name="transportation" value="yes"> Yes</label><label><input type="radio" name="transportation" value="no"> No</label></div></div>
-            <div class="question-row"><span>Child care</span><div class="options"><label><input type="radio" name="child_care" value="yes"> Yes</label><label><input type="radio" name="child_care" value="no"> No</label></div></div>
-            <div class="question-row"><span>Having enough food</span><div class="options"><label><input type="radio" name="food" value="yes"> Yes</label><label><input type="radio" name="food" value="no"> No</label></div></div>
-            <div class="question-row"><span>Access to medicine</span><div class="options"><label><input type="radio" name="medicine" value="yes"> Yes</label><label><input type="radio" name="medicine" value="no"> No</label></div></div>
-            <div class="question-row"><span>Treatment decisions</span><div class="options"><label><input type="radio" name="treatment_decisions" value="yes"> Yes</label><label><input type="radio" name="treatment_decisions" value="no"> No</label></div></div>
-        </fieldset>
+        <form id="iposForm">
+            
+            <div class="question-card">
+                <label class="q-label">Q1. Please circle the number (0-10) that best describes how much distress you have been experiencing in the past week, including today.</label>
+                
+                <div class="scale-container" style="flex-wrap: wrap;">
+                    <div class="scale-opt"><input type="radio" name="distress_score" value="0" id="ds_0"><label for="ds_0">0<div class="scale-desc">No Distress</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="distress_score" value="1" id="ds_1"><label for="ds_1">1</label></div>
+                    <div class="scale-opt"><input type="radio" name="distress_score" value="2" id="ds_2"><label for="ds_2">2</label></div>
+                    <div class="scale-opt"><input type="radio" name="distress_score" value="3" id="ds_3"><label for="ds_3">3</label></div>
+                    <div class="scale-opt"><input type="radio" name="distress_score" value="4" id="ds_4"><label for="ds_4">4</label></div>
+                    <div class="scale-opt"><input type="radio" name="distress_score" value="5" id="ds_5"><label for="ds_5">5</label></div>
+                    <div class="scale-opt"><input type="radio" name="distress_score" value="6" id="ds_6"><label for="ds_6">6</label></div>
+                    <div class="scale-opt"><input type="radio" name="distress_score" value="7" id="ds_7"><label for="ds_7">7</label></div>
+                    <div class="scale-opt"><input type="radio" name="distress_score" value="8" id="ds_8"><label for="ds_8">8</label></div>
+                    <div class="scale-opt"><input type="radio" name="distress_score" value="9" id="ds_9"><label for="ds_9">9</label></div>
+                    <div class="scale-opt"><input type="radio" name="distress_score" value="10" id="ds_10"><label for="ds_10">10<div class="scale-desc" style="color:#d32f2f;">Extreme</div></label></div>
+                </div>
+            </div>
 
-        <fieldset>
-            <legend>Social Concerns</legend>
-            <div class="question-row"><span>Relationship with spouse or partner</span><div class="options"><label><input type="radio" name="spouse" value="yes"> Yes</label><label><input type="radio" name="spouse" value="no"> No</label></div></div>
-            <div class="question-row"><span>Relationship with children</span><div class="options"><label><input type="radio" name="children" value="yes"> Yes</label><label><input type="radio" name="children" value="no"> No</label></div></div>
-            <div class="question-row"><span>Relationship with family members</span><div class="options"><label><input type="radio" name="family" value="yes"> Yes</label><label><input type="radio" name="family" value="no"> No</label></div></div>
-            <div class="question-row"><span>Relationship with friends or coworkers</span><div class="options"><label><input type="radio" name="friends" value="yes"> Yes</label><label><input type="radio" name="friends" value="no"> No</label></div></div>
-            <div class="question-row"><span>Communication with health care team</span><div class="options"><label><input type="radio" name="healthcare_team" value="yes"> Yes</label><label><input type="radio" name="healthcare_team" value="no"> No</label></div></div>
-            <div class="question-row"><span>Ability to have children</span><div class="options"><label><input type="radio" name="fertility" value="yes"> Yes</label><label><input type="radio" name="fertility" value="no"> No</label></div></div>
-            <div class="question-row"><span>Prejudice or discrimination</span><div class="options"><label><input type="radio" name="discrimination" value="yes"> Yes</label><label><input type="radio" name="discrimination" value="no"> No</label></div></div>
-        </fieldset>
+            <div class="question-card">
+                <label class="q-label">Q2. Problem List: Have you had concerns about any of the items below in the past week, including today?</label>
+                
+                <style>
+                    .yes-no-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+                    .yes-no-row:last-child { border-bottom: none; }
+                    .yn-label { font-size: 15px; color: #333; flex: 1; padding-right: 10px; }
+                    .yn-options { display: flex; gap: 5px; width: 100px; }
+                    .section-header { background: #f8f9fa; padding: 8px; margin: 15px -20px 10px -20px; font-weight: 700; color: #0061f2; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+                </style>
 
-        <fieldset>
-            <legend>Spiritual or Religious Concerns</legend>
-            <div class="question-row"><span>Sense of meaning or purpose</span><div class="options"><label><input type="radio" name="meaning" value="yes"> Yes</label><label><input type="radio" name="meaning" value="no"> No</label></div></div>
-            <div class="question-row"><span>Changes in faith or beliefs</span><div class="options"><label><input type="radio" name="faith" value="yes"> Yes</label><label><input type="radio" name="faith" value="no"> No</label></div></div>
-            <div class="question-row"><span>Death, dying, or afterlife</span><div class="options"><label><input type="radio" name="death" value="yes"> Yes</label><label><input type="radio" name="death" value="no"> No</label></div></div>
-            <div class="question-row"><span>Conflict between beliefs and cancer treatments</span><div class="options"><label><input type="radio" name="belief_conflict" value="yes"> Yes</label><label><input type="radio" name="belief_conflict" value="no"> No</label></div></div>
-            <div class="question-row"><span>Relationship with the sacred</span><div class="options"><label><input type="radio" name="sacred" value="yes"> Yes</label><label><input type="radio" name="sacred" value="no"> No</label></div></div>
-            <div class="question-row"><span>Ritual or dietary needs</span><div class="options"><label><input type="radio" name="rituals" value="yes"> Yes</label><label><input type="radio" name="rituals" value="no"> No</label></div></div>
-        </fieldset>
+                <div class="section-header" style="margin-top:0;">Physical Concerns</div>
+                <div id="physical-section"></div>
 
-        <fieldset>
-            <legend>Other Concerns</legend>
-            <label for="other_concerns">Other Concerns:</label>
-            <textarea id="other_concerns" name="other_concerns" rows="4" maxlength="200" placeholder="Please describe any other concerns..."></textarea>
-            <div class="char-count">Max 200 characters</div>
-        </fieldset>
+                <div class="section-header">Emotional Concerns</div>
+                <div id="emotional-section"></div>
 
-        <button type="submit">Submit Assessment</button>
-    </form>
-</div>
+                <div class="section-header">Practical Concerns</div>
+                <div id="practical-section"></div>
 
-<script>
-    const textArea = document.getElementById('other_concerns');
-    const charCountDisplay = document.querySelector('.char-count');
-    const maxChars = 200;
+                <div class="section-header">Social Concerns</div>
+                <div id="social-section"></div>
 
-    // Initialize the text (Count Up: "0 / 200 characters used")
-    charCountDisplay.textContent = `0 / ${maxChars} characters used`;
-    
-    textArea.addEventListener('input', function() {
-        const currentLength = this.value.length;
-        
-        // Update the visual text (Counting up)
-        charCountDisplay.textContent = `${currentLength} / ${maxChars} characters used`;
+                <div class="section-header">Spiritual / Religious</div>
+                <div id="spiritual-section"></div>
 
-        // Optional: Change color if they hit the max
-        if (currentLength >= maxChars) {
-            charCountDisplay.style.color = 'red';
-            charCountDisplay.style.fontWeight = 'bold';
-        } else {
-            charCountDisplay.style.color = '#666';
-            charCountDisplay.style.fontWeight = 'normal';
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">Other Concerns:</label>
+                <textarea class="form-control" id="other_concerns" rows="3" maxlength="200" 
+                          style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" 
+                          placeholder="Please describe any other concerns..." 
+                          oninput="updateCharCount(this)"></textarea>
+                <small id="char-count" style="display:block; text-align:right; color:#6c757d; font-size:12px; margin-top:4px;">
+                    0/200
+                </small>
+            </div>
+
+            <div class="score-box no-print">
+                <div><div class="score-title">Distress Score</div><small style="opacity:0.7">0 (No Distress) to 10 (Extreme)</small></div>
+                <div class="score-val" id="total-score-display">0</div>
+            </div>
+
+            <div id="qr-section">
+                <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:8px; border-radius:6px; margin-bottom:8px; font-size:12px;">
+                    <i class="bi bi-check-circle-fill"></i> <strong>Result Ready!</strong>
+                    <p style="margin:0; font-size:13px;">Show this QR to your doctor.</p>
+                </div>
+                <div id="qrcode-container" style="background:white; padding:8px; border-radius:8px; display:inline-block;">
+                    <div id="qrcode"></div>
+                    <div style="font-size:9px; color:#999; margin-top:4px;">NCCN-DT Secure Payload</div>
+                </div>
+            </div>
+
+            <div class="action-buttons no-print" style="margin-top:20px; display:flex; gap:8px; flex-direction:column;">
+                <button type="button" class="btn btn-buccal" onclick="generateQR()" style="width:100%;">
+                    <i class="bi bi-qr-code-scan"></i> Generate Result QR
+                </button>
+                <button type="button" class="btn btn-pdf" onclick="window.print()" style="width:100%;">
+                    <i class="bi bi-printer"></i> Print / Save as PDF
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+    <script>
+        // --- 1. CONFIGURATION: List of Questions ---
+        const physicalItems = [
+            {id:'phy_pain', l:'Pain'}, {id:'phy_sleep', l:'Sleep'}, {id:'phy_fatigue', l:'Fatigue'}, 
+            {id:'phy_tobacco', l:'Tobacco use'}, {id:'phy_substance', l:'Substance use'}, 
+            {id:'phy_mem', l:'Memory/Concentration'}, {id:'phy_sex', l:'Sexual health'}, 
+            {id:'phy_eat', l:'Changes in eating'}, {id:'phy_abil', l:'Loss of physical abilities'}
+        ];
+        const emotionalItems = [
+            {id:'emo_worry', l:'Worry or anxiety'}, {id:'emo_sad', l:'Sadness or depression'}, 
+            {id:'emo_int', l:'Loss of interest'}, {id:'emo_grief', l:'Grief or loss'}, 
+            {id:'emo_fear', l:'Fear'}, {id:'emo_lone', l:'Loneliness'}, 
+            {id:'emo_anger', l:'Anger'}, {id:'emo_app', l:'Changes in appearance'}, 
+            {id:'emo_worth', l:'Worthlessness/Burden'}
+        ];
+        const practicalItems = [
+            {id:'prac_self', l:'Taking care of myself'}, {id:'prac_others', l:'Taking care of others'}, 
+            {id:'prac_safe', l:'Safety'}, {id:'prac_work', l:'Work'}, {id:'prac_school', l:'School'}, 
+            {id:'prac_house', l:'Housing/Utilities'}, {id:'prac_fin', l:'Finances'}, 
+            {id:'prac_ins', l:'Insurance'}, {id:'prac_trans', l:'Transportation'}, 
+            {id:'prac_child', l:'Child care'}, {id:'prac_food', l:'Having enough food'}, 
+            {id:'prac_med', l:'Access to medicine'}, {id:'prac_tx', l:'Treatment decisions'}
+        ];
+        const socialItems = [
+            {id:'soc_spouse', l:'Rel. w/ spouse/partner'}, {id:'soc_child', l:'Rel. w/ children'}, 
+            {id:'soc_fam', l:'Rel. w/ family'}, {id:'soc_friend', l:'Rel. w/ friends'}, 
+            {id:'soc_team', l:'Comm. w/ health team'}, {id:'soc_fert', l:'Ability to have children'}, 
+            {id:'soc_disc', l:'Prejudice/Discrimination'}
+        ];
+        const spiritualItems = [
+            {id:'spir_mean', l:'Meaning or purpose'}, {id:'spir_faith', l:'Changes in faith/beliefs'}, 
+            {id:'spir_death', l:'Death, dying, afterlife'}, {id:'spir_conf', l:'Conflict beliefs/treatment'}, 
+            {id:'spir_sacred', l:'Rel. w/ the sacred'}, {id:'spir_rit', l:'Ritual or dietary needs'}
+        ];
+
+        // --- 2. INITIALIZATION: Build the Form Dynamically ---
+        function renderYesNoItems(items, containerId) {
+            const container = document.getElementById(containerId);
+            let html = '';
+            items.forEach(item => {
+                html += `
+                <div class="yes-no-row">
+                    <div class="yn-label">${item.l}</div>
+                    <div class="yn-options">
+                        <div class="scale-opt" style="flex:1;">
+                            <input type="radio" name="${item.id}" value="0" id="${item.id}_0" checked>
+                            <label for="${item.id}_0">No</label>
+                        </div>
+                        <div class="scale-opt" style="flex:1;">
+                            <input type="radio" name="${item.id}" value="1" id="${item.id}_1">
+                            <label for="${item.id}_1" style="font-weight:bold;">Yes</label>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
         }
-    });
-</script>
 
+        document.addEventListener('DOMContentLoaded', () => {
+            renderYesNoItems(physicalItems, 'physical-section');
+            renderYesNoItems(emotionalItems, 'emotional-section');
+            renderYesNoItems(practicalItems, 'practical-section');
+            renderYesNoItems(socialItems, 'social-section');
+            renderYesNoItems(spiritualItems, 'spiritual-section');
+            
+            // Re-attach listeners for the new inputs
+            const form = document.getElementById('iposForm');
+            if(form) form.addEventListener('change', calculateTotalScore);
+        });
+
+        // --- 3. LOGIC ---
+        function calculateTotalScore() {
+            // For Distress Thermometer, the Score is just Question 1 (0-10)
+            let total = 0;
+            const scoreEl = document.querySelector('input[name="distress_score"]:checked');
+            if (scoreEl) total = parseInt(scoreEl.value);
+
+            const display = document.getElementById('total-score-display');
+            if(display) display.innerText = total;
+            
+            // Visual feedback on yes/no items (optional)
+            // We could count total problems here if needed, but per request, we display the thermometer score.
+            return total;
+        }
+
+        function updateCharCount(textarea) {
+            const maxLength = textarea.getAttribute('maxlength');
+            const currentLength = textarea.value.length;
+            const counter = textarea.nextElementSibling; // The <small> tag
+            counter.innerText = `${currentLength}/${maxLength}`;
+        }
+
+        function generateQR() {
+            // Helper to get value
+            const getVal = (name) => {
+                const el = document.querySelector(`input[name="${name}"]:checked`);
+                return el ? parseInt(el.value) : 0;
+            };
+
+            // Build payload
+            const payload = {
+                t: "NCCN-DT",
+                d: Date.now(),
+                score: getVal('distress_score'),
+                other: document.getElementById('other_concerns').value.substring(0, 200),
+                probs: {} // Object to hold the yes/no answers
+            };
+
+            // Populate Checklists
+            const allLists = [...physicalItems, ...emotionalItems, ...practicalItems, ...socialItems, ...spiritualItems];
+            allLists.forEach(item => {
+                // To save space in QR, we only map if YES (1)
+                // Or we can map all. Let's map all for consistency.
+                payload.probs[item.id] = getVal(item.id);
+            });
+
+            const qrDiv = document.getElementById("qrcode");
+            qrDiv.innerHTML = "";
+            
+            // Generate QR
+            const safeData = encodeURIComponent(JSON.stringify(payload));
+            new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+
+            const section = document.getElementById('qr-section');
+            section.style.display = 'block';
+            section.scrollIntoView({behavior: 'smooth'});
+        }
+
+        // Overwrite printPDF to default window.print since we don't have a background PDF
+        // If you have a specific PDF background, you can uncomment the logic from ipos.html
+        function printPDF() {
+            window.print();
+        }
+    </script>
 </body>
 </html>
