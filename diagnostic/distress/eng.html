@@ -12,7 +12,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -22,122 +21,54 @@
     <style>
         /* --- THERMOMETER LAYOUT --- */
         .thermo-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: stretch; 
-            gap: 20px;
-            padding: 10px 0;
-            min-height: 450px;
+            display: flex; justify-content: center; align-items: stretch; gap: 20px;
+            padding: 10px 0; min-height: 450px;
         }
-
         .scale-column {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: flex-end; 
-            padding-right: 10px;
-            font-weight: bold;
-            color: #495057;
+            display: flex; flex-direction: column; justify-content: space-between;
+            align-items: flex-end; padding-right: 10px; font-weight: bold; color: #495057;
         }
-
-        .scale-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            height: 35px;
-        }
-
+        .scale-row { display: flex; align-items: center; gap: 10px; height: 35px; }
         .scale-row label { font-size: 18px; cursor: pointer; }
         .scale-row input[type="radio"] { transform: scale(1.5); margin: 0; cursor: pointer; }
 
-        .label-text {
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-            margin-top: 5px;
-        }
+        .label-text { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin: 5px 0; }
         .text-extreme { color: #d32f2f; font-weight: 800; }
         .text-none { color: #2e7d32; font-weight: 800; }
 
-        .image-column {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .thermo-img {
-            height: 100%;
-            max-height: 480px; 
-            width: auto;
-            object-fit: contain;
-        }
+        .image-column { display: flex; align-items: center; justify-content: center; }
+        .thermo-img { height: 100%; max-height: 480px; width: auto; object-fit: contain; }
 
         /* --- YES/NO LIST STYLING --- */
         .section-header { 
-            background: #f8f9fa; 
-            padding: 10px 15px; 
-            margin: 20px -20px 10px -20px; 
-            font-weight: 700; 
-            color: #0061f2; 
-            font-size: 14px; 
-            text-transform: uppercase; 
+            background: #f8f9fa; padding: 10px 15px; margin: 20px -20px 10px -20px; 
+            font-weight: 700; color: #0061f2; font-size: 14px; text-transform: uppercase; 
             border-left: 4px solid #0061f2;
         }
-        
         .yes-no-row { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 12px 0; 
-            border-bottom: 1px solid #f0f0f0; 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px 0; border-bottom: 1px solid #f0f0f0; 
         }
         .yes-no-row:last-child { border-bottom: none; }
         
         .yn-label { 
-            font-size: 15px; 
-            color: #333; 
-            flex: 1; 
-            padding-right: 10px; 
-            white-space: normal; 
-            line-height: 1.3;
+            font-size: 15px; color: #333; flex: 1; padding-right: 10px; 
+            white-space: normal; line-height: 1.3;
         }
-        
-        .yn-options { 
-            display: flex; 
-            gap: 5px; 
-            width: 110px; 
-            flex-shrink: 0; 
-        }
+        .yn-options { display: flex; gap: 5px; width: 110px; flex-shrink: 0; }
 
-        .yn-btn {
-            flex: 1;
-            position: relative;
-            text-align: center;
-        }
-        .yn-btn input {
-            position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; left:0; top:0;
-        }
+        .yn-btn { flex: 1; position: relative; text-align: center; }
+        .yn-btn input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; left:0; top:0; }
         .yn-btn label {
             display: flex; justify-content: center; align-items: center; height: 35px;
             background: #fff; border: 1px solid #dee2e6; border-radius: 6px;
             color: #6c757d; font-weight: 600; font-size: 13px; transition: all 0.2s;
         }
-        
         .yn-btn input:checked + label.lbl-no { background: #e8f5e9; border-color: #2e7d32; color: #2e7d32; } 
         .yn-btn input:checked + label.lbl-yes { background: #ffebee; border-color: #c62828; color: #c62828; }
-
     </style>
 </head>
 <body>
-
-    <div id="pdf-loading">
-        <div style="text-align:center">
-            <div style="display:inline-block; width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            <p style="margin-top: 15px; font-weight: bold;">Preparing PDF...</p>
-        </div>
-        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } #pdf-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; }</style>
-    </div>
 
     <div class="main-container">
         
@@ -248,42 +179,92 @@
                 </button>
             </div>
         </form>
-
     </div>
 
     <script>
-        // --- CONFIGURATION: Full Text Labels ---
-        
-        const physicalItems = [
-            {l:'Pain'}, {l:'Sleep'}, {l:'Fatigue'}, {l:'Tobacco use'}, {l:'Substance use'}, 
-            {l:'Memory or concentration'}, {l:'Sexual health'}, {l:'Changes in eating'}, {l:'Loss or change of physical abilities'}
-        ];
-        
-        const emotionalItems = [
-            {l:'Worry or anxiety'}, {l:'Sadness or depression'}, {l:'Loss of interest or enjoyment'}, 
-            {l:'Grief or loss'}, {l:'Fear'}, {l:'Loneliness'}, 
-            {l:'Anger'}, {l:'Changes in appearance'}, {l:'Feelings of worthlessness or being a burden'}
-        ];
-        
-        const practicalItems = [
-            {l:'Taking care of myself'}, {l:'Taking care of others'}, {l:'Safety'}, 
-            {l:'Work'}, {l:'School'}, {l:'Housing/Utilities'}, {l:'Finances'}, 
-            {l:'Insurance'}, {l:'Transportation'}, {l:'Child care'}, 
-            {l:'Having enough food'}, {l:'Access to medicine'}, {l:'Treatment decisions'}
-        ];
-        
-        const socialItems = [
-            {l:'Relationship with spouse or partner'}, {l:'Relationship with children'}, 
-            {l:'Relationship with family members'}, {l:'Relationship with friends or coworkers'}, 
-            {l:'Communication with health care team'}, {l:'Ability to have children'}, 
-            {l:'Prejudice or discrimination'}
-        ];
-        
-        const spiritualItems = [
-            {l:'Sense of meaning or purpose'}, {l:'Changes in faith or beliefs'}, 
-            {l:'Death, dying, or afterlife'}, {l:'Conflict between beliefs and cancer treatments'}, 
-            {l:'Relationship with the sacred'}, {l:'Ritual or dietary needs'}
-        ];
+        // --- DATA CONFIGURATION ---
+        const physicalItems = [ {l:'Pain'}, {l:'Sleep'}, {l:'Fatigue'}, {l:'Tobacco use'}, {l:'Substance use'}, {l:'Memory or concentration'}, {l:'Sexual health'}, {l:'Changes in eating'}, {l:'Loss or change of physical abilities'} ];
+        const emotionalItems = [ {l:'Worry or anxiety'}, {l:'Sadness or depression'}, {l:'Loss of interest or enjoyment'}, {l:'Grief or loss'}, {l:'Fear'}, {l:'Loneliness'}, {l:'Anger'}, {l:'Changes in appearance'}, {l:'Feelings of worthlessness or being a burden'} ];
+        const practicalItems = [ {l:'Taking care of myself'}, {l:'Taking care of others'}, {l:'Safety'}, {l:'Work'}, {l:'School'}, {l:'Housing/Utilities'}, {l:'Finances'}, {l:'Insurance'}, {l:'Transportation'}, {l:'Child care'}, {l:'Having enough food'}, {l:'Access to medicine'}, {l:'Treatment decisions'} ];
+        const socialItems = [ {l:'Relationship with spouse or partner'}, {l:'Relationship with children'}, {l:'Relationship with family members'}, {l:'Relationship with friends or coworkers'}, {l:'Communication with health care team'}, {l:'Ability to have children'}, {l:'Prejudice or discrimination'} ];
+        const spiritualItems = [ {l:'Sense of meaning or purpose'}, {l:'Changes in faith or beliefs'}, {l:'Death, dying, or afterlife'}, {l:'Conflict between beliefs and cancer treatments'}, {l:'Relationship with the sacred'}, {l:'Ritual or dietary needs'} ];
+
+        let dtContext = { mode: 'personal', instId: null };
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Render Lists
+            renderYesNoItems(physicalItems, 'physical-section', 'phy');
+            renderYesNoItems(emotionalItems, 'emotional-section', 'emo');
+            renderYesNoItems(practicalItems, 'practical-section', 'prac');
+            renderYesNoItems(socialItems, 'social-section', 'soc');
+            renderYesNoItems(spiritualItems, 'spiritual-section', 'spir');
+            
+            // Setup Listeners
+            const dateDisplay = document.getElementById('dateDisplay');
+            if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
+            
+            const form = document.getElementById('iposForm');
+            if(form) form.addEventListener('change', calculateTotalScore);
+
+            // Setup Auth/Branding
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+
+            if (ref) {
+                dtContext.mode = 'shared'; 
+                dtContext.instId = ref;
+                await finalizeAppSetup(ref);
+            } else {
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        try {
+                            const snap = await db.collection('users').doc(user.uid).get();
+                            if (snap.exists) {
+                                const userData = snap.data();
+                                if (['institutionUser', 'institutionAdmin'].includes(userData.role)) {
+                                    dtContext.mode = 'institution'; 
+                                    dtContext.instId = userData.institutionId;
+                                }
+                            }
+                        } catch (e) { console.error(e); }
+                    }
+                    finalizeAppSetup(dtContext.instId);
+                });
+            }
+        });
+
+        // --- APP SETUP & BRANDING ---
+        async function finalizeAppSetup(instId) {
+            const blankQrHeader = document.getElementById('blank-qr-header');
+            const backButton = document.getElementById('backLink');
+
+            if (dtContext.mode === 'shared') {
+                if(blankQrHeader) blankQrHeader.style.display = 'none';
+                if(backButton) backButton.style.display = 'none';
+            } else {
+                if(blankQrHeader) {
+                    blankQrHeader.style.display = 'block';
+                    generateBlankFormQR(instId);
+                }
+                if(backButton) backButton.style.display = 'inline-flex';
+            }
+            
+            if (typeof loadInstitutionHeader === "function" && instId) {
+                await loadInstitutionHeader(instId);
+            } else if (typeof loadPersonalHeader === "function") {
+                loadPersonalHeader();
+            }
+        }
+
+        function generateBlankFormQR(instId) {
+            const qrContainer = document.getElementById("blank-qrcode");
+            if (!qrContainer) return;
+            qrContainer.innerHTML = ""; 
+            const baseUrl = window.location.href.split('?')[0]; 
+            const targetUrl = instId ? `${baseUrl}?ref=${instId}` : baseUrl;
+            new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
+        }
 
         // --- RENDER LOGIC ---
         function renderYesNoItems(items, containerId, prefix) {
@@ -309,22 +290,10 @@
             container.innerHTML = html;
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            renderYesNoItems(physicalItems, 'physical-section', 'phy');
-            renderYesNoItems(emotionalItems, 'emotional-section', 'emo');
-            renderYesNoItems(practicalItems, 'practical-section', 'prac');
-            renderYesNoItems(socialItems, 'social-section', 'soc');
-            renderYesNoItems(spiritualItems, 'spiritual-section', 'spir');
-            
-            const form = document.getElementById('iposForm');
-            if(form) form.addEventListener('change', calculateTotalScore);
-        });
-
         function calculateTotalScore() {
             let total = 0;
             const scoreEl = document.querySelector('input[name="distress_score"]:checked');
             const display = document.getElementById('total-score-display');
-            
             if (scoreEl) {
                 total = parseInt(scoreEl.value);
                 display.innerText = total;
@@ -341,7 +310,23 @@
             counter.innerText = `${currentLength}/${maxLength} characters used`;
         }
 
+        // --- UPDATED QR FLOW (CONSENT MODAL) ---
+
+        // 1. Trigger the Modal
         function generateQR() {
+            const modal = document.getElementById('pdpa-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+            } else {
+                // Fallback
+                if(confirm("Generate QR Code? By clicking OK you consent to sharing this data.")) {
+                    executeQRGeneration();
+                }
+            }
+        }
+
+        // 2. The Actual Logic (Called by diagnostic.js)
+        function executeQRGeneration() {
             const getVal = (name) => {
                 const el = document.querySelector(`input[name="${name}"]:checked`);
                 return el ? parseInt(el.value) : null; 
@@ -350,11 +335,10 @@
             
             const distressScore = getVal('distress_score');
 
-            // --- PAYLOAD GENERATION ---
             const payload = {
                 t: "dt", 
                 d: Date.now(),
-                score: distressScore, // <--- ADDED THIS KEY so the scanner detects the total
+                score: distressScore,
                 Q1: distressScore
             };
 
@@ -376,8 +360,6 @@
             section.style.display = 'block';
             section.scrollIntoView({behavior: 'smooth'});
         }
-
-        function printPDF() { window.print(); }
     </script>
 </body>
 </html>
