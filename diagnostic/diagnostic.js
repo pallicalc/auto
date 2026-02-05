@@ -1,5 +1,5 @@
 // ============================================================
-// DIAGNOSTIC.JS - AUTO-CONSENT VERSION
+// DIAGNOSTIC.JS - DIRECT CONSENT VERSION
 // ============================================================
 
 const firebaseConfig = {
@@ -11,7 +11,6 @@ const firebaseConfig = {
     appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
 };
 
-// Prevent double initialization
 if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -21,28 +20,17 @@ const auth = (typeof firebase !== 'undefined') ? firebase.auth() : null;
 
 window.appContext = { mode: 'personal', instId: null };
 
+// --- 1. INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', async () => {
-    
-    // --------------------------------------------------------
-    // THE AUTO-HIJACKER (This makes it work without touching buttons)
-    // --------------------------------------------------------
-    if (typeof window.generateQR === 'function') {
-        const originalLogic = window.generateQR;
-        // Overwrite the function to ask for consent first
-        window.generateQR = function() {
-            requestConsent(originalLogic);
-        };
-        console.log("Consent Layer: Auto-Injected");
-    }
-    // --------------------------------------------------------
-
-    injectStandardFooter();
+    // A. Inject the Modal HTML immediately
     injectConsentModal();
+    injectStandardFooter();
     injectFavicon();
 
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
+    // B. Handle Auth/Roles
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
 
@@ -73,7 +61,64 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// --- UI HELPERS ---
+// --- 2. CONSENT LOGIC (The Formula) ---
+let functionToRunAfterConsent = null;
+
+function injectConsentModal() {
+    // If modal already exists, don't create it again
+    if (document.getElementById('pdpa-modal')) return;
+
+    const modalHtml = `
+    <div id="pdpa-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Data Consent</h3>
+            </div>
+            <div class="modal-body">
+                <p><strong>Privacy Notice:</strong> By proceeding, you consent to generating a QR code containing your assessment responses. 
+                This data is generated locally to facilitate your clinical consultation and is not permanently stored on a central server.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="cancelConsent()">Cancel</button>
+                <button class="btn btn-agree" onclick="agreeConsent()">Agree & Generate</button>
+            </div>
+        </div>
+    </div>`;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// Function A: Call this from your HTML button
+window.askForConsent = function(targetFunction) {
+    functionToRunAfterConsent = targetFunction; // Save the QR function for later
+    const modal = document.getElementById('pdpa-modal');
+    if(modal) {
+        modal.style.display = 'flex'; // Show the box
+    } else {
+        // Fallback if modal CSS/HTML failed
+        if(confirm("Generate QR Code?")) targetFunction();
+    }
+}
+
+// Function B: Runs when user clicks "Agree"
+window.agreeConsent = function() {
+    const modal = document.getElementById('pdpa-modal');
+    if(modal) modal.style.display = 'none'; // Hide box
+    
+    if (typeof functionToRunAfterConsent === 'function') {
+        functionToRunAfterConsent(); // <--- RUN THE SAVED FORMULA (QR GENERATION)
+    }
+    functionToRunAfterConsent = null;
+}
+
+// Function C: Runs when user clicks "Cancel"
+window.cancelConsent = function() {
+    const modal = document.getElementById('pdpa-modal');
+    if(modal) modal.style.display = 'none';
+    functionToRunAfterConsent = null;
+}
+
+// --- 3. UI HELPERS (Header/Footer) ---
 async function setupUI(instId) {
     const blankQrHeader = document.getElementById('blank-qr-header');
     const backButton = document.getElementById('backLink');
@@ -156,45 +201,4 @@ function injectFavicon() {
     let link = document.querySelector("link[rel~='icon']");
     if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
     link.href = '../../favicon.png'; 
-}
-
-// --- UNIVERSAL CONSENT MODAL ---
-let pendingGenFunction = null;
-
-function injectConsentModal() {
-    if (document.getElementById('pdpa-modal')) return;
-    const modalHtml = `
-    <div id="pdpa-modal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header"><h3>Data Consent</h3></div>
-            <div class="modal-body"><p><strong>Privacy Notice:</strong> By proceeding, you consent to generating a QR code containing your assessment responses. This data is generated locally to facilitate your clinical consultation and is not permanently stored on a central server.</p></div>
-            <div class="modal-actions">
-                <button class="btn btn-cancel" onclick="closeConsentModal()">Cancel</button>
-                <button class="btn btn-agree" onclick="confirmConsent()">Agree & Generate</button>
-            </div>
-        </div>
-    </div>`;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-}
-
-// Helper: Used by the Hijacker
-window.requestConsent = function(targetFunction) {
-    pendingGenFunction = targetFunction;
-    const modal = document.getElementById('pdpa-modal');
-    if (modal) modal.style.display = 'flex';
-    else if(confirm("Consent to Generate QR?")) targetFunction();
-}
-
-window.confirmConsent = function() {
-    closeConsentModal();
-    if (typeof pendingGenFunction === 'function') { 
-        pendingGenFunction(); 
-        pendingGenFunction = null; 
-    }
-}
-
-window.closeConsentModal = function() {
-    const modal = document.getElementById('pdpa-modal');
-    if(modal) modal.style.display = 'none';
-    pendingGenFunction = null;
 }
