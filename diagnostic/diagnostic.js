@@ -1,5 +1,5 @@
 // ============================================================
-// DIAGNOSTIC.JS - CLEAN VERSION (No Auto-Hijack)
+// DIAGNOSTIC.JS - AUTO-CONSENT VERSION
 // ============================================================
 
 const firebaseConfig = {
@@ -22,7 +22,20 @@ const auth = (typeof firebase !== 'undefined') ? firebase.auth() : null;
 window.appContext = { mode: 'personal', instId: null };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Inject UI Elements
+    
+    // --------------------------------------------------------
+    // THE AUTO-HIJACKER (This makes it work without touching buttons)
+    // --------------------------------------------------------
+    if (typeof window.generateQR === 'function') {
+        const originalLogic = window.generateQR;
+        // Overwrite the function to ask for consent first
+        window.generateQR = function() {
+            requestConsent(originalLogic);
+        };
+        console.log("Consent Layer: Auto-Injected");
+    }
+    // --------------------------------------------------------
+
     injectStandardFooter();
     injectConsentModal();
     injectFavicon();
@@ -30,7 +43,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
-    // 2. Handle Role & Header
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
 
@@ -165,7 +177,7 @@ function injectConsentModal() {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
-// Global helpers (exposed to window)
+// Helper: Used by the Hijacker
 window.requestConsent = function(targetFunction) {
     pendingGenFunction = targetFunction;
     const modal = document.getElementById('pdpa-modal');
@@ -176,7 +188,7 @@ window.requestConsent = function(targetFunction) {
 window.confirmConsent = function() {
     closeConsentModal();
     if (typeof pendingGenFunction === 'function') { 
-        pendingGenFunction(); // <--- This runs your generateQR code
+        pendingGenFunction(); 
         pendingGenFunction = null; 
     }
 }
