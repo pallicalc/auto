@@ -7,7 +7,6 @@
         document.head.appendChild(link);
     }
     // Adjust path based on where this script runs. 
-    // If diagnostic.js is in a subfolder, use '../favicon.png'
     link.href = '../../favicon.png'; 
 })();
 
@@ -31,6 +30,9 @@ let context = { mode: 'personal', instId: null };
 document.addEventListener('DOMContentLoaded', async () => {
     injectStandardFooter();
     
+    // [NEW 1/3] Inject the Modal HTML automatically on load
+    injectConsentModal(); 
+    
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
@@ -43,14 +45,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (ref) {
         // SCENARIO A: PATIENT (Accessed via QR Link)
-        // This is where we capture the ID even if not logged in
         context.mode = 'shared'; 
         context.instId = ref;
-        
-        // Expose to window for eng.html PDF generator to find
         window.context = context;
-        
-        // EXECUTE PATIENT VIEW LOGIC
         await finalizeAppSetup(context.instId);
 
     } else {
@@ -64,12 +61,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         if (['institutionUser', 'institutionAdmin'].includes(userData.role)) {
                             context.mode = 'institution'; 
                             context.instId = userData.institutionId;
-                            window.context = context; // Expose for PDF
+                            window.context = context; 
                         }
                     }
                 } catch (e) { console.error("Auth Data Error:", e); }
             }
-            // Execute Final Setup (Doctors will see QR & Back Button)
             finalizeAppSetup(context.instId);
         });
     }
@@ -81,26 +77,16 @@ async function finalizeAppSetup(instId) {
     const backButton = document.getElementById('backLink');
 
     if (context.mode === 'shared') {
-        // === PATIENT VIEW ===
-        // 1. Hide the "Scan to Start" QR (They are already here)
         if(blankQrHeader) blankQrHeader.style.display = 'none';
-        
-        // 2. Hide the Back Button (Prevent accidental exit)
         if(backButton) backButton.style.display = 'none';
-    
     } else {
-        // === DOCTOR VIEW ===
-        // 1. Generate and Show the "Scan to Start" QR
         if(blankQrHeader) {
             blankQrHeader.style.display = 'block';
             generateBlankFormQR(instId);
         }
-        
-        // 2. Ensure Back Button is Visible
         if(backButton) backButton.style.display = 'inline-flex';
     }
 
-    // Load Branding
     if (instId) {
         await loadInstitutionHeader(instId);
     } else {
@@ -120,8 +106,23 @@ function generateBlankFormQR(instId) {
     new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
 }
 
-// --- 2. RESULT QR (DATA PAYLOAD) ---
+// --- 2. RESULT QR GENERATION LOGIC ---
+
+// [NEW 2/3] The Trigger: This function now opens the modal instead of generating immediately
 function generateQR() {
+    const modal = document.getElementById('pdpa-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    } else {
+        // Fallback if modal somehow missing
+        if(confirm("Generate QR Code? By clicking OK you consent to sharing this data for clinical use.")) {
+            executeQRGeneration();
+        }
+    }
+}
+
+// [NEW 3/3] The Logic: This was your old generateQR function, simply renamed.
+function executeQRGeneration() {
     const getVal = (name) => {
         const el = document.querySelector(`input[name="${name}"]:checked`);
         return el ? parseInt(el.value) : 0;
@@ -137,10 +138,6 @@ function generateQR() {
         }
     }
 
-    // Note: Q6-Q9 inputs in HTML now have value="0" for 'Always/Addressed' (Good) 
-    // and value="4" for 'Not at all/Not Addressed' (Bad).
-    // Therefore, simple value extraction represents the Distress Score correctly.
-    
     const payload = {
         t: "IPOS",
         d: Date.now(),
@@ -164,8 +161,6 @@ function generateQR() {
         Q7: getVal('share'),
         Q8: getVal('info'),
         Q9: getVal('practical'),
-        
-        // MAP: 0->A, 1->B, 2->C. Default to A if error.
         Q10: ["A", "B", "C"][document.getElementById('completion_mode').value] || "A"
     };
 
@@ -184,8 +179,6 @@ function generateQR() {
 function calculateTotalScore() {
     let total = 0;
     document.querySelectorAll('#iposForm input[type="radio"]:checked').forEach(input => {
-        // Because Q6-Q9 HTML values are aligned with distress (0=Good, 4=Bad),
-        // we can simply sum all checked values.
         total += parseInt(input.value);
     });
     const display = document.getElementById('total-score-display');
@@ -202,33 +195,23 @@ function normalizeBranding(data) {
     };
 }
 
-// --- UPDATED HEADER LOGIC (MATCHES EDUCATION.JS) ---
 async function loadInstitutionHeader(instId) {
     try {
         const doc = await db.collection('institutions').doc(instId).get();
         if (doc.exists) { 
             const data = doc.data();
-            
-            // Check Suspension
             if (data.status === 'suspended') { 
                 localStorage.removeItem('institutionSettings'); 
                 localStorage.removeItem('cached_inst_' + instId);
                 return; 
             }
-
-            // [CRITICAL ADDITION] Cache raw data for PDF generation (Like education.js)
-            // This allows eng.html to find the logo for the PDF
             localStorage.setItem('cached_inst_' + instId, JSON.stringify(data));
-
-            // Normalize for display
             const cleanData = normalizeBranding(data);
             localStorage.setItem('institutionSettings', JSON.stringify(cleanData));
-            
             applyBranding(cleanData); 
         }
     } catch (e) { 
         console.warn("Fetch failed, trying cache", e);
-        // Fallback to cache if offline
         const cached = localStorage.getItem('cached_inst_' + instId);
         if (cached) {
             const data = JSON.parse(cached);
@@ -276,3 +259,39 @@ function injectStandardFooter() {
 }
 
 function printPDF() { window.print(); }
+
+// --- CONSENT MODAL HELPERS ---
+
+function injectConsentModal() {
+    if (document.getElementById('pdpa-modal')) return;
+
+    const modalHtml = `
+    <div id="pdpa-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Data Consent</h3>
+            </div>
+            <div class="modal-body">
+                <p>
+                    <strong>Privacy Notice:</strong> By proceeding, you consent to generating a QR code containing your assessment responses. 
+                    This data is generated locally to facilitate your clinical consultation and is not permanently stored on a central server.
+                </p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeConsentModal()">Cancel</button>
+                <button class="btn btn-agree" onclick="confirmConsent()">Agree & Generate</button>
+            </div>
+        </div>
+    </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closeConsentModal() {
+    document.getElementById('pdpa-modal').style.display = 'none';
+}
+
+function confirmConsent() {
+    closeConsentModal();
+    executeQRGeneration(); // Proceed to original logic
+}
