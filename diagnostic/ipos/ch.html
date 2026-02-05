@@ -58,17 +58,18 @@
         <form id="iposForm">
             
            <div class="question-card">
-    <label class="q-label" for="q1_input">Q1. 在过去的三天内，您主要面对的问题或担忧是什么（健康、财务、幸福感等）？</label>
-    
-    <textarea class="form-control" id="q1_input" rows="3" maxlength="100" 
-              style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" 
-              placeholder="请在此填写..." 
-              oninput="updateCharCount(this)"></textarea>
-    
-    <small id="char-count" style="display:block; text-align:right; color:#6c757d; font-size:12px; margin-top:4px;">
-        0/100
-    </small>
-</div>
+                <label class="q-label" for="q1_input">Q1. 在过去的三天内，您主要面对的问题或担忧是什么（健康、财务、幸福感等）？</label>
+                
+                <textarea class="form-control" id="q1_input" rows="3" maxlength="100" 
+                          style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" 
+                          placeholder="请在此填写..." 
+                          oninput="updateCharCount(this)"></textarea>
+                
+                <small id="char-count" style="display:block; text-align:right; color:#6c757d; font-size:12px; margin-top:4px;">
+                    0/100
+                </small>
+            </div>
+            
             <div class="question-card">
                 <label class="q-label">Q2. 以下是您已经经历或未经历的症状列表。对于每一个症状，请勾选一个最能描述过去3天它对您影响的方格。</label>
                 
@@ -314,6 +315,7 @@
 
     </div>
 
+<script>
         function updateCharCount(textarea) {
             document.getElementById('char-count').innerText = `${textarea.value.length}/100`;
         }
@@ -457,8 +459,6 @@
                 loading.style.display = 'none';
             }
         }
-
-
 </script>
 
 </body>
