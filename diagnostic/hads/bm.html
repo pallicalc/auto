@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Penilaian HADS | PalliCalc</title>
+    
+    <link rel="stylesheet" href="../diagnostic.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="../diagnostic.js"></script>
+
+    <style>
+        /* --- iPad Optimized Styles --- */
+        .question-card { padding: 20px; }
+        .q-label { font-size: 1.1rem; margin-bottom: 15px; }
+        .scale-container { display: flex; flex-direction: column; gap: 10px; }
+
+        /* The clickable row */
+        .scale-opt label {
+            display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
+            width: 100%; padding: 18px 20px;
+            background: #fff; border: 2px solid #e9ecef; border-radius: 12px;
+            cursor: pointer; font-size: 18px; font-weight: 500; color: #495057;
+            text-align: left; transition: all 0.2s ease;
+        }
+
+        .scale-opt input[type="radio"] { display: none; }
+
+        /* Custom Radio Circle */
+        .scale-opt label::before {
+            content: ''; display: block; width: 24px; height: 24px; margin-right: 20px;
+            border: 2px solid #adb5bd; border-radius: 50%; background: white;
+            flex-shrink: 0; transition: all 0.2s;
+        }
+
+        /* ACTIVE STATE */
+        .scale-opt input:checked + label {
+            background-color: #e7f1ff; border-color: #0061f2; color: #004085;
+            box-shadow: 0 4px 12px rgba(0, 97, 242, 0.15); transform: translateY(-1px);
+        }
+        .scale-opt input:checked + label::before {
+            background-color: #0061f2; border-color: #0061f2; box-shadow: inset 0 0 0 5px white;
+        }
+
+        /* Score Box */
+        .score-box-split { display: flex; gap: 15px; margin-top: 30px; }
+        .score-card { flex: 1; background: #2c3e50; color: white; padding: 20px; border-radius: 12px; text-align: center; }
+        .score-card .val { font-size: 32px; font-weight: 800; color: #00c6f7; }
+        .score-card .severity { font-size: 14px; margin-top: 5px; color: #fff; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 6px; display:inline-block;}
+
+        .sev-normal { background: #28a745 !important; }
+        .sev-border { background: #ffc107 !important; color: #333 !important; }
+        .sev-case { background: #dc3545 !important; }
+    </style>
+</head>
+<body>
+
+    <div id="pdf-loading">
+        <div style="text-align:center">
+            <div style="display:inline-block; width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; font-weight: bold;">Menjana PDF...</p>
+        </div>
+        <style>
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
+            #pdf-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        </style>
+    </div>
+
+    <div class="main-container">
+        <div class="header header-ipos">
+            <div id="inst-header-container" class="inst-header-container">
+                <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+                <div class="inst-info"><h3 id="inst-name-display"></h3><p id="inst-contact-display"></p></div>
+            </div>
+            <h1>HADS (Malay Version)</h1>
+            <p>Hospital Anxiety and Depression Scale</p>
+        </div>
+
+        <div id="blank-qr-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:20px; border: 2px dashed #ccc; padding: 15px; border-radius: 8px;">
+                <div id="blank-qrcode"></div>
+                <div style="text-align:left;">
+                    <h4 style="margin:0; color:#0061f2;">Imbas untuk Mula</h4>
+                    <small>Imbas kod ini untuk mengisi borang di telefon anda.</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-bar no-print">
+            <a href="../../diagnostic.html" class="nav-link" id="backLink"><i class="bi bi-arrow-left"></i> Kembali</a>
+            <div class="nav-link" style="color:#6c757d; cursor:default;"><i class="bi bi-calendar-event"></i> <span id="dateDisplay"></span></div>
+        </div>
+
+        <form id="hadsForm">
+            <div class="alert alert-info" style="background:#e8f4f8; color:#005f73; border:none; font-size:16px; margin-bottom:20px; padding:15px; border-radius:8px;">
+                <i class="bi bi-info-circle-fill"></i> Sila baca setiap pernyataan dan pilih jawapan yang paling menggambarkan perasaan anda pada minggu lepas.
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">1. Saya berasa tertekan / tersepit / serabut:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q1" value="3" id="q1_3"><label for="q1_3">Sepanjang masa</label></div>
+                    <div class="scale-opt"><input type="radio" name="q1" value="2" id="q1_2"><label for="q1_2">Banyak kali / kerapkali</label></div>
+                    <div class="scale-opt"><input type="radio" name="q1" value="1" id="q1_1"><label for="q1_1">Kadang-kadang</label></div>
+                    <div class="scale-opt"><input type="radio" name="q1" value="0" id="q1_0"><label for="q1_0">Tiada langsung</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">2. Saya masih seronok melakukan perkara yang dahulunya menyeronokkan:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q2" value="0" id="q2_0"><label for="q2_0">Seperti dahulu/biasa (tiada perubahan)</label></div>
+                    <div class="scale-opt"><input type="radio" name="q2" value="1" id="q2_1"><label for="q2_1">Tidak seseronok dahulu</label></div>
+                    <div class="scale-opt"><input type="radio" name="q2" value="2" id="q2_2"><label for="q2_2">Seronok sedikit sahaja</label></div>
+                    <div class="scale-opt"><input type="radio" name="q2" value="3" id="q2_3"><label for="q2_3">Tidak lagi/hampir tiada lagi keseronokan</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">3. Saya selalu berasa ketakutan seolah-olah seperti sesuatu yang buruk akan berlaku:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q3" value="3" id="q3_3"><label for="q3_3">Sememangnya dan amat teruk sekali</label></div>
+                    <div class="scale-opt"><input type="radio" name="q3" value="2" id="q3_2"><label for="q3_2">Ya tetapi tidaklah terlalu teruk</label></div>
+                    <div class="scale-opt"><input type="radio" name="q3" value="1" id="q3_1"><label for="q3_1">Ada sedikit tetapi tidak membimbangkan saya</label></div>
+                    <div class="scale-opt"><input type="radio" name="q3" value="0" id="q3_0"><label for="q3_0">Tidak ada langsung</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">4. Saya boleh ketawa dan dapat menyukai / Nampak perkara-perkara yang melucukan:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q4" value="0" id="q4_0"><label for="q4_0">Sememangnya seperti dahulu</label></div>
+                    <div class="scale-opt"><input type="radio" name="q4" value="1" id="q4_1"><label for="q4_1">Tidaklah seperti dahulu</label></div>
+                    <div class="scale-opt"><input type="radio" name="q4" value="2" id="q4_2"><label for="q4_2">Sememangnya tidak seperti dahulu</label></div>
+                    <div class="scale-opt"><input type="radio" name="q4" value="3" id="q4_3"><label for="q4_3">Hanya kadang-kadang</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">5. Perkara-perkara yang merisaukan / membimbangkan kerap bermain di fikiran saya:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q5" value="3" id="q5_3"><label for="q5_3">Hampir sepanjang masa</label></div>
+                    <div class="scale-opt"><input type="radio" name="q5" value="2" id="q5_2"><label for="q5_2">Banyak kali</label></div>
+                    <div class="scale-opt"><input type="radio" name="q5" value="1" id="q5_1"><label for="q5_1">Dari masa kesemasa</label></div>
+                    <div class="scale-opt"><input type="radio" name="q5" value="0" id="q5_0"><label for="q5_0">Hanya jarang-jarang / kadang-kadang</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">6. Saya berasa ceria:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q6" value="3" id="q6_3"><label for="q6_3">Tidak ada langsung</label></div>
+                    <div class="scale-opt"><input type="radio" name="q6" value="2" id="q6_2"><label for="q6_2">Tidak selalu</label></div>
+                    <div class="scale-opt"><input type="radio" name="q6" value="1" id="q6_1"><label for="q6_1">Kadang-kadang</label></div>
+                    <div class="scale-opt"><input type="radio" name="q6" value="0" id="q6_0"><label for="q6_0">Sepanjang masa</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">7. Saya boleh berasa relaks dan duduk dengan selesa:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q7" value="0" id="q7_0"><label for="q7_0">Sememangnya</label></div>
+                    <div class="scale-opt"><input type="radio" name="q7" value="1" id="q7_1"><label for="q7_1">Selalunya / kerap kali</label></div>
+                    <div class="scale-opt"><input type="radio" name="q7" value="2" id="q7_2"><label for="q7_2">Tidak selalu / kadang-kadang</label></div>
+                    <div class="scale-opt"><input type="radio" name="q7" value="3" id="q7_3"><label for="q7_3">Tidak boleh langsung</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">8. Saya berasa kurang / tidak secergas dahulu:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q8" value="3" id="q8_3"><label for="q8_3">Hampir sepanjang masa</label></div>
+                    <div class="scale-opt"><input type="radio" name="q8" value="2" id="q8_2"><label for="q8_2">Kerap kali</label></div>
+                    <div class="scale-opt"><input type="radio" name="q8" value="1" id="q8_1"><label for="q8_1">Kadang-kadang</label></div>
+                    <div class="scale-opt"><input type="radio" name="q8" value="0" id="q8_0"><label for="q8_0">Tidak langsung</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">9. Saya berasa takut / berdebar-debar / gementar:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q9" value="0" id="q9_0"><label for="q9_0">Tidak langsung</label></div>
+                    <div class="scale-opt"><input type="radio" name="q9" value="1" id="q9_1"><label for="q9_1">Jarang-jarang</label></div>
+                    <div class="scale-opt"><input type="radio" name="q9" value="2" id="q9_2"><label for="q9_2">Agak kerap</label></div>
+                    <div class="scale-opt"><input type="radio" name="q9" value="3" id="q9_3"><label for="q9_3">Kerap kali</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">10. Saya sudah hilang minat terhadap keterampilan diri sendiri:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q10" value="3" id="q10_3"><label for="q10_3">Sememangnya agak kurang minat dari biasa</label></div>
+                    <div class="scale-opt"><input type="radio" name="q10" value="2" id="q10_2"><label for="q10_2">Kurang minat dari biasa / yang seharusnya</label></div>
+                    <div class="scale-opt"><input type="radio" name="q10" value="1" id="q10_1"><label for="q10_1">Kadang-kadang mungkin kurang minat dari biasa</label></div>
+                    <div class="scale-opt"><input type="radio" name="q10" value="0" id="q10_0"><label for="q10_0">Tidak hilang minat – masih seperti biasa</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">11. Saya berasa tidak tenang / gelisah / seolah-olah saya perlu sentiasa membuat kerja / bergerak:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q11" value="3" id="q11_3"><label for="q11_3">Sememangnya banyak kali</label></div>
+                    <div class="scale-opt"><input type="radio" name="q11" value="2" id="q11_2"><label for="q11_2">Agak kerap</label></div>
+                    <div class="scale-opt"><input type="radio" name="q11" value="1" id="q11_1"><label for="q11_1">Tidak terlalu kerap</label></div>
+                    <div class="scale-opt"><input type="radio" name="q11" value="0" id="q11_0"><label for="q11_0">Tidak langsung</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">12. Saya sentiasa mengharapkan keceriaan / kegembiraan apabila melakukan sesuatu perkara:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q12" value="0" id="q12_0"><label for="q12_0">Sama seperti dahulu</label></div>
+                    <div class="scale-opt"><input type="radio" name="q12" value="1" id="q12_1"><label for="q12_1">Tidak seperti dahulu</label></div>
+                    <div class="scale-opt"><input type="radio" name="q12" value="2" id="q12_2"><label for="q12_2">Sememangnya amat kurang daripada dahulu</label></div>
+                    <div class="scale-opt"><input type="radio" name="q12" value="3" id="q12_3"><label for="q12_3">Tidak / hampir tidak berasa ceria langsung</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">13. Saya mengalami panik / keadaan gementar secara tiba-tiba:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q13" value="3" id="q13_3"><label for="q13_3">Sememangnya banyak kali / kerap kali</label></div>
+                    <div class="scale-opt"><input type="radio" name="q13" value="2" id="q13_2"><label for="q13_2">Agak kerap</label></div>
+                    <div class="scale-opt"><input type="radio" name="q13" value="1" id="q13_1"><label for="q13_1">Tidak kerap / kadang-kadang</label></div>
+                    <div class="scale-opt"><input type="radio" name="q13" value="0" id="q13_0"><label for="q13_0">Tidak pernah langsung</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">14. Saya dapat merasai nikmat / keseronokan apabila melakukan sesuatu seperti membaca buku yang menarik / mendengar radio / menonton rancangan televisyen yang menarik:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q14" value="0" id="q14_0"><label for="q14_0">Kerap kali</label></div>
+                    <div class="scale-opt"><input type="radio" name="q14" value="1" id="q14_1"><label for="q14_1">Kadang-kadang</label></div>
+                    <div class="scale-opt"><input type="radio" name="q14" value="2" id="q14_2"><label for="q14_2">Tidak selalu</label></div>
+                    <div class="scale-opt"><input type="radio" name="q14" value="3" id="q14_3"><label for="q14_3">Jarang-jarang sekali</label></div>
+                </div>
+            </div>
+
+            <div class="score-box-split no-print">
+                <div class="score-card">
+                    <h4>Kebimbangan (A)</h4>
+                    <div class="val" id="score-a-display">0</div>
+                    <div id="sev-a" class="severity">Normal</div>
+                </div>
+                <div class="score-card">
+                    <h4>Kemurungan (D)</h4>
+                    <div class="val" id="score-d-display">0</div>
+                    <div id="sev-d" class="severity">Normal</div>
+                </div>
+            </div>
+
+            <div id="qr-section">
+                <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:8px; border-radius:6px; margin-bottom:8px; font-size:12px;">
+                    <i class="bi bi-check-circle-fill"></i> <strong>Keputusan Sedia!</strong>
+                    <p style="margin:0; font-size:13px;">Tunjukkan kod QR ini kepada doktor anda.</p>
+                </div>
+                <div id="qrcode-container" style="background:white; padding:8px; border-radius:8px; display:inline-block;">
+                    <div id="qrcode"></div>
+                    <div style="font-size:9px; color:#999; margin-top:4px;">HADS Secure Payload</div>
+                </div>
+            </div>
+
+            <div class="action-buttons no-print" style="margin-top:20px; display:flex; gap:8px; flex-direction:column;">
+                <button type="button" class="btn btn-buccal" onclick="generateQR()" style="width:100%;">
+                    <i class="bi bi-qr-code-scan"></i> Hasilkan QR Keputusan
+                </button>
+                <button type="button" class="btn btn-pdf" onclick="printPDF()" style="width:100%;">
+                    <i class="bi bi-printer"></i> Cetak Borang Kosong
+                </button>
+            </div>
+            
+            <p style="text-align:center; font-size:10px; color:#999; margin-top:30px;">
+                Fariza Yahya, Zahiruddin Othman. Validation of the Malay Version of Hospital Anxiety and Depression Scale (HADS) in Hospital Universiti Sains Malaysia. International Medical Journal 2015; 22(2): 80-82.
+            </p>
+        </form>
+    </div>
+
+    <script>
+        let hadsContext = { mode: 'personal', instId: null };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
+            document.getElementById('hadsForm').addEventListener('change', calculateHadsScore);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+
+            if (ref) {
+                hadsContext.mode = 'shared'; 
+                hadsContext.instId = ref;
+                await finalizeHadsSetup(ref);
+            } else {
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        try {
+                            const snap = await db.collection('users').doc(user.uid).get();
+                            if (snap.exists) {
+                                const userData = snap.data();
+                                if (['institutionUser', 'institutionAdmin'].includes(userData.role)) {
+                                    hadsContext.mode = 'institution'; 
+                                    hadsContext.instId = userData.institutionId;
+                                }
+                            }
+                        } catch (e) { console.error(e); }
+                    }
+                    finalizeHadsSetup(hadsContext.instId);
+                });
+            }
+        });
+
+        async function finalizeHadsSetup(instId) {
+            const blankQrHeader = document.getElementById('blank-qr-header');
+            const backButton = document.getElementById('backLink');
+
+            if (hadsContext.mode === 'shared') {
+                if(blankQrHeader) blankQrHeader.style.display = 'none';
+                if(backButton) backButton.style.display = 'none';
+            } else {
+                if(blankQrHeader) {
+                    blankQrHeader.style.display = 'block';
+                    generateBlankFormQR(instId);
+                }
+                if(backButton) backButton.style.display = 'inline-flex';
+            }
+            if (typeof loadInstitutionHeader === "function" && instId) {
+                await loadInstitutionHeader(instId);
+            } else if (typeof loadPersonalHeader === "function") {
+                loadPersonalHeader();
+            }
+        }
+
+        function generateBlankFormQR(instId) {
+            const qrContainer = document.getElementById("blank-qrcode");
+            if (!qrContainer) return;
+            qrContainer.innerHTML = ""; 
+            const baseUrl = window.location.href.split('?')[0]; 
+            const targetUrl = instId ? `${baseUrl}?ref=${instId}` : baseUrl;
+            new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
+        }
+
+        function calculateHadsScore() {
+            let scoreA = 0;
+            let scoreD = 0;
+            const aItems = [1, 3, 5, 7, 9, 11, 13];
+            const dItems = [2, 4, 6, 8, 10, 12, 14];
+
+            aItems.forEach(i => {
+                const el = document.querySelector(`input[name="q${i}"]:checked`);
+                if(el) scoreA += parseInt(el.value);
+            });
+
+            dItems.forEach(i => {
+                const el = document.querySelector(`input[name="q${i}"]:checked`);
+                if(el) scoreD += parseInt(el.value);
+            });
+
+            document.getElementById('score-a-display').innerText = scoreA;
+            document.getElementById('score-d-display').innerText = scoreD;
+            updateSeverity('sev-a', scoreA);
+            updateSeverity('sev-d', scoreD);
+
+            return { A: scoreA, D: scoreD };
+        }
+
+        function updateSeverity(elId, score) {
+            const el = document.getElementById(elId);
+            el.className = 'severity'; 
+            if (score <= 7) { el.innerText = "Normal"; el.classList.add('sev-normal'); }
+            else if (score <= 10) { el.innerText = "Sempadan"; el.classList.add('sev-border'); }
+            else { el.innerText = "Tidak Normal"; el.classList.add('sev-case'); }
+        }
+
+        function generateQR() {
+            const modal = document.getElementById('pdpa-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+            } else {
+                if(confirm("Jana Kod QR? Dengan mengklik OK, anda bersetuju untuk berkongsi data ini.")) {
+                    executeQRGeneration();
+                }
+            }
+        }
+
+        function executeQRGeneration() {
+            const scores = calculateHadsScore();
+
+            const payload = {
+                t: "HADS",
+                d: Date.now(),
+                score: "A:" + scores.A + " D:" + scores.D, 
+                scoreA: scores.A,
+                scoreD: scores.D
+            };
+
+            for(let i=1; i<=14; i++) {
+                const el = document.querySelector(`input[name="q${i}"]:checked`);
+                payload[`q${i}`] = el ? parseInt(el.value) : 0;
+            }
+
+            const qrDiv = document.getElementById("qrcode");
+            qrDiv.innerHTML = "";
+            
+            const safeData = encodeURIComponent(JSON.stringify(payload));
+            new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+
+            const section = document.getElementById('qr-section');
+            section.style.display = 'block';
+            section.scrollIntoView({behavior: 'smooth'});
+        }
+
+        // --- NEW PRINT PDF FUNCTION ---
+        async function printPDF() {
+            const loading = document.getElementById('pdf-loading');
+            if (loading) loading.style.display = 'flex';
+            
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert("Sila benarkan 'pop-ups' untuk melihat PDF.");
+                if (loading) loading.style.display = 'none';
+                return;
+            }
+            printWindow.document.write('Sila tunggu, menjana PDF...');
+
+            try {
+                // 1. Get Branding Data
+                let footerData = { name: "PalliCalc Patient Education", contact: "", logos: [] };
+                // Use hadsContext.instId to check cache first
+                if (hadsContext && hadsContext.instId) {
+                    const cached = localStorage.getItem('cached_inst_' + hadsContext.instId);
+                    if (cached) {
+                        const d = JSON.parse(cached);
+                        footerData = { 
+                            name: d.headerName || d.name, 
+                            contact: d.headerContact || d.contact, 
+                            logos: d.headerLogos || (d.logo ? [d.logo] : [])
+                        };
+                    }
+                } else {
+                    const s = localStorage.getItem('institutionSettings');
+                    if (s) {
+                        const parsed = JSON.parse(s);
+                        footerData = { name: parsed.name, contact: parsed.contact, logos: parsed.logos || [parsed.logo] };
+                    }
+                }
+
+                const { PDFDocument, rgb, StandardFonts } = PDFLib;
+                
+                // 2. Fetch 'ms.pdf' specifically
+                const pdfUrl = './ms.pdf?v=' + Date.now();
+                
+                const existingPdfBytes = await fetch(pdfUrl).then(res => {
+                    if (!res.ok) throw new Error("File ms.pdf not found!");
+                    return res.arrayBuffer();
+                });
+
+                const pdfDoc = await PDFDocument.load(existingPdfBytes);
+                const newPdf = await PDFDocument.create();
+                
+                const helveticaFont = await newPdf.embedFont(StandardFonts.Helvetica);
+                const helveticaBold = await newPdf.embedFont(StandardFonts.HelveticaBold);
+
+                const pageIndices = pdfDoc.getPageIndices(); 
+                const embeddedPages = await newPdf.embedPdf(pdfDoc, pageIndices);
+
+                const A4_W = 595.28; 
+                const A4_H = 841.89;
+                const FOOTER_H = 80;
+
+                // 3. Stamp Footer
+                for (const page of embeddedPages) {
+                    const newPage = newPdf.addPage([A4_W, A4_H]);
+                    
+                    const scale = Math.min(A4_W / page.width, (A4_H - FOOTER_H) / page.height);
+                    const w = page.width * scale;
+                    const h = page.height * scale;
+                    newPage.drawPage(page, { x: (A4_W - w)/2, y: FOOTER_H, width: w, height: h });
+
+                    // Branding Line
+                    const lineY = FOOTER_H - 10;
+                    newPage.drawLine({ 
+                        start: {x: 30, y: lineY}, 
+                        end: {x: A4_W-30, y: lineY}, 
+                        thickness: 0.5, 
+                        color: rgb(0.6, 0.6, 0.6) 
+                    });
+
+                    // Logos
+                    let currentX = 30;
+                    if (footerData.logos && footerData.logos.length > 0) {
+                        for (const logoUrl of footerData.logos) {
+                            try {
+                                if(!logoUrl) continue;
+                                const logoBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
+                                let logoImg = logoUrl.toLowerCase().includes('png') ? await newPdf.embedPng(logoBytes) : await newPdf.embedJpg(logoBytes);
+                                const lScale = 35 / logoImg.height;
+                                const lWidth = logoImg.width * lScale;
+                                newPage.drawImage(logoImg, { x: currentX, y: lineY - 45, width: lWidth, height: 35 });
+                                currentX += lWidth + 15;
+                            } catch (e) { console.warn("Logo Error", e); }
+                        }
+                    }
+
+                    // Text Info
+                    const nameStr = footerData.name || "PalliCalc Patient Education";
+                    const contactStr = footerData.contact ? `Contact: ${footerData.contact}` : "";
+                    
+                    const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
+                    newPage.drawText(nameStr, { x: A4_W - 30 - nameWidth, y: lineY - 25, size: 12, font: helveticaBold, color: rgb(0.2, 0.2, 0.2) });
+
+                    if (contactStr) {
+                        const contactWidth = helveticaFont.widthOfTextAtSize(contactStr, 10);
+                        newPage.drawText(contactStr, { x: A4_W - 30 - contactWidth, y: lineY - 40, size: 10, font: helveticaFont, color: rgb(0.4, 0.4, 0.4) });
+                    }
+
+                    // Copyright
+                    const copyText = "© 2026 Alivioscript Solutions | PalliCalc™";
+                    const copyWidth = helveticaFont.widthOfTextAtSize(copyText, 8);
+                    newPage.drawText(copyText, { x: (A4_W - copyWidth) / 2, y: 10, size: 8, font: helveticaFont, color: rgb(0.6, 0.6, 0.6) });
+                }
+
+                const pdfBytes = await newPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                printWindow.location.href = URL.createObjectURL(blob);
+
+            } catch (e) {
+                if (printWindow) printWindow.close();
+                alert("Ralat: " + e.message);
+            } finally {
+                if (loading) loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
