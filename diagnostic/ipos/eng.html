@@ -12,7 +12,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     
     <script src="../diagnostic.js"></script>
@@ -329,7 +328,7 @@
             printWindow.document.write('Please wait, generating PDF...');
 
             try {
-                // A. GET DATA (Relies on context set by diagnostic.js)
+                // A. GET DATA
                 let footerData = { name: "PalliCalc Patient Education", contact: "", logos: [] };
                 if (window.appContext && window.appContext.instId) {
                     const cached = localStorage.getItem('cached_inst_' + window.appContext.instId);
@@ -442,7 +441,6 @@
     }
 
     // --- 2. IPOS QR GENERATION ---
-    // Function MUST be named generateQR to match the button's argument
     function generateQR() {
         const getVal = (name) => {
             const el = document.querySelector(`input[name="${name}"]:checked`);
