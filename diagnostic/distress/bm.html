@@ -382,18 +382,18 @@
             section.scrollIntoView({behavior: 'smooth'});
         }
 
-        // --- PDF GENERATION LOGIC (MALAY) ---
+        // --- PDF GENERATION LOGIC (ENGLISH) ---
         async function printPDF() {
             const loading = document.getElementById('pdf-loading');
             if (loading) loading.style.display = 'flex';
             
             const printWindow = window.open('', '_blank');
             if (!printWindow) {
-                alert("Sila benarkan 'pop-ups' untuk melihat PDF.");
+                alert("Please allow 'pop-ups' to view the PDF.");
                 if (loading) loading.style.display = 'none';
                 return;
             }
-            printWindow.document.write('Sila tunggu, sedang menjana PDF...');
+            printWindow.document.write('Please wait, generating PDF...');
 
             try {
                 // 1. Get Branding Data
@@ -411,10 +411,10 @@
                 const { PDFDocument, rgb, StandardFonts } = PDFLib;
                 
                 // 2. Fetch the existing blank bm.pdf (Local source)
-                const pdfUrl = 'bm.pdf?v=' + Date.now();
+                const pdfUrl = './bm.pdf?v=' + Date.now();
                 
                 const existingPdfBytes = await fetch(pdfUrl).then(res => {
-                    if (!res.ok) throw new Error("File bm.pdf tidak dijumpai!");
+                    if (!res.ok) throw new Error("File bm.pdf not found!");
                     return res.arrayBuffer();
                 });
 
@@ -467,7 +467,7 @@
 
                     // INSTITUTION TEXT
                     const nameStr = footerData.name || "PalliCalc Patient Education";
-                    const contactStr = footerData.contact ? `Hubungi: ${footerData.contact}` : "";
+                    const contactStr = footerData.contact ? `Contact: ${footerData.contact}` : "";
                     
                     const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
                     newPage.drawText(nameStr, { x: A4_W - 30 - nameWidth, y: lineY - 25, size: 12, font: helveticaBold, color: rgb(0.2, 0.2, 0.2) });
@@ -489,7 +489,7 @@
 
             } catch (e) {
                 if (printWindow) printWindow.close();
-                alert("Ralat: " + e.message);
+                alert("Error: " + e.message);
             } finally {
                 if (loading) loading.style.display = 'none';
             }
@@ -497,4 +497,3 @@
     </script>
 </body>
 </html>
- 
