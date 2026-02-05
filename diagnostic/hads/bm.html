@@ -455,11 +455,11 @@
 
                 const { PDFDocument, rgb, StandardFonts } = PDFLib;
                 
-                // 2. Fetch 'ms.pdf' specifically
-                const pdfUrl = './ms.pdf?v=' + Date.now();
+                // 2. Fetch 'bm.pdf' specifically
+                const pdfUrl = './bm.pdf?v=' + Date.now();
                 
                 const existingPdfBytes = await fetch(pdfUrl).then(res => {
-                    if (!res.ok) throw new Error("File ms.pdf not found!");
+                    if (!res.ok) throw new Error("File bm.pdf not found!");
                     return res.arrayBuffer();
                 });
 
