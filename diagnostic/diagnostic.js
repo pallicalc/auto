@@ -1,5 +1,5 @@
 // ============================================================
-// DIAGNOSTIC.JS - Central Brain with Auto-Consent Injection
+// DIAGNOSTIC.JS - STABLE VERSION (Explicit Consent)
 // ============================================================
 
 const firebaseConfig = {
@@ -20,25 +20,8 @@ const auth = (typeof firebase !== 'undefined') ? firebase.auth() : null;
 
 window.appContext = { mode: 'personal', instId: null };
 
-// --- MAIN LIFECYCLE ---
 document.addEventListener('DOMContentLoaded', async () => {
-    
-    // ============================================================
-    // 1. THE AUTO-HIJACKER (No HTML changes needed)
-    // ============================================================
-    // This looks for your existing generateQR() function and wraps it
-    if (typeof window.generateQR === 'function') {
-        const originalLogic = window.generateQR; // Save your math/QR logic
-        
-        // Overwrite the function globally
-        window.generateQR = function() {
-            // When button is clicked, open modal instead of running logic immediately
-            requestConsent(originalLogic);
-        };
-        console.log("Secure Consent Layer: Injected");
-    }
-
-    // 2. Inject UI Elements
+    // 1. Inject UI Elements
     injectStandardFooter();
     injectConsentModal();
     injectFavicon();
@@ -46,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
-    // 3. Handle User/Doctor Roles
+    // 2. Handle Role & Header
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
 
@@ -162,7 +145,7 @@ function injectFavicon() {
     link.href = '../../favicon.png'; 
 }
 
-// --- CONSENT MODAL ---
+// --- UNIVERSAL CONSENT MODAL ---
 let pendingGenFunction = null;
 
 function injectConsentModal() {
@@ -181,7 +164,7 @@ function injectConsentModal() {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
-// Global helpers (exposed to window so buttons work)
+// Global helpers (exposed to window)
 window.requestConsent = function(targetFunction) {
     pendingGenFunction = targetFunction;
     const modal = document.getElementById('pdpa-modal');
@@ -191,7 +174,10 @@ window.requestConsent = function(targetFunction) {
 
 window.confirmConsent = function() {
     closeConsentModal();
-    if (pendingGenFunction) { pendingGenFunction(); pendingGenFunction = null; }
+    if (typeof pendingGenFunction === 'function') { 
+        pendingGenFunction(); // Runs the passed function (generateQR)
+        pendingGenFunction = null; 
+    }
 }
 
 window.closeConsentModal = function() {

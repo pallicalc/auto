@@ -12,11 +12,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+    
     <script src="../diagnostic.js"></script>
 </head>
 <body>
@@ -58,19 +55,16 @@
         <form id="iposForm">
             
            <div class="question-card">
-    <label class="q-label">Q1. What have been your main problems or concerns over the past 3 days?</label>
-    
-    <textarea class="form-control" id="q1_input" rows="3" maxlength="100" 
-              style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" 
-              placeholder="List concerns..." 
-              oninput="updateCharCount(this)"></textarea>
-    
-    <small id="char-count" style="display:block; text-align:right; color:#6c757d; font-size:12px; margin-top:4px;">
-        0/100
-    </small>
-</div>
+                <label class="q-label">Q1. What have been your main problems or concerns over the past 3 days?</label>
+                <textarea class="form-control" id="q1_input" rows="3" maxlength="100" 
+                          style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" 
+                          placeholder="List concerns..." 
+                          oninput="updateCharCount(this)"></textarea>
+                <small id="char-count" style="display:block; text-align:right; color:#6c757d; font-size:12px; margin-top:4px;">0/100</small>
+            </div>
+
             <div class="question-card">
-                <label class="q-label">Q2. Below is a list of symptoms, which you may or may not have experienced. For each symptom, please tick one box that best describes how it has affected you over the past 3 days.  </label>
+                <label class="q-label">Q2. Below is a list of symptoms, which you may or may not have experienced. For each symptom, please tick one box that best describes how it has affected you over the past 3 days.</label>
                 
                 <label class="sub-label">Pain</label>
                 <div class="scale-container">
@@ -315,6 +309,12 @@
     </div>
 
     <script>
+        function updateCharCount(textarea) {
+            const count = textarea.value.length;
+            const max = textarea.getAttribute('maxlength');
+            document.getElementById('char-count').innerText = `${count}/${max}`;
+        }
+
         async function printPDF() {
             const loading = document.getElementById('pdf-loading');
             loading.style.display = 'flex';
@@ -328,10 +328,10 @@
             printWindow.document.write('Please wait, generating PDF...');
 
             try {
-                // A. GET DATA
+                // A. GET DATA (Relies on context set by diagnostic.js)
                 let footerData = { name: "PalliCalc Patient Education", contact: "", logos: [] };
-                if (window.context && window.context.instId) {
-                    const cached = localStorage.getItem('cached_inst_' + window.context.instId);
+                if (window.appContext && window.appContext.instId) {
+                    const cached = localStorage.getItem('cached_inst_' + window.appContext.instId);
                     if (cached) {
                         const d = JSON.parse(cached);
                         footerData = { 
@@ -348,12 +348,9 @@
                     }
                 }
 
-                // B. LOAD PDF (Force Cache Busting with '?v=timestamp')
+                // B. LOAD PDF
                 const { PDFDocument, rgb, StandardFonts } = PDFLib;
-                
-                // CRITICAL FIX: Append timestamp to force new download
                 const pdfUrl = 'eng.pdf?v=' + Date.now();
-                
                 const existingPdfBytes = await fetch(pdfUrl).then(res => {
                     if (!res.ok) throw new Error("File eng.pdf not found!");
                     return res.arrayBuffer();
@@ -364,8 +361,6 @@
                 
                 const helveticaFont = await newPdf.embedFont(StandardFonts.Helvetica);
                 const helveticaBold = await newPdf.embedFont(StandardFonts.HelveticaBold);
-
-                // CRITICAL FIX: Explicitly embed ALL pages by index
                 const pageIndices = pdfDoc.getPageIndices(); 
                 const embeddedPages = await newPdf.embedPdf(pdfDoc, pageIndices);
 
@@ -373,26 +368,17 @@
                 const A4_H = 841.89;
                 const FOOTER_H = 80;
 
-                // C. STAMP FOOTER (Iterates through ALL pages)
+                // C. STAMP FOOTER
                 for (const page of embeddedPages) {
                     const newPage = newPdf.addPage([A4_W, A4_H]);
-                    
-                    // 1. Content
                     const scale = Math.min(A4_W / page.width, (A4_H - FOOTER_H) / page.height);
                     const w = page.width * scale;
                     const h = page.height * scale;
                     newPage.drawPage(page, { x: (A4_W - w)/2, y: FOOTER_H, width: w, height: h });
 
-                    // 2. Line
                     const lineY = FOOTER_H - 10;
-                    newPage.drawLine({ 
-                        start: {x: 30, y: lineY}, 
-                        end: {x: A4_W-30, y: lineY}, 
-                        thickness: 0.5, 
-                        color: rgb(0.6, 0.6, 0.6) 
-                    });
+                    newPage.drawLine({ start: {x: 30, y: lineY}, end: {x: A4_W-30, y: lineY}, thickness: 0.5, color: rgb(0.6, 0.6, 0.6) });
 
-                    // 3. LOGOS (LEFT)
                     let currentX = 30;
                     if (footerData.logos && footerData.logos.length > 0) {
                         for (const logoUrl of footerData.logos) {
@@ -405,52 +391,25 @@
 
                                 const lScale = 35 / logoImg.height;
                                 const lWidth = logoImg.width * lScale;
-                                
-                                newPage.drawImage(logoImg, {
-                                    x: currentX,
-                                    y: lineY - 45,
-                                    width: lWidth,
-                                    height: 35
-                                });
+                                newPage.drawImage(logoImg, { x: currentX, y: lineY - 45, width: lWidth, height: 35 });
                                 currentX += lWidth + 15;
                             } catch (e) { console.warn("Logo Error", e); }
                         }
                     }
 
-                    // 4. TEXT (RIGHT)
                     const nameStr = footerData.name || "PalliCalc Patient Education";
                     const contactStr = footerData.contact ? `Contact: ${footerData.contact}` : "";
-                    
                     const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
-                    newPage.drawText(nameStr, { 
-                        x: A4_W - 30 - nameWidth, 
-                        y: lineY - 25, 
-                        size: 12, 
-                        font: helveticaBold, 
-                        color: rgb(0.2, 0.2, 0.2) 
-                    });
+                    newPage.drawText(nameStr, { x: A4_W - 30 - nameWidth, y: lineY - 25, size: 12, font: helveticaBold, color: rgb(0.2, 0.2, 0.2) });
 
                     if (contactStr) {
                         const contactWidth = helveticaFont.widthOfTextAtSize(contactStr, 10);
-                        newPage.drawText(contactStr, { 
-                            x: A4_W - 30 - contactWidth, 
-                            y: lineY - 40, 
-                            size: 10, 
-                            font: helveticaFont, 
-                            color: rgb(0.4, 0.4, 0.4) 
-                        });
+                        newPage.drawText(contactStr, { x: A4_W - 30 - contactWidth, y: lineY - 40, size: 10, font: helveticaFont, color: rgb(0.4, 0.4, 0.4) });
                     }
 
-                    // 5. COPYRIGHT (CENTER)
                     const copyText = "© 2026 Alivioscript Solutions | PalliCalc™";
                     const copyWidth = helveticaFont.widthOfTextAtSize(copyText, 8);
-                    newPage.drawText(copyText, {
-                        x: (A4_W - copyWidth) / 2,
-                        y: 10,
-                        size: 8,
-                        font: helveticaFont,
-                        color: rgb(0.6, 0.6, 0.6)
-                    });
+                    newPage.drawText(copyText, { x: (A4_W - copyWidth) / 2, y: 10, size: 8, font: helveticaFont, color: rgb(0.6, 0.6, 0.6) });
                 }
 
                 const pdfBytes = await newPdf.save();
@@ -482,7 +441,8 @@
     }
 
     // --- 2. IPOS QR GENERATION ---
-    function generateIposQR() {
+    // RENAMED TO MATCH BUTTON AND DIAGNOSTIC.JS EXPECTATION
+    function generateQR() {
         const getVal = (name) => {
             const el = document.querySelector(`input[name="${name}"]:checked`);
             return el ? parseInt(el.value) : 0;
