@@ -1,5 +1,5 @@
 // ============================================================
-// DIAGNOSTIC.JS - STABLE VERSION
+// DIAGNOSTIC.JS - CLEAN VERSION (No Auto-Hijack)
 // ============================================================
 
 const firebaseConfig = {
@@ -11,6 +11,7 @@ const firebaseConfig = {
     appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
 };
 
+// Prevent double initialization
 if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -21,6 +22,7 @@ const auth = (typeof firebase !== 'undefined') ? firebase.auth() : null;
 window.appContext = { mode: 'personal', instId: null };
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Inject UI Elements
     injectStandardFooter();
     injectConsentModal();
     injectFavicon();
@@ -28,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
+    // 2. Handle Role & Header
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
 
@@ -173,7 +176,7 @@ window.requestConsent = function(targetFunction) {
 window.confirmConsent = function() {
     closeConsentModal();
     if (typeof pendingGenFunction === 'function') { 
-        pendingGenFunction(); 
+        pendingGenFunction(); // <--- This runs your generateQR code
         pendingGenFunction = null; 
     }
 }
