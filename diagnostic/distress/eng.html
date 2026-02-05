@@ -12,6 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -20,32 +21,123 @@
 
     <style>
         /* --- THERMOMETER LAYOUT --- */
-        .thermo-wrapper { display: flex; justify-content: center; align-items: stretch; gap: 20px; padding: 10px 0; min-height: 450px; }
-        .scale-column { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; padding-right: 10px; font-weight: bold; color: #495057; }
-        .scale-row { display: flex; align-items: center; gap: 10px; height: 35px; }
+        .thermo-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: stretch; 
+            gap: 20px;
+            padding: 10px 0;
+            min-height: 450px;
+        }
+
+        .scale-column {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-end; 
+            padding-right: 10px;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .scale-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 35px;
+        }
+
         .scale-row label { font-size: 18px; cursor: pointer; }
         .scale-row input[type="radio"] { transform: scale(1.5); margin: 0; cursor: pointer; }
-        .label-text { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin: 5px 0; }
+
+        .label-text {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+            margin-top: 5px;
+        }
         .text-extreme { color: #d32f2f; font-weight: 800; }
         .text-none { color: #2e7d32; font-weight: 800; }
-        .image-column { display: flex; align-items: center; justify-content: center; }
-        .thermo-img { height: 100%; max-height: 480px; width: auto; object-fit: contain; }
+
+        .image-column {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .thermo-img {
+            height: 100%;
+            max-height: 480px; 
+            width: auto;
+            object-fit: contain;
+        }
 
         /* --- YES/NO LIST STYLING --- */
-        .section-header { background: #f8f9fa; padding: 10px 15px; margin: 20px -20px 10px -20px; font-weight: 700; color: #0061f2; font-size: 14px; text-transform: uppercase; border-left: 4px solid #0061f2; }
-        .yes-no-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .section-header { 
+            background: #f8f9fa; 
+            padding: 10px 15px; 
+            margin: 20px -20px 10px -20px; 
+            font-weight: 700; 
+            color: #0061f2; 
+            font-size: 14px; 
+            text-transform: uppercase; 
+            border-left: 4px solid #0061f2;
+        }
+        
+        .yes-no-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px 0; 
+            border-bottom: 1px solid #f0f0f0; 
+        }
         .yes-no-row:last-child { border-bottom: none; }
-        .yn-label { font-size: 15px; color: #333; flex: 1; padding-right: 10px; white-space: normal; line-height: 1.3; }
-        .yn-options { display: flex; gap: 5px; width: 110px; flex-shrink: 0; }
-        .yn-btn { flex: 1; position: relative; text-align: center; }
-        .yn-btn input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; left:0; top:0; }
-        .yn-btn label { display: flex; justify-content: center; align-items: center; height: 35px; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; color: #6c757d; font-weight: 600; font-size: 13px; transition: all 0.2s; }
+        
+        .yn-label { 
+            font-size: 15px; 
+            color: #333; 
+            flex: 1; 
+            padding-right: 10px; 
+            white-space: normal; 
+            line-height: 1.3;
+        }
+        
+        .yn-options { 
+            display: flex; 
+            gap: 5px; 
+            width: 110px; 
+            flex-shrink: 0; 
+        }
+
+        .yn-btn {
+            flex: 1;
+            position: relative;
+            text-align: center;
+        }
+        .yn-btn input {
+            position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; left:0; top:0;
+        }
+        .yn-btn label {
+            display: flex; justify-content: center; align-items: center; height: 35px;
+            background: #fff; border: 1px solid #dee2e6; border-radius: 6px;
+            color: #6c757d; font-weight: 600; font-size: 13px; transition: all 0.2s;
+        }
         
         .yn-btn input:checked + label.lbl-no { background: #e8f5e9; border-color: #2e7d32; color: #2e7d32; } 
         .yn-btn input:checked + label.lbl-yes { background: #ffebee; border-color: #c62828; color: #c62828; }
+
     </style>
 </head>
 <body>
+
+    <div id="pdf-loading">
+        <div style="text-align:center">
+            <div style="display:inline-block; width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; font-weight: bold;">Preparing PDF...</p>
+        </div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } #pdf-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; }</style>
+    </div>
 
     <div class="main-container">
         
@@ -73,7 +165,9 @@
             <div class="nav-link" style="color:#6c757d; cursor:default;"><i class="bi bi-calendar-event"></i> <span id="dateDisplay"></span></div>
         </div>
 
-        <form id="iposForm"> <div class="question-card">
+        <form id="iposForm">
+            
+            <div class="question-card">
                 <label class="q-label">Q1. Please circle the number (0-10) that best describes how much distress you have been experiencing in the past week, including today.</label>
                 
                 <div class="thermo-wrapper">
@@ -134,7 +228,7 @@
                 <div class="score-val" id="total-score-display">--</div>
             </div>
 
-            <div id="qr-section" style="display:none; margin-top:20px;">
+            <div id="qr-section">
                 <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:8px; border-radius:6px; margin-bottom:8px; font-size:12px;">
                     <i class="bi bi-check-circle-fill"></i> <strong>Result Ready!</strong>
                     <p style="margin:0; font-size:13px;">Show this QR to your doctor.</p>
@@ -158,12 +252,38 @@
     </div>
 
     <script>
-        // --- CONFIGURATION ---
-        const physicalItems = [ {l:'Pain'}, {l:'Sleep'}, {l:'Fatigue'}, {l:'Tobacco use'}, {l:'Substance use'}, {l:'Memory or concentration'}, {l:'Sexual health'}, {l:'Changes in eating'}, {l:'Loss or change of physical abilities'} ];
-        const emotionalItems = [ {l:'Worry or anxiety'}, {l:'Sadness or depression'}, {l:'Loss of interest or enjoyment'}, {l:'Grief or loss'}, {l:'Fear'}, {l:'Loneliness'}, {l:'Anger'}, {l:'Changes in appearance'}, {l:'Feelings of worthlessness or being a burden'} ];
-        const practicalItems = [ {l:'Taking care of myself'}, {l:'Taking care of others'}, {l:'Safety'}, {l:'Work'}, {l:'School'}, {l:'Housing/Utilities'}, {l:'Finances'}, {l:'Insurance'}, {l:'Transportation'}, {l:'Child care'}, {l:'Having enough food'}, {l:'Access to medicine'}, {l:'Treatment decisions'} ];
-        const socialItems = [ {l:'Relationship with spouse or partner'}, {l:'Relationship with children'}, {l:'Relationship with family members'}, {l:'Relationship with friends or coworkers'}, {l:'Communication with health care team'}, {l:'Ability to have children'}, {l:'Prejudice or discrimination'} ];
-        const spiritualItems = [ {l:'Sense of meaning or purpose'}, {l:'Changes in faith or beliefs'}, {l:'Death, dying, or afterlife'}, {l:'Conflict between beliefs and cancer treatments'}, {l:'Relationship with the sacred'}, {l:'Ritual or dietary needs'} ];
+        // --- CONFIGURATION: Full Text Labels ---
+        
+        const physicalItems = [
+            {l:'Pain'}, {l:'Sleep'}, {l:'Fatigue'}, {l:'Tobacco use'}, {l:'Substance use'}, 
+            {l:'Memory or concentration'}, {l:'Sexual health'}, {l:'Changes in eating'}, {l:'Loss or change of physical abilities'}
+        ];
+        
+        const emotionalItems = [
+            {l:'Worry or anxiety'}, {l:'Sadness or depression'}, {l:'Loss of interest or enjoyment'}, 
+            {l:'Grief or loss'}, {l:'Fear'}, {l:'Loneliness'}, 
+            {l:'Anger'}, {l:'Changes in appearance'}, {l:'Feelings of worthlessness or being a burden'}
+        ];
+        
+        const practicalItems = [
+            {l:'Taking care of myself'}, {l:'Taking care of others'}, {l:'Safety'}, 
+            {l:'Work'}, {l:'School'}, {l:'Housing/Utilities'}, {l:'Finances'}, 
+            {l:'Insurance'}, {l:'Transportation'}, {l:'Child care'}, 
+            {l:'Having enough food'}, {l:'Access to medicine'}, {l:'Treatment decisions'}
+        ];
+        
+        const socialItems = [
+            {l:'Relationship with spouse or partner'}, {l:'Relationship with children'}, 
+            {l:'Relationship with family members'}, {l:'Relationship with friends or coworkers'}, 
+            {l:'Communication with health care team'}, {l:'Ability to have children'}, 
+            {l:'Prejudice or discrimination'}
+        ];
+        
+        const spiritualItems = [
+            {l:'Sense of meaning or purpose'}, {l:'Changes in faith or beliefs'}, 
+            {l:'Death, dying, or afterlife'}, {l:'Conflict between beliefs and cancer treatments'}, 
+            {l:'Relationship with the sacred'}, {l:'Ritual or dietary needs'}
+        ];
 
         // --- RENDER LOGIC ---
         function renderYesNoItems(items, containerId, prefix) {
@@ -175,8 +295,14 @@
                 <div class="yes-no-row">
                     <div class="yn-label">${item.l}</div>
                     <div class="yn-options">
-                        <div class="yn-btn"><input type="radio" name="${uniqueName}" value="0" id="${uniqueName}_no"><label for="${uniqueName}_no" class="lbl-no">No</label></div>
-                        <div class="yn-btn"><input type="radio" name="${uniqueName}" value="1" id="${uniqueName}_yes"><label for="${uniqueName}_yes" class="lbl-yes">Yes</label></div>
+                        <div class="yn-btn">
+                            <input type="radio" name="${uniqueName}" value="0" id="${uniqueName}_no">
+                            <label for="${uniqueName}_no" class="lbl-no">No</label>
+                        </div>
+                        <div class="yn-btn">
+                            <input type="radio" name="${uniqueName}" value="1" id="${uniqueName}_yes">
+                            <label for="${uniqueName}_yes" class="lbl-yes">Yes</label>
+                        </div>
                     </div>
                 </div>`;
             });
@@ -215,7 +341,6 @@
             counter.innerText = `${currentLength}/${maxLength} characters used`;
         }
 
-        // --- DT QR PAYLOAD LOGIC ---
         function generateQR() {
             const getVal = (name) => {
                 const el = document.querySelector(`input[name="${name}"]:checked`);
@@ -229,7 +354,7 @@
             const payload = {
                 t: "dt", 
                 d: Date.now(),
-                score: distressScore, 
+                score: distressScore, // <--- ADDED THIS KEY so the scanner detects the total
                 Q1: distressScore
             };
 
@@ -251,6 +376,8 @@
             section.style.display = 'block';
             section.scrollIntoView({behavior: 'smooth'});
         }
+
+        function printPDF() { window.print(); }
     </script>
 </body>
 </html>

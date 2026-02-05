@@ -13,23 +13,89 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    
     <script src="../diagnostic.js"></script>
 
     <style>
-        /* [Keep your Styles exactly as they were] */
-        .question-card { padding: 20px; }
-        .q-label { font-size: 1.1rem; margin-bottom: 15px; }
-        .scale-container { display: flex; flex-direction: column; gap: 10px; }
-        .scale-opt label { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; width: 100%; padding: 18px 20px; background: #fff; border: 2px solid #e9ecef; border-radius: 12px; cursor: pointer; font-size: 18px; font-weight: 500; color: #495057; text-align: left; transition: all 0.2s ease; }
-        .scale-opt input[type="radio"] { display: none; }
-        .scale-opt label::before { content: ''; display: block; width: 24px; height: 24px; margin-right: 20px; border: 2px solid #adb5bd; border-radius: 50%; background: white; flex-shrink: 0; transition: all 0.2s; }
-        .scale-opt input:checked + label { background-color: #e7f1ff; border-color: #0061f2; color: #004085; box-shadow: 0 4px 12px rgba(0, 97, 242, 0.15); transform: translateY(-1px); }
-        .scale-opt input:checked + label::before { background-color: #0061f2; border-color: #0061f2; box-shadow: inset 0 0 0 5px white; }
+        /* --- iPad Optimized Styles --- */
+        
+        .question-card {
+            padding: 20px; /* More breathing room */
+        }
+
+        .q-label {
+            font-size: 1.1rem; /* Larger question text */
+            margin-bottom: 15px;
+        }
+
+        .scale-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Space between options */
+        }
+
+        /* The clickable row */
+        .scale-opt label {
+            display: flex;
+            flex-direction: row; /* Align horizontal */
+            align-items: center; /* Vertically center */
+            justify-content: flex-start; /* Align Left */
+            
+            width: 100%;
+            padding: 18px 20px; /* Large touch target */
+            
+            background: #fff;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            
+            cursor: pointer;
+            font-size: 18px; /* Bigger text for iPad */
+            font-weight: 500;
+            color: #495057;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        /* Hide the actual radio button but keep logic */
+        .scale-opt input[type="radio"] {
+            display: none; 
+        }
+
+        /* Create a custom radio circle on the left */
+        .scale-opt label::before {
+            content: '';
+            display: block;
+            width: 24px;
+            height: 24px;
+            margin-right: 20px; /* Space between circle and text */
+            border: 2px solid #adb5bd;
+            border-radius: 50%;
+            background: white;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        /* ACTIVE STATE (When selected) */
+        .scale-opt input:checked + label {
+            background-color: #e7f1ff; /* Light Blue Background */
+            border-color: #0061f2;     /* Blue Border */
+            color: #004085;            /* Dark Blue Text */
+            box-shadow: 0 4px 12px rgba(0, 97, 242, 0.15);
+            transform: translateY(-1px);
+        }
+
+        /* Active Circle */
+        .scale-opt input:checked + label::before {
+            background-color: #0061f2;
+            border-color: #0061f2;
+            box-shadow: inset 0 0 0 5px white; /* Makes it look like a donut */
+        }
+
+        /* Score Box */
         .score-box-split { display: flex; gap: 15px; margin-top: 30px; }
         .score-card { flex: 1; background: #2c3e50; color: white; padding: 20px; border-radius: 12px; text-align: center; }
         .score-card .val { font-size: 32px; font-weight: 800; color: #00c6f7; }
         .score-card .severity { font-size: 14px; margin-top: 5px; color: #fff; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 6px; display:inline-block;}
+
         .sev-normal { background: #28a745 !important; }
         .sev-border { background: #ffc107 !important; color: #333 !important; }
         .sev-case { background: #dc3545 !important; }
@@ -63,29 +129,164 @@
         </div>
 
         <form id="hadsForm">
-            <div class="alert alert-info">Read each item...</div>
-            
-            <div class="question-card"><label class="q-label">1. I feel tense or 'wound up':</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q1" value="3" id="q1_3"><label for="q1_3">Most of the time</label></div><div class="scale-opt"><input type="radio" name="q1" value="2" id="q1_2"><label for="q1_2">A lot of the time</label></div><div class="scale-opt"><input type="radio" name="q1" value="1" id="q1_1"><label for="q1_1">From time to time, occasionally</label></div><div class="scale-opt"><input type="radio" name="q1" value="0" id="q1_0"><label for="q1_0">Not at all</label></div></div></div>
-            <div class="question-card"><label class="q-label">2. I still enjoy the things I used to enjoy:</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q2" value="0" id="q2_0"><label for="q2_0">Definitely as much</label></div><div class="scale-opt"><input type="radio" name="q2" value="1" id="q2_1"><label for="q2_1">Not quite so much</label></div><div class="scale-opt"><input type="radio" name="q2" value="2" id="q2_2"><label for="q2_2">Only a little</label></div><div class="scale-opt"><input type="radio" name="q2" value="3" id="q2_3"><label for="q2_3">Hardly at all</label></div></div></div>
-            <div class="question-card"><label class="q-label">3. I get a sort of frightened feeling as if something awful is about to happen:</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q3" value="3" id="q3_3"><label for="q3_3">Very definitely and quite badly</label></div><div class="scale-opt"><input type="radio" name="q3" value="2" id="q3_2"><label for="q3_2">Yes, but not too badly</label></div><div class="scale-opt"><input type="radio" name="q3" value="1" id="q3_1"><label for="q3_1">A little, but it doesn't worry me</label></div><div class="scale-opt"><input type="radio" name="q3" value="0" id="q3_0"><label for="q3_0">Not at all</label></div></div></div>
-            <div class="question-card"><label class="q-label">4. I can laugh and see the funny side of things:</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q4" value="0" id="q4_0"><label for="q4_0">As much as I always could</label></div><div class="scale-opt"><input type="radio" name="q4" value="1" id="q4_1"><label for="q4_1">Not quite so much now</label></div><div class="scale-opt"><input type="radio" name="q4" value="2" id="q4_2"><label for="q4_2">Definitely not so much now</label></div><div class="scale-opt"><input type="radio" name="q4" value="3" id="q4_3"><label for="q4_3">Not at all</label></div></div></div>
-            <div class="question-card"><label class="q-label">5. Worrying thoughts go through my mind:</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q5" value="3" id="q5_3"><label for="q5_3">A great deal of the time</label></div><div class="scale-opt"><input type="radio" name="q5" value="2" id="q5_2"><label for="q5_2">A lot of the time</label></div><div class="scale-opt"><input type="radio" name="q5" value="1" id="q5_1"><label for="q5_1">From time to time, but not too often</label></div><div class="scale-opt"><input type="radio" name="q5" value="0" id="q5_0"><label for="q5_0">Only occasionally</label></div></div></div>
-            <div class="question-card"><label class="q-label">6. I feel cheerful:</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q6" value="3" id="q6_3"><label for="q6_3">Not at all</label></div><div class="scale-opt"><input type="radio" name="q6" value="2" id="q6_2"><label for="q6_2">Not often</label></div><div class="scale-opt"><input type="radio" name="q6" value="1" id="q6_1"><label for="q6_1">Sometimes</label></div><div class="scale-opt"><input type="radio" name="q6" value="0" id="q6_0"><label for="q6_0">Most of the time</label></div></div></div>
-            <div class="question-card"><label class="q-label">7. I can sit at ease and feel relaxed:</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q7" value="0" id="q7_0"><label for="q7_0">Definitely</label></div><div class="scale-opt"><input type="radio" name="q7" value="1" id="q7_1"><label for="q7_1">Usually</label></div><div class="scale-opt"><input type="radio" name="q7" value="2" id="q7_2"><label for="q7_2">Not often</label></div><div class="scale-opt"><input type="radio" name="q7" value="3" id="q7_3"><label for="q7_3">Not at all</label></div></div></div>
-            <div class="question-card"><label class="q-label">8. I feel as if I am slowed down:</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q8" value="3" id="q8_3"><label for="q8_3">Nearly all the time</label></div><div class="scale-opt"><input type="radio" name="q8" value="2" id="q8_2"><label for="q8_2">Very often</label></div><div class="scale-opt"><input type="radio" name="q8" value="1" id="q8_1"><label for="q8_1">Sometimes</label></div><div class="scale-opt"><input type="radio" name="q8" value="0" id="q8_0"><label for="q8_0">Not at all</label></div></div></div>
-            <div class="question-card"><label class="q-label">9. I get a sort of frightened feeling like 'butterflies' in the stomach:</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q9" value="0" id="q9_0"><label for="q9_0">Not at all</label></div><div class="scale-opt"><input type="radio" name="q9" value="1" id="q9_1"><label for="q9_1">Occasionally</label></div><div class="scale-opt"><input type="radio" name="q9" value="2" id="q9_2"><label for="q9_2">Quite often</label></div><div class="scale-opt"><input type="radio" name="q9" value="3" id="q9_3"><label for="q9_3">Very often</label></div></div></div>
-            <div class="question-card"><label class="q-label">10. I have lost interest in my appearance:</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q10" value="3" id="q10_3"><label for="q10_3">Definitely</label></div><div class="scale-opt"><input type="radio" name="q10" value="2" id="q10_2"><label for="q10_2">I don't take as much care as I should</label></div><div class="scale-opt"><input type="radio" name="q10" value="1" id="q10_1"><label for="q10_1">I may not take quite as much care</label></div><div class="scale-opt"><input type="radio" name="q10" value="0" id="q10_0"><label for="q10_0">I take just as much care as ever</label></div></div></div>
-            <div class="question-card"><label class="q-label">11. I feel restless as if I have to be on the move:</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q11" value="3" id="q11_3"><label for="q11_3">Very much indeed</label></div><div class="scale-opt"><input type="radio" name="q11" value="2" id="q11_2"><label for="q11_2">Quite a lot</label></div><div class="scale-opt"><input type="radio" name="q11" value="1" id="q11_1"><label for="q11_1">Not very much</label></div><div class="scale-opt"><input type="radio" name="q11" value="0" id="q11_0"><label for="q11_0">Not at all</label></div></div></div>
-            <div class="question-card"><label class="q-label">12. I look forward with enjoyment to things:</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q12" value="0" id="q12_0"><label for="q12_0">As much as I ever did</label></div><div class="scale-opt"><input type="radio" name="q12" value="1" id="q12_1"><label for="q12_1">Rather less than I used to</label></div><div class="scale-opt"><input type="radio" name="q12" value="2" id="q12_2"><label for="q12_2">Definitely less than I used to</label></div><div class="scale-opt"><input type="radio" name="q12" value="3" id="q12_3"><label for="q12_3">Hardly at all</label></div></div></div>
-            <div class="question-card"><label class="q-label">13. I get sudden feelings of panic:</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q13" value="3" id="q13_3"><label for="q13_3">Very often indeed</label></div><div class="scale-opt"><input type="radio" name="q13" value="2" id="q13_2"><label for="q13_2">Quite often</label></div><div class="scale-opt"><input type="radio" name="q13" value="1" id="q13_1"><label for="q13_1">Not very often</label></div><div class="scale-opt"><input type="radio" name="q13" value="0" id="q13_0"><label for="q13_0">Not at all</label></div></div></div>
-            <div class="question-card"><label class="q-label">14. I can enjoy a good book or radio or TV program:</label><div class="scale-container"><div class="scale-opt"><input type="radio" name="q14" value="0" id="q14_0"><label for="q14_0">Often</label></div><div class="scale-opt"><input type="radio" name="q14" value="1" id="q14_1"><label for="q14_1">Sometimes</label></div><div class="scale-opt"><input type="radio" name="q14" value="2" id="q14_2"><label for="q14_2">Not often</label></div><div class="scale-opt"><input type="radio" name="q14" value="3" id="q14_3"><label for="q14_3">Very seldom</label></div></div></div>
-
-            <div class="score-box-split no-print">
-                <div class="score-card"><h4>Anxiety (A)</h4><div class="val" id="score-a-display">0</div><div id="sev-a" class="severity">Normal</div></div>
-                <div class="score-card"><h4>Depression (D)</h4><div class="val" id="score-d-display">0</div><div id="sev-d" class="severity">Normal</div></div>
+            <div class="alert alert-info" style="background:#e8f4f8; color:#005f73; border:none; font-size:16px; margin-bottom:20px; padding:15px; border-radius:8px;">
+                <i class="bi bi-info-circle-fill"></i> Read each item and tap the reply which comes closest to how you have been feeling in the <strong>past week</strong>.
             </div>
 
-            <div id="qr-section" style="display:none; margin-top:20px;">
+            <div class="question-card">
+                <label class="q-label">1. I feel tense or 'wound up':</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q1" value="3" id="q1_3"><label for="q1_3">Most of the time</label></div>
+                    <div class="scale-opt"><input type="radio" name="q1" value="2" id="q1_2"><label for="q1_2">A lot of the time</label></div>
+                    <div class="scale-opt"><input type="radio" name="q1" value="1" id="q1_1"><label for="q1_1">From time to time, occasionally</label></div>
+                    <div class="scale-opt"><input type="radio" name="q1" value="0" id="q1_0"><label for="q1_0">Not at all</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">2. I still enjoy the things I used to enjoy:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q2" value="0" id="q2_0"><label for="q2_0">Definitely as much</label></div>
+                    <div class="scale-opt"><input type="radio" name="q2" value="1" id="q2_1"><label for="q2_1">Not quite so much</label></div>
+                    <div class="scale-opt"><input type="radio" name="q2" value="2" id="q2_2"><label for="q2_2">Only a little</label></div>
+                    <div class="scale-opt"><input type="radio" name="q2" value="3" id="q2_3"><label for="q2_3">Hardly at all</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">3. I get a sort of frightened feeling as if something awful is about to happen:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q3" value="3" id="q3_3"><label for="q3_3">Very definitely and quite badly</label></div>
+                    <div class="scale-opt"><input type="radio" name="q3" value="2" id="q3_2"><label for="q3_2">Yes, but not too badly</label></div>
+                    <div class="scale-opt"><input type="radio" name="q3" value="1" id="q3_1"><label for="q3_1">A little, but it doesn't worry me</label></div>
+                    <div class="scale-opt"><input type="radio" name="q3" value="0" id="q3_0"><label for="q3_0">Not at all</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">4. I can laugh and see the funny side of things:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q4" value="0" id="q4_0"><label for="q4_0">As much as I always could</label></div>
+                    <div class="scale-opt"><input type="radio" name="q4" value="1" id="q4_1"><label for="q4_1">Not quite so much now</label></div>
+                    <div class="scale-opt"><input type="radio" name="q4" value="2" id="q4_2"><label for="q4_2">Definitely not so much now</label></div>
+                    <div class="scale-opt"><input type="radio" name="q4" value="3" id="q4_3"><label for="q4_3">Not at all</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">5. Worrying thoughts go through my mind:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q5" value="3" id="q5_3"><label for="q5_3">A great deal of the time</label></div>
+                    <div class="scale-opt"><input type="radio" name="q5" value="2" id="q5_2"><label for="q5_2">A lot of the time</label></div>
+                    <div class="scale-opt"><input type="radio" name="q5" value="1" id="q5_1"><label for="q5_1">From time to time, but not too often</label></div>
+                    <div class="scale-opt"><input type="radio" name="q5" value="0" id="q5_0"><label for="q5_0">Only occasionally</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">6. I feel cheerful:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q6" value="3" id="q6_3"><label for="q6_3">Not at all</label></div>
+                    <div class="scale-opt"><input type="radio" name="q6" value="2" id="q6_2"><label for="q6_2">Not often</label></div>
+                    <div class="scale-opt"><input type="radio" name="q6" value="1" id="q6_1"><label for="q6_1">Sometimes</label></div>
+                    <div class="scale-opt"><input type="radio" name="q6" value="0" id="q6_0"><label for="q6_0">Most of the time</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">7. I can sit at ease and feel relaxed:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q7" value="0" id="q7_0"><label for="q7_0">Definitely</label></div>
+                    <div class="scale-opt"><input type="radio" name="q7" value="1" id="q7_1"><label for="q7_1">Usually</label></div>
+                    <div class="scale-opt"><input type="radio" name="q7" value="2" id="q7_2"><label for="q7_2">Not often</label></div>
+                    <div class="scale-opt"><input type="radio" name="q7" value="3" id="q7_3"><label for="q7_3">Not at all</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">8. I feel as if I am slowed down:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q8" value="3" id="q8_3"><label for="q8_3">Nearly all the time</label></div>
+                    <div class="scale-opt"><input type="radio" name="q8" value="2" id="q8_2"><label for="q8_2">Very often</label></div>
+                    <div class="scale-opt"><input type="radio" name="q8" value="1" id="q8_1"><label for="q8_1">Sometimes</label></div>
+                    <div class="scale-opt"><input type="radio" name="q8" value="0" id="q8_0"><label for="q8_0">Not at all</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">9. I get a sort of frightened feeling like 'butterflies' in the stomach:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q9" value="0" id="q9_0"><label for="q9_0">Not at all</label></div>
+                    <div class="scale-opt"><input type="radio" name="q9" value="1" id="q9_1"><label for="q9_1">Occasionally</label></div>
+                    <div class="scale-opt"><input type="radio" name="q9" value="2" id="q9_2"><label for="q9_2">Quite often</label></div>
+                    <div class="scale-opt"><input type="radio" name="q9" value="3" id="q9_3"><label for="q9_3">Very often</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">10. I have lost interest in my appearance:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q10" value="3" id="q10_3"><label for="q10_3">Definitely</label></div>
+                    <div class="scale-opt"><input type="radio" name="q10" value="2" id="q10_2"><label for="q10_2">I don't take as much care as I should</label></div>
+                    <div class="scale-opt"><input type="radio" name="q10" value="1" id="q10_1"><label for="q10_1">I may not take quite as much care</label></div>
+                    <div class="scale-opt"><input type="radio" name="q10" value="0" id="q10_0"><label for="q10_0">I take just as much care as ever</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">11. I feel restless as if I have to be on the move:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q11" value="3" id="q11_3"><label for="q11_3">Very much indeed</label></div>
+                    <div class="scale-opt"><input type="radio" name="q11" value="2" id="q11_2"><label for="q11_2">Quite a lot</label></div>
+                    <div class="scale-opt"><input type="radio" name="q11" value="1" id="q11_1"><label for="q11_1">Not very much</label></div>
+                    <div class="scale-opt"><input type="radio" name="q11" value="0" id="q11_0"><label for="q11_0">Not at all</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">12. I look forward with enjoyment to things:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q12" value="0" id="q12_0"><label for="q12_0">As much as I ever did</label></div>
+                    <div class="scale-opt"><input type="radio" name="q12" value="1" id="q12_1"><label for="q12_1">Rather less than I used to</label></div>
+                    <div class="scale-opt"><input type="radio" name="q12" value="2" id="q12_2"><label for="q12_2">Definitely less than I used to</label></div>
+                    <div class="scale-opt"><input type="radio" name="q12" value="3" id="q12_3"><label for="q12_3">Hardly at all</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">13. I get sudden feelings of panic:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q13" value="3" id="q13_3"><label for="q13_3">Very often indeed</label></div>
+                    <div class="scale-opt"><input type="radio" name="q13" value="2" id="q13_2"><label for="q13_2">Quite often</label></div>
+                    <div class="scale-opt"><input type="radio" name="q13" value="1" id="q13_1"><label for="q13_1">Not very often</label></div>
+                    <div class="scale-opt"><input type="radio" name="q13" value="0" id="q13_0"><label for="q13_0">Not at all</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">14. I can enjoy a good book or radio or TV program:</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q14" value="0" id="q14_0"><label for="q14_0">Often</label></div>
+                    <div class="scale-opt"><input type="radio" name="q14" value="1" id="q14_1"><label for="q14_1">Sometimes</label></div>
+                    <div class="scale-opt"><input type="radio" name="q14" value="2" id="q14_2"><label for="q14_2">Not often</label></div>
+                    <div class="scale-opt"><input type="radio" name="q14" value="3" id="q14_3"><label for="q14_3">Very seldom</label></div>
+                </div>
+            </div>
+
+            <div class="score-box-split no-print">
+                <div class="score-card">
+                    <h4>Anxiety (A)</h4>
+                    <div class="val" id="score-a-display">0</div>
+                    <div id="sev-a" class="severity">Normal</div>
+                </div>
+                <div class="score-card">
+                    <h4>Depression (D)</h4>
+                    <div class="val" id="score-d-display">0</div>
+                    <div id="sev-d" class="severity">Normal</div>
+                </div>
+            </div>
+
+            <div id="qr-section">
                 <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:8px; border-radius:6px; margin-bottom:8px; font-size:12px;">
                     <i class="bi bi-check-circle-fill"></i> <strong>Result Ready!</strong>
                     <p style="margin:0; font-size:13px;">Show this QR to your doctor.</p>
@@ -108,12 +309,68 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('hadsForm');
-            if(form) form.addEventListener('change', calculateHadsScore);
+        let hadsContext = { mode: 'personal', instId: null };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
+            document.getElementById('hadsForm').addEventListener('change', calculateHadsScore);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+
+            if (ref) {
+                hadsContext.mode = 'shared'; 
+                hadsContext.instId = ref;
+                await finalizeHadsSetup(ref);
+            } else {
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        try {
+                            const snap = await db.collection('users').doc(user.uid).get();
+                            if (snap.exists) {
+                                const userData = snap.data();
+                                if (['institutionUser', 'institutionAdmin'].includes(userData.role)) {
+                                    hadsContext.mode = 'institution'; 
+                                    hadsContext.instId = userData.institutionId;
+                                }
+                            }
+                        } catch (e) { console.error(e); }
+                    }
+                    finalizeHadsSetup(hadsContext.instId);
+                });
+            }
         });
 
-        // 1. Scoring
+        async function finalizeHadsSetup(instId) {
+            const blankQrHeader = document.getElementById('blank-qr-header');
+            const backButton = document.getElementById('backLink');
+
+            if (hadsContext.mode === 'shared') {
+                if(blankQrHeader) blankQrHeader.style.display = 'none';
+                if(backButton) backButton.style.display = 'none';
+            } else {
+                if(blankQrHeader) {
+                    blankQrHeader.style.display = 'block';
+                    generateBlankFormQR(instId);
+                }
+                if(backButton) backButton.style.display = 'inline-flex';
+            }
+            if (typeof loadInstitutionHeader === "function" && instId) {
+                await loadInstitutionHeader(instId);
+            } else if (typeof loadPersonalHeader === "function") {
+                loadPersonalHeader();
+            }
+        }
+
+        function generateBlankFormQR(instId) {
+            const qrContainer = document.getElementById("blank-qrcode");
+            if (!qrContainer) return;
+            qrContainer.innerHTML = ""; 
+            const baseUrl = window.location.href.split('?')[0]; 
+            const targetUrl = instId ? `${baseUrl}?ref=${instId}` : baseUrl;
+            new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
+        }
+
         function calculateHadsScore() {
             let scoreA = 0;
             let scoreD = 0;
@@ -130,11 +387,8 @@
                 if(el) scoreD += parseInt(el.value);
             });
 
-            const scoreAEl = document.getElementById('score-a-display');
-            const scoreDEl = document.getElementById('score-d-display');
-            if(scoreAEl) scoreAEl.innerText = scoreA;
-            if(scoreDEl) scoreDEl.innerText = scoreD;
-            
+            document.getElementById('score-a-display').innerText = scoreA;
+            document.getElementById('score-d-display').innerText = scoreD;
             updateSeverity('sev-a', scoreA);
             updateSeverity('sev-d', scoreD);
 
@@ -143,17 +397,17 @@
 
         function updateSeverity(elId, score) {
             const el = document.getElementById(elId);
-            if(!el) return;
             el.className = 'severity'; 
             if (score <= 7) { el.innerText = "Normal"; el.classList.add('sev-normal'); }
             else if (score <= 10) { el.innerText = "Borderline"; el.classList.add('sev-border'); }
             else { el.innerText = "Abnormal"; el.classList.add('sev-case'); }
         }
 
-        // 2. QR Generation (Named exactly "generateQR")
+        // --- UPDATED QR GENERATION (FLATTENED STRUCTURE) ---
         function generateQR() {
             const scores = calculateHadsScore();
 
+            // 1. Create a Flat Payload (No nested objects)
             const payload = {
                 t: "HADS",
                 d: Date.now(),
@@ -162,8 +416,10 @@
                 scoreD: scores.D
             };
 
+            // 2. Loop through Q1-Q14 and add them to top level
             for(let i=1; i<=14; i++) {
                 const el = document.querySelector(`input[name="q${i}"]:checked`);
+                // Stores as q1: 3, q2: 0, etc.
                 payload[`q${i}`] = el ? parseInt(el.value) : 0;
             }
 
