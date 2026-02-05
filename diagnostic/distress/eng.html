@@ -11,6 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -69,6 +70,17 @@
     </style>
 </head>
 <body>
+
+    <div id="pdf-loading">
+        <div style="text-align:center">
+            <div style="display:inline-block; width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; font-weight: bold;">Generating PDF...</p>
+        </div>
+        <style>
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
+            #pdf-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        </style>
+    </div>
 
     <div class="main-container">
         
@@ -174,7 +186,7 @@
                 <button type="button" class="btn btn-buccal" onclick="generateQR()" style="width:100%;">
                     <i class="bi bi-qr-code-scan"></i> Generate Result QR
                 </button>
-                <button type="button" class="btn btn-pdf" onclick="window.print()" style="width:100%;">
+                <button type="button" class="btn btn-pdf" onclick="printPDF()" style="width:100%;">
                     <i class="bi bi-printer"></i> Print / Save as PDF
                 </button>
             </div>
@@ -311,21 +323,17 @@
         }
 
         // --- UPDATED QR FLOW (CONSENT MODAL) ---
-
-        // 1. Trigger the Modal
         function generateQR() {
             const modal = document.getElementById('pdpa-modal');
             if (modal) {
                 modal.style.display = 'flex';
             } else {
-                // Fallback
                 if(confirm("Generate QR Code? By clicking OK you consent to sharing this data.")) {
                     executeQRGeneration();
                 }
             }
         }
 
-        // 2. The Actual Logic (Called by diagnostic.js)
         function executeQRGeneration() {
             const getVal = (name) => {
                 const el = document.querySelector(`input[name="${name}"]:checked`);
@@ -359,6 +367,119 @@
             const section = document.getElementById('qr-section');
             section.style.display = 'block';
             section.scrollIntoView({behavior: 'smooth'});
+        }
+
+        // --- PDF GENERATION LOGIC (ENGLISH) ---
+        async function printPDF() {
+            const loading = document.getElementById('pdf-loading');
+            if (loading) loading.style.display = 'flex';
+            
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert("Please allow 'pop-ups' to view the PDF.");
+                if (loading) loading.style.display = 'none';
+                return;
+            }
+            printWindow.document.write('Please wait, generating PDF...');
+
+            try {
+                // 1. Get Branding Data
+                let footerData = { name: "PalliCalc Patient Education", contact: "", logos: [] };
+                const instSettings = localStorage.getItem('institutionSettings');
+                if (instSettings) {
+                    const parsed = JSON.parse(instSettings);
+                    footerData = { 
+                        name: parsed.name, 
+                        contact: parsed.contact, 
+                        logos: parsed.logos || (parsed.logo ? [parsed.logo] : []) 
+                    };
+                }
+
+                const { PDFDocument, rgb, StandardFonts } = PDFLib;
+                
+                // 2. Fetch the existing blank eng.pdf (Local source)
+                const pdfUrl = './eng.pdf?v=' + Date.now();
+                
+                const existingPdfBytes = await fetch(pdfUrl).then(res => {
+                    if (!res.ok) throw new Error("File eng.pdf not found!");
+                    return res.arrayBuffer();
+                });
+
+                const pdfDoc = await PDFDocument.load(existingPdfBytes);
+                const newPdf = await PDFDocument.create();
+                
+                const helveticaFont = await newPdf.embedFont(StandardFonts.Helvetica);
+                const helveticaBold = await newPdf.embedFont(StandardFonts.HelveticaBold);
+
+                const pageIndices = pdfDoc.getPageIndices(); 
+                const embeddedPages = await newPdf.embedPdf(pdfDoc, pageIndices);
+
+                const A4_W = 595.28; 
+                const A4_H = 841.89;
+                const FOOTER_H = 80;
+
+                // 3. Stamp Footer on ALL pages
+                for (const page of embeddedPages) {
+                    const newPage = newPdf.addPage([A4_W, A4_H]);
+                    
+                    const scale = Math.min(A4_W / page.width, (A4_H - FOOTER_H) / page.height);
+                    const w = page.width * scale;
+                    const h = page.height * scale;
+                    newPage.drawPage(page, { x: (A4_W - w)/2, y: FOOTER_H, width: w, height: h });
+
+                    // Branding Line
+                    const lineY = FOOTER_H - 10;
+                    newPage.drawLine({ 
+                        start: {x: 30, y: lineY}, 
+                        end: {x: A4_W-30, y: lineY}, 
+                        thickness: 0.5, 
+                        color: rgb(0.6, 0.6, 0.6) 
+                    });
+
+                    // LOGOS
+                    let currentX = 30;
+                    if (footerData.logos && footerData.logos.length > 0) {
+                        for (const logoUrl of footerData.logos) {
+                            try {
+                                const logoBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
+                                let logoImg = logoUrl.toLowerCase().includes('png') ? await newPdf.embedPng(logoBytes) : await newPdf.embedJpg(logoBytes);
+                                const lScale = 35 / logoImg.height;
+                                const lWidth = logoImg.width * lScale;
+                                
+                                newPage.drawImage(logoImg, { x: currentX, y: lineY - 45, width: lWidth, height: 35 });
+                                currentX += lWidth + 15;
+                            } catch (e) { console.warn("Logo Error", e); }
+                        }
+                    }
+
+                    // INSTITUTION TEXT
+                    const nameStr = footerData.name || "PalliCalc Patient Education";
+                    const contactStr = footerData.contact ? `Contact: ${footerData.contact}` : "";
+                    
+                    const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
+                    newPage.drawText(nameStr, { x: A4_W - 30 - nameWidth, y: lineY - 25, size: 12, font: helveticaBold, color: rgb(0.2, 0.2, 0.2) });
+
+                    if (contactStr) {
+                        const contactWidth = helveticaFont.widthOfTextAtSize(contactStr, 10);
+                        newPage.drawText(contactStr, { x: A4_W - 30 - contactWidth, y: lineY - 40, size: 10, font: helveticaFont, color: rgb(0.4, 0.4, 0.4) });
+                    }
+
+                    // COPYRIGHT
+                    const copyText = "© 2026 Alivioscript Solutions | PalliCalc™";
+                    const copyWidth = helveticaFont.widthOfTextAtSize(copyText, 8);
+                    newPage.drawText(copyText, { x: (A4_W - copyWidth) / 2, y: 10, size: 8, font: helveticaFont, color: rgb(0.6, 0.6, 0.6) });
+                }
+
+                const pdfBytes = await newPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                printWindow.location.href = URL.createObjectURL(blob);
+
+            } catch (e) {
+                if (printWindow) printWindow.close();
+                alert("Error: " + e.message);
+            } finally {
+                if (loading) loading.style.display = 'none';
+            }
         }
     </script>
 </body>

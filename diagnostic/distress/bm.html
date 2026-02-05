@@ -11,6 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -19,32 +20,70 @@
     <script src="../diagnostic.js"></script>
 
     <style>
-        .thermo-wrapper { display: flex; justify-content: center; align-items: stretch; gap: 20px; padding: 10px 0; min-height: 450px; }
-        .scale-column { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; padding-right: 10px; font-weight: bold; color: #495057; }
+        /* --- THERMOMETER LAYOUT --- */
+        .thermo-wrapper {
+            display: flex; justify-content: center; align-items: stretch; gap: 20px;
+            padding: 10px 0; min-height: 450px;
+        }
+        .scale-column {
+            display: flex; flex-direction: column; justify-content: space-between;
+            align-items: flex-end; padding-right: 10px; font-weight: bold; color: #495057;
+        }
         .scale-row { display: flex; align-items: center; gap: 10px; height: 35px; }
         .scale-row label { font-size: 18px; cursor: pointer; }
         .scale-row input[type="radio"] { transform: scale(1.5); margin: 0; cursor: pointer; }
+
         .label-text { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin: 5px 0; }
         .text-extreme { color: #d32f2f; font-weight: 800; }
         .text-none { color: #2e7d32; font-weight: 800; }
+
         .image-column { display: flex; align-items: center; justify-content: center; }
         .thermo-img { height: 100%; max-height: 480px; width: auto; object-fit: contain; }
-        .section-header { background: #f8f9fa; padding: 10px 15px; margin: 20px -20px 10px -20px; font-weight: 700; color: #0061f2; font-size: 14px; text-transform: uppercase; border-left: 4px solid #0061f2; }
-        .yes-no-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+
+        /* --- YES/NO LIST STYLING --- */
+        .section-header { 
+            background: #f8f9fa; padding: 10px 15px; margin: 20px -20px 10px -20px; 
+            font-weight: 700; color: #0061f2; font-size: 14px; text-transform: uppercase; 
+            border-left: 4px solid #0061f2;
+        }
+        .yes-no-row { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px 0; border-bottom: 1px solid #f0f0f0; 
+        }
         .yes-no-row:last-child { border-bottom: none; }
-        .yn-label { font-size: 15px; color: #333; flex: 1; padding-right: 10px; white-space: normal; line-height: 1.3; }
+        
+        .yn-label { 
+            font-size: 15px; color: #333; flex: 1; padding-right: 10px; 
+            white-space: normal; line-height: 1.3;
+        }
         .yn-options { display: flex; gap: 5px; width: 110px; flex-shrink: 0; }
+
         .yn-btn { flex: 1; position: relative; text-align: center; }
         .yn-btn input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; left:0; top:0; }
-        .yn-btn label { display: flex; justify-content: center; align-items: center; height: 35px; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; color: #6c757d; font-weight: 600; font-size: 13px; transition: all 0.2s; }
+        .yn-btn label {
+            display: flex; justify-content: center; align-items: center; height: 35px;
+            background: #fff; border: 1px solid #dee2e6; border-radius: 6px;
+            color: #6c757d; font-weight: 600; font-size: 13px; transition: all 0.2s;
+        }
         .yn-btn input:checked + label.lbl-no { background: #e8f5e9; border-color: #2e7d32; color: #2e7d32; } 
         .yn-btn input:checked + label.lbl-yes { background: #ffebee; border-color: #c62828; color: #c62828; }
-        .intro-text { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.4; padding: 10px; background: #f0f7ff; border-radius: 6px; }
     </style>
 </head>
 <body>
 
+    <div id="pdf-loading">
+        <div style="text-align:center">
+            <div style="display:inline-block; width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; font-weight: bold;">Sedang menjana PDF...</p>
+        </div>
+        <style>
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
+            #pdf-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        </style>
+    </div>
+
     <div class="main-container">
+        
         <div class="header header-ipos">
             <div id="inst-header-container" class="inst-header-container">
                 <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
@@ -69,13 +108,10 @@
             <div class="nav-link" style="color:#6c757d; cursor:default;"><i class="bi bi-calendar-event"></i> <span id="dateDisplay"></span></div>
         </div>
 
-        <div class="intro-text">
-            [span_0](start_span)Distres merupakan satu pengalaman yang tidak menyenangkan, yang bersifat mental, fizikal, sosial atau kerohanian[span_0](end_span). [span_1](start_span)Tekanan emosi boleh mempengaruhi cara anda berfikir, mengalami perasaan tertentu atau bertindak[span_1](end_span). [span_2](start_span)Ia boleh menyukarkan penyesuaian diri terhadap kanser, gejalanya atau rawatannya[span_2](end_span).
-        </div>
-
         <form id="iposForm">
+            
             <div class="question-card">
-                [span_3](start_span)<label class="q-label">Arahan: Sila bulatkan nombor (0-10) yang paling tepat menggambarkan tahap tekanan emosi yang dialami sepanjang minggu lalu, termasuk hari ini[span_3](end_span).</label>
+                <label class="q-label">Q1. Arahan: Sila bulatkan nombor (0-10) yang paling tepat menggambarkan tahap tekanan emosi yang dialami sepanjang minggu lalu, termasuk hari ini.</label>
                 
                 <div class="thermo-wrapper">
                     <div class="scale-column">
@@ -100,26 +136,27 @@
             </div>
 
             <div class="question-card">
-                <label class="q-label">SENARAI MASALAH<br>Adakah anda bimbang tentang sebarang perkara yang disenaraikan di bawah dalam tempoh seminggu yang lalu, termasuk hari ini? (Tandakan semua yang berkenaan) [span_4](start_span)</label>
+                <label class="q-label">SENARAI MASALAH: Adakah anda bimbang tentang sebarang perkara yang disenaraikan di bawah dalam tempoh seminggu yang lalu, termasuk hari ini? (Tandakan semua yang berkenaan)</label>
                 
-                <div class="section-header" style="margin-top:0;">Kebimbangan Fizikal</div>
+                <div class="section-header" style="margin-top:0;">Q2. Kebimbangan Fizikal</div>
                 <div id="physical-section"></div>
 
-                <div class="section-header">Kebimbangan Emosi</div>
+                <div class="section-header">Q3. Kebimbangan Emosi</div>
                 <div id="emotional-section"></div>
 
-                <div class="section-header">Kebimbangan Praktikal</div>
+                <div class="section-header">Q4. Kebimbangan Praktikal</div>
                 <div id="practical-section"></div>
 
-                <div class="section-header">Kebimbangan Sosial</div>
+                <div class="section-header">Q5. Kebimbangan Sosial</div>
                 <div id="social-section"></div>
 
-                <div class="section-header">Kebimbangan Kerohanian atau Keagamaan</div>
+                <div class="section-header">Q6. Kebimbangan Kerohanian atau Keagamaan</div>
                 <div id="spiritual-section"></div>
+
             </div>
 
             <div class="question-card">
-                <label class="q-label">Kebimbangan Lain:[span_4](end_span)</label>
+                <label class="q-label">Q7. Kebimbangan Lain:</label>
                 <textarea class="form-control" id="other_concerns" rows="3" maxlength="200" 
                           style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" 
                           placeholder="Sila nyatakan..." 
@@ -149,7 +186,7 @@
                 <button type="button" class="btn btn-buccal" onclick="generateQR()" style="width:100%;">
                     <i class="bi bi-qr-code-scan"></i> Jana Kod QR Keputusan
                 </button>
-                <button type="button" class="btn btn-pdf" onclick="window.print()" style="width:100%;">
+                <button type="button" class="btn btn-pdf" onclick="printPDF()" style="width:100%;">
                     <i class="bi bi-printer"></i> Cetak / Simpan PDF
                 </button>
             </div>
@@ -157,32 +194,32 @@
     </div>
 
     <script>
-        // --- Data Configuration (Perkataan demi perkataan daripada PDF) ---
+        // --- DATA CONFIGURATION (Extracted from Malay PDF) ---
         const physicalItems = [ 
             {l:'Kesakitan'}, {l:'Tidur'}, {l:'Kelesuan'}, {l:'Penggunaan tembakau'}, {l:'Penggunaan bahan'}, 
             {l:'Daya ingatan atau penumpuan'}, {l:'Kesihatan seksual'}, {l:'Perubahan dalam pemakanan'}, {l:'Kehilangan atau perubahan keupayaan fizikal'} 
-        [span_5](start_span)]; //[span_5](end_span)
+        ];
 
         const emotionalItems = [ 
             {l:'Kerisauan atau keresahan'}, {l:'Kesedihan atau kemurungan'}, {l:'Kehilangan minat atau keseronokan'}, {l:'Kehibaan atau kehilangan seseorang'}, 
             {l:'Ketakutan'}, {l:'Kesunyian'}, {l:'Kemarahan'}, {l:'Perubahan dalam penampilan'}, {l:'Perasaan tidak berguna atau menjadi beban'} 
-        ]; [span_6](start_span)//[span_6](end_span)
+        ];
 
         const practicalItems = [ 
             {l:'Menjaga diri sendiri'}, {l:'Menjaga orang lain'}, {l:'Keselamatan'}, {l:'Pekerjaan'}, {l:'Sekolah'}, 
             {l:'Perumahan/Utiliti'}, {l:'Kewangan'}, {l:'Insurans'}, {l:'Pengangkutan'}, {l:'Penjagaan anak'}, 
             {l:'Kecukupan makanan'}, {l:'Akses kepada ubat-ubatan'}, {l:'Keputusan rawatan'} 
-        ]; [span_7](start_span)//[span_7](end_span)
+        ];
 
         const socialItems = [ 
             {l:'Hubungan dengan pasangan atau suami/isteri'}, {l:'Hubungan dengan anak-anak'}, {l:'Hubungan dengan ahli keluarga'}, 
             {l:'Hubungan dengan kawan-kawan atau rakan sekerja'}, {l:'Komunikasi dengan pasukan penjagaan kesihatan'}, {l:'Keupayaan mendapat anak'}, {l:'Prasangka atau diskriminasi'} 
-        ]; [span_8](start_span)//[span_8](end_span)
+        ];
 
         const spiritualItems = [ 
             {l:'Rasa bermakna atau bertujuan'}, {l:'Perubahan dalam kepercayaan atau pegangan'}, {l:'Kematian, akan mati atau selepas mati'}, 
             {l:'Konflik antara kepercayaan dan rawatan kanser'}, {l:'Hubungan dengan yang suci'}, {l:'Keperluan amalan atau pemakanan'} 
-        ]; [span_9](start_span)//[span_9](end_span)
+        ];
 
         let dtContext = { mode: 'personal', instId: null };
 
@@ -203,8 +240,9 @@
             const ref = urlParams.get('ref');
 
             if (ref) {
-                dtContext.mode = 'shared'; dtContext.instId = ref;
-                finalizeAppSetup(ref);
+                dtContext.mode = 'shared'; 
+                dtContext.instId = ref;
+                await finalizeAppSetup(ref);
             } else {
                 auth.onAuthStateChanged(async (user) => {
                     if (user) {
@@ -213,7 +251,8 @@
                             if (snap.exists) {
                                 const userData = snap.data();
                                 if (['institutionUser', 'institutionAdmin'].includes(userData.role)) {
-                                    dtContext.mode = 'institution'; dtContext.instId = userData.institutionId;
+                                    dtContext.mode = 'institution'; 
+                                    dtContext.instId = userData.institutionId;
                                 }
                             }
                         } catch (e) { console.error(e); }
@@ -226,15 +265,23 @@
         async function finalizeAppSetup(instId) {
             const blankQrHeader = document.getElementById('blank-qr-header');
             const backButton = document.getElementById('backLink');
+
             if (dtContext.mode === 'shared') {
                 if(blankQrHeader) blankQrHeader.style.display = 'none';
                 if(backButton) backButton.style.display = 'none';
             } else {
-                if(blankQrHeader) { blankQrHeader.style.display = 'block'; generateBlankFormQR(instId); }
+                if(blankQrHeader) {
+                    blankQrHeader.style.display = 'block';
+                    generateBlankFormQR(instId);
+                }
                 if(backButton) backButton.style.display = 'inline-flex';
             }
-            if (typeof loadInstitutionHeader === "function" && instId) { await loadInstitutionHeader(instId); }
-            else if (typeof loadPersonalHeader === "function") { loadPersonalHeader(); }
+            
+            if (typeof loadInstitutionHeader === "function" && instId) {
+                await loadInstitutionHeader(instId);
+            } else if (typeof loadPersonalHeader === "function") {
+                loadPersonalHeader();
+            }
         }
 
         function generateBlankFormQR(instId) {
@@ -251,7 +298,20 @@
             let html = '';
             items.forEach((item, index) => {
                 const uniqueName = `${prefix}_${index}`;
-                html += `<div class="yes-no-row"><div class="yn-label">${item.l}</div><div class="yn-options"><div class="yn-btn"><input type="radio" name="${uniqueName}" value="0" id="${uniqueName}_no"><label for="${uniqueName}_no" class="lbl-no">Tidak</label></div><div class="yn-btn"><input type="radio" name="${uniqueName}" value="1" id="${uniqueName}_yes"><label for="${uniqueName}_yes" class="lbl-yes">Ya</label></div></div></div>`;
+                html += `
+                <div class="yes-no-row">
+                    <div class="yn-label">${item.l}</div>
+                    <div class="yn-options">
+                        <div class="yn-btn">
+                            <input type="radio" name="${uniqueName}" value="0" id="${uniqueName}_no">
+                            <label for="${uniqueName}_no" class="lbl-no">Tidak</label>
+                        </div>
+                        <div class="yn-btn">
+                            <input type="radio" name="${uniqueName}" value="1" id="${uniqueName}_yes">
+                            <label for="${uniqueName}_yes" class="lbl-yes">Ya</label>
+                        </div>
+                    </div>
+                </div>`;
             });
             container.innerHTML = html;
         }
@@ -260,8 +320,12 @@
             let total = 0;
             const scoreEl = document.querySelector('input[name="distress_score"]:checked');
             const display = document.getElementById('total-score-display');
-            if (scoreEl) { total = parseInt(scoreEl.value); display.innerText = total; }
-            else { display.innerText = "--"; }
+            if (scoreEl) {
+                total = parseInt(scoreEl.value);
+                display.innerText = total;
+            } else {
+                display.innerText = "--";
+            }
             return total;
         }
 
@@ -274,8 +338,13 @@
 
         function generateQR() {
             const modal = document.getElementById('pdpa-modal');
-            if (modal) { modal.style.display = 'flex'; }
-            else { if(confirm("Jana kod QR? Dengan mengklik OK anda bersetuju untuk berkongsi data ini.")) { executeQRGeneration(); } }
+            if (modal) {
+                modal.style.display = 'flex';
+            } else {
+                if(confirm("Jana kod QR? Dengan mengklik OK anda bersetuju untuk berkongsi data ini.")) {
+                    executeQRGeneration();
+                }
+            }
         }
 
         function executeQRGeneration() {
@@ -284,22 +353,148 @@
                 return el ? parseInt(el.value) : null; 
             };
             const getSuffix = (i) => String.fromCharCode(97 + i); 
+            
             const distressScore = getVal('distress_score');
-            const payload = { t: "dt", d: Date.now(), score: distressScore, Q1: distressScore };
+
+            const payload = {
+                t: "dt", 
+                d: Date.now(),
+                score: distressScore,
+                Q1: distressScore
+            };
+
             physicalItems.forEach((_, i) => { payload[`Q2${getSuffix(i)}`] = getVal(`phy_${i}`); });
             emotionalItems.forEach((_, i) => { payload[`Q3${getSuffix(i)}`] = getVal(`emo_${i}`); });
             practicalItems.forEach((_, i) => { payload[`Q4${getSuffix(i)}`] = getVal(`prac_${i}`); });
             socialItems.forEach((_, i) => { payload[`Q5${getSuffix(i)}`] = getVal(`soc_${i}`); });
             spiritualItems.forEach((_, i) => { payload[`Q6${getSuffix(i)}`] = getVal(`spir_${i}`); });
+
             payload['Q7'] = document.getElementById('other_concerns').value.substring(0, 200);
+
             const qrDiv = document.getElementById("qrcode");
             qrDiv.innerHTML = "";
+            
             const safeData = encodeURIComponent(JSON.stringify(payload));
             new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+
             const section = document.getElementById('qr-section');
             section.style.display = 'block';
             section.scrollIntoView({behavior: 'smooth'});
         }
+
+        // --- PDF GENERATION LOGIC (MALAY) ---
+        async function printPDF() {
+            const loading = document.getElementById('pdf-loading');
+            if (loading) loading.style.display = 'flex';
+            
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert("Sila benarkan 'pop-ups' untuk melihat PDF.");
+                if (loading) loading.style.display = 'none';
+                return;
+            }
+            printWindow.document.write('Sila tunggu, sedang menjana PDF...');
+
+            try {
+                // 1. Get Branding Data
+                let footerData = { name: "PalliCalc Patient Education", contact: "", logos: [] };
+                const instSettings = localStorage.getItem('institutionSettings');
+                if (instSettings) {
+                    const parsed = JSON.parse(instSettings);
+                    footerData = { 
+                        name: parsed.name, 
+                        contact: parsed.contact, 
+                        logos: parsed.logos || (parsed.logo ? [parsed.logo] : []) 
+                    };
+                }
+
+                const { PDFDocument, rgb, StandardFonts } = PDFLib;
+                
+                // 2. Fetch the existing blank bm.pdf (Local source)
+                const pdfUrl = './bm.pdf?v=' + Date.now();
+                
+                const existingPdfBytes = await fetch(pdfUrl).then(res => {
+                    if (!res.ok) throw new Error("File bm.pdf tidak dijumpai!");
+                    return res.arrayBuffer();
+                });
+
+                const pdfDoc = await PDFDocument.load(existingPdfBytes);
+                const newPdf = await PDFDocument.create();
+                
+                const helveticaFont = await newPdf.embedFont(StandardFonts.Helvetica);
+                const helveticaBold = await newPdf.embedFont(StandardFonts.HelveticaBold);
+
+                const pageIndices = pdfDoc.getPageIndices(); 
+                const embeddedPages = await newPdf.embedPdf(pdfDoc, pageIndices);
+
+                const A4_W = 595.28; 
+                const A4_H = 841.89;
+                const FOOTER_H = 80;
+
+                // 3. Stamp Footer on ALL pages
+                for (const page of embeddedPages) {
+                    const newPage = newPdf.addPage([A4_W, A4_H]);
+                    
+                    const scale = Math.min(A4_W / page.width, (A4_H - FOOTER_H) / page.height);
+                    const w = page.width * scale;
+                    const h = page.height * scale;
+                    newPage.drawPage(page, { x: (A4_W - w)/2, y: FOOTER_H, width: w, height: h });
+
+                    // Branding Line
+                    const lineY = FOOTER_H - 10;
+                    newPage.drawLine({ 
+                        start: {x: 30, y: lineY}, 
+                        end: {x: A4_W-30, y: lineY}, 
+                        thickness: 0.5, 
+                        color: rgb(0.6, 0.6, 0.6) 
+                    });
+
+                    // LOGOS
+                    let currentX = 30;
+                    if (footerData.logos && footerData.logos.length > 0) {
+                        for (const logoUrl of footerData.logos) {
+                            try {
+                                const logoBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
+                                let logoImg = logoUrl.toLowerCase().includes('png') ? await newPdf.embedPng(logoBytes) : await newPdf.embedJpg(logoBytes);
+                                const lScale = 35 / logoImg.height;
+                                const lWidth = logoImg.width * lScale;
+                                
+                                newPage.drawImage(logoImg, { x: currentX, y: lineY - 45, width: lWidth, height: 35 });
+                                currentX += lWidth + 15;
+                            } catch (e) { console.warn("Logo Error", e); }
+                        }
+                    }
+
+                    // INSTITUTION TEXT
+                    const nameStr = footerData.name || "PalliCalc Patient Education";
+                    const contactStr = footerData.contact ? `Hubungi: ${footerData.contact}` : "";
+                    
+                    const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
+                    newPage.drawText(nameStr, { x: A4_W - 30 - nameWidth, y: lineY - 25, size: 12, font: helveticaBold, color: rgb(0.2, 0.2, 0.2) });
+
+                    if (contactStr) {
+                        const contactWidth = helveticaFont.widthOfTextAtSize(contactStr, 10);
+                        newPage.drawText(contactStr, { x: A4_W - 30 - contactWidth, y: lineY - 40, size: 10, font: helveticaFont, color: rgb(0.4, 0.4, 0.4) });
+                    }
+
+                    // COPYRIGHT
+                    const copyText = "© 2026 Alivioscript Solutions | PalliCalc™";
+                    const copyWidth = helveticaFont.widthOfTextAtSize(copyText, 8);
+                    newPage.drawText(copyText, { x: (A4_W - copyWidth) / 2, y: 10, size: 8, font: helveticaFont, color: rgb(0.6, 0.6, 0.6) });
+                }
+
+                const pdfBytes = await newPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                printWindow.location.href = URL.createObjectURL(blob);
+
+            } catch (e) {
+                if (printWindow) printWindow.close();
+                alert("Ralat: " + e.message);
+            } finally {
+                if (loading) loading.style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>
+ 
