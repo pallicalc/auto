@@ -457,76 +457,9 @@
                 loading.style.display = 'none';
             }
         }
-        <script>
-    // --- 1. IPOS SCORING LOGIC ---
-    document.addEventListener('DOMContentLoaded', () => {
-        const form = document.getElementById('iposForm');
-        if(form) form.addEventListener('change', calculateIposScore);
-    });
 
-    function calculateIposScore() {
-        let total = 0;
-        document.querySelectorAll('#iposForm input[type="radio"]:checked').forEach(input => {
-            total += parseInt(input.value);
-        });
-        const display = document.getElementById('total-score-display');
-        if(display) display.innerText = total;
-        return total;
-    }
 
-    // --- 2. IPOS QR GENERATION ---
-    function generateIposQR() {
-        const getVal = (name) => {
-            const el = document.querySelector(`input[name="${name}"]:checked`);
-            return el ? parseInt(el.value) : 0;
-        };
-
-        const otherSymptoms = [];
-        for (let i = 1; i <= 3; i++) {
-            const labelEl = document.getElementById(`other_sym_${i}_label`);
-            const label = labelEl ? labelEl.value.substring(0, 20) : "";
-            const val = getVal(`other_sym_${i}_val`);
-            if (label || val > 0) {
-                otherSymptoms.push(`${label} (${val})`);
-            }
-        }
-
-        const payload = {
-            t: "IPOS",
-            d: Date.now(),
-            score: calculateIposScore(),
-            Q1: document.getElementById('q1_input').value.substring(0, 100),
-            Q2a: getVal('pain'),
-            Q2b: getVal('sob'),
-            Q2c: getVal('weak'),
-            Q2d: getVal('nau'),
-            Q2e: getVal('vom'),
-            Q2f: getVal('app'),
-            Q2g: getVal('con'),
-            Q2h: getVal('mou'),
-            Q2i: getVal('dro'),
-            Q2j: getVal('mob'),
-            Q2k: otherSymptoms.join(", "), 
-            Q3: getVal('anxious'),
-            Q4: getVal('family'),
-            Q5: getVal('depressed'),
-            Q6: getVal('peace'),
-            Q7: getVal('share'),
-            Q8: getVal('info'),
-            Q9: getVal('practical'),
-            Q10: ["A", "B", "C"][document.getElementById('completion_mode').value] || "A"
-        };
-
-        const qrDiv = document.getElementById("qrcode");
-        qrDiv.innerHTML = "";
-        
-        const safeData = encodeURIComponent(JSON.stringify(payload));
-        new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
-
-        const section = document.getElementById('qr-section');
-        section.style.display = 'block';
-        section.scrollIntoView({behavior: 'smooth'});
-    }
 </script>
+
 </body>
 </html>
