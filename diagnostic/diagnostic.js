@@ -1,5 +1,5 @@
 // ============================================================
-// DIAGNOSTIC.JS - STABLE VERSION (Explicit Consent)
+// DIAGNOSTIC.JS - STABLE VERSION
 // ============================================================
 
 const firebaseConfig = {
@@ -21,7 +21,6 @@ const auth = (typeof firebase !== 'undefined') ? firebase.auth() : null;
 window.appContext = { mode: 'personal', instId: null };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Inject UI Elements
     injectStandardFooter();
     injectConsentModal();
     injectFavicon();
@@ -29,7 +28,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
-    // 2. Handle Role & Header
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
 
@@ -175,7 +173,7 @@ window.requestConsent = function(targetFunction) {
 window.confirmConsent = function() {
     closeConsentModal();
     if (typeof pendingGenFunction === 'function') { 
-        pendingGenFunction(); // Runs the passed function (generateQR)
+        pendingGenFunction(); 
         pendingGenFunction = null; 
     }
 }
