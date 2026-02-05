@@ -13,81 +13,39 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    
     <script src="../diagnostic.js"></script>
 
     <style>
         /* --- iPad Optimized Styles --- */
+        .question-card { padding: 20px; }
+        .q-label { font-size: 1.1rem; margin-bottom: 15px; }
+        .scale-container { display: flex; flex-direction: column; gap: 10px; }
         
-        .question-card {
-            padding: 20px; /* More breathing room */
-        }
-
-        .q-label {
-            font-size: 1.1rem; /* Larger question text */
-            margin-bottom: 15px;
-        }
-
-        .scale-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px; /* Space between options */
-        }
-
-        /* The clickable row */
         .scale-opt label {
-            display: flex;
-            flex-direction: row; /* Align horizontal */
-            align-items: center; /* Vertically center */
-            justify-content: flex-start; /* Align Left */
-            
-            width: 100%;
-            padding: 18px 20px; /* Large touch target */
-            
-            background: #fff;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            
-            cursor: pointer;
-            font-size: 18px; /* Bigger text for iPad */
-            font-weight: 500;
-            color: #495057;
-            text-align: left;
+            display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
+            width: 100%; padding: 18px 20px; background: #fff;
+            border: 2px solid #e9ecef; border-radius: 12px; cursor: pointer;
+            font-size: 18px; font-weight: 500; color: #495057; text-align: left;
             transition: all 0.2s ease;
         }
 
-        /* Hide the actual radio button but keep logic */
-        .scale-opt input[type="radio"] {
-            display: none; 
-        }
+        .scale-opt input[type="radio"] { display: none; }
 
-        /* Create a custom radio circle on the left */
         .scale-opt label::before {
-            content: '';
-            display: block;
-            width: 24px;
-            height: 24px;
-            margin-right: 20px; /* Space between circle and text */
-            border: 2px solid #adb5bd;
-            border-radius: 50%;
-            background: white;
-            flex-shrink: 0;
-            transition: all 0.2s;
+            content: ''; display: block; width: 24px; height: 24px; margin-right: 20px;
+            border: 2px solid #adb5bd; border-radius: 50%; background: white;
+            flex-shrink: 0; transition: all 0.2s;
         }
 
-        /* ACTIVE STATE (When selected) */
+        /* ACTIVE STATE */
         .scale-opt input:checked + label {
-            background-color: #e7f1ff; /* Light Blue Background */
-            border-color: #0061f2;     /* Blue Border */
-            color: #004085;            /* Dark Blue Text */
-            box-shadow: 0 4px 12px rgba(0, 97, 242, 0.15);
-            transform: translateY(-1px);
+            background-color: #e7f1ff; border-color: #0061f2; color: #004085;
+            box-shadow: 0 4px 12px rgba(0, 97, 242, 0.15); transform: translateY(-1px);
         }
-
-        /* Active Circle */
         .scale-opt input:checked + label::before {
-            background-color: #0061f2;
-            border-color: #0061f2;
-            box-shadow: inset 0 0 0 5px white; /* Makes it look like a donut */
+            background-color: #0061f2; border-color: #0061f2;
+            box-shadow: inset 0 0 0 5px white;
         }
 
         /* Score Box */
@@ -286,7 +244,7 @@
                 </div>
             </div>
 
-            <div id="qr-section">
+            <div id="qr-section" style="display:none; margin-top:20px;">
                 <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:8px; border-radius:6px; margin-bottom:8px; font-size:12px;">
                     <i class="bi bi-check-circle-fill"></i> <strong>Result Ready!</strong>
                     <p style="margin:0; font-size:13px;">Show this QR to your doctor.</p>
@@ -309,68 +267,11 @@
     </div>
 
     <script>
-        let hadsContext = { mode: 'personal', instId: null };
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
+        document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('hadsForm').addEventListener('change', calculateHadsScore);
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const ref = urlParams.get('ref');
-
-            if (ref) {
-                hadsContext.mode = 'shared'; 
-                hadsContext.instId = ref;
-                await finalizeHadsSetup(ref);
-            } else {
-                auth.onAuthStateChanged(async (user) => {
-                    if (user) {
-                        try {
-                            const snap = await db.collection('users').doc(user.uid).get();
-                            if (snap.exists) {
-                                const userData = snap.data();
-                                if (['institutionUser', 'institutionAdmin'].includes(userData.role)) {
-                                    hadsContext.mode = 'institution'; 
-                                    hadsContext.instId = userData.institutionId;
-                                }
-                            }
-                        } catch (e) { console.error(e); }
-                    }
-                    finalizeHadsSetup(hadsContext.instId);
-                });
-            }
         });
 
-        async function finalizeHadsSetup(instId) {
-            const blankQrHeader = document.getElementById('blank-qr-header');
-            const backButton = document.getElementById('backLink');
-
-            if (hadsContext.mode === 'shared') {
-                if(blankQrHeader) blankQrHeader.style.display = 'none';
-                if(backButton) backButton.style.display = 'none';
-            } else {
-                if(blankQrHeader) {
-                    blankQrHeader.style.display = 'block';
-                    generateBlankFormQR(instId);
-                }
-                if(backButton) backButton.style.display = 'inline-flex';
-            }
-            if (typeof loadInstitutionHeader === "function" && instId) {
-                await loadInstitutionHeader(instId);
-            } else if (typeof loadPersonalHeader === "function") {
-                loadPersonalHeader();
-            }
-        }
-
-        function generateBlankFormQR(instId) {
-            const qrContainer = document.getElementById("blank-qrcode");
-            if (!qrContainer) return;
-            qrContainer.innerHTML = ""; 
-            const baseUrl = window.location.href.split('?')[0]; 
-            const targetUrl = instId ? `${baseUrl}?ref=${instId}` : baseUrl;
-            new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
-        }
-
+        // 1. Scoring Logic
         function calculateHadsScore() {
             let scoreA = 0;
             let scoreD = 0;
@@ -387,8 +288,11 @@
                 if(el) scoreD += parseInt(el.value);
             });
 
-            document.getElementById('score-a-display').innerText = scoreA;
-            document.getElementById('score-d-display').innerText = scoreD;
+            const scoreAEl = document.getElementById('score-a-display');
+            const scoreDEl = document.getElementById('score-d-display');
+            if(scoreAEl) scoreAEl.innerText = scoreA;
+            if(scoreDEl) scoreDEl.innerText = scoreD;
+            
             updateSeverity('sev-a', scoreA);
             updateSeverity('sev-d', scoreD);
 
@@ -397,17 +301,17 @@
 
         function updateSeverity(elId, score) {
             const el = document.getElementById(elId);
+            if(!el) return;
             el.className = 'severity'; 
             if (score <= 7) { el.innerText = "Normal"; el.classList.add('sev-normal'); }
             else if (score <= 10) { el.innerText = "Borderline"; el.classList.add('sev-border'); }
             else { el.innerText = "Abnormal"; el.classList.add('sev-case'); }
         }
 
-        // --- UPDATED QR GENERATION (FLATTENED STRUCTURE) ---
+        // 2. QR Payload Logic (diagnostic.js will call this AFTER consent)
         function generateQR() {
             const scores = calculateHadsScore();
 
-            // 1. Create a Flat Payload (No nested objects)
             const payload = {
                 t: "HADS",
                 d: Date.now(),
@@ -416,10 +320,8 @@
                 scoreD: scores.D
             };
 
-            // 2. Loop through Q1-Q14 and add them to top level
             for(let i=1; i<=14; i++) {
                 const el = document.querySelector(`input[name="q${i}"]:checked`);
-                // Stores as q1: 3, q2: 0, etc.
                 payload[`q${i}`] = el ? parseInt(el.value) : 0;
             }
 
