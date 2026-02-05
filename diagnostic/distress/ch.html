@@ -407,7 +407,7 @@
                 const { PDFDocument, rgb, StandardFonts } = PDFLib;
                 
                 // 2. Fetch the existing blank ch.pdf (Local source)
-                const pdfUrl = './ch.pdf?v=' + Date.now();
+                const pdfUrl = 'ch.pdf?v=' + Date.now();
                 
                 const existingPdfBytes = await fetch(pdfUrl).then(res => {
                     if (!res.ok) throw new Error("找不到 ch.pdf 文件！");

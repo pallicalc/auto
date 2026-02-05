@@ -411,7 +411,7 @@
                 const { PDFDocument, rgb, StandardFonts } = PDFLib;
                 
                 // 2. Fetch the existing blank bm.pdf (Local source)
-                const pdfUrl = './bm.pdf?v=' + Date.now();
+                const pdfUrl = 'bm.pdf?v=' + Date.now();
                 
                 const existingPdfBytes = await fetch(pdfUrl).then(res => {
                     if (!res.ok) throw new Error("File bm.pdf tidak dijumpai!");
