@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
@@ -193,40 +193,52 @@
         </form>
     </div>
 
-<script>
-        // --- DATA CONFIGURATION ---
-        const physicalItems = [ {l:'Pain'}, {l:'Sleep'}, {l:'Fatigue'}, {l:'Tobacco use'}, {l:'Substance use'}, {l:'Memory or concentration'}, {l:'Sexual health'}, {l:'Changes in eating'}, {l:'Loss or change of physical abilities'} ];
-        const emotionalItems = [ {l:'Worry or anxiety'}, {l:'Sadness or depression'}, {l:'Loss of interest or enjoyment'}, {l:'Grief or loss'}, {l:'Fear'}, {l:'Loneliness'}, {l:'Anger'}, {l:'Changes in appearance'}, {l:'Feelings of worthlessness or being a burden'} ];
-        const practicalItems = [ {l:'Taking care of myself'}, {l:'Taking care of others'}, {l:'Safety'}, {l:'Work'}, {l:'School'}, {l:'Housing/Utilities'}, {l:'Finances'}, {l:'Insurance'}, {l:'Transportation'}, {l:'Child care'}, {l:'Having enough food'}, {l:'Access to medicine'}, {l:'Treatment decisions'} ];
-        const socialItems = [ {l:'Relationship with spouse or partner'}, {l:'Relationship with children'}, {l:'Relationship with family members'}, {l:'Relationship with friends or coworkers'}, {l:'Communication with health care team'}, {l:'Ability to have children'}, {l:'Prejudice or discrimination'} ];
-        const spiritualItems = [ {l:'Sense of meaning or purpose'}, {l:'Changes in faith or beliefs'}, {l:'Death, dying, or afterlife'}, {l:'Conflict between beliefs and cancer treatments'}, {l:'Relationship with the sacred'}, {l:'Ritual or dietary needs'} ];
+    <script>
+        // --- DATA CONFIGURATION (Strictly matching provided version) ---
+        const physicalItems = [ 
+            {l:'疼痛'}, {l:'睡眠'}, {l:'疲勞'}, {l:'煙草使用'}, {l:'物質使用'}, 
+            {l:'記憶力或注意力'}, {l:'性健康'}, {l:'飲食變化'}, {l:'身體能力的喪失或改變'} 
+        ];
+        const emotionalItems = [ 
+            {l:'擔心或焦慮'}, {l:'悲傷或抑鬱'}, {l:'失去興趣或樂趣'}, {l:'悲傷或失落'}, 
+            {l:'恐懼'}, {l:'孤獨'}, {l:'憤怒'}, {l:'外表變化'}, {l:'無價值感或感覺成為負擔'} 
+        ];
+        const practicalItems = [ 
+            {l:'照顧自己'}, {l:'照顧他人'}, {l:'安全'}, {l:'工作'}, {l:'上學'}, 
+            {l:'住房/公用事業'}, {l:'財物'}, {l:'保險'}, {l:'交通'}, {l:'兒童保育'}, 
+            {l:'有足夠的食物'}, {l:'藥品可及性'}, {l:'治療決定'} 
+        ];
+        const socialItems = [ 
+            {l:'與配偶或伴侶的關係'}, {l:'與孩子的關係'}, {l:'與家庭成員的關係'}, 
+            {l:'與朋友或同事的關係'}, {l:'與醫療團隊的溝通'}, {l:'生育能力'}, {l:'偏見或歧視'} 
+        ];
+        const spiritualItems = [ 
+            {l:'意義或目的感'}, {l:'信仰或信念的變化'}, {l:'死亡、垂死或來世'}, 
+            {l:'信仰與癌症治療之間的衝突'}, {l:'與宗教的關係'}, {l:'儀式或飲食需求'} 
+        ];
 
         let dtContext = { mode: 'personal', instId: null };
 
-        // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', async () => {
-            // Render Lists
             renderYesNoItems(physicalItems, 'physical-section', 'phy');
             renderYesNoItems(emotionalItems, 'emotional-section', 'emo');
             renderYesNoItems(practicalItems, 'practical-section', 'prac');
             renderYesNoItems(socialItems, 'social-section', 'soc');
             renderYesNoItems(spiritualItems, 'spiritual-section', 'spir');
             
-            // Setup Listeners
             const dateDisplay = document.getElementById('dateDisplay');
             if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
             
             const form = document.getElementById('iposForm');
             if(form) form.addEventListener('change', calculateTotalScore);
 
-            // Setup Auth/Branding
             const urlParams = new URLSearchParams(window.location.search);
             const ref = urlParams.get('ref');
 
             if (ref) {
                 dtContext.mode = 'shared'; 
                 dtContext.instId = ref;
-                await finalizeAppSetup(ref);
+                finalizeAppSetup(ref);
             } else {
                 auth.onAuthStateChanged(async (user) => {
                     if (user) {
@@ -246,7 +258,6 @@
             }
         });
 
-        // --- APP SETUP & BRANDING ---
         async function finalizeAppSetup(instId) {
             const blankQrHeader = document.getElementById('blank-qr-header');
             const backButton = document.getElementById('backLink');
@@ -278,7 +289,6 @@
             new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
         }
 
-        // --- RENDER LOGIC ---
         function renderYesNoItems(items, containerId, prefix) {
             const container = document.getElementById(containerId);
             let html = '';
@@ -290,11 +300,11 @@
                     <div class="yn-options">
                         <div class="yn-btn">
                             <input type="radio" name="${uniqueName}" value="0" id="${uniqueName}_no">
-                            <label for="${uniqueName}_no" class="lbl-no">No</label>
+                            <label for="${uniqueName}_no" class="lbl-no">否</label>
                         </div>
                         <div class="yn-btn">
                             <input type="radio" name="${uniqueName}" value="1" id="${uniqueName}_yes">
-                            <label for="${uniqueName}_yes" class="lbl-yes">Yes</label>
+                            <label for="${uniqueName}_yes" class="lbl-yes">是</label>
                         </div>
                     </div>
                 </div>`;
@@ -319,16 +329,15 @@
             const maxLength = textarea.getAttribute('maxlength');
             const currentLength = textarea.value.length;
             const counter = textarea.nextElementSibling;
-            counter.innerText = `${currentLength}/${maxLength} characters used`;
+            counter.innerText = `已使用 ${currentLength}/${maxLength} 個字元`;
         }
 
-        // --- UPDATED QR FLOW (CONSENT MODAL) ---
         function generateQR() {
             const modal = document.getElementById('pdpa-modal');
             if (modal) {
                 modal.style.display = 'flex';
             } else {
-                if(confirm("Generate QR Code? By clicking OK you consent to sharing this data.")) {
+                if(confirm("生成二維碼？點擊確定即表示您同意共享此數據。")) {
                     executeQRGeneration();
                 }
             }
@@ -368,19 +377,19 @@
             section.style.display = 'block';
             section.scrollIntoView({behavior: 'smooth'});
         }
-                
-        // --- PDF GENERATION LOGIC (ENGLISH) ---
+
+        // --- NEW PDF PRINT FUNCTION ---
         async function printPDF() {
             const loading = document.getElementById('pdf-loading');
             if (loading) loading.style.display = 'flex';
             
             const printWindow = window.open('', '_blank');
             if (!printWindow) {
-                alert("Please allow 'pop-ups' to view the PDF.");
+                alert("請允許 '彈出視窗' 以查看 PDF。");
                 if (loading) loading.style.display = 'none';
                 return;
             }
-            printWindow.document.write('Please wait, generating PDF...');
+            printWindow.document.write('請稍候，正在生成 PDF...');
 
             try {
                 // 1. Get Branding Data
@@ -401,7 +410,7 @@
                 const pdfUrl = './ch.pdf?v=' + Date.now();
                 
                 const existingPdfBytes = await fetch(pdfUrl).then(res => {
-                    if (!res.ok) throw new Error("File ch.pdf not found!");
+                    if (!res.ok) throw new Error("找不到 ch.pdf 文件！");
                     return res.arrayBuffer();
                 });
 
@@ -454,7 +463,7 @@
 
                     // INSTITUTION TEXT
                     const nameStr = footerData.name || "PalliCalc Patient Education";
-                    const contactStr = footerData.contact ? `Contact: ${footerData.contact}` : "";
+                    const contactStr = footerData.contact ? `聯絡: ${footerData.contact}` : "";
                     
                     const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
                     newPage.drawText(nameStr, { x: A4_W - 30 - nameWidth, y: lineY - 25, size: 12, font: helveticaBold, color: rgb(0.2, 0.2, 0.2) });
@@ -476,7 +485,7 @@
 
             } catch (e) {
                 if (printWindow) printWindow.close();
-                alert("Error: " + e.message);
+                alert("錯誤: " + e.message);
             } finally {
                 if (loading) loading.style.display = 'none';
             }

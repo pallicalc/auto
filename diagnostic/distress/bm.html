@@ -1,3 +1,6 @@
+﻿
+
+
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -193,33 +196,49 @@
         </form>
     </div>
 
-   <script>
-        // --- DATA CONFIGURATION ---
-        const physicalItems = [ {l:'Pain'}, {l:'Sleep'}, {l:'Fatigue'}, {l:'Tobacco use'}, {l:'Substance use'}, {l:'Memory or concentration'}, {l:'Sexual health'}, {l:'Changes in eating'}, {l:'Loss or change of physical abilities'} ];
-        const emotionalItems = [ {l:'Worry or anxiety'}, {l:'Sadness or depression'}, {l:'Loss of interest or enjoyment'}, {l:'Grief or loss'}, {l:'Fear'}, {l:'Loneliness'}, {l:'Anger'}, {l:'Changes in appearance'}, {l:'Feelings of worthlessness or being a burden'} ];
-        const practicalItems = [ {l:'Taking care of myself'}, {l:'Taking care of others'}, {l:'Safety'}, {l:'Work'}, {l:'School'}, {l:'Housing/Utilities'}, {l:'Finances'}, {l:'Insurance'}, {l:'Transportation'}, {l:'Child care'}, {l:'Having enough food'}, {l:'Access to medicine'}, {l:'Treatment decisions'} ];
-        const socialItems = [ {l:'Relationship with spouse or partner'}, {l:'Relationship with children'}, {l:'Relationship with family members'}, {l:'Relationship with friends or coworkers'}, {l:'Communication with health care team'}, {l:'Ability to have children'}, {l:'Prejudice or discrimination'} ];
-        const spiritualItems = [ {l:'Sense of meaning or purpose'}, {l:'Changes in faith or beliefs'}, {l:'Death, dying, or afterlife'}, {l:'Conflict between beliefs and cancer treatments'}, {l:'Relationship with the sacred'}, {l:'Ritual or dietary needs'} ];
+    <script>
+        // --- DATA CONFIGURATION (Extracted from Malay PDF) ---
+        const physicalItems = [ 
+            {l:'Kesakitan'}, {l:'Tidur'}, {l:'Kelesuan'}, {l:'Penggunaan tembakau'}, {l:'Penggunaan bahan'}, 
+            {l:'Daya ingatan atau penumpuan'}, {l:'Kesihatan seksual'}, {l:'Perubahan dalam pemakanan'}, {l:'Kehilangan atau perubahan keupayaan fizikal'} 
+        ];
+
+        const emotionalItems = [ 
+            {l:'Kerisauan atau keresahan'}, {l:'Kesedihan atau kemurungan'}, {l:'Kehilangan minat atau keseronokan'}, {l:'Kehibaan atau kehilangan seseorang'}, 
+            {l:'Ketakutan'}, {l:'Kesunyian'}, {l:'Kemarahan'}, {l:'Perubahan dalam penampilan'}, {l:'Perasaan tidak berguna atau menjadi beban'} 
+        ];
+
+        const practicalItems = [ 
+            {l:'Menjaga diri sendiri'}, {l:'Menjaga orang lain'}, {l:'Keselamatan'}, {l:'Pekerjaan'}, {l:'Sekolah'}, 
+            {l:'Perumahan/Utiliti'}, {l:'Kewangan'}, {l:'Insurans'}, {l:'Pengangkutan'}, {l:'Penjagaan anak'}, 
+            {l:'Kecukupan makanan'}, {l:'Akses kepada ubat-ubatan'}, {l:'Keputusan rawatan'} 
+        ];
+
+        const socialItems = [ 
+            {l:'Hubungan dengan pasangan atau suami/isteri'}, {l:'Hubungan dengan anak-anak'}, {l:'Hubungan dengan ahli keluarga'}, 
+            {l:'Hubungan dengan kawan-kawan atau rakan sekerja'}, {l:'Komunikasi dengan pasukan penjagaan kesihatan'}, {l:'Keupayaan mendapat anak'}, {l:'Prasangka atau diskriminasi'} 
+        ];
+
+        const spiritualItems = [ 
+            {l:'Rasa bermakna atau bertujuan'}, {l:'Perubahan dalam kepercayaan atau pegangan'}, {l:'Kematian, akan mati atau selepas mati'}, 
+            {l:'Konflik antara kepercayaan dan rawatan kanser'}, {l:'Hubungan dengan yang suci'}, {l:'Keperluan amalan atau pemakanan'} 
+        ];
 
         let dtContext = { mode: 'personal', instId: null };
 
-        // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', async () => {
-            // Render Lists
             renderYesNoItems(physicalItems, 'physical-section', 'phy');
             renderYesNoItems(emotionalItems, 'emotional-section', 'emo');
             renderYesNoItems(practicalItems, 'practical-section', 'prac');
             renderYesNoItems(socialItems, 'social-section', 'soc');
             renderYesNoItems(spiritualItems, 'spiritual-section', 'spir');
             
-            // Setup Listeners
             const dateDisplay = document.getElementById('dateDisplay');
             if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
             
             const form = document.getElementById('iposForm');
             if(form) form.addEventListener('change', calculateTotalScore);
 
-            // Setup Auth/Branding
             const urlParams = new URLSearchParams(window.location.search);
             const ref = urlParams.get('ref');
 
@@ -246,7 +265,6 @@
             }
         });
 
-        // --- APP SETUP & BRANDING ---
         async function finalizeAppSetup(instId) {
             const blankQrHeader = document.getElementById('blank-qr-header');
             const backButton = document.getElementById('backLink');
@@ -278,7 +296,6 @@
             new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
         }
 
-        // --- RENDER LOGIC ---
         function renderYesNoItems(items, containerId, prefix) {
             const container = document.getElementById(containerId);
             let html = '';
@@ -290,11 +307,11 @@
                     <div class="yn-options">
                         <div class="yn-btn">
                             <input type="radio" name="${uniqueName}" value="0" id="${uniqueName}_no">
-                            <label for="${uniqueName}_no" class="lbl-no">No</label>
+                            <label for="${uniqueName}_no" class="lbl-no">Tidak</label>
                         </div>
                         <div class="yn-btn">
                             <input type="radio" name="${uniqueName}" value="1" id="${uniqueName}_yes">
-                            <label for="${uniqueName}_yes" class="lbl-yes">Yes</label>
+                            <label for="${uniqueName}_yes" class="lbl-yes">Ya</label>
                         </div>
                     </div>
                 </div>`;
@@ -319,16 +336,15 @@
             const maxLength = textarea.getAttribute('maxlength');
             const currentLength = textarea.value.length;
             const counter = textarea.nextElementSibling;
-            counter.innerText = `${currentLength}/${maxLength} characters used`;
+            counter.innerText = `${currentLength}/${maxLength} aksara telah digunakan`;
         }
 
-        // --- UPDATED QR FLOW (CONSENT MODAL) ---
         function generateQR() {
             const modal = document.getElementById('pdpa-modal');
             if (modal) {
                 modal.style.display = 'flex';
             } else {
-                if(confirm("Generate QR Code? By clicking OK you consent to sharing this data.")) {
+                if(confirm("Jana kod QR? Dengan mengklik OK anda bersetuju untuk berkongsi data ini.")) {
                     executeQRGeneration();
                 }
             }
@@ -369,18 +385,18 @@
             section.scrollIntoView({behavior: 'smooth'});
         }
 
-        // --- PDF GENERATION LOGIC (ENGLISH) ---
+        // --- PDF GENERATION LOGIC (MALAY) ---
         async function printPDF() {
             const loading = document.getElementById('pdf-loading');
             if (loading) loading.style.display = 'flex';
             
             const printWindow = window.open('', '_blank');
             if (!printWindow) {
-                alert("Please allow 'pop-ups' to view the PDF.");
+                alert("Sila benarkan 'pop-ups' untuk melihat PDF.");
                 if (loading) loading.style.display = 'none';
                 return;
             }
-            printWindow.document.write('Please wait, generating PDF...');
+            printWindow.document.write('Sila tunggu, sedang menjana PDF...');
 
             try {
                 // 1. Get Branding Data
@@ -398,10 +414,10 @@
                 const { PDFDocument, rgb, StandardFonts } = PDFLib;
                 
                 // 2. Fetch the existing blank bm.pdf (Local source)
-                const pdfUrl = 'bm.pdf?v=' + Date.now();
+                const pdfUrl = './bm.pdf?v=' + Date.now();
                 
                 const existingPdfBytes = await fetch(pdfUrl).then(res => {
-                    if (!res.ok) throw new Error("File bm.pdf not found!");
+                    if (!res.ok) throw new Error("File bm.pdf tidak dijumpai!");
                     return res.arrayBuffer();
                 });
 
@@ -454,7 +470,7 @@
 
                     // INSTITUTION TEXT
                     const nameStr = footerData.name || "PalliCalc Patient Education";
-                    const contactStr = footerData.contact ? `Contact: ${footerData.contact}` : "";
+                    const contactStr = footerData.contact ? `Hubungi: ${footerData.contact}` : "";
                     
                     const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
                     newPage.drawText(nameStr, { x: A4_W - 30 - nameWidth, y: lineY - 25, size: 12, font: helveticaBold, color: rgb(0.2, 0.2, 0.2) });
@@ -476,7 +492,7 @@
 
             } catch (e) {
                 if (printWindow) printWindow.close();
-                alert("Error: " + e.message);
+                alert("Ralat: " + e.message);
             } finally {
                 if (loading) loading.style.display = 'none';
             }
@@ -484,3 +500,4 @@
     </script>
 </body>
 </html>
+ 
