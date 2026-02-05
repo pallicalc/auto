@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Termometer Distres NCCN | PalliCalc</title>
+    <title>Distress Thermometer | PalliCalc</title>
     
     <link rel="stylesheet" href="../diagnostic.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -74,7 +74,7 @@
     <div id="pdf-loading">
         <div style="text-align:center">
             <div style="display:inline-block; width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            <p style="margin-top: 15px; font-weight: bold;">Sedang menjana PDF...</p>
+            <p style="margin-top: 15px; font-weight: bold;">Generating PDF...</p>
         </div>
         <style>
             @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
@@ -89,33 +89,33 @@
                 <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
                 <div class="inst-info"><h3 id="inst-name-display"></h3><p id="inst-contact-display"></p></div>
             </div>
-            <h1>TERMOMETER DISTRES NCCN</h1>
-            <p>Pengurusan Distres</p>
+            <h1>Distress Thermometer</h1>
+            <p>NCCN Distress Management Screening</p>
         </div>
 
         <div id="blank-qr-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:20px; border: 2px dashed #ccc; padding: 15px; border-radius: 8px;">
                 <div id="blank-qrcode"></div>
                 <div style="text-align:left;">
-                    <h4 style="margin:0; color:#0061f2;">Imbas untuk Mula</h4>
-                    <small>Imbas kod ini untuk mengisi borang di telefon anda.</small>
+                    <h4 style="margin:0; color:#0061f2;">Scan to Start</h4>
+                    <small>Scan this code to fill the form on your phone.</small>
                 </div>
             </div>
         </div>
 
         <div class="nav-bar no-print">
-            <a href="../../diagnostic.html" class="nav-link" id="backLink"><i class="bi bi-arrow-left"></i> Kembali</a>
+            <a href="../../diagnostic.html" class="nav-link" id="backLink"><i class="bi bi-arrow-left"></i> Back</a>
             <div class="nav-link" style="color:#6c757d; cursor:default;"><i class="bi bi-calendar-event"></i> <span id="dateDisplay"></span></div>
         </div>
 
         <form id="iposForm">
             
             <div class="question-card">
-                <label class="q-label">Q1. Arahan: Sila bulatkan nombor (0-10) yang paling tepat menggambarkan tahap tekanan emosi yang dialami sepanjang minggu lalu, termasuk hari ini.</label>
+                <label class="q-label">Q1. Please circle the number (0-10) that best describes how much distress you have been experiencing in the past week, including today.</label>
                 
                 <div class="thermo-wrapper">
                     <div class="scale-column">
-                        <div class="label-text text-extreme">Distres melampau</div>
+                        <div class="label-text text-extreme">Extreme Distress</div>
                         <div class="scale-row"><label for="ds_10">10</label><input type="radio" name="distress_score" value="10" id="ds_10"></div>
                         <div class="scale-row"><label for="ds_9">9</label><input type="radio" name="distress_score" value="9" id="ds_9"></div>
                         <div class="scale-row"><label for="ds_8">8</label><input type="radio" name="distress_score" value="8" id="ds_8"></div>
@@ -127,54 +127,54 @@
                         <div class="scale-row"><label for="ds_2">2</label><input type="radio" name="distress_score" value="2" id="ds_2"></div>
                         <div class="scale-row"><label for="ds_1">1</label><input type="radio" name="distress_score" value="1" id="ds_1"></div>
                         <div class="scale-row"><label for="ds_0">0</label><input type="radio" name="distress_score" value="0" id="ds_0"></div>
-                        <div class="label-text text-none">Tiada distres</div>
+                        <div class="label-text text-none">No Distress</div>
                     </div>
                     <div class="image-column">
-                        <img src="1.png" alt="Visual Termometer" class="thermo-img">
+                        <img src="1.png" alt="Thermometer Visual" class="thermo-img">
                     </div>
                 </div>
             </div>
 
             <div class="question-card">
-                <label class="q-label">SENARAI MASALAH: Adakah anda bimbang tentang sebarang perkara yang disenaraikan di bawah dalam tempoh seminggu yang lalu, termasuk hari ini? (Tandakan semua yang berkenaan)</label>
+                <label class="q-label">Problem List: Have you had concerns about any of the items below in the past week, including today?</label>
                 
-                <div class="section-header" style="margin-top:0;">Q2. Kebimbangan Fizikal</div>
+                <div class="section-header" style="margin-top:0;">Q2. Physical Concerns</div>
                 <div id="physical-section"></div>
 
-                <div class="section-header">Q3. Kebimbangan Emosi</div>
+                <div class="section-header">Q3. Emotional Concerns</div>
                 <div id="emotional-section"></div>
 
-                <div class="section-header">Q4. Kebimbangan Praktikal</div>
+                <div class="section-header">Q4. Practical Concerns</div>
                 <div id="practical-section"></div>
 
-                <div class="section-header">Q5. Kebimbangan Sosial</div>
+                <div class="section-header">Q5. Social Concerns</div>
                 <div id="social-section"></div>
 
-                <div class="section-header">Q6. Kebimbangan Kerohanian atau Keagamaan</div>
+                <div class="section-header">Q6. Spiritual / Religious</div>
                 <div id="spiritual-section"></div>
 
             </div>
 
             <div class="question-card">
-                <label class="q-label">Q7. Kebimbangan Lain:</label>
+                <label class="q-label">Q7. Other Concerns:</label>
                 <textarea class="form-control" id="other_concerns" rows="3" maxlength="200" 
                           style="width:100%; border:1px solid #ced4da; border-radius:6px; padding:10px; font-size:16px;" 
-                          placeholder="Sila nyatakan..." 
+                          placeholder="Please describe any other concerns..." 
                           oninput="updateCharCount(this)"></textarea>
                 <small id="char-count" style="display:block; text-align:right; color:#6c757d; font-size:12px; margin-top:4px;">
-                    0/200 aksara telah digunakan
+                    0/200 characters used
                 </small>
             </div>
 
             <div class="score-box no-print">
-                <div><div class="score-title">Tahap Tekanan Emosi</div><small style="opacity:0.7">0 (Tiada distres) ke 10 (Distres melampau)</small></div>
+                <div><div class="score-title">Distress Score</div><small style="opacity:0.7">0 (No Distress) to 10 (Extreme)</small></div>
                 <div class="score-val" id="total-score-display">--</div>
             </div>
 
             <div id="qr-section">
                 <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:8px; border-radius:6px; margin-bottom:8px; font-size:12px;">
-                    <i class="bi bi-check-circle-fill"></i> <strong>Keputusan Sedia!</strong>
-                    <p style="margin:0; font-size:13px;">Tunjukkan kod QR ini kepada pasukan kesihatan anda.</p>
+                    <i class="bi bi-check-circle-fill"></i> <strong>Result Ready!</strong>
+                    <p style="margin:0; font-size:13px;">Show this QR to your doctor.</p>
                 </div>
                 <div id="qrcode-container" style="background:white; padding:8px; border-radius:8px; display:inline-block;">
                     <div id="qrcode"></div>
@@ -184,16 +184,16 @@
 
             <div class="action-buttons no-print" style="margin-top:20px; display:flex; gap:8px; flex-direction:column;">
                 <button type="button" class="btn btn-buccal" onclick="generateQR()" style="width:100%;">
-                    <i class="bi bi-qr-code-scan"></i> Jana Kod QR Keputusan
+                    <i class="bi bi-qr-code-scan"></i> Generate Result QR
                 </button>
                 <button type="button" class="btn btn-pdf" onclick="printPDF()" style="width:100%;">
-                    <i class="bi bi-printer"></i> Cetak / Simpan PDF
+                    <i class="bi bi-printer"></i> Print / Save as PDF
                 </button>
             </div>
         </form>
     </div>
 
-   <script>
+    <script>
         // --- DATA CONFIGURATION ---
         const physicalItems = [ {l:'Pain'}, {l:'Sleep'}, {l:'Fatigue'}, {l:'Tobacco use'}, {l:'Substance use'}, {l:'Memory or concentration'}, {l:'Sexual health'}, {l:'Changes in eating'}, {l:'Loss or change of physical abilities'} ];
         const emotionalItems = [ {l:'Worry or anxiety'}, {l:'Sadness or depression'}, {l:'Loss of interest or enjoyment'}, {l:'Grief or loss'}, {l:'Fear'}, {l:'Loneliness'}, {l:'Anger'}, {l:'Changes in appearance'}, {l:'Feelings of worthlessness or being a burden'} ];
@@ -397,11 +397,11 @@
 
                 const { PDFDocument, rgb, StandardFonts } = PDFLib;
                 
-                // 2. Fetch the existing blank bm.pdf (Local source)
-                const pdfUrl = 'bm.pdf?v=' + Date.now();
+                // 2. Fetch the existing blank eng.pdf (Local source)
+                const pdfUrl = './eng.pdf?v=' + Date.now();
                 
                 const existingPdfBytes = await fetch(pdfUrl).then(res => {
-                    if (!res.ok) throw new Error("File bm.pdf not found!");
+                    if (!res.ok) throw new Error("File eng.pdf not found!");
                     return res.arrayBuffer();
                 });
 
