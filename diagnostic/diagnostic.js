@@ -6,12 +6,10 @@
         link.rel = 'icon';
         document.head.appendChild(link);
     }
-    // Adjust path based on where this script runs. 
     link.href = '../../favicon.png'; 
 })();
 
-// --- diagnostic.js (Final Production Version with Patient Caching) ---
-
+// --- FIREBASE CONFIG ---
 const firebaseConfig = {
     apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
     authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -29,14 +27,12 @@ let context = { mode: 'personal', instId: null };
 
 document.addEventListener('DOMContentLoaded', async () => {
     injectStandardFooter();
-    
-    // [NEW 1/3] Inject the Modal HTML automatically on load
     injectConsentModal(); 
     
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
-    const form = document.getElementById('iposForm');
+    const form = document.querySelector('form'); 
     if(form) form.addEventListener('change', calculateTotalScore);
 
     // --- DETERMINE ROLE ---
@@ -44,14 +40,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ref = urlParams.get('ref');
 
     if (ref) {
-        // SCENARIO A: PATIENT (Accessed via QR Link)
         context.mode = 'shared'; 
         context.instId = ref;
         window.context = context;
         await finalizeAppSetup(context.instId);
-
     } else {
-        // SCENARIO B: DOCTOR (Direct Access / Login)
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 try {
@@ -71,7 +64,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// --- UI SETUP HANDLER ---
 async function finalizeAppSetup(instId) {
     const blankQrHeader = document.getElementById('blank-qr-header');
     const backButton = document.getElementById('backLink');
@@ -94,93 +86,105 @@ async function finalizeAppSetup(instId) {
     }
 }
 
-// --- 1. START QR (URL LINK) ---
 function generateBlankFormQR(instId) {
     const qrContainer = document.getElementById("blank-qrcode");
     if (!qrContainer) return;
-
     qrContainer.innerHTML = ""; 
     const baseUrl = window.location.href.split('?')[0]; 
     const targetUrl = instId ? `${baseUrl}?ref=${instId}` : baseUrl;
-    
     new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
 }
 
-// --- 2. RESULT QR GENERATION LOGIC ---
+// --- RESULT GENERATION LOGIC ---
 
-// [NEW 2/3] The Trigger: This function now opens the modal instead of generating immediately
 function generateQR() {
     const modal = document.getElementById('pdpa-modal');
     if (modal) {
         modal.style.display = 'flex';
     } else {
-        // Fallback if modal somehow missing
         if(confirm("Generate QR Code? By clicking OK you consent to sharing this data for clinical use.")) {
             executeQRGeneration();
         }
     }
 }
 
-// [NEW 3/3] The Logic: This was your old generateQR function, simply renamed.
 function executeQRGeneration() {
+    const totalScore = calculateTotalScore();
+
     const getVal = (name) => {
         const el = document.querySelector(`input[name="${name}"]:checked`);
         return el ? parseInt(el.value) : 0;
     };
-
+    
+    // Generic symptom collector (Safe for all tools)
     const otherSymptoms = [];
     for (let i = 1; i <= 3; i++) {
         const labelEl = document.getElementById(`other_sym_${i}_label`);
-        const label = labelEl ? labelEl.value.substring(0, 20) : "";
-        const val = getVal(`other_sym_${i}_val`);
-        if (label || val > 0) {
-            otherSymptoms.push(`${label} (${val})`);
+        if(labelEl) {
+            const label = labelEl.value.substring(0, 20);
+            const val = getVal(`other_sym_${i}_val`);
+            if (label || val > 0) otherSymptoms.push(`${label} (${val})`);
         }
     }
 
+    // Default Payload
+    // If REPORT_KEY is not defined, we default to "TOOL"
+    const toolName = (typeof REPORT_KEY !== 'undefined') ? REPORT_KEY.replace('report_', '').toUpperCase() : "TOOL";
+    
     const payload = {
-        t: "IPOS",
+        t: toolName,
         d: Date.now(),
-        score: calculateTotalScore(),
-        Q1: document.getElementById('q1_input').value.substring(0, 100),
-        Q2a: getVal('pain'),
-        Q2b: getVal('sob'),
-        Q2c: getVal('weak'),
-        Q2d: getVal('nau'),
-        Q2e: getVal('vom'),
-        Q2f: getVal('app'),
-        Q2g: getVal('con'),
-        Q2h: getVal('mou'),
-        Q2i: getVal('dro'),
-        Q2j: getVal('mob'),
-        Q2k: otherSymptoms.join(", "), 
-        Q3: getVal('anxious'),
-        Q4: getVal('family'),
-        Q5: getVal('depressed'),
-        Q6: getVal('peace'),
-        Q7: getVal('share'),
-        Q8: getVal('info'),
-        Q9: getVal('practical'),
-        Q10: ["A", "B", "C"][document.getElementById('completion_mode').value] || "A"
+        score: totalScore,
+        details: otherSymptoms.join(", ") 
     };
 
+    // ============================================================
+    // [NEW] SMART SAVE LOGIC
+    // Checks if 'ENABLE_CLINICAL_REPORT' exists. If not, it skips this block.
+    // ============================================================
+    if (typeof ENABLE_CLINICAL_REPORT !== 'undefined' && ENABLE_CLINICAL_REPORT === true) {
+        try {
+            let formattedScore = totalScore;
+            
+            // Auto-format based on the key name
+            if(typeof REPORT_KEY !== 'undefined') {
+                if(REPORT_KEY.includes('flacc')) formattedScore += "/10";
+                if(REPORT_KEY.includes('akps')) formattedScore += "%";
+                if(REPORT_KEY.includes('rug')) formattedScore += ""; // RUG is just a number
+                
+                sessionStorage.setItem(REPORT_KEY, formattedScore);
+                // console.log(`Saved ${REPORT_KEY}: ${formattedScore}`);
+            }
+        } catch (e) {
+            console.warn("Session storage save failed", e);
+        }
+    }
+    // ============================================================
+
     const qrDiv = document.getElementById("qrcode");
-    qrDiv.innerHTML = "";
-    
-    const safeData = encodeURIComponent(JSON.stringify(payload));
-    new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+    if (qrDiv) {
+        qrDiv.innerHTML = "";
+        const safeData = encodeURIComponent(JSON.stringify(payload));
+        new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+    }
 
     const section = document.getElementById('qr-section');
-    section.style.display = 'block';
-    section.scrollIntoView({behavior: 'smooth'});
+    if (section) {
+        section.style.display = 'block';
+        section.scrollIntoView({behavior: 'smooth'});
+    }
 }
 
 // --- UTILS ---
 function calculateTotalScore() {
     let total = 0;
-    document.querySelectorAll('#iposForm input[type="radio"]:checked').forEach(input => {
-        total += parseInt(input.value);
-    });
+    const form = document.querySelector('form');
+    if(form) {
+        form.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+            const val = parseInt(input.value);
+            if(!isNaN(val)) total += val;
+        });
+    }
     const display = document.getElementById('total-score-display');
     if(display) display.innerText = total;
     return total;
@@ -211,7 +215,6 @@ async function loadInstitutionHeader(instId) {
             applyBranding(cleanData); 
         }
     } catch (e) { 
-        console.warn("Fetch failed, trying cache", e);
         const cached = localStorage.getItem('cached_inst_' + instId);
         if (cached) {
             const data = JSON.parse(cached);
@@ -260,8 +263,6 @@ function injectStandardFooter() {
 
 function printPDF() { window.print(); }
 
-// --- CONSENT MODAL HELPERS ---
-
 function injectConsentModal() {
     if (document.getElementById('pdpa-modal')) return;
 
@@ -293,5 +294,5 @@ function closeConsentModal() {
 
 function confirmConsent() {
     closeConsentModal();
-    executeQRGeneration(); // Proceed to original logic
+    executeQRGeneration(); 
 }

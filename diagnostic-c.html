@@ -54,6 +54,43 @@
         text-align: center;
         box-shadow: 0 4px 12px rgba(0,123,255,0.1);
     }
+
+    /* Badge for the Report Card */
+    .badge-card {
+        background-color: #dc3545;
+        color: white;
+        font-size: 12px;
+        padding: 2px 8px;
+        border-radius: 12px;
+        margin-left: 10px;
+        vertical-align: middle;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* Report Grid Styles for the Modal */
+    .report-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .input-group label {
+        display: block;
+        font-size: 11px;
+        font-weight: bold;
+        color: #555;
+        margin-bottom: 2px;
+    }
+    .input-group input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: #f9f9f9;
+        box-sizing: border-box; 
+    }
 </style>
 </head>
 <body>
@@ -77,11 +114,17 @@
             <div style="font-style: italic; opacity: 0.8;">Institution header will appear here</div>
         </div>
 
-        <div id="shareCallout" class="action-callout" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0); border-color: #22c55e;">
-            <h3>📱 Share with Patient</h3>
-            <p><strong>Auto-Generated QR Code</strong><br>Patient will see your institution's header automatically.</p>
-            <button class="btn-action btn-share" id="openShareBtn">
-                <i class="bi bi-qr-code"></i> Generate Patient QR
+        <div id="shareCallout" class="pamphlet-section" style="border-color: #198754; background-color: #f0fdf4; margin-top: 20px;">
+            <div class="pamphlet-title" style="color: #198754;">
+                Clinical Handover
+                <span id="cardBadge" class="badge-card" style="display:none;">0</span>
+            </div>
+            <div class="pamphlet-subtitle">
+                Generate WhatsApp summary or Google Form submission
+            </div>
+            
+            <button onclick="openReportModal()" class="btn-start-assess" style="background-color: #198754;">
+                <i class="bi bi-clipboard-check"></i> Generate Report
             </button>
         </div>
 
@@ -102,7 +145,6 @@
                 <div class="pamphlet-subtitle">Richmond Agitation-Sedation Scale</div>
                 <a href="diagnostic/rass.html" class="btn-start-assess">Start Assessment</a>
             </div>
-
 
             <div class="pamphlet-section">
                 <div class="pamphlet-title">AKPS</div>
@@ -125,6 +167,7 @@
         </section>
 
     </div> 
+
     <div id="settingsModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -163,22 +206,52 @@
         </div>
     </div>
 
-    <div id="shareModal" class="modal-overlay">
-        <div class="modal-content">
+    <div id="reportModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
-                <h2 style="margin:0; font-size: 18px;">📱 Scan to View</h2>
-                <button class="close-btn" id="closeShareBtn">&times;</button>
-            </div>
-            <div class="qr-instruction">
-                Ask the patient to scan this code.<br>They will see the tools with <strong>your</strong> institution's header.
+                <h2 style="margin:0; font-size: 18px;">📋 Clinical Handover</h2>
+                <button class="close-btn" onclick="closeReportModal()">&times;</button>
             </div>
             
-            <div id="qrcode-wrapper-safe">
-                <div id="qrcode"></div>
+            <p style="font-size:12px; color:#666; margin-bottom:15px;">
+                Verify scores below. You can manually type or edit results.
+            </p>
+
+            <div class="report-grid">
+                <div class="input-group">
+                    <label>FLACC</label>
+                    <input type="text" id="input_flacc" placeholder="-">
+                </div>
+                <div class="input-group">
+                    <label>RASS</label>
+                    <input type="text" id="input_rass" placeholder="-">
+                </div>
+                <div class="input-group">
+                    <label>AKPS</label>
+                    <input type="text" id="input_akps" placeholder="-">
+                </div>
+                <div class="input-group">
+                    <label>RUG-ADL</label>
+                    <input type="text" id="input_rug" placeholder="-">
+                </div>
+                <div class="input-group">
+                    <label>RDOS</label>
+                    <input type="text" id="input_rdos" placeholder="-">
+                </div>
             </div>
 
-            <div style="margin-top:20px; font-size:11px; color:#999; word-break: break-all;">
-                Link: <span id="shareLink"></span>
+            <div class="report-actions-vertical" style="display:flex; flex-direction:column; gap:10px;">
+                <button class="btn-start-assess" style="background:#25D366; border:none; margin-top:0;" onclick="copyReport()">
+                    <i class="bi bi-whatsapp"></i> Copy for WhatsApp
+                </button>
+
+                <button class="btn-start-assess" style="background:#4285F4; border:none; margin-top:0;" onclick="sendToGoogleForm()">
+                    <i class="bi bi-cloud-upload"></i> Fill Patient Details & Submit
+                </button>
+                
+                <button onclick="clearReport()" style="background:none; border:none; color:#dc3545; text-decoration:underline; cursor:pointer; font-size:12px; padding:10px;">
+                    Clear All Data
+                </button>
             </div>
         </div>
     </div>

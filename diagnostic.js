@@ -6,12 +6,10 @@
         link.rel = 'icon';
         document.head.appendChild(link);
     }
-    // Adjust path based on where this script runs. 
-    // If diagnostic.js is in a subfolder, use '../favicon.png'
     link.href = '/favicon.png'; 
 })();
 
-// --- FIREBASE CONFIG (Keep your existing config) ---
+// --- FIREBASE CONFIGURATION ---
 const firebaseConfig = {
     apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
     authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -28,21 +26,30 @@ let userInstId = null;
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', function() {
+    // 1. Standard App Logic
     initApp();
-    generateToolLinks(); // <--- THIS FUNCTION GENERATES THE FLAGS
+    generateToolLinks(); 
     
-    // Attach Event Listeners
+    // 2. Attach Standard Event Listeners
     if(document.getElementById('openSettingsBtn')) {
         document.getElementById('openSettingsBtn').addEventListener('click', openSettings);
         document.getElementById('closeSettingsBtn').addEventListener('click', closeSettings);
     }
-if(document.getElementById('openScannerBtn')) {
-    document.getElementById('openScannerBtn').addEventListener('click', () => {
-        window.location.href = 'diagnostic/scan.html';
-    });
-}
+    if(document.getElementById('openScannerBtn')) {
+        document.getElementById('openScannerBtn').addEventListener('click', () => {
+            window.location.href = 'diagnostic/scan.html';
+        });
+    }
     if(document.getElementById('institutionForm')) {
         document.getElementById('institutionForm').addEventListener('submit', saveSettings);
+    }
+
+    // ============================================================
+    // [SAFETY CHECK] CLINICAL REPORT INIT
+    // Only runs if the "Report Card Badge" exists (i.e., ONLY on diagnostic-c)
+    // ============================================================
+    if(document.getElementById('cardBadge')) {
+        updateBadgeCount();
     }
 });
 
@@ -53,7 +60,6 @@ const toolConfig = {
         zh: { flag: '🇨🇳', label: '中文', filename: 'ch.html' },
         ms: { flag: '🇲🇾', label: 'Bahasa', filename: 'bm.html' } 
     },
-    // These names MUST match the data-tool="..." in your HTML
     tools: { 
         ipos:       ['en', 'zh', 'ms'],
         hads:       ['en', 'zh', 'ms'],
@@ -61,33 +67,23 @@ const toolConfig = {
     }
 };
 
-// --- 2. THE FUNCTION THAT GENERATES FLAGS ---
+// --- 2. GENERATE FLAGS ---
 function generateToolLinks() {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref');
 
-    // Loop through every tool in the config
     Object.entries(toolConfig.tools).forEach(([toolId, availableLangs]) => {
-        
-        // FIND THE CONTAINER: Look for data-tool="ipos" (not data-pamphlet)
         const section = document.querySelector(`[data-tool="${toolId}"] .language-icons`);
-        
-        if (!section) {
-            console.warn(`Could not find container for tool: ${toolId}`);
-            return;
-        }
+        if (!section) return; // Skip if tool not found
 
-        section.innerHTML = ''; // Clear any existing content
+        section.innerHTML = ''; 
 
-        // Create the buttons
         availableLangs.forEach(langCode => {
             const langData = toolConfig.languages[langCode];
             const link = document.createElement('a');
-            
-            // Path: diagnostic/toolName/eng.html
             const baseUrl = `diagnostic/${toolId}/${langData.filename}`;
             link.href = ref ? `${baseUrl}?ref=${ref}` : baseUrl;
-            link.className = 'lang-icon-link'; // Uses your style.css
+            link.className = 'lang-icon-link'; 
             link.innerHTML = `
               <div class="lang-icon" style="font-size:24px;">${langData.flag}</div>
               <div class="lang-label" style="font-size:12px;">${langData.label}</div>
@@ -97,9 +93,7 @@ function generateToolLinks() {
     });
 }
 
-// --- STANDARD APP LOGIC (Header, Firebase, etc.) ---
-// (Keep the rest of your logic below for InitApp, LoadSettings, etc.)
-
+// --- STANDARD APP LOGIC ---
 async function initApp() {
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     auth = firebase.auth();
@@ -209,7 +203,6 @@ function renderPlaceholder() {
     if(document.getElementById('headerPlaceholder')) document.getElementById('headerPlaceholder').style.display = 'block';
 }
 
-// --- SETTINGS UI & SAVE ---
 function openSettings() { 
     document.getElementById('settingsModal').style.display = 'block';
     const settings = JSON.parse(localStorage.getItem('institutionSettings') || '{}');
@@ -226,14 +219,13 @@ function saveSettings(e) {
     const settings = {
         name: document.getElementById('institutionNameInput').value.trim(),
         contact: document.getElementById('institutionContactInput').value.trim(),
-        logos: [] // Simplify for brevity, add logo logic if needed
+        logos: [] 
     };
     localStorage.setItem('institutionSettings', JSON.stringify(settings));
     loadLocalSettings();
     closeSettings();
 }
 
-// --- QR CODE ---
 function openShareModal() {
     const modal = document.getElementById('shareModal');
     const qrDiv = document.getElementById('qrcode');
@@ -250,3 +242,122 @@ function openShareModal() {
 function closeShareModal() {
     document.getElementById('shareModal').style.display = 'none';
 }
+
+
+// =========================================================
+// [NEW APPENDED SECTION] CLINICAL HANDOVER REPORT LOGIC
+// (Includes Safety Checks for Patient Page)
+// =========================================================
+
+function updateBadgeCount() {
+    // SAFETY CHECK: If this element is missing (Patient Page), stop immediately.
+    const cardBadge = document.getElementById('cardBadge');
+    if (!cardBadge) return; 
+
+    let count = 0;
+    for (let i = 0; i < sessionStorage.length; i++) {
+        if (sessionStorage.key(i).startsWith("report_")) {
+            count++;
+        }
+    }
+    
+    if (count > 0) {
+        cardBadge.innerText = count + " Ready";
+        cardBadge.style.display = 'inline-block';
+    } else {
+        cardBadge.style.display = 'none';
+    }
+}
+
+function openReportModal() {
+    const modal = document.getElementById('reportModal');
+    if (!modal) return; // SAFETY CHECK: Stops error on Patient Page
+    
+    // Helper to load data safely into inputs
+    const setVal = (id, key) => {
+        const el = document.getElementById(id);
+        if (el) el.value = sessionStorage.getItem(key) || "";
+    };
+
+    setVal('input_flacc', 'report_flacc');
+    setVal('input_rass', 'report_rass');
+    setVal('input_akps', 'report_akps');
+    setVal('input_rug', 'report_rug');
+    setVal('input_rdos', 'report_rdos');
+
+    modal.style.display = 'flex';
+}
+
+function closeReportModal() {
+    const modal = document.getElementById('reportModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function copyReport() {
+    const getVal = (id) => document.getElementById(id)?.value;
+
+    let reportText = "📋 *CLINICAL HANDOVER*\n";
+    reportText += "Name: \n";  
+    reportText += "ID: \n";    
+    reportText += "Date: " + new Date().toLocaleString('en-GB', { hour12: false }) + "\n";
+    reportText += "------------------\n";
+    
+    const flacc = getVal('input_flacc'); if(flacc) reportText += `FLACC: ${flacc}\n`;
+    const rass = getVal('input_rass');   if(rass)  reportText += `RASS: ${rass}\n`;
+    const akps = getVal('input_akps');   if(akps)  reportText += `AKPS: ${akps}\n`;
+    const rug = getVal('input_rug');     if(rug)   reportText += `RUG-ADL: ${rug}\n`;
+    const rdos = getVal('input_rdos');   if(rdos)  reportText += `RDOS: ${rdos}\n`;
+
+    if (!flacc && !rass && !akps && !rug && !rdos) {
+        alert("No scores to copy.");
+        return;
+    }
+
+    navigator.clipboard.writeText(reportText).then(() => {
+        alert("Report copied! \n\nPlease paste in WhatsApp and add Name/ID.");
+    });
+}
+
+function sendToGoogleForm() {
+    // ⚠️ REPLACE WITH YOUR REAL FORM ID ⚠️
+    const baseUrl = "https://docs.google.com/forms/d/e/YOUR_FORM_ID_HERE/viewform";
+    
+    // ⚠️ UPDATE THESE ENTRY IDs ⚠️
+    const mapping = {
+        'input_flacc': 'entry.111111', 
+        'input_rass':  'entry.222222',
+        'input_akps':  'entry.333333',
+        'input_rug':   'entry.444444',
+        'input_rdos':  'entry.555555'
+    };
+
+    const params = new URLSearchParams();
+    Object.keys(mapping).forEach(id => {
+        const val = document.getElementById(id)?.value;
+        if(val) params.append(mapping[id], val);
+    });
+
+    if(params.toString() === "" && !confirm("Form is empty. Open blank form?")) return;
+
+    window.open(`${baseUrl}?${params.toString()}`, '_blank');
+}
+
+function clearReport() {
+    if(confirm("Clear all data?")) {
+        sessionStorage.clear();
+        updateBadgeCount();
+        closeReportModal();
+        // Check if inputs exist before clearing (Safety)
+        const inputs = document.querySelectorAll('.report-grid input');
+        if(inputs.length > 0) {
+            inputs.forEach(i => i.value = '');
+        }
+    }
+}
+
+// Expose functions globally
+window.openReportModal = openReportModal;
+window.closeReportModal = closeReportModal;
+window.copyReport = copyReport;
+window.sendToGoogleForm = sendToGoogleForm;
+window.clearReport = clearReport;
