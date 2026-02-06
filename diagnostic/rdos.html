@@ -11,7 +11,7 @@
 
     <style>
         /* =========================================
-           1. GLOBAL RESET & LAYOUT (Your CSS)
+           1. GLOBAL RESET & LAYOUT (Standard Theme)
            ========================================= */
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -86,8 +86,15 @@
             padding: 12px 24px; border: none; border-radius: 50px; font-weight: 600;
             cursor: pointer; text-decoration: none; font-size: 16px;
         }
-        .btn-buccal { background: linear-gradient(135deg, #0061f2 0%, #00c6f7 100%); color: white; }
         .btn-reset { background: #6c757d; color: white; }
+
+        /* NEW: Save Button Style */
+        .btn-save { 
+            background: #28a745; 
+            color: white; 
+            box-shadow: 0 4px 6px rgba(40, 167, 69, 0.3);
+        }
+        .btn-save:hover { background: #218838; }
 
         /* =========================================
            4. FORM ELEMENTS
@@ -120,10 +127,11 @@
         .score-box {
             background: #2c3e50; color: white; padding: 20px; border-radius: 12px;
             margin-top: 30px; display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 10px;
         }
         .score-title { font-size: 14px; opacity: 0.9; text-transform: uppercase; }
         .score-val { font-size: 32px; font-weight: 800; color: #00c6f7; }
-        .score-interp { font-size: 14px; text-align: right; margin-top: 5px; font-weight: 600; color: #e3f2fd; }
+        .score-interp { font-size: 14px; text-align: left; margin-top: 5px; font-weight: 600; color: #e3f2fd; }
 
         /* =========================================
            5. FOOTER
@@ -145,11 +153,9 @@
             .main-container { margin: 0; border-radius: 0; padding: 15px; }
             .header { margin: -15px -15px 15px -15px; border-radius: 0; }
             .scale-container { gap: 3px; }
-        }
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white; }
-            .main-container { box-shadow: none; padding: 0; }
+            .score-box { flex-direction: column; align-items: stretch; text-align: center; }
+            .score-box > div { margin-bottom: 10px; }
+            .btn { width: 100%; margin: 5px 0 0 0 !important; }
         }
     </style>
 </head>
@@ -314,22 +320,29 @@
             </div>
 
             <div class="score-box">
-                <div>
+                <div style="flex-grow: 1; text-align: left;">
                     <div class="score-title">Total RDOS Score</div>
                     <div id="interp-display" class="score-interp" style="text-align: left; font-weight: normal; font-size: 13px; color: #81e6d9;">Comfort</div>
                 </div>
-                <div class="score-val" id="total-score-display">0</div>
+                <div class="score-val" id="total-score-display" style="margin-right: 20px;">0</div>
+
+                <button type="button" class="btn btn-save" onclick="saveAndExit()">Save & Finish</button>
+                
+                <button type="button" class="btn btn-reset" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);" onclick="resetRDOS()">Reset</button>
             </div>
             
-            <div style="text-align: center; margin-top: 20px;" class="no-print">
-                 <button type="button" class="btn btn-reset" onclick="resetRDOS()">Reset Form</button>
-            </div>
-
         </form>
     </div>
 
     <script>
-        // --- 1. FIREBASE CONFIG (Matching your diagnostic.js) ---
+        // ===============================================
+        // ⚙️ CONFIGURATION FOR CLINICAL REPORT
+        // ===============================================
+        const ENABLE_CLINICAL_REPORT = true; 
+        const REPORT_KEY = 'report_rdos';
+        // ===============================================
+
+        // --- 1. FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
             authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -339,33 +352,21 @@
             appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
         };
         
-        // Initialize Firebase if not already done
         if (typeof firebase !== 'undefined' && !firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
 
         // --- 2. LOGIC START ---
         document.addEventListener('DOMContentLoaded', async () => {
-            // Setup Date
-            const dateDisplay = document.getElementById('dateDisplay');
-            if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
-
-            // Inject Footer
+            document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
             injectStandardFooter();
 
-            // Check for Institution ID in URL (Ref) or LocalStorage
             const urlParams = new URLSearchParams(window.location.search);
             const ref = urlParams.get('ref');
             
-            if (ref) {
-                // Accessed via Shared Link
-                await loadInstitutionHeader(ref);
-            } else {
-                // Check local storage for previously cached settings (Doctor view)
-                loadPersonalHeader();
-            }
+            if (ref) await loadInstitutionHeader(ref);
+            else loadPersonalHeader();
 
-            // Run initial calc
             calcRDOS();
         });
 
@@ -380,7 +381,6 @@
 
             const scoreDisplay = document.getElementById('total-score-display');
             const interpDisplay = document.getElementById('interp-display');
-            const scoreBox = document.querySelector('.score-box');
 
             scoreDisplay.innerText = total;
 
@@ -403,35 +403,41 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // --- 4. HEADER & BRANDING LOGIC (Adapted from diagnostic.js) ---
+        // --- NEW: SAVE LOGIC ---
+        function saveAndExit() {
+            const currentScore = document.getElementById('total-score-display').innerText;
+
+            if (ENABLE_CLINICAL_REPORT) {
+                sessionStorage.setItem(REPORT_KEY, currentScore);
+                
+                const btn = document.querySelector('.btn-save');
+                btn.innerText = "Saved!";
+                btn.style.backgroundColor = "#155724";
+
+                setTimeout(() => {
+                    history.back();
+                }, 400);
+            }
+        }
+
+        // --- 4. BRANDING HELPERS ---
         async function loadInstitutionHeader(instId) {
             try {
                 if (typeof firebase === 'undefined') throw new Error("Firebase SDK not loaded");
                 const db = firebase.firestore();
-                
-                // Try Fetch
                 const doc = await db.collection('institutions').doc(instId).get();
-                if (doc.exists) { 
-                    const data = doc.data();
-                    if (data.status === 'suspended') return; 
-
-                    const cleanData = normalizeBranding(data);
-                    applyBranding(cleanData); 
+                if (doc.exists && doc.data().status !== 'suspended') { 
+                    applyBranding(normalizeBranding(doc.data())); 
                 }
             } catch (e) { 
-                console.warn("Fetch failed, checking cache...", e);
                 const cached = localStorage.getItem('cached_inst_' + instId);
-                if (cached) {
-                    applyBranding(normalizeBranding(JSON.parse(cached)));
-                }
+                if (cached) applyBranding(normalizeBranding(JSON.parse(cached)));
             }
         }
 
         function loadPersonalHeader() {
             const settingsStr = localStorage.getItem('institutionSettings');
-            if (settingsStr) { 
-                try { applyBranding(JSON.parse(settingsStr)); } catch (e) {} 
-            }
+            if (settingsStr) try { applyBranding(JSON.parse(settingsStr)); } catch (e) {}
         }
 
         function normalizeBranding(data) {
@@ -444,10 +450,7 @@
         }
 
         function applyBranding({ name, contact, logo }) {
-            if(name) {
-                document.getElementById('inst-name-display').textContent = name;
-                // Add to footer if needed
-            }
+            if(name) document.getElementById('inst-name-display').textContent = name;
             if(contact) document.getElementById('inst-contact-display').textContent = contact;
             if(logo) {
                 const el = document.getElementById('inst-logo-img');

@@ -88,6 +88,14 @@
         }
         .btn-reset { background: #6c757d; color: white; }
 
+        /* NEW: Save Button Style */
+        .btn-save { 
+            background: #28a745; 
+            color: white; 
+            box-shadow: 0 4px 6px rgba(40, 167, 69, 0.3);
+        }
+        .btn-save:hover { background: #218838; }
+
         /* =========================================
            4. FORM ELEMENTS (Adapted for RUG-ADL Text)
            ========================================= */
@@ -158,6 +166,7 @@
         .score-box {
             background: #2c3e50; color: white; padding: 20px; border-radius: 12px;
             margin-top: 30px; display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 10px;
         }
         .score-title { font-size: 14px; opacity: 0.9; text-transform: uppercase; }
         .score-val { font-size: 32px; font-weight: 800; color: #00c6f7; }
@@ -180,6 +189,9 @@
         @media (max-width: 600px) {
             .main-container { margin: 0; border-radius: 0; padding: 15px; }
             .header { margin: -15px -15px 15px -15px; border-radius: 0; }
+            .score-box { flex-direction: column; align-items: stretch; text-align: center; }
+            .score-box > div { margin-bottom: 10px; }
+            .btn { width: 100%; margin: 5px 0 0 0 !important; }
         }
     </style>
 </head>
@@ -369,21 +381,28 @@
             </div>
 
             <div class="score-box">
-                <div>
+                <div style="flex-grow: 1; text-align: left;">
                     <div class="score-title">Total RUG-ADL Score</div>
                     <div class="score-range">Range: 4 - 18</div>
                 </div>
-                <div class="score-val" id="totalScore">--</div>
+                <div class="score-val" id="totalScore" style="margin-right: 20px;">--</div>
+                
+                <button type="button" class="btn btn-save" onclick="saveAndExit()">Save & Finish</button>
+                
+                <button type="button" class="btn btn-reset" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);" onclick="resetRUG()">Reset</button>
             </div>
             
-            <div style="text-align: center; margin-top: 20px;">
-                 <button type="button" class="btn btn-reset" onclick="resetRUG()">Reset Form</button>
-            </div>
-
         </form>
     </div>
 
     <script>
+        // ===============================================
+        // ⚙️ CONFIGURATION FOR CLINICAL REPORT
+        // ===============================================
+        const ENABLE_CLINICAL_REPORT = true; 
+        const REPORT_KEY = 'report_rug';
+        // ===============================================
+
         // --- 1. FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
@@ -438,6 +457,29 @@
             document.getElementById('rugForm').reset();
             document.getElementById('totalScore').innerText = "--";
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- NEW: SAVE LOGIC ---
+        function saveAndExit() {
+            const scoreText = document.getElementById('totalScore').innerText;
+
+            // Validation: Ensure all questions are answered
+            if (scoreText === "--") {
+                alert("Please answer all questions to calculate a score.");
+                return;
+            }
+
+            if (ENABLE_CLINICAL_REPORT) {
+                sessionStorage.setItem(REPORT_KEY, scoreText);
+                
+                const btn = document.querySelector('.btn-save');
+                btn.innerText = "Saved!";
+                btn.style.backgroundColor = "#155724";
+
+                setTimeout(() => {
+                    history.back();
+                }, 400);
+            }
         }
 
         // --- 4. BRANDING HELPERS ---

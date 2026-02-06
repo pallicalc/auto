@@ -26,11 +26,10 @@ let userInstId = null;
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Standard App Logic
     initApp();
     generateToolLinks(); 
     
-    // 2. Attach Standard Event Listeners
+    // Attach Standard Event Listeners
     if(document.getElementById('openSettingsBtn')) {
         document.getElementById('openSettingsBtn').addEventListener('click', openSettings);
         document.getElementById('closeSettingsBtn').addEventListener('click', closeSettings);
@@ -44,10 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('institutionForm').addEventListener('submit', saveSettings);
     }
 
-    // ============================================================
-    // [SAFETY CHECK] CLINICAL REPORT INIT
-    // Only runs if the "Report Card Badge" exists (i.e., ONLY on diagnostic-c)
-    // ============================================================
+    // Trigger Badge Update on Load
     if(document.getElementById('cardBadge')) {
         updateBadgeCount();
     }
@@ -74,7 +70,7 @@ function generateToolLinks() {
 
     Object.entries(toolConfig.tools).forEach(([toolId, availableLangs]) => {
         const section = document.querySelector(`[data-tool="${toolId}"] .language-icons`);
-        if (!section) return; // Skip if tool not found
+        if (!section) return;
 
         section.innerHTML = ''; 
 
@@ -161,16 +157,23 @@ function loadLocalSettings() {
     else renderPlaceholder();
 }
 
+// [FETCH DATA INCLUDING LINKS]
 async function loadInstitutionFromFirebase(instId, isSharedLink) {
     try {
         const doc = await db.collection('institutions').doc(instId).get();
         if (doc.exists) {
             const data = doc.data();
-            renderHeader({
+            
+            const settings = {
                 name: data.headerName || data.name,
                 contact: data.headerContact,
-                logos: data.headerLogos || [] 
-            });
+                logos: data.headerLogos || [],
+                links: data.diagnosticLinks || {} // Store links
+            };
+
+            localStorage.setItem('institutionSettings', JSON.stringify(settings));
+
+            renderHeader(settings);
             updateBanner(isSharedLink ? 'shared' : 'custom_firebase', data.name);
         } else renderPlaceholder();
     } catch (e) { renderPlaceholder(); }
@@ -219,7 +222,8 @@ function saveSettings(e) {
     const settings = {
         name: document.getElementById('institutionNameInput').value.trim(),
         contact: document.getElementById('institutionContactInput').value.trim(),
-        logos: [] 
+        logos: [],
+        links: {}
     };
     localStorage.setItem('institutionSettings', JSON.stringify(settings));
     loadLocalSettings();
@@ -245,12 +249,10 @@ function closeShareModal() {
 
 
 // =========================================================
-// [NEW APPENDED SECTION] CLINICAL HANDOVER REPORT LOGIC
-// (Includes Safety Checks for Patient Page)
+// CLINICAL HANDOVER REPORT LOGIC
 // =========================================================
 
 function updateBadgeCount() {
-    // SAFETY CHECK: If this element is missing (Patient Page), stop immediately.
     const cardBadge = document.getElementById('cardBadge');
     if (!cardBadge) return; 
 
@@ -271,9 +273,8 @@ function updateBadgeCount() {
 
 function openReportModal() {
     const modal = document.getElementById('reportModal');
-    if (!modal) return; // SAFETY CHECK: Stops error on Patient Page
+    if (!modal) return;
     
-    // Helper to load data safely into inputs
     const setVal = (id, key) => {
         const el = document.getElementById(id);
         if (el) el.value = sessionStorage.getItem(key) || "";
@@ -318,11 +319,24 @@ function copyReport() {
     });
 }
 
+// ============================================================
+// [UPDATED] SEND TO GOOGLE FORM (Master Handover Link)
+// ============================================================
 function sendToGoogleForm() {
-    // ⚠️ REPLACE WITH YOUR REAL FORM ID ⚠️
-    const baseUrl = "https://docs.google.com/forms/d/e/YOUR_FORM_ID_HERE/viewform";
+    // 1. Retrieve the saved links from memory
+    const settings = JSON.parse(localStorage.getItem('institutionSettings') || '{}');
+    const links = settings.links || {};
+
+    // 2. Use the 'handover' link (from the new card in Admin)
+    const baseUrl = links.handover || ""; 
     
-    // ⚠️ UPDATE THESE ENTRY IDs ⚠️
+    if (!baseUrl) {
+        alert("Master Handover Link not set. Please contact your Institution Admin.");
+        return;
+    }
+    
+    // 3. ⚠️ IMPORTANT: UPDATE THESE NUMBERS TO MATCH YOUR GOOGLE FORM ⚠️
+    // You must manually replace 'entry.XXXXXX' with the codes from your actual Google Form
     const mapping = {
         'input_flacc': 'entry.111111', 
         'input_rass':  'entry.222222',
@@ -347,7 +361,6 @@ function clearReport() {
         sessionStorage.clear();
         updateBadgeCount();
         closeReportModal();
-        // Check if inputs exist before clearing (Safety)
         const inputs = document.querySelectorAll('.report-grid input');
         if(inputs.length > 0) {
             inputs.forEach(i => i.value = '');

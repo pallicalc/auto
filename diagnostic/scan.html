@@ -35,7 +35,6 @@
         .scan-box { width: 200px; height: 200px; border: 2px solid rgba(255,255,255,0.9); border-radius: 12px; position: relative; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); }
         .scan-box::after { content: ''; position: absolute; top: 10px; left: 10px; right: 10px; height: 2px; background: #00c6f7; box-shadow: 0 0 4px #00c6f7; animation: scanLine 2s infinite ease-in-out; }
 
-        /* SWITCH CAMERA BUTTON */
         #switch-cam-btn {
             position: absolute; bottom: 20px; right: 20px; z-index: 50;
             background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
@@ -44,7 +43,6 @@
             display: flex; align-items: center; gap: 8px;
         }
 
-        /* NEW: TROUBLESHOOTING BOX */
         .help-tip {
             margin: 15px; background: #f8f9fa; border-left: 4px solid #6c757d; 
             padding: 12px; font-size: 0.9rem; color: #495057; text-align: left;
@@ -144,9 +142,10 @@
         <div class="step-card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <span class="step-label" style="margin:0;">2. Review Data</span>
-                <span id="form-badge" class="badge-pill">IPOS</span>
+                <span id="form-badge" class="badge-pill">DATA</span>
             </div>
             <div id="clinical-preview" class="clinical-summary"></div>
+            
             <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; background:#eef2f5; padding:10px; border-radius:6px;">
                 <strong>Total Score</strong>
                 <span id="total-score" style="font-size:1.2rem; color:var(--primary); font-weight:800;">0</span>
@@ -195,13 +194,7 @@
     let availableCameras = [];
     let currentCameraIndex = 0;
 
-    const DISPLAY_LABELS = {
-        Q2a: 'Pain', Q2b: 'Breath', Q2c: 'Weakness', Q2d: 'Nausea', Q2e: 'Vomiting',
-        Q2f: 'Appetite', Q2g: 'Constipation', Q2h: 'Mouth', Q2i: 'Drowsy', Q2j: 'Mobility',
-        Q2k: 'Other', Q3: 'Anxiety', Q4: 'Family Anxiety', Q5: 'Depression', Q6: 'Peace', 
-        Q7: 'Shared Feelings', Q8: 'Information', Q9: 'Practical',
-        Q10: 'Completed By'
-    };
+    // --- REMOVED DISPLAY_LABELS: Now Generic ---
 
     auth.onAuthStateChanged(async user => {
         if (user) {
@@ -342,19 +335,21 @@
         badge.className = `badge-pill badge-${data.t.toLowerCase()}`;
         document.getElementById('total-score').textContent = data.score || 0;
         const container = document.getElementById('clinical-preview');
+        
         let html = "";
-        if (data.Q1) {
-            html += `<div style="padding-bottom:10px; margin-bottom:10px; border-bottom:1px dashed #ccc; font-style:italic; font-size:0.9rem; color:#666;">
-                        <strong>Q1 Concern:</strong> "${data.Q1}"
-                     </div>`;
-        }
+        
+        // Loop through all keys generically
         for (const [key, val] of Object.entries(data)) {
-            if (['t', 'd', 'score', 'Q1'].includes(key)) continue;
-            const label = DISPLAY_LABELS[key] || key;
+            // Hide metadata keys
+            if (['t', 'd', 'score'].includes(key)) continue;
+
+            // Highlight values >= 3
             const numVal = parseInt(val);
             const isHigh = (!isNaN(numVal) && numVal >= 3);
+            
+            // Format Display
             html += `<div class="summary-row">
-                        <span>${label}</span>
+                        <span>${key}</span>
                         <span class="${isHigh ? 'val-high' : 'val-normal'}">${val}</span>
                      </div>`;
         }
@@ -369,30 +364,39 @@
         const remark = document.getElementById('clinical_remark').value;
 
         if (!ptID) { alert("Please enter a Patient ID (MRN)."); return; }
+        
         const typeKey = currentData.t.toLowerCase(); 
         let targetUrl = savedLinks[typeKey];
 
         if (!targetUrl) {
-            alert(`No Google Form linked for ${currentData.t}. Please ask Admin to configure it.`);
+            // Fallback for new generic forms not yet in config
+            alert(`No Google Form configured for "${currentData.t}". Please ask Admin to add it.`);
             return;
         }
 
+        // --- Generic Report Building ---
         let report = "";
         const ignoredKeys = ['t', 'score']; 
+        
         for (let [key, val] of Object.entries(currentData)) {
-            if (!ignoredKeys.includes(key)) report += `${key}: ${val} | `;
+            if (!ignoredKeys.includes(key)) {
+                report += `${key}: ${val} | `;
+            }
         }
+        
         report += `Phase: ${kpiPhase} | `;
         if (remark) report += `Note: ${remark} | `;
 
         const currentUser = firebase.auth().currentUser;
         if (currentUser && currentUser.email) report += `ScannedBy: ${currentUser.email} | `;
 
+        // Replace Placeholders
         targetUrl = targetUrl
             .replace('MAGIC_ID', encodeURIComponent(ptID))
             .replace('MAGIC_NAME', encodeURIComponent(ptName || ""))
-            .replace('MAGIC_SCORE', currentData.score)
+            .replace('MAGIC_SCORE', currentData.score || "0")
             .replace('MAGIC_SUMMARY', encodeURIComponent(report))
+            // Keep specific placeholders if they exist, send empty if not
             .replace('MAGIC_Q1', encodeURIComponent(currentData.Q1 || ""))
             .replace('MAGIC_A', currentData.scoreA || "") 
             .replace('MAGIC_D', currentData.scoreD || ""); 
