@@ -6,381 +6,293 @@
         link.rel = 'icon';
         document.head.appendChild(link);
     }
-    link.href = '/favicon.png'; 
+    link.href = '../../favicon.png'; 
 })();
 
-// --- FIREBASE CONFIGURATION ---
+// --- FIREBASE CONFIG ---
 const firebaseConfig = {
     apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
     authDomain: "pallicalc-eabdc.firebaseapp.com",
     projectId: "pallicalc-eabdc",
     storageBucket: "pallicalc-eabdc.firebasestorage.app",
     messagingSenderId: "347532270864",
-    appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995",
-    measurementId: "G-6G9C984F8E"
+    appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
 };
 
-let auth, db;
-let currentUserRole = "guest";
-let userInstId = null;
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
 
-// --- INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', function() {
-    initApp();
-    generateToolLinks(); 
+let context = { mode: 'personal', instId: null };
+
+document.addEventListener('DOMContentLoaded', async () => {
+    injectStandardFooter();
+    injectConsentModal(); 
     
-    // Attach Standard Event Listeners
-    if(document.getElementById('openSettingsBtn')) {
-        document.getElementById('openSettingsBtn').addEventListener('click', openSettings);
-        document.getElementById('closeSettingsBtn').addEventListener('click', closeSettings);
-    }
-    if(document.getElementById('openScannerBtn')) {
-        document.getElementById('openScannerBtn').addEventListener('click', () => {
-            window.location.href = 'diagnostic/scan.html';
-        });
-    }
-    if(document.getElementById('institutionForm')) {
-        document.getElementById('institutionForm').addEventListener('submit', saveSettings);
-    }
+    const dateDisplay = document.getElementById('dateDisplay');
+    if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
-    // Trigger Badge Update on Load
-    if(document.getElementById('cardBadge')) {
-        updateBadgeCount();
+    const form = document.querySelector('form'); 
+    if(form) form.addEventListener('change', calculateTotalScore);
+
+    // --- DETERMINE ROLE ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+
+    if (ref) {
+        context.mode = 'shared'; 
+        context.instId = ref;
+        window.context = context;
+        await finalizeAppSetup(context.instId);
+    } else {
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                try {
+                    const snap = await db.collection('users').doc(user.uid).get();
+                    if (snap.exists) {
+                        const userData = snap.data();
+                        if (['institutionUser', 'institutionAdmin'].includes(userData.role)) {
+                            context.mode = 'institution'; 
+                            context.instId = userData.institutionId;
+                            window.context = context; 
+                        }
+                    }
+                } catch (e) { console.error("Auth Data Error:", e); }
+            }
+            finalizeAppSetup(context.instId);
+        });
     }
 });
 
-// --- 1. CONFIGURATION FOR DIAGNOSTIC TOOLS ---
-const toolConfig = {
-    languages: { 
-        en: { flag: '🇬🇧', label: 'English', filename: 'eng.html' },
-        zh: { flag: '🇨🇳', label: '中文', filename: 'ch.html' },
-        ms: { flag: '🇲🇾', label: 'Bahasa', filename: 'bm.html' } 
-    },
-    tools: { 
-        ipos:       ['en', 'zh', 'ms'],
-        hads:       ['en', 'zh', 'ms'],
-        distress:   ['en', 'zh', 'ms']
-    }
-};
+async function finalizeAppSetup(instId) {
+    const blankQrHeader = document.getElementById('blank-qr-header');
+    const backButton = document.getElementById('backLink');
 
-// --- 2. GENERATE FLAGS ---
-function generateToolLinks() {
-    const params = new URLSearchParams(window.location.search);
-    const ref = params.get('ref');
-
-    Object.entries(toolConfig.tools).forEach(([toolId, availableLangs]) => {
-        const section = document.querySelector(`[data-tool="${toolId}"] .language-icons`);
-        if (!section) return;
-
-        section.innerHTML = ''; 
-
-        availableLangs.forEach(langCode => {
-            const langData = toolConfig.languages[langCode];
-            const link = document.createElement('a');
-            const baseUrl = `diagnostic/${toolId}/${langData.filename}`;
-            link.href = ref ? `${baseUrl}?ref=${ref}` : baseUrl;
-            link.className = 'lang-icon-link'; 
-            link.innerHTML = `
-              <div class="lang-icon" style="font-size:24px;">${langData.flag}</div>
-              <div class="lang-label" style="font-size:12px;">${langData.label}</div>
-            `;
-            section.appendChild(link);
-        });
-    });
-}
-
-// --- STANDARD APP LOGIC ---
-async function initApp() {
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    auth = firebase.auth();
-    db = firebase.firestore();
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            try {
-                const snap = await db.collection('users').doc(user.uid).get();
-                if (snap.exists) {
-                    currentUserRole = snap.data().role || "personal";
-                    userInstId = snap.data().institutionId || null;
-                }
-            } catch (e) { console.error(e); }
+    if (context.mode === 'shared') {
+        if(blankQrHeader) blankQrHeader.style.display = 'none';
+        if(backButton) backButton.style.display = 'none';
+    } else {
+        if(blankQrHeader) {
+            blankQrHeader.style.display = 'block';
+            generateBlankFormQR(instId);
         }
-        applyViewLogic();
-    });
-}
-
-async function applyViewLogic() {
-    const settingsSection = document.getElementById('settingsCallout');
-    const shareSection = document.getElementById('shareCallout');
-    const urlParams = new URLSearchParams(window.location.search);
-    const sharedRef = urlParams.get('ref');
-
-    if (sharedRef) {
-        if(settingsSection) settingsSection.style.display = 'none';
-        if(shareSection) shareSection.style.display = 'none';
-        await loadInstitutionFromFirebase(sharedRef, true);
-        document.querySelectorAll('.btn-start-assess').forEach(btn => {
-            btn.href = btn.href.includes('?') ? btn.href + "&ref=" + sharedRef : btn.href + "?ref=" + sharedRef;
-        });
-        return;
+        if(backButton) backButton.style.display = 'inline-flex';
     }
 
-    if ((currentUserRole === 'institutionUser' || currentUserRole === 'institutionAdmin') && userInstId) {
-        await loadInstitutionFromFirebase(userInstId, false);
-        if(settingsSection) settingsSection.style.display = 'none';
-        if(shareSection) shareSection.style.display = 'block';
+    if (instId) {
+        await loadInstitutionHeader(instId);
     } else {
-        if(settingsSection) settingsSection.style.display = 'block';
-        if(shareSection) shareSection.style.display = 'block'; 
-        loadLocalSettings();
+        loadPersonalHeader();
     }
 }
 
-function updateBanner(type, sourceName) {
-    const banner = document.getElementById('sourceBanner');
-    if(!banner) return;
-    banner.style.display = 'block';
+function generateBlankFormQR(instId) {
+    const qrContainer = document.getElementById("blank-qrcode");
+    if (!qrContainer) return;
+    qrContainer.innerHTML = ""; 
+    const baseUrl = window.location.href.split('?')[0]; 
+    const targetUrl = instId ? `${baseUrl}?ref=${instId}` : baseUrl;
+    new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
+}
+
+// --- RESULT GENERATION LOGIC ---
+
+function generateQR() {
+    const modal = document.getElementById('pdpa-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    } else {
+        if(confirm("Generate QR Code? By clicking OK you consent to sharing this data for clinical use.")) {
+            executeQRGeneration();
+        }
+    }
+}
+
+function executeQRGeneration() {
+    const totalScore = calculateTotalScore();
+
+    const getVal = (name) => {
+        const el = document.querySelector(`input[name="${name}"]:checked`);
+        return el ? parseInt(el.value) : 0;
+    };
     
-    if (type === 'shared') {
-        banner.innerHTML = `<strong>Viewing Shared Page:</strong> <span class="source-shared">${sourceName}</span>`;
-    } else if (type === 'custom_firebase') {
-        banner.innerHTML = `<strong>${sourceName}:</strong> <span class="source-custom">Official Header Loaded</span>`;
-    } else if (type === 'custom_local') {
-        banner.innerHTML = `<strong>Personal User:</strong> <span class="source-custom">Custom Header (Local)</span>`;
-    } else {
-        banner.style.display = 'none';
+    // Generic symptom collector (Safe for all tools)
+    const otherSymptoms = [];
+    for (let i = 1; i <= 3; i++) {
+        const labelEl = document.getElementById(`other_sym_${i}_label`);
+        if(labelEl) {
+            const label = labelEl.value.substring(0, 20);
+            const val = getVal(`other_sym_${i}_val`);
+            if (label || val > 0) otherSymptoms.push(`${label} (${val})`);
+        }
+    }
+
+    // Default Payload
+    // If REPORT_KEY is not defined, we default to "TOOL"
+    const toolName = (typeof REPORT_KEY !== 'undefined') ? REPORT_KEY.replace('report_', '').toUpperCase() : "TOOL";
+    
+    const payload = {
+        t: toolName,
+        d: Date.now(),
+        score: totalScore,
+        details: otherSymptoms.join(", ") 
+    };
+
+    // ============================================================
+    // [NEW] SMART SAVE LOGIC
+    // Checks if 'ENABLE_CLINICAL_REPORT' exists. If not, it skips this block.
+    // ============================================================
+    if (typeof ENABLE_CLINICAL_REPORT !== 'undefined' && ENABLE_CLINICAL_REPORT === true) {
+        try {
+            let formattedScore = totalScore;
+            
+            // Auto-format based on the key name
+            if(typeof REPORT_KEY !== 'undefined') {
+                if(REPORT_KEY.includes('flacc')) formattedScore += "/10";
+                if(REPORT_KEY.includes('akps')) formattedScore += "%";
+                if(REPORT_KEY.includes('rug')) formattedScore += ""; // RUG is just a number
+                
+                sessionStorage.setItem(REPORT_KEY, formattedScore);
+                // console.log(`Saved ${REPORT_KEY}: ${formattedScore}`);
+            }
+        } catch (e) {
+            console.warn("Session storage save failed", e);
+        }
+    }
+    // ============================================================
+
+    const qrDiv = document.getElementById("qrcode");
+    if (qrDiv) {
+        qrDiv.innerHTML = "";
+        const safeData = encodeURIComponent(JSON.stringify(payload));
+        new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+    }
+
+    const section = document.getElementById('qr-section');
+    if (section) {
+        section.style.display = 'block';
+        section.scrollIntoView({behavior: 'smooth'});
     }
 }
 
-function loadLocalSettings() {
-    const settings = JSON.parse(localStorage.getItem('institutionSettings') || '{}');
-    if (settings.name) renderHeader(settings);
-    else renderPlaceholder();
+// --- UTILS ---
+function calculateTotalScore() {
+    let total = 0;
+    const form = document.querySelector('form');
+    if(form) {
+        form.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+            const val = parseInt(input.value);
+            if(!isNaN(val)) total += val;
+        });
+    }
+    const display = document.getElementById('total-score-display');
+    if(display) display.innerText = total;
+    return total;
 }
 
-// [FETCH DATA INCLUDING LINKS]
-async function loadInstitutionFromFirebase(instId, isSharedLink) {
+function normalizeBranding(data) {
+    const logos = data.headerLogos || (data.logo ? [data.logo] : []);
+    return {
+        name: data.headerName || data.name || "",
+        contact: data.headerContact || data.contact || "",
+        logo: logos.length > 0 ? logos[0] : null
+    };
+}
+
+async function loadInstitutionHeader(instId) {
     try {
         const doc = await db.collection('institutions').doc(instId).get();
-        if (doc.exists) {
+        if (doc.exists) { 
             const data = doc.data();
-            
-            const settings = {
-                name: data.headerName || data.name,
-                contact: data.headerContact,
-                logos: data.headerLogos || [],
-                links: data.diagnosticLinks || {} // Store links
-            };
-
-            localStorage.setItem('institutionSettings', JSON.stringify(settings));
-
-            renderHeader(settings);
-            updateBanner(isSharedLink ? 'shared' : 'custom_firebase', data.name);
-        } else renderPlaceholder();
-    } catch (e) { renderPlaceholder(); }
-}
-
-function renderHeader(settings) {
-    const header = document.getElementById('institutionHeader');
-    const placeholder = document.getElementById('headerPlaceholder');
-    const logoContainer = document.getElementById('headerLogoContainer');
-    
-    if(placeholder) placeholder.style.display = 'none';
-    if(header) header.style.display = 'block';
-    if(logoContainer) {
-        logoContainer.innerHTML = '';
-        if (settings.logos) {
-            settings.logos.forEach(src => {
-                const img = document.createElement('img');
-                img.src = src;
-                img.className = 'institution-logo';
-                logoContainer.appendChild(img);
-            });
+            if (data.status === 'suspended') { 
+                localStorage.removeItem('institutionSettings'); 
+                localStorage.removeItem('cached_inst_' + instId);
+                return; 
+            }
+            localStorage.setItem('cached_inst_' + instId, JSON.stringify(data));
+            const cleanData = normalizeBranding(data);
+            localStorage.setItem('institutionSettings', JSON.stringify(cleanData));
+            applyBranding(cleanData); 
+        }
+    } catch (e) { 
+        const cached = localStorage.getItem('cached_inst_' + instId);
+        if (cached) {
+            const data = JSON.parse(cached);
+            const cleanData = normalizeBranding(data);
+            applyBranding(cleanData);
+        } else {
+            loadPersonalHeader(); 
         }
     }
-    if(document.getElementById('institutionName')) document.getElementById('institutionName').textContent = settings.name;
-    if(document.getElementById('institutionContact')) document.getElementById('institutionContact').textContent = settings.contact ? `Contact: ${settings.contact}` : '';
 }
 
-function renderPlaceholder() {
-    if(document.getElementById('institutionHeader')) document.getElementById('institutionHeader').style.display = 'none';
-    if(document.getElementById('headerPlaceholder')) document.getElementById('headerPlaceholder').style.display = 'block';
+function loadPersonalHeader() {
+    const settingsStr = localStorage.getItem('institutionSettings');
+    if (settingsStr) { try { applyBranding(JSON.parse(settingsStr)); } catch (e) {} }
 }
 
-function openSettings() { 
-    document.getElementById('settingsModal').style.display = 'block';
-    const settings = JSON.parse(localStorage.getItem('institutionSettings') || '{}');
-    document.getElementById('institutionNameInput').value = settings.name || '';
-    document.getElementById('institutionContactInput').value = settings.contact || '';
-}
-
-function closeSettings() {
-    document.getElementById('settingsModal').style.display = 'none';
-}
-
-function saveSettings(e) {
-    e.preventDefault();
-    const settings = {
-        name: document.getElementById('institutionNameInput').value.trim(),
-        contact: document.getElementById('institutionContactInput').value.trim(),
-        logos: [],
-        links: {}
-    };
-    localStorage.setItem('institutionSettings', JSON.stringify(settings));
-    loadLocalSettings();
-    closeSettings();
-}
-
-function openShareModal() {
-    const modal = document.getElementById('shareModal');
-    const qrDiv = document.getElementById('qrcode');
-    const shareLink = document.getElementById('shareLink');
-    const baseUrl = window.location.origin + window.location.pathname;
-    const fullUrl = userInstId ? `${baseUrl}?ref=${userInstId}` : baseUrl;
-
-    qrDiv.innerHTML = ""; 
-    new QRCode(qrDiv, { text: fullUrl, width: 200, height: 200 });
-    shareLink.textContent = fullUrl;
-    modal.style.display = 'block';
-}
-
-function closeShareModal() {
-    document.getElementById('shareModal').style.display = 'none';
-}
-
-
-// =========================================================
-// CLINICAL HANDOVER REPORT LOGIC
-// =========================================================
-
-function updateBadgeCount() {
-    const cardBadge = document.getElementById('cardBadge');
-    if (!cardBadge) return; 
-
-    let count = 0;
-    for (let i = 0; i < sessionStorage.length; i++) {
-        if (sessionStorage.key(i).startsWith("report_")) {
-            count++;
-        }
+function applyBranding({ name, contact, logo }) {
+    if(name) {
+        const nameEl = document.getElementById('inst-name-display');
+        const footerName = document.getElementById('footer-inst-name');
+        if(nameEl) nameEl.textContent = name;
+        if(footerName) footerName.textContent = name;
     }
-    
-    if (count > 0) {
-        cardBadge.innerText = count + " Ready";
-        cardBadge.style.display = 'inline-block';
-    } else {
-        cardBadge.style.display = 'none';
+    if(contact) document.getElementById('inst-contact-display').textContent = contact;
+    if(logo) {
+        const el = document.getElementById('inst-logo-img');
+        const container = document.getElementById('inst-header-container');
+        if(el) { el.src = logo; el.style.display = 'block'; }
+        if(container) container.style.display = 'flex';
     }
 }
 
-function openReportModal() {
-    const modal = document.getElementById('reportModal');
-    if (!modal) return;
-    
-    const setVal = (id, key) => {
-        const el = document.getElementById(id);
-        if (el) el.value = sessionStorage.getItem(key) || "";
-    };
-
-    setVal('input_flacc', 'report_flacc');
-    setVal('input_rass', 'report_rass');
-    setVal('input_akps', 'report_akps');
-    setVal('input_rug', 'report_rug');
-    setVal('input_rdos', 'report_rdos');
-    setVal('input_spict', 'report_spict'); // <--- ADDED: Load SPICT Data
-
-    modal.style.display = 'flex';
+function injectStandardFooter() {
+    const existing = document.querySelector('footer');
+    if(existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', `
+        <footer class="standard-footer" style="padding: 15px 10px; background: transparent; border-top: none;">
+            <div class="footer-inner" style="line-height: 1.4;">
+                <p style="margin: 0; font-weight: bold; color: #495057;">&copy; 2026 Alivioscript Solutions</p>
+                <p style="margin: 2px 0; color: #6c757d;">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+                <p style="margin: 2px 0; font-weight: bold; color: #dc3545;">For professional use only. Verify all results.</p>
+            </div>
+        </footer>
+    `);
 }
 
-function closeReportModal() {
-    const modal = document.getElementById('reportModal');
-    if (modal) modal.style.display = 'none';
+function printPDF() { window.print(); }
+
+function injectConsentModal() {
+    if (document.getElementById('pdpa-modal')) return;
+
+    const modalHtml = `
+    <div id="pdpa-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Data Consent</h3>
+            </div>
+            <div class="modal-body">
+                <p>
+                    <strong>Privacy Notice:</strong> By proceeding, you consent to generating a QR code containing your assessment responses. 
+                    This data is generated locally to facilitate your clinical consultation and is not permanently stored on a central server.
+                </p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeConsentModal()">Cancel</button>
+                <button class="btn btn-agree" onclick="confirmConsent()">Agree & Generate</button>
+            </div>
+        </div>
+    </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
-function copyReport() {
-    const getVal = (id) => document.getElementById(id)?.value;
-
-    let reportText = "📋 *CLINICAL HANDOVER*\n";
-    reportText += "Name: \n";  
-    reportText += "ID: \n";    
-    reportText += "Date: " + new Date().toLocaleString('en-GB', { hour12: false }) + "\n";
-    reportText += "------------------\n";
-    
-    const flacc = getVal('input_flacc'); if(flacc) reportText += `FLACC: ${flacc}\n`;
-    const rass = getVal('input_rass');   if(rass)  reportText += `RASS: ${rass}\n`;
-    const akps = getVal('input_akps');   if(akps)  reportText += `AKPS: ${akps}\n`;
-    const rug = getVal('input_rug');     if(rug)   reportText += `RUG-ADL: ${rug}\n`;
-    const rdos = getVal('input_rdos');   if(rdos)  reportText += `RDOS: ${rdos}\n`;
-    
-    const spict = getVal('input_spict'); // <--- ADDED: Get SPICT Text
-    if(spict) {
-        reportText += "\n--- SPICT INDICATORS ---\n" + spict + "\n";
-    }
-
-    if (!flacc && !rass && !akps && !rug && !rdos && !spict) {
-        alert("No scores to copy.");
-        return;
-    }
-
-    navigator.clipboard.writeText(reportText).then(() => {
-        alert("Report copied! \n\nPlease paste in WhatsApp and add Name/ID.");
-    });
+function closeConsentModal() {
+    document.getElementById('pdpa-modal').style.display = 'none';
 }
 
-// ============================================================
-// [UPDATED] SEND TO GOOGLE FORM (Master Handover Link)
-// ============================================================
-function sendToGoogleForm() {
-    // 1. Retrieve the saved links from memory
-    const settings = JSON.parse(localStorage.getItem('institutionSettings') || '{}');
-    const links = settings.links || {};
-
-    // 2. Use the 'handover' link (from the new card in Admin)
-    const baseUrl = links.handover || ""; 
-    
-    if (!baseUrl) {
-        alert("Master Handover Link not set. Please contact your Institution Admin.");
-        return;
-    }
-    
-    // 3. ⚠️ IMPORTANT: UPDATE THESE NUMBERS TO MATCH YOUR GOOGLE FORM ⚠️
-    // You must manually replace 'entry.XXXXXX' with the codes from your actual Google Form
-    const mapping = {
-        'input_flacc': 'entry.111111', 
-        'input_rass':  'entry.222222',
-        'input_akps':  'entry.333333',
-        'input_rug':   'entry.444444',
-        'input_rdos':  'entry.555555',
-        'input_spict': 'entry.666666' // <--- ADDED: Map SPICT field
-    };
-
-    const params = new URLSearchParams();
-    Object.keys(mapping).forEach(id => {
-        const val = document.getElementById(id)?.value;
-        if(val) params.append(mapping[id], val);
-    });
-
-    if(params.toString() === "" && !confirm("Form is empty. Open blank form?")) return;
-
-    window.open(`${baseUrl}?${params.toString()}`, '_blank');
+function confirmConsent() {
+    closeConsentModal();
+    executeQRGeneration(); 
 }
-
-function clearReport() {
-    if(confirm("Clear all data?")) {
-        sessionStorage.clear();
-        updateBadgeCount();
-        closeReportModal();
-        const inputs = document.querySelectorAll('.report-grid input, .report-grid textarea'); // Include textarea
-        if(inputs.length > 0) {
-            inputs.forEach(i => i.value = '');
-        }
-        // Also clear textarea if it's separate from report-grid
-        const spictArea = document.getElementById('input_spict');
-        if(spictArea) spictArea.value = '';
-    }
-}
-
-// Expose functions globally
-window.openReportModal = openReportModal;
-window.closeReportModal = closeReportModal;
-window.copyReport = copyReport;
-window.sendToGoogleForm = sendToGoogleForm;
-window.clearReport = clearReport;
