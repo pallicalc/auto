@@ -275,6 +275,7 @@ function openReportModal() {
     const modal = document.getElementById('reportModal');
     if (!modal) return;
     
+    // Helper to set values from session storage
     const setVal = (id, key) => {
         const el = document.getElementById(id);
         if (el) el.value = sessionStorage.getItem(key) || "";
@@ -285,6 +286,7 @@ function openReportModal() {
     setVal('input_akps', 'report_akps');
     setVal('input_rug', 'report_rug');
     setVal('input_rdos', 'report_rdos');
+    setVal('input_spict', 'report_spict'); // <--- ADDED: Load SPICT Results
 
     modal.style.display = 'flex';
 }
@@ -308,8 +310,14 @@ function copyReport() {
     const akps = getVal('input_akps');   if(akps)  reportText += `AKPS: ${akps}\n`;
     const rug = getVal('input_rug');     if(rug)   reportText += `RUG-ADL: ${rug}\n`;
     const rdos = getVal('input_rdos');   if(rdos)  reportText += `RDOS: ${rdos}\n`;
+    
+    // <--- ADDED: SPICT Logic for Clipboard
+    const spict = getVal('input_spict'); 
+    if(spict) {
+        reportText += "\n--- SPICT INDICATORS ---\n" + spict + "\n";
+    }
 
-    if (!flacc && !rass && !akps && !rug && !rdos) {
+    if (!flacc && !rass && !akps && !rug && !rdos && !spict) {
         alert("No scores to copy.");
         return;
     }
@@ -342,7 +350,8 @@ function sendToGoogleForm() {
         'input_rass':  'entry.222222',
         'input_akps':  'entry.333333',
         'input_rug':   'entry.444444',
-        'input_rdos':  'entry.555555'
+        'input_rdos':  'entry.555555',
+        'input_spict': 'entry.666666' // <--- ADDED: SPICT Field Mapping
     };
 
     const params = new URLSearchParams();
@@ -361,7 +370,8 @@ function clearReport() {
         sessionStorage.clear();
         updateBadgeCount();
         closeReportModal();
-        const inputs = document.querySelectorAll('.report-grid input');
+        // Clear both inputs and textareas
+        const inputs = document.querySelectorAll('.report-grid input, .report-grid textarea, #input_spict');
         if(inputs.length > 0) {
             inputs.forEach(i => i.value = '');
         }

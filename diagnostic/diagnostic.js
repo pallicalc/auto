@@ -116,19 +116,18 @@ function executeQRGeneration() {
         return el ? parseInt(el.value) : 0;
     };
     
-    // Generic symptom collector (Safe for all tools)
+    // Generic symptom collector
     const otherSymptoms = [];
     for (let i = 1; i <= 3; i++) {
         const labelEl = document.getElementById(`other_sym_${i}_label`);
         if(labelEl) {
             const label = labelEl.value.substring(0, 20);
-            const val = getVal(`other_sym_${i}_val`);
+            const val = getVal(`other_sym_${i}_val`); // <--- FIXED THIS LINE
             if (label || val > 0) otherSymptoms.push(`${label} (${val})`);
         }
     }
 
     // Default Payload
-    // If REPORT_KEY is not defined, we default to "TOOL"
     const toolName = (typeof REPORT_KEY !== 'undefined') ? REPORT_KEY.replace('report_', '').toUpperCase() : "TOOL";
     
     const payload = {
@@ -139,21 +138,21 @@ function executeQRGeneration() {
     };
 
     // ============================================================
-    // [NEW] SMART SAVE LOGIC
-    // Checks if 'ENABLE_CLINICAL_REPORT' exists. If not, it skips this block.
+    // [SMART SAVE LOGIC]
+    // Saves score to SessionStorage for the Handover Report
     // ============================================================
     if (typeof ENABLE_CLINICAL_REPORT !== 'undefined' && ENABLE_CLINICAL_REPORT === true) {
         try {
-            let formattedScore = totalScore;
-            
-            // Auto-format based on the key name
-            if(typeof REPORT_KEY !== 'undefined') {
+            // Safety: If this is SPICT, do NOT overwrite the text report with a number.
+            // SPICT uses its own internal save logic in spict.html
+            if (typeof REPORT_KEY !== 'undefined' && !REPORT_KEY.includes('spict')) {
+                let formattedScore = totalScore;
+                
                 if(REPORT_KEY.includes('flacc')) formattedScore += "/10";
                 if(REPORT_KEY.includes('akps')) formattedScore += "%";
                 if(REPORT_KEY.includes('rug')) formattedScore += ""; // RUG is just a number
                 
                 sessionStorage.setItem(REPORT_KEY, formattedScore);
-                // console.log(`Saved ${REPORT_KEY}: ${formattedScore}`);
             }
         } catch (e) {
             console.warn("Session storage save failed", e);
