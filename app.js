@@ -179,33 +179,46 @@ async function checkAuthState(user) {
         if (toolsSection) {
             toolsSection.classList.remove('visible');
             toolsSection.style.display = 'none'; // Ensure it hides
+            
+            // 🔥 UPDATED HTML BLOCK MATCHING YOUR NEW INDEX.HTML
             toolsSection.innerHTML = `
                 <h2 id="tools-title"
                     style="text-align:center;font-size:24px;font-weight:700;color:#1e293b;margin-bottom:20px;"
                     aria-label="Tools available">
                     🛠️ Tools Available
                 </h2>
+
                 <a href="all-calculators.html" class="tool-btn" aria-label="All calculators page">
                     <span class="tool-icon" role="img" aria-label="Pill icon">💊</span>
                     <span>All calculators
                         <span id="user-tier-badge" class="vip-badge" style="display:none;">PRO</span>
                     </span>
                 </a>
-                <a href="diagnostic.html" class="tool-btn" aria-label="Diagnostic tools page">
-                    <span class="tool-icon" role="img" aria-label="Stethoscope icon">🩺</span>
-                    <span>Diagnostic Tools
+
+                <a href="diagnostic-p.html" class="tool-btn" aria-label="Patient Reported Measures page">
+                    <span class="tool-icon" role="img" aria-label="Patient icon">👤</span>
+                    <span>Patient Measures (PROMs)
+                        <span class="vip-badge" style="background-color: #0ea5e9; font-size: 0.7em;">NEW</span>
+                    </span>
+                </a>
+
+                <a href="diagnostic-c.html" class="tool-btn" aria-label="Clinician Assessment tools page">
+                    <span class="tool-icon" role="img" aria-label="Clinician icon">🩺</span>
+                    <span>Clinician Assessments
                         <span class="vip-badge" style="background-color: #28a745; font-size: 0.7em;">NEW</span>
                     </span>
                 </a>
+
                 <a href="patient-education.html" class="tool-btn" aria-label="Patient information pamphlets">
                     <span class="tool-icon" role="img" aria-label="Information sheets icon">📄</span>
                     <span>Patient information pamphlets</span>
                 </a>
+
                 <a href="healthcare-guidelines.html" class="tool-btn" aria-label="Healthcare guidelines">
                     <span class="tool-icon" role="img" aria-label="Guidelines icon">📘</span>
                     <span>Healthcare guidelines</span>
                 </a>
-                `;
+            `;
         }
 
         if (featureSection) featureSection.style.display = 'block';
