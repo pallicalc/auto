@@ -189,7 +189,7 @@
                 <span class="q-label">1. Heart Rate</span>
                 <div class="scale-container">
                     <div class="scale-opt">
-                        <input type="radio" name="hr" value="0" checked onchange="calcRDOS()">
+                        <input type="radio" name="hr" value="0" onchange="calcRDOS()">
                         <label><span class="scale-desc">&lt; 90</span><span class="scale-val-tiny">bpm</span></label>
                     </div>
                     <div class="scale-opt">
@@ -207,7 +207,7 @@
                 <span class="q-label">2. Respiratory Rate</span>
                 <div class="scale-container">
                     <div class="scale-opt">
-                        <input type="radio" name="rr" value="0" checked onchange="calcRDOS()">
+                        <input type="radio" name="rr" value="0" onchange="calcRDOS()">
                         <label><span class="scale-desc">&le; 18</span><span class="scale-val-tiny">breaths/min</span></label>
                     </div>
                     <div class="scale-opt">
@@ -226,7 +226,7 @@
                 <span class="helper-text">Non-purposeful movements</span>
                 <div class="scale-container">
                     <div class="scale-opt">
-                        <input type="radio" name="restless" value="0" checked onchange="calcRDOS()">
+                        <input type="radio" name="restless" value="0" onchange="calcRDOS()">
                         <label><span class="scale-desc">None</span></label>
                     </div>
                     <div class="scale-opt">
@@ -245,7 +245,7 @@
                 <span class="helper-text">Abdomen moves in when chest moves out</span>
                 <div class="scale-container">
                     <div class="scale-opt">
-                        <input type="radio" name="paradox" value="0" checked onchange="calcRDOS()">
+                        <input type="radio" name="paradox" value="0" onchange="calcRDOS()">
                         <label><span class="scale-desc">No</span></label>
                     </div>
                     <div class="scale-opt">
@@ -260,7 +260,7 @@
                 <span class="helper-text">Rise of clavicle during inspiration</span>
                 <div class="scale-container">
                     <div class="scale-opt">
-                        <input type="radio" name="muscle" value="0" checked onchange="calcRDOS()">
+                        <input type="radio" name="muscle" value="0" onchange="calcRDOS()">
                         <label><span class="scale-desc">None</span></label>
                     </div>
                     <div class="scale-opt">
@@ -279,7 +279,7 @@
                 <span class="helper-text">Audible vocalization</span>
                 <div class="scale-container">
                     <div class="scale-opt">
-                        <input type="radio" name="grunt" value="0" checked onchange="calcRDOS()">
+                        <input type="radio" name="grunt" value="0" onchange="calcRDOS()">
                         <label><span class="scale-desc">No</span></label>
                     </div>
                     <div class="scale-opt">
@@ -294,7 +294,7 @@
                 <span class="helper-text">Involuntary dilation of nostrils</span>
                 <div class="scale-container">
                     <div class="scale-opt">
-                        <input type="radio" name="nasal" value="0" checked onchange="calcRDOS()">
+                        <input type="radio" name="nasal" value="0" onchange="calcRDOS()">
                         <label><span class="scale-desc">No</span></label>
                     </div>
                     <div class="scale-opt">
@@ -309,7 +309,7 @@
                 <span class="helper-text">Eyes wide open, facial tension, brow furrowed</span>
                 <div class="scale-container">
                     <div class="scale-opt">
-                        <input type="radio" name="fear" value="0" checked onchange="calcRDOS()">
+                        <input type="radio" name="fear" value="0" onchange="calcRDOS()">
                         <label><span class="scale-desc">No</span></label>
                     </div>
                     <div class="scale-opt">
@@ -322,9 +322,9 @@
             <div class="score-box">
                 <div style="flex-grow: 1; text-align: left;">
                     <div class="score-title">Total RDOS Score</div>
-                    <div id="interp-display" class="score-interp" style="text-align: left; font-weight: normal; font-size: 13px; color: #81e6d9;">Comfort</div>
+                    <div id="interp-display" class="score-interp" style="text-align: left; font-weight: normal; font-size: 13px; color: #81e6d9;">--</div>
                 </div>
-                <div class="score-val" id="total-score-display" style="margin-right: 20px;">0</div>
+                <div class="score-val" id="total-score-display" style="margin-right: 20px;">--</div>
 
                 <button type="button" class="btn btn-save" onclick="saveAndExit()">Save & Finish</button>
                 
@@ -367,20 +367,33 @@
             if (ref) await loadInstitutionHeader(ref);
             else loadPersonalHeader();
 
-            calcRDOS();
+            // Set Initial Display
+            document.getElementById('total-score-display').innerText = "--";
+            document.getElementById('interp-display').innerText = "Complete all items";
+            document.getElementById('interp-display').style.color = "#ccc";
         });
 
         // --- 3. CALCULATION LOGIC ---
         function calcRDOS() {
             let total = 0;
+            let count = 0;
             const radios = document.querySelectorAll('input[type="radio"]:checked');
             
             radios.forEach(radio => {
                 total += parseInt(radio.value);
+                count++;
             });
 
             const scoreDisplay = document.getElementById('total-score-display');
             const interpDisplay = document.getElementById('interp-display');
+
+            // Only show score if all 8 questions are answered
+            if (count < 8) {
+                scoreDisplay.innerText = "--";
+                interpDisplay.innerText = "Complete all items";
+                interpDisplay.style.color = "#ccc";
+                return;
+            }
 
             scoreDisplay.innerText = total;
 
@@ -399,13 +412,24 @@
 
         function resetRDOS() {
             document.getElementById('rdosForm').reset();
-            calcRDOS();
+            
+            // Reset display
+            document.getElementById('total-score-display').innerText = "--";
+            document.getElementById('interp-display').innerText = "Complete all items";
+            document.getElementById('interp-display').style.color = "#ccc";
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // --- NEW: SAVE LOGIC ---
         function saveAndExit() {
             const currentScore = document.getElementById('total-score-display').innerText;
+
+            // Validation: Ensure score is calculated
+            if (currentScore === "--") {
+                alert("Please answer all questions to calculate a score.");
+                return;
+            }
 
             if (ENABLE_CLINICAL_REPORT) {
                 sessionStorage.setItem(REPORT_KEY, currentScore);
