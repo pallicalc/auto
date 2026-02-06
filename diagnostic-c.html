@@ -1,77 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinician Assessments | PalliCalc</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Diagnostic Tools | PalliCalc</title>
 
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" defer></script>
-    <script src="app.js" defer></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="style.css">
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+    /* Specific styles for headers and buttons in this page */
+    .section-header-text {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #334155;
+        margin: 30px 0 15px 0;
+        padding-left: 10px;
+        border-left: 4px solid #007bff;
+    }
+    
+    .btn-start-assess {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: #007bff; /* Matches your theme blue */
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        margin-top: 15px;
+        transition: background 0.2s;
+        text-align: center;
+        border: none;
+    }
+    
+    .btn-start-assess:hover {
+        background: #0056b3;
+        color: white;
+    }
+
+    /* Ensure pamphlet cards match education style */
+    .pamphlet-section {
+        background: #f8faff;
+        border: 2px solid #007bff;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0,123,255,0.1);
+    }
+</style>
 </head>
 <body>
-    <header>
-        <div class="container header-container">
-            <div class="header-content">
-                <a href="index.html" style="text-decoration:none; color:inherit;">
-                    <div class="logo">💉 PalliCalc</div>
-                </a>
-                <div id="user-info" class="user-info">
-                    <button id="login-btn" class="login-btn">🔐 Login</button>
-                </div>
+
+    <div class="container">
+        
+        <div class="back-nav">
+            <a href="index.html" class="back-link"><i class="bi bi-arrow-left"></i> Back</a>
+        </div>
+
+        <div id="sourceBanner" class="source-banner"></div>
+
+        <div id="institutionHeader" class="institution-header" style="display: none;">
+            <div id="headerLogoContainer" class="logo-container"></div>
+            <div id="institutionName" class="institution-name"></div>
+            <div id="institutionContact" class="institution-contact"></div>
+        </div>
+
+        <div id="headerPlaceholder" class="header-placeholder">
+            <div style="font-size: 30px; margin-bottom: 10px;">🏥</div>
+            <div style="font-style: italic; opacity: 0.8;">Institution header will appear here</div>
+        </div>
+
+        <div id="shareCallout" class="action-callout" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0); border-color: #22c55e;">
+            <h3>📱 Share with Patient</h3>
+            <p><strong>Auto-Generated QR Code</strong><br>Patient will see your institution's header automatically.</p>
+            <button class="btn-action btn-share" id="openShareBtn">
+                <i class="bi bi-qr-code"></i> Generate Patient QR
+            </button>
+        </div>
+
+        <h1>Diagnostic Tools</h1>
+
+        <section class="pamphlets-available">
+            
+            <div class="section-header-text">Clinician Assessment</div>
+
+            <div class="pamphlet-section">
+                <div class="pamphlet-title">FLACC Scale</div>
+                <div class="pamphlet-subtitle">Pain scale for non-verbal / paediatric patients</div>
+                <a href="diagnostic/flacc.html" class="btn-start-assess">Start Assessment</a>
             </div>
-        </div>
-    </header>
 
-    <main class="container">
-        <div style="margin-top: 20px; margin-bottom: 20px;">
-            <a href="index.html" class="btn-demo" style="text-decoration: none; padding: 8px 16px; font-size: 14px; background: #64748b; color: white; border: none;">
-                <i class="bi bi-arrow-left"></i> Back to Dashboard
-            </a>
-        </div>
+            <div class="pamphlet-section">
+                <div class="pamphlet-title">RASS</div>
+                <div class="pamphlet-subtitle">Richmond Agitation-Sedation Scale</div>
+                <a href="diagnostic/rass.html" class="btn-start-assess">Start Assessment</a>
+            </div>
 
-        <section class="hero">
-            <h1>Clinician Assessments</h1>
-            <p>Scoring tools for healthcare professionals (English Only).</p>
+
+            <div class="pamphlet-section">
+                <div class="pamphlet-title">AKPS</div>
+                <div class="pamphlet-subtitle">Australia-modified Karnofsky Performance Status</div>
+                <a href="diagnostic/akps.html" class="btn-start-assess">Start Assessment</a>
+            </div>
+
+            <div class="pamphlet-section">
+                <div class="pamphlet-title">RUG-ADL</div>
+                <div class="pamphlet-subtitle">Resource Utilization Groups - ADL</div>
+                <a href="diagnostic/rug-adl.html" class="btn-start-assess">Start Assessment</a>
+            </div>
+
+            <div class="pamphlet-section">
+                <div class="pamphlet-title">RDOS</div>
+                <div class="pamphlet-subtitle">Respiratory Distress Observation Scale</div>
+                <a href="diagnostic/rdos.html" class="btn-start-assess">Start Assessment</a>
+            </div>
+
         </section>
 
-        <div id="tools-section" class="tools-section">
-            <h2 style="font-size:24px; font-weight:700; color:#1e293b; margin-bottom:20px;">
-                Available Tools
-            </h2>
-
-            <a href="tool-akps.html" class="tool-btn">
-                <span class="tool-icon" role="img">🏃</span>
-                <span>AKPS (Australia-modified Karnofsky)</span>
-            </a>
-
-            <a href="tool-flacc.html" class="tool-btn">
-                <span class="tool-icon" role="img">👶</span>
-                <span>FLACC Scale (Pediatric/Non-verbal)</span>
-            </a>
-
-            <a href="tool-pps.html" class="tool-btn">
-                <span class="tool-icon" role="img">📉</span>
-                <span>PPS (Palliative Performance Scale)</span>
-            </a>
+    </div> 
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="margin:0; font-size: 18px;">🏥 Custom Header Settings</h2>
+                <button class="close-btn" id="closeSettingsBtn">&times;</button>
+            </div>
+            <p style="font-size:12px; color:#666; margin-bottom:15px;">Settings saved to this device only.</p>
             
-            <a href="tool-esas-c.html" class="tool-btn">
-                <span class="tool-icon" role="img">🩺</span>
-                <span>ESAS-r (Clinician Rated)</span>
-            </a>
+            <form id="institutionForm">
+                <div class="form-group">
+                    <label>Logos (Select max 2)</label>
+                    <div class="logo-selection-area">
+                        <div class="logo-gallery" id="logoGallery"></div>
+                        <div class="custom-upload-box" id="uploadTrigger">
+                            <i class="bi bi-cloud-upload"></i> Upload Logo
+                            <input type="file" id="logoFileInput" accept="image/*" style="display: none;">
+                        </div>
+                        <div class="selected-logos-preview" id="selectedLogosPreview"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="institutionNameInput">Institution Name</label>
+                    <input type="text" id="institutionNameInput" required>
+                </div>
+                <div class="form-group">
+                    <label for="institutionContactInput">Contact Number</label>
+                    <input type="tel" id="institutionContactInput" required>
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>🔐 Login Password</label>
+                    <input type="password" id="loginPassword" required>
+                    <div class="password-error" id="passwordError">❌ Password incorrect.</div>
+                </div>
+                <button type="submit" class="btn-save" id="saveBtn">💾 Save Settings</button>
+            </form>
         </div>
-    </main>
+    </div>
+
+    <div id="shareModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="margin:0; font-size: 18px;">📱 Scan to View</h2>
+                <button class="close-btn" id="closeShareBtn">&times;</button>
+            </div>
+            <div class="qr-instruction">
+                Ask the patient to scan this code.<br>They will see the tools with <strong>your</strong> institution's header.
+            </div>
+            
+            <div id="qrcode-wrapper-safe">
+                <div id="qrcode"></div>
+            </div>
+
+            <div style="margin-top:20px; font-size:11px; color:#999; word-break: break-all;">
+                Link: <span id="shareLink"></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="diagnostic.js"></script>
 
     <footer class="legal-footer">
         <div class="container">
             <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
-            <p class="legal-warning">For professional use only.</p>
+            <div class="author-info">
+                <span class="author-name">Author: Alison Chai</span>
+                <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
+            </div>
+            <p class="legal-warning">For professional use only. Verify all results.</p>
         </div>
     </footer>
+
 </body>
 </html>
