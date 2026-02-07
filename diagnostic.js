@@ -249,7 +249,7 @@ function closeShareModal() {
 
 
 // =========================================================
-// CLINICAL HANDOVER REPORT LOGIC
+// CLINICAL HANDOVER REPORT LOGIC (UPDATED FOR SPLIT SPICT)
 // =========================================================
 
 function updateBadgeCount() {
@@ -257,10 +257,16 @@ function updateBadgeCount() {
     if (!cardBadge) return; 
 
     let count = 0;
-    for (let i = 0; i < sessionStorage.length; i++) {
-        if (sessionStorage.key(i).startsWith("report_")) {
-            count++;
-        }
+    const keys = ['report_akps', 'report_flacc', 'report_rass', 'report_rug', 'report_rdos'];
+    
+    // Count standard tools
+    keys.forEach(key => {
+        if(sessionStorage.getItem(key)) count++;
+    });
+
+    // Count SPICT (count as 1 if either section has data)
+    if(sessionStorage.getItem('report_spict_general') || sessionStorage.getItem('report_spict_clinical')) {
+        count++;
     }
     
     if (count > 0) {
@@ -275,10 +281,11 @@ function openReportModal() {
     const modal = document.getElementById('reportModal');
     if (!modal) return;
     
-    // Helper to set values from session storage
+    // Helper to safely get data
+    const getSaved = (key) => sessionStorage.getItem(key) || '';
     const setVal = (id, key) => {
         const el = document.getElementById(id);
-        if (el) el.value = sessionStorage.getItem(key) || "";
+        if (el) el.value = getSaved(key);
     };
 
     setVal('input_flacc', 'report_flacc');
@@ -286,7 +293,21 @@ function openReportModal() {
     setVal('input_akps', 'report_akps');
     setVal('input_rug', 'report_rug');
     setVal('input_rdos', 'report_rdos');
-    setVal('input_spict', 'report_spict'); // <--- ADDED: Load SPICT Results
+    
+    // --- UPDATED: SPICT SPLIT LOGIC ---
+    let spictGen = getSaved('report_spict_general');
+    let spictClin = getSaved('report_spict_clinical');
+
+    // Clean "None" strings
+    if(spictGen === 'None') spictGen = '';
+    if(spictClin === 'None') spictClin = '';
+
+    // Set values with bullet formatting
+    const genEl = document.getElementById('input_spict_gen');
+    if(genEl) genEl.value = spictGen.replace(/ \| /g, '\n• ');
+    
+    const clinEl = document.getElementById('input_spict_clin');
+    if(clinEl) clinEl.value = spictClin.replace(/ \| /g, '\n• ');
 
     modal.style.display = 'flex';
 }
@@ -297,33 +318,46 @@ function closeReportModal() {
 }
 
 function copyReport() {
-    const getVal = (id) => document.getElementById(id)?.value;
+    const getVal = (id) => document.getElementById(id)?.value?.trim();
 
-    let reportText = "📋 *CLINICAL HANDOVER*\n";
-    reportText += "Name: \n";  
-    reportText += "ID: \n";    
-    reportText += "Date: " + new Date().toLocaleString('en-GB', { hour12: false }) + "\n";
-    reportText += "------------------\n";
+    let text = `*CLINICAL HANDOVER REPORT*\n`;
+    text += `Date: ${new Date().toLocaleDateString()}\n`;
+    text += `------------------\n`;
     
-    const flacc = getVal('input_flacc'); if(flacc) reportText += `FLACC: ${flacc}\n`;
-    const rass = getVal('input_rass');   if(rass)  reportText += `RASS: ${rass}\n`;
-    const akps = getVal('input_akps');   if(akps)  reportText += `AKPS: ${akps}\n`;
-    const rug = getVal('input_rug');     if(rug)   reportText += `RUG-ADL: ${rug}\n`;
-    const rdos = getVal('input_rdos');   if(rdos)  reportText += `RDOS: ${rdos}\n`;
+    // Standard Scores
+    const flacc = getVal('input_flacc'); if(flacc) text += `FLACC: ${flacc}\n`;
+    const rass = getVal('input_rass');   if(rass)  text += `RASS: ${rass}\n`;
+    const akps = getVal('input_akps');   if(akps)  text += `AKPS: ${akps}\n`;
+    const rug = getVal('input_rug');     if(rug)   text += `RUG-ADL: ${rug}\n`;
+    const rdos = getVal('input_rdos');   if(rdos)  text += `RDOS: ${rdos}\n`;
     
-    // <--- ADDED: SPICT Logic for Clipboard
-    const spict = getVal('input_spict'); 
-    if(spict) {
-        reportText += "\n--- SPICT INDICATORS ---\n" + spict + "\n";
+    // --- UPDATED: SPICT Logic for Clipboard ---
+    const sGen = getVal('input_spict_gen');
+    const sClin = getVal('input_spict_clin');
+
+    if (sGen || sClin) {
+        text += `------------------\n`;
+        text += `*SPICT REPORT*\n`;
+        
+        if (sGen) {
+            text += `_General/Care Planning:_\n• ${sGen.replace(/\n/g, '\n')}\n\n`;
+        }
+        
+        if (sClin) {
+            text += `_Clinical Indicators:_\n• ${sClin.replace(/\n/g, '\n')}\n`;
+        }
     }
 
-    if (!flacc && !rass && !akps && !rug && !rdos && !spict) {
+    if (!flacc && !rass && !akps && !rug && !rdos && !sGen && !sClin) {
         alert("No scores to copy.");
         return;
     }
 
-    navigator.clipboard.writeText(reportText).then(() => {
-        alert("Report copied! \n\nPlease paste in WhatsApp and add Name/ID.");
+    navigator.clipboard.writeText(text).then(() => {
+        alert("Report copied to clipboard.");
+    }).catch(err => {
+        console.error('Copy failed', err);
+        alert("Error copying text. Please select manually.");
     });
 }
 
@@ -351,7 +385,9 @@ function sendToGoogleForm() {
         'input_akps':  'entry.333333',
         'input_rug':   'entry.444444',
         'input_rdos':  'entry.555555',
-        'input_spict': 'entry.666666' // <--- ADDED: SPICT Field Mapping
+        // New Split SPICT Mappings:
+        'input_spict_gen': 'entry.666666', // <--- Update this ID
+        'input_spict_clin': 'entry.777777' // <--- Update this ID
     };
 
     const params = new URLSearchParams();
@@ -366,12 +402,12 @@ function sendToGoogleForm() {
 }
 
 function clearReport() {
-    if(confirm("Clear all data?")) {
+    if(confirm("Clear all assessment data? This cannot be undone.")) {
         sessionStorage.clear();
         updateBadgeCount();
         closeReportModal();
         // Clear both inputs and textareas
-        const inputs = document.querySelectorAll('.report-grid input, .report-grid textarea, #input_spict');
+        const inputs = document.querySelectorAll('.report-grid input, .report-grid textarea, #input_spict_gen, #input_spict_clin');
         if(inputs.length > 0) {
             inputs.forEach(i => i.value = '');
         }

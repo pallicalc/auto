@@ -12,7 +12,7 @@
 <style>
     /* --- 1. GLOBAL RESET & LAYOUT --- */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    
+
     body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         background-color: #f0f2f5;
@@ -120,7 +120,7 @@
         background-color: #009B9E !important; 
         color: white !important;
     }
-    
+
     .item.selected::after {
         content: '✓';
         position: absolute;
@@ -150,7 +150,7 @@
         box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
         z-index: 1000;
     }
-    
+
     .btn-save {
         background: #198754; color: white; border: none;
         padding: 14px 40px; border-radius: 50px;
@@ -172,7 +172,7 @@
 <body>
 
 <div class="spict-container">
-    
+
     <div class="header">
         <div class="inst-header-container" id="inst-header-container">
             <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display: none;">
@@ -256,7 +256,7 @@
 
     <div class="category-title">Other conditions</div>
     <div class="item">Deteriorating with other physical or mental illnesses, multiple conditions and/or complications that are not reversible; best available treatment has a poor outcome.</div>
-    
+
     <div class="section-header">
         Look for any general indicators of poor or deteriorating health
     </div>
@@ -295,7 +295,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
         const urlParams = new URLSearchParams(window.location.search);
         const ref = urlParams.get('ref');
-        
+
         if (ref) await loadInstitutionHeader(ref);
         else loadPersonalHeader();
 
@@ -314,10 +314,10 @@
         document.getElementById('selection-count').innerText = count + " Selected";
     }
 
-    // --- 3. SMART SAVE LOGIC ---
+    // --- 3. SMART SAVE LOGIC (UPDATED) ---
     function saveAndExit() {
         const selectedItems = document.querySelectorAll('.item.selected');
-        
+
         if (selectedItems.length === 0) {
             if(!confirm("No items selected. Save as 'Negative'?")) return;
         }
@@ -341,7 +341,7 @@
                     isClinicalSection = true; 
                     break;
                 }
-                
+
                 // Check if we hit a Section Header 
                 if (sibling.classList.contains('section-header')) {
                     const headerText = sibling.innerText.toLowerCase();
@@ -361,31 +361,26 @@
             // --- SORT INTO LISTS ---
             if (isClinicalSection) {
                 if (foundCategory) {
-                    clinicalList.push(`• ${foundCategory}: ${text}`);
+                    clinicalList.push(foundCategory ? `${foundCategory}: ${text}` : text);
                 } else {
-                    clinicalList.push(`• ${text}`);
+                    clinicalList.push(text);
                 }
             } else {
-                generalList.push(`• ${text}`);
+                generalList.push(text);
             }
         });
 
-        // --- COMBINE REPORT ---
-        let finalReport = "";
-
-        if (generalList.length > 0) {
-            finalReport += "[GENERAL / CARE PLANNING]\n" + generalList.join("\n") + "\n\n";
-        }
-
-        if (clinicalList.length > 0) {
-            finalReport += "[CLINICAL INDICATORS]\n" + clinicalList.join("\n");
-        }
-
-        if (finalReport === "") finalReport = "SPICT Negative";
-
         if (ENABLE_CLINICAL_REPORT) {
-            sessionStorage.setItem(REPORT_KEY, finalReport.trim());
+            // --- SAVE AS TWO SEPARATE SECTIONS ---
+            // 'report_spict_general' for General/Care Planning
+            // 'report_spict_clinical' for Clinical Indicators
+            sessionStorage.setItem('report_spict_general', generalList.length > 0 ? generalList.join(" | ") : "None");
+            sessionStorage.setItem('report_spict_clinical', clinicalList.length > 0 ? clinicalList.join(" | ") : "None");
             
+            // Optional: Keep the combined one just in case other parts of your app need it
+            const combined = `General: ${generalList.length} items, Clinical: ${clinicalList.length} items`;
+            sessionStorage.setItem(REPORT_KEY, combined);
+
             const btn = document.querySelector('.btn-save');
             btn.innerText = "Saved!";
             btn.style.backgroundColor = "#009B9E"; // Button turns Teal on save
