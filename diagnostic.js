@@ -362,43 +362,60 @@ function copyReport() {
 }
 
 // ============================================================
-// [UPDATED] SEND TO GOOGLE FORM (Master Handover Link)
+// [FIXED] SEND TO GOOGLE FORM (Using Magic Codes)
 // ============================================================
 function sendToGoogleForm() {
-    // 1. Retrieve the saved links from memory
+    // 1. Retrieve the saved settings
     const settings = JSON.parse(localStorage.getItem('institutionSettings') || '{}');
     const links = settings.links || {};
 
-    // 2. Use the 'handover' link (from the new card in Admin)
-    const baseUrl = links.handover || ""; 
+    // 2. Get the Master Handover Link
+    let targetUrl = links.handover || ""; 
     
-    if (!baseUrl) {
+    if (!targetUrl) {
         alert("Master Handover Link not set. Please contact your Institution Admin.");
         return;
     }
+
+    // 3. Get Values from Inputs
+    const val = (id) => document.getElementById(id)?.value || "";
+
+    const akps = val('input_akps');
+    const flacc = val('input_flacc');
+    const rass = val('input_rass');
+    const rug = val('input_rug');
+    const rdos = val('input_rdos');
     
-    // 3. ⚠️ IMPORTANT: UPDATE THESE NUMBERS TO MATCH YOUR GOOGLE FORM ⚠️
-    // You must manually replace 'entry.XXXXXX' with the codes from your actual Google Form
-    const mapping = {
-        'input_flacc': 'entry.111111', 
-        'input_rass':  'entry.222222',
-        'input_akps':  'entry.333333',
-        'input_rug':   'entry.444444',
-        'input_rdos':  'entry.555555',
-        // New Split SPICT Mappings:
-        'input_spict_gen': 'entry.666666', // <--- Update this ID
-        'input_spict_clin': 'entry.777777' // <--- Update this ID
-    };
+    // SPICT Handling
+    const spictGen = val('input_spict_gen');
+    const spictClin = val('input_spict_clin');
+    
+    // Create a combined summary for MAGIC_SUMMARY if needed
+    let fullSummary = "";
+    if(akps) fullSummary += `AKPS: ${akps} | `;
+    if(flacc) fullSummary += `FLACC: ${flacc} | `;
+    if(rass) fullSummary += `RASS: ${rass} | `;
+    if(rug) fullSummary += `RUG: ${rug} | `;
+    if(rdos) fullSummary += `RDOS: ${rdos} | `;
+    if(spictGen) fullSummary += `SPICT Gen: ${spictGen} | `;
+    if(spictClin) fullSummary += `SPICT Clin: ${spictClin}`;
 
-    const params = new URLSearchParams();
-    Object.keys(mapping).forEach(id => {
-        const val = document.getElementById(id)?.value;
-        if(val) params.append(mapping[id], val);
-    });
+    // 4. REPLACE MAGIC CODES
+    // This looks for the text "MAGIC_..." in the URL and swaps it with real data
+    targetUrl = targetUrl
+        .replace(/MAGIC_AKPS/g, encodeURIComponent(akps))
+        .replace(/MAGIC_FLACC/g, encodeURIComponent(flacc))
+        .replace(/MAGIC_RASS/g, encodeURIComponent(rass))
+        .replace(/MAGIC_RUG/g, encodeURIComponent(rug))
+        .replace(/MAGIC_RDOS/g, encodeURIComponent(rdos))
+        // SPICT is tricky - usually maps to a "Summary" or specific text field
+        .replace(/MAGIC_SPICT_GEN/g, encodeURIComponent(spictGen))
+        .replace(/MAGIC_SPICT_CLIN/g, encodeURIComponent(spictClin))
+        // Generic Summary Fallback
+        .replace(/MAGIC_SUMMARY/g, encodeURIComponent(fullSummary));
 
-    if(params.toString() === "" && !confirm("Form is empty. Open blank form?")) return;
-
-    window.open(`${baseUrl}?${params.toString()}`, '_blank');
+    // 5. Open the final URL
+    window.open(targetUrl, '_blank');
 }
 
 function clearReport() {
