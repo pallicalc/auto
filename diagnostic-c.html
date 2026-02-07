@@ -14,7 +14,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
-    /* Specific styles for headers and buttons in this page */
+    /* Section Headers */
     .section-header-text {
         font-size: 1.1rem;
         font-weight: 800;
@@ -23,36 +23,48 @@
         padding-left: 10px;
         border-left: 4px solid #007bff;
     }
-    
-    .btn-start-assess {
-        display: block;
-        width: 100%;
-        padding: 12px;
-        background: #007bff; /* Matches your theme blue */
-        color: white;
-        text-decoration: none;
-        border-radius: 8px;
-        font-weight: 600;
-        margin-top: 15px;
-        transition: background 0.2s;
-        text-align: center;
-        border: none;
-    }
-    
-    .btn-start-assess:hover {
-        background: #0056b3;
-        color: white;
-    }
 
-    /* Ensure pamphlet cards match education style */
-    .pamphlet-section {
+    /* CLICKABLE CARD STYLES */
+    .pamphlet-link {
+        display: block; 
+        text-decoration: none; 
+        color: inherit; 
         background: #f8faff;
         border: 2px solid #007bff;
         border-radius: 12px;
         padding: 20px;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         text-align: center;
-        box-shadow: 0 4px 12px rgba(0,123,255,0.1);
+        box-shadow: 0 4px 6px rgba(0,123,255,0.05);
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .pamphlet-link:active {
+        background-color: #e6f0ff;
+        transform: scale(0.98); 
+    }
+
+    .pamphlet-title {
+        font-weight: 800;
+        font-size: 1.2rem;
+        color: #007bff;
+        margin-bottom: 5px;
+    }
+
+    .pamphlet-subtitle {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+
+    .tap-indicator {
+        font-size: 0.8rem;
+        color: #007bff;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 10px;
     }
 
     /* Badge for the Report Card */
@@ -65,10 +77,9 @@
         margin-left: 10px;
         vertical-align: middle;
         font-weight: bold;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
-    /* Report Grid Styles for the Modal */
+    /* Report Grid Styles */
     .report-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -82,7 +93,7 @@
         color: #555;
         margin-bottom: 2px;
     }
-    .input-group input {
+    .input-group input, .input-group textarea {
         width: 100%;
         padding: 8px;
         border: 1px solid #ddd;
@@ -90,6 +101,12 @@
         font-size: 14px;
         background: #f9f9f9;
         box-sizing: border-box; 
+    }
+    
+    .btn-action {
+        display: block; width: 100%; padding: 12px;
+        border-radius: 8px; font-weight: 600; text-align: center; border: none; color: white;
+        cursor: pointer;
     }
 </style>
 </head>
@@ -114,16 +131,15 @@
             <div style="font-style: italic; opacity: 0.8;">Institution header will appear here</div>
         </div>
 
-        <div id="shareCallout" class="pamphlet-section" style="border-color: #198754; background-color: #f0fdf4; margin-top: 20px;">
-            <div class="pamphlet-title" style="color: #198754;">
+        <div id="shareCallout" style="background: #f0fdf4; border: 2px solid #198754; border-radius: 12px; padding: 20px; margin-top: 20px; text-align: center;">
+            <div style="color: #198754; font-weight: 800; font-size: 1.1rem; margin-bottom: 5px;">
                 Clinical Handover
                 <span id="cardBadge" class="badge-card" style="display:none;">0</span>
             </div>
-            <div class="pamphlet-subtitle">
+            <div style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">
                 Generate WhatsApp summary or Google Form submission
             </div>
-            
-            <button onclick="openReportModal()" class="btn-start-assess" style="background-color: #198754;">
+            <button onclick="openReportModal()" class="btn-action" style="background-color: #198754;">
                 <i class="bi bi-clipboard-check"></i> Generate Report
             </button>
         </div>
@@ -134,43 +150,41 @@
             
             <div class="section-header-text">Clinician Assessment</div>
 
-
-
-            <div class="pamphlet-section">
-                <div class="pamphlet-title">SPICT Tool</div>
+            <a href="diagnostic/spict.html" class="pamphlet-link">
+                <div class="pamphlet-title">SPICT</div>
                 <div class="pamphlet-subtitle">Supportive & Palliative Care Indicators Tool</div>
-                <a href="diagnostic/spict.html" class="btn-start-assess">Start Assessment</a>
-  .          </div>
+                <div class="tap-indicator">Tap to Start <i class="bi bi-chevron-right"></i></div>
+            </a>
 
-            <div class="pamphlet-section">
+            <a href="diagnostic/flacc.html" class="pamphlet-link">
                 <div class="pamphlet-title">FLACC Scale</div>
                 <div class="pamphlet-subtitle">Pain scale for non-verbal / paediatric patients</div>
-                <a href="diagnostic/flacc.html" class="btn-start-assess">Start Assessment</a>
-            </div>
+                <div class="tap-indicator">Tap to Start <i class="bi bi-chevron-right"></i></div>
+            </a>
 
-            <div class="pamphlet-section">
+            <a href="diagnostic/rass.html" class="pamphlet-link">
                 <div class="pamphlet-title">RASS</div>
                 <div class="pamphlet-subtitle">Richmond Agitation-Sedation Scale</div>
-                <a href="diagnostic/rass.html" class="btn-start-assess">Start Assessment</a>
-            </div>
+                <div class="tap-indicator">Tap to Start <i class="bi bi-chevron-right"></i></div>
+            </a>
 
-            <div class="pamphlet-section">
+            <a href="diagnostic/akps.html" class="pamphlet-link">
                 <div class="pamphlet-title">AKPS</div>
                 <div class="pamphlet-subtitle">Australia-modified Karnofsky Performance Status</div>
-                <a href="diagnostic/akps.html" class="btn-start-assess">Start Assessment</a>
-            </div>
+                <div class="tap-indicator">Tap to Start <i class="bi bi-chevron-right"></i></div>
+            </a>
 
-            <div class="pamphlet-section">
+            <a href="diagnostic/rug-adl.html" class="pamphlet-link">
                 <div class="pamphlet-title">RUG-ADL</div>
                 <div class="pamphlet-subtitle">Resource Utilization Groups - ADL</div>
-                <a href="diagnostic/rug-adl.html" class="btn-start-assess">Start Assessment</a>
-            </div>
+                <div class="tap-indicator">Tap to Start <i class="bi bi-chevron-right"></i></div>
+            </a>
 
-            <div class="pamphlet-section">
+            <a href="diagnostic/rdos.html" class="pamphlet-link">
                 <div class="pamphlet-title">RDOS</div>
                 <div class="pamphlet-subtitle">Respiratory Distress Observation Scale</div>
-                <a href="diagnostic/rdos.html" class="btn-start-assess">Start Assessment</a>
-            </div>
+                <div class="tap-indicator">Tap to Start <i class="bi bi-chevron-right"></i></div>
+            </a>
 
         </section>
 
@@ -209,7 +223,7 @@
                     <input type="password" id="loginPassword" required>
                     <div class="password-error" id="passwordError">❌ Password incorrect.</div>
                 </div>
-                <button type="submit" class="btn-save" id="saveBtn">💾 Save Settings</button>
+                <button type="submit" class="btn-action" style="background:#007bff;" id="saveBtn">💾 Save Settings</button>
             </form>
         </div>
     </div>
@@ -248,12 +262,17 @@
                 </div>
             </div>
 
+            <div style="margin-bottom: 20px;">
+                <label style="font-size:11px; font-weight:bold; color:#555; display:block; margin-bottom:5px;">SPICT Indicators</label>
+                <textarea id="input_spict" rows="5" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:13px; background:#f9f9f9; resize:vertical;" placeholder="No SPICT indicators selected..."></textarea>
+            </div>
+
             <div class="report-actions-vertical" style="display:flex; flex-direction:column; gap:10px;">
-                <button class="btn-start-assess" style="background:#25D366; border:none; margin-top:0;" onclick="copyReport()">
+                <button class="btn-action" style="background:#25D366;" onclick="copyReport()">
                     <i class="bi bi-whatsapp"></i> Copy for WhatsApp
                 </button>
 
-                <button class="btn-start-assess" style="background:#4285F4; border:none; margin-top:0;" onclick="sendToGoogleForm()">
+                <button class="btn-action" style="background:#4285F4;" onclick="sendToGoogleForm()">
                     <i class="bi bi-cloud-upload"></i> Fill Patient Details & Submit
                 </button>
                 
@@ -264,7 +283,7 @@
         </div>
     </div>
 
-    <script src="diagnostic.js"></script>
+    <script src="diagnostic-c.js"></script>
 
     <footer class="legal-footer">
         <div class="container">
