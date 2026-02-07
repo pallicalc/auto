@@ -322,6 +322,13 @@ function copyReport() {
 
     let text = `*CLINICAL HANDOVER REPORT*\n`;
     text += `Date: ${new Date().toLocaleDateString()}\n`;
+    
+    const pName = getVal('patient_name');
+    const pId = getVal('patient_id');
+    if(pName || pId) {
+        text += `Patient: ${pName} (${pId})\n`;
+    }
+
     text += `------------------\n`;
     
     // Standard Scores
@@ -362,7 +369,7 @@ function copyReport() {
 }
 
 // ============================================================
-// [FIXED] SEND TO GOOGLE FORM (Using Magic Codes)
+// [SIMPLIFIED] SEND TO GOOGLE FORM (Master Summary)
 // ============================================================
 function sendToGoogleForm() {
     // 1. Retrieve the saved settings
@@ -380,41 +387,36 @@ function sendToGoogleForm() {
     // 3. Get Values from Inputs
     const val = (id) => document.getElementById(id)?.value || "";
 
+    const pName = val('patient_name');
+    const pId = val('patient_id');
     const akps = val('input_akps');
     const flacc = val('input_flacc');
     const rass = val('input_rass');
     const rug = val('input_rug');
     const rdos = val('input_rdos');
-    
-    // SPICT Handling
     const spictGen = val('input_spict_gen');
     const spictClin = val('input_spict_clin');
     
-    // Create a combined summary for MAGIC_SUMMARY if needed
-    let fullSummary = "";
-    if(akps) fullSummary += `AKPS: ${akps} | `;
-    if(flacc) fullSummary += `FLACC: ${flacc} | `;
-    if(rass) fullSummary += `RASS: ${rass} | `;
-    if(rug) fullSummary += `RUG: ${rug} | `;
-    if(rdos) fullSummary += `RDOS: ${rdos} | `;
-    if(spictGen) fullSummary += `SPICT Gen: ${spictGen} | `;
-    if(spictClin) fullSummary += `SPICT Clin: ${spictClin}`;
+    // 4. Create Combined Summary (The "Master" String)
+    let summaryParts = [];
 
-    // 4. REPLACE MAGIC CODES
-    // This looks for the text "MAGIC_..." in the URL and swaps it with real data
+    if(akps) summaryParts.push(`AKPS: ${akps}`);
+    if(flacc) summaryParts.push(`FLACC: ${flacc}`);
+    if(rass) summaryParts.push(`RASS: ${rass}`);
+    if(rug) summaryParts.push(`RUG: ${rug}`);
+    if(rdos) summaryParts.push(`RDOS: ${rdos}`);
+    if(spictGen) summaryParts.push(`SPICT Gen: ${spictGen.replace(/\n/g, ' ')}`);
+    if(spictClin) summaryParts.push(`SPICT Clin: ${spictClin.replace(/\n/g, ' ')}`);
+
+    const fullSummary = summaryParts.join(" | ");
+
+    // 5. REPLACE ONLY THE 3 CORE MAGIC CODES
     targetUrl = targetUrl
-        .replace(/MAGIC_AKPS/g, encodeURIComponent(akps))
-        .replace(/MAGIC_FLACC/g, encodeURIComponent(flacc))
-        .replace(/MAGIC_RASS/g, encodeURIComponent(rass))
-        .replace(/MAGIC_RUG/g, encodeURIComponent(rug))
-        .replace(/MAGIC_RDOS/g, encodeURIComponent(rdos))
-        // SPICT is tricky - usually maps to a "Summary" or specific text field
-        .replace(/MAGIC_SPICT_GEN/g, encodeURIComponent(spictGen))
-        .replace(/MAGIC_SPICT_CLIN/g, encodeURIComponent(spictClin))
-        // Generic Summary Fallback
+        .replace(/MAGIC_NAME/g, encodeURIComponent(pName))
+        .replace(/MAGIC_ID/g, encodeURIComponent(pId))
         .replace(/MAGIC_SUMMARY/g, encodeURIComponent(fullSummary));
 
-    // 5. Open the final URL
+    // 6. Open the final URL
     window.open(targetUrl, '_blank');
 }
 
@@ -424,7 +426,7 @@ function clearReport() {
         updateBadgeCount();
         closeReportModal();
         // Clear both inputs and textareas
-        const inputs = document.querySelectorAll('.report-grid input, .report-grid textarea, #input_spict_gen, #input_spict_clin');
+        const inputs = document.querySelectorAll('.report-grid input, .report-grid textarea, #input_spict_gen, #input_spict_clin, #patient_name, #patient_id');
         if(inputs.length > 0) {
             inputs.forEach(i => i.value = '');
         }
