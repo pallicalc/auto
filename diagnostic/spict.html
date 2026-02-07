@@ -10,58 +10,74 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 <style>
-    /* --- 1. GLOBAL RESET & LAYOUT --- */
+    /* =========================================
+       1. GLOBAL RESET & LAYOUT (Matches AKPS)
+       ========================================= */
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         background-color: #f0f2f5;
-        color: #333;
+        color: #343a40;
+        line-height: 1.5;
         display: flex;
-        justify-content: center;
+        flex-direction: column;
         min-height: 100vh;
-        padding: 20px;
-        margin: 0;
+        font-size: 16px; 
     }
 
-    .spict-container {
-        background-color: white;
-        max-width: 600px;
+    .main-container {
+        flex: 1;
         width: 100%;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        max-width: 800px; /* Matches AKPS width */
+        margin: 20px auto;
+        background: white;
+        padding: 30px;
         border-radius: 12px;
-        overflow: hidden;
-        padding-bottom: 90px; /* Space for fixed bottom bar */
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         position: relative;
     }
 
-    /* --- 2. HEADER & BRANDING --- */
+    /* =========================================
+       2. HEADER & BRANDING (Matches AKPS)
+       ========================================= */
     .header {
-        background: linear-gradient(135deg, #003366 0%, #0056b3 100%);
+        margin: -30px -30px 30px -30px; 
+        border-radius: 12px 12px 24px 24px; 
+        padding: 30px; 
         color: white;
-        padding: 25px;
-        text-align: left;
+        position: relative;
+        overflow: hidden;
+        text-align: left; 
     }
+
+    .header-ipos {
+        background: linear-gradient(135deg, #0061f2 0%, #00c6f7 100%);
+        box-shadow: 0 4px 12px rgba(0, 97, 242, 0.2);
+    }
+
+    .header h1 { font-size: 28px; font-weight: 700; margin: 0 0 10px 0; line-height: 1.2; }
+    .header p { font-size: 16px; opacity: 0.95; margin: 0; }
+
     .inst-header-container {
-        display: none; align-items: center; gap: 15px; margin-bottom: 15px;
-        padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.3);
+        display: none; align-items: center; gap: 15px; margin-bottom: 20px;
+        padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.3);
     }
     .inst-logo {
-        max-height: 50px; max-width: 60px; width: auto;
-        border-radius: 6px; background: white; padding: 2px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        max-height: 60px; max-width: 60px; width: auto;
+        border-radius: 8px; background: white; padding: 4px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    .inst-info h3 { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.2; }
-    .inst-info p { margin: 2px 0 0 0; font-size: 12px; opacity: 0.9; }
+    .inst-info h3 { font-size: 18px; font-weight: 700; margin: 0; line-height: 1.2; }
+    .inst-info p { font-size: 14px; margin: 2px 0 0 0; opacity: 0.9; }
 
-    .header h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px; }
-    .header p { opacity: 0.9; font-size: 14px; margin-top: 5px; }
-
-    /* --- 3. NAVIGATION --- */
+    /* =========================================
+       3. NAVIGATION
+       ========================================= */
     .nav-bar { 
-        padding: 12px 20px; 
+        padding: 0 5px 20px 5px; 
         display: flex; justify-content: space-between; align-items: center; 
-        background: #f8f9fa; border-bottom: 1px solid #e9ecef; 
+        /* Removed bottom border to match AKPS cleaner look */
     }
     .nav-link { 
         text-decoration: none; color: #6c757d; font-weight: 600; font-size: 14px; 
@@ -69,56 +85,69 @@
     }
     .nav-link:hover { color: #003366; }
 
-    /* --- 4. SPICT CONTENT STYLES --- */
+    /* =========================================
+       4. SPICT SPECIFIC CONTENT STYLES
+       ========================================= */
     .intro-box {
-        border: 2px solid #003366;
+        border: 2px solid #0061f2; /* Updated to match header blue */
+        background-color: #f8fbff;
         padding: 15px;
-        margin: 15px 20px;
-        color: #003366;
-        font-weight: bold;
+        margin-bottom: 25px;
+        color: #004085;
+        font-weight: 600;
         font-size: 15px;
-        line-height: 1.4;
+        line-height: 1.5;
+        border-radius: 8px;
     }
 
     .section-header {
-        background-color: #003366;
+        background-color: #2c3e50; /* Darker, neutral tone */
         color: white;
         padding: 12px 20px;
         font-size: 15px;
         font-weight: bold;
-        margin-top: 20px;
+        margin-top: 25px;
+        border-radius: 6px;
     }
 
     .category-title {
-        color: #003366;
+        color: #2c3e50;
         font-size: 18px;
-        font-weight: bold;
-        padding: 20px 20px 5px 20px;
+        font-weight: 700;
+        padding: 20px 5px 10px 5px;
         margin: 0;
         background-color: white;
+        border-bottom: 2px solid #eef2f6;
+        margin-bottom: 10px;
     }
 
-    /* List Items - Interactive */
+    /* List Items */
     .item {
-        background-color: #dbebf9; /* Light blue base from your request */
-        color: #222;
-        padding: 15px 45px 15px 20px; /* Extra right padding for checkmark */
-        margin-bottom: 2px;
-        font-size: 14px;
-        line-height: 1.4;
+        background-color: #f8f9fa; 
+        border: 1px solid #e9ecef;
+        color: #343a40;
+        padding: 15px 45px 15px 20px; 
+        margin-bottom: 8px; /* Spaced out slightly more */
+        font-size: 15px;
+        line-height: 1.5;
         cursor: pointer;
-        transition: background-color 0.2s, color 0.2s;
+        transition: all 0.2s;
         position: relative;
+        border-radius: 8px; /* Rounded like AKPS items */
     }
 
     .item:hover {
-        background-color: #cce0f5;
+        background-color: #e3f2fd;
+        border-color: #0061f2;
+        transform: translateY(-1px);
     }
 
-    /* Selected State - YOUR TEAL COLOR */
+    /* Selected State - TEAL */
     .item.selected {
         background-color: #009B9E !important; 
+        border-color: #009B9E !important;
         color: white !important;
+        box-shadow: 0 4px 6px rgba(0, 155, 158, 0.2);
     }
 
     .item.selected::after {
@@ -133,15 +162,12 @@
     }
 
     /* Lists inside items (Liver disease) */
-    .item ul {
-        margin: 5px 0 0 20px;
-        padding: 0;
-    }
-    .item ul li {
-        margin-bottom: 3px;
-    }
+    .item ul { margin: 5px 0 0 20px; padding: 0; }
+    .item ul li { margin-bottom: 3px; }
 
-    /* --- 5. BOTTOM SAVE BAR --- */
+    /* =========================================
+       5. BOTTOM SAVE BAR
+       ========================================= */
     .save-bar {
         position: fixed; bottom: 0; left: 0; width: 100%;
         background: white; border-top: 1px solid #dee2e6;
@@ -161,19 +187,27 @@
     }
     .btn-save:hover { background: #157347; }
 
+    /* Footer Style */
+    .standard-footer {
+        width: 100%; background-color: #f8f9fa; border-top: 1px solid #dee2e6;
+        padding: 30px 20px; font-size: 11px; color: #6c757d; text-align: center;
+        margin-bottom: 80px; /* Space for fixed save bar */
+    }
+    .footer-inner { max-width: 600px; margin: 0 auto; }
+
     /* Mobile Tweaks */
     @media (max-width: 600px) {
-        body { padding: 0; border-radius: 0; }
-        .spict-container { border-radius: 0; box-shadow: none; min-height: 100vh; }
-        .header { padding: 20px; }
+        .main-container { margin: 0; border-radius: 0; padding: 15px; min-height: 100vh; box-shadow: none; }
+        .header { margin: -15px -15px 20px -15px; border-radius: 0; padding: 25px 20px; }
+        .item { font-size: 14px; padding: 12px 40px 12px 15px; }
     }
 </style>
 </head>
 <body>
 
-<div class="spict-container">
+<div class="main-container">
 
-    <div class="header">
+    <div class="header header-ipos">
         <div class="inst-header-container" id="inst-header-container">
             <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display: none;">
             <div class="inst-info">
@@ -187,7 +221,7 @@
 
     <div class="nav-bar">
         <a href="javascript:history.back()" class="nav-link">← Back</a>
-        <div id="selection-count" style="font-size:13px; font-weight:700; color:#009B9E;">0 Selected</div>
+        <div id="selection-count" style="font-size:14px; font-weight:700; color:#009B9E;">0 Selected</div>
     </div>
 
     <div class="intro-box">
@@ -265,7 +299,9 @@
      <div class="item">Ask for specialist advice or a review if symptoms or other problems are difficult to manage.</div>
      <div class="item">Agree a current and future care plan with the person and their family. Discuss decision making in the future (e.g., Power of Attorney).</div>
      <div class="item">Record, share and review care plans.</div>
-    <div style="height: 40px;"></div>
+    
+    <div style="height: 20px;"></div>
+
 </div>
 
 <div class="save-bar">
@@ -293,6 +329,9 @@
 
     // --- 2. INIT ---
     document.addEventListener('DOMContentLoaded', async () => {
+        // Auto-Inject the standard footer (From AKPS logic)
+        injectStandardFooter();
+
         const urlParams = new URLSearchParams(window.location.search);
         const ref = urlParams.get('ref');
 
@@ -314,7 +353,7 @@
         document.getElementById('selection-count').innerText = count + " Selected";
     }
 
-    // --- 3. SMART SAVE LOGIC (UPDATED) ---
+    // --- 3. SMART SAVE LOGIC (UNCHANGED) ---
     function saveAndExit() {
         const selectedItems = document.querySelectorAll('.item.selected');
 
@@ -326,7 +365,7 @@
         let clinicalList = [];
 
         selectedItems.forEach(item => {
-            // Clean text: remove newlines from list items inside the card (esp. Liver)
+            // Clean text
             let text = item.innerText.replace(/\n/g, ', ').replace(/, \s*$/, "");
 
             // --- SCAN UPWARDS TO FIND CATEGORY ---
@@ -345,11 +384,9 @@
                 // Check if we hit a Section Header 
                 if (sibling.classList.contains('section-header')) {
                     const headerText = sibling.innerText.toLowerCase();
-                    // "clinical indicators" triggers the Clinical List
                     if (headerText.includes('clinical indicators')) {
                         isClinicalSection = true;
                     } 
-                    // Any other header (General or the Care Planning one at bottom) goes to General
                     else {
                         isClinicalSection = false;
                     }
@@ -371,19 +408,15 @@
         });
 
         if (ENABLE_CLINICAL_REPORT) {
-            // --- SAVE AS TWO SEPARATE SECTIONS ---
-            // 'report_spict_general' for General/Care Planning
-            // 'report_spict_clinical' for Clinical Indicators
             sessionStorage.setItem('report_spict_general', generalList.length > 0 ? generalList.join(" | ") : "None");
             sessionStorage.setItem('report_spict_clinical', clinicalList.length > 0 ? clinicalList.join(" | ") : "None");
             
-            // Optional: Keep the combined one just in case other parts of your app need it
             const combined = `General: ${generalList.length} items, Clinical: ${clinicalList.length} items`;
             sessionStorage.setItem(REPORT_KEY, combined);
 
             const btn = document.querySelector('.btn-save');
             btn.innerText = "Saved!";
-            btn.style.backgroundColor = "#009B9E"; // Button turns Teal on save
+            btn.style.backgroundColor = "#009B9E"; 
 
             setTimeout(() => { history.back(); }, 400);
         }
@@ -431,6 +464,23 @@
             if(el) { el.src = logo; el.style.display = 'block'; }
             if(container) container.style.display = 'flex';
         }
+    }
+
+    // --- 5. FOOTER INJECTION (Matches AKPS) ---
+    function injectStandardFooter() {
+        // We append this AFTER the main container, but before the save bar effectively hides it on small screens
+        // The CSS handles the spacing
+        const existing = document.querySelector('footer');
+        if(existing) existing.remove();
+        document.body.insertAdjacentHTML('beforeend', `
+            <footer class="standard-footer">
+                <div class="footer-inner">
+                    <p style="margin: 0; font-weight: bold; color: #495057;">&copy; 2026 Alivioscript Solutions</p>
+                    <p style="margin: 2px 0; color: #6c757d;">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+                    <p style="margin: 2px 0; font-weight: bold; color: #dc3545;">For professional use only. Verify all results.</p>
+                </div>
+            </footer>
+        `);
     }
 </script>
 
