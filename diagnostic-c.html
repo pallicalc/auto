@@ -82,7 +82,7 @@
         color: #555;
         margin-bottom: 2px;
     }
-    .input-group input, .input-group textarea {
+    .input-group input {
         width: 100%;
         padding: 8px;
         border: 1px solid #ddd;
@@ -134,11 +134,13 @@
             
             <div class="section-header-text">Clinician Assessment</div>
 
+
+
             <div class="pamphlet-section">
                 <div class="pamphlet-title">SPICT Tool</div>
                 <div class="pamphlet-subtitle">Supportive & Palliative Care Indicators Tool</div>
                 <a href="diagnostic/spict.html" class="btn-start-assess">Start Assessment</a>
-            </div>
+  .          </div>
 
             <div class="pamphlet-section">
                 <div class="pamphlet-title">FLACC Scale</div>
@@ -224,11 +226,6 @@
             </p>
 
             <div class="report-grid">
-                <div class="input-group" style="grid-column: span 2;">
-                    <label>SPICT Indicators</label>
-                    <textarea id="input_spict" rows="5" placeholder="No indicators selected..." style="resize: vertical;"></textarea>
-                </div>
-
                 <div class="input-group">
                     <label>FLACC</label>
                     <input type="text" id="input_flacc" placeholder="-">
@@ -267,7 +264,7 @@
         </div>
     </div>
 
-    <script src="diagnostic-c.js"></script>
+    <script src="diagnostic.js"></script>
 
     <footer class="legal-footer">
         <div class="container">
