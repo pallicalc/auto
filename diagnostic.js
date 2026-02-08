@@ -34,11 +34,22 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('openSettingsBtn').addEventListener('click', openSettings);
         document.getElementById('closeSettingsBtn').addEventListener('click', closeSettings);
     }
-    if(document.getElementById('openScannerBtn')) {
-        document.getElementById('openScannerBtn').addEventListener('click', () => {
-            window.location.href = 'diagnostic/scan.html';
-        });
-    }
+if(document.getElementById('openScannerBtn')) {
+       document.getElementById('openScannerBtn').addEventListener('click', () => {
+           
+           // --- START TRACKING CODE ---
+           if (typeof gtag === 'function') {
+               gtag('event', 'clinical_action', {
+                   'event_category': 'Data Transfer',
+                   'event_label': 'opened_qr_scanner',
+                   'institution_id': userInstId || 'personal_user'
+               });
+           }
+           // --- END TRACKING CODE ---
+
+           window.location.href = 'diagnostic/scan.html';
+       });
+   }
     if(document.getElementById('institutionForm')) {
         document.getElementById('institutionForm').addEventListener('submit', saveSettings);
     }
@@ -360,9 +371,21 @@ function copyReport() {
         return;
     }
 
-    navigator.clipboard.writeText(text).then(() => {
-        alert("Report copied to clipboard.");
-    }).catch(err => {
+navigator.clipboard.writeText(text).then(() => {
+       
+       // --- START TRACKING CODE ---
+       if (typeof gtag === 'function') {
+           gtag('event', 'clinical_action', {
+               'event_category': 'Report Management',
+               'event_label': 'copied_to_clipboard',
+               'institution_id': userInstId || 'personal_user'
+           });
+       }
+       // --- END TRACKING CODE ---
+
+       alert("Report copied to clipboard.");
+   }).catch(err => {
+
         console.error('Copy failed', err);
         alert("Error copying text. Please select manually.");
     });
@@ -416,8 +439,19 @@ function sendToGoogleForm() {
         .replace(/MAGIC_ID/g, encodeURIComponent(pId))
         .replace(/MAGIC_SUMMARY/g, encodeURIComponent(fullSummary));
 
-    // 6. Open the final URL
-    window.open(targetUrl, '_blank');
+// 6. Open the final URL
+
+   // --- START TRACKING CODE ---
+   if (typeof gtag === 'function') {
+       gtag('event', 'clinical_action', {
+           'event_category': 'Report Management',
+           'event_label': 'sent_to_google_form',
+           'institution_id': userInstId || 'personal_user'
+       });
+   }
+   // --- END TRACKING CODE ---
+
+   window.open(targetUrl, '_blank');
 }
 
 function clearReport() {

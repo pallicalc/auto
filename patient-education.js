@@ -234,7 +234,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // --- QR GENERATION ---
 function openShareModal() {
-    const modal = document.getElementById('shareModal');
+// --- START TRACKING CODE ---
+if (typeof gtag === 'function') {
+    gtag('event', 'patient_action', {
+        'event_category': 'Patient Education',
+        'event_label': 'generated_qr_code',
+        'institution_id': userInstId || 'personal_user' 
+    });
+}
+// --- END TRACKING CODE ---
+  const modal = document.getElementById('shareModal');
     const qrDiv = document.getElementById('qrcode');
     const shareLink = document.getElementById('shareLink');
     

@@ -380,7 +380,16 @@ function convert() {
         alert("Please enter at least one valid dose.");
         return;
     }
-
+// --- START TRACKING CODE ---
+    if (typeof gtag === 'function') {
+        gtag('event', 'calculator_used', {
+            'event_category': 'Benzodiazepine Calculator',
+            'event_label': 'convert_success',
+            'institution_id': (typeof window.PALLICALC_USER !== 'undefined' && window.PALLICALC_USER.institutionId) ? window.PALLICALC_USER.institutionId : 'personal_user'
+        });
+    }
+    // --- END TRACKING CODE ---
+    
     const res = (totalUnits * target.equiv).toFixed(2);
     
     // Check increase

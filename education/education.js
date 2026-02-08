@@ -350,6 +350,15 @@ async function generateAndPrintPDF(filename) {
 
 // --- 6. QR CODE LOGIC ---
 function showQR() {
+    // --- START TRACKING CODE ---
+    if (typeof gtag === 'function') {
+        gtag('event', 'patient_action', {
+            'event_category': 'Patient Education',
+            'event_label': 'generated_qr_code',
+            'institution_id': (context && context.instId) ? context.instId : 'personal_user'
+        });
+    }
+    // --- END TRACKING CODE ---
     const modal = document.getElementById('qr-modal');
     const container = document.getElementById('qrcode');
     container.innerHTML = '';

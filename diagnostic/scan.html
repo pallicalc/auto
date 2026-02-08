@@ -193,6 +193,9 @@
     let isCameraRunning = false;
     let availableCameras = [];
     let currentCameraIndex = 0;
+    
+    // --- ADDED GLOBAL VARIABLE FOR TRACKING ---
+    let userInstId = null; 
 
     // --- REMOVED DISPLAY_LABELS: Now Generic ---
 
@@ -202,6 +205,9 @@
                 const userDoc = await db.collection('users').doc(user.uid).get();
                 if (!userDoc.exists) throw "User not found";
                 const instId = userDoc.data().institutionId;
+                
+                // --- CAPTURE ID FOR TRACKING ---
+                userInstId = instId; 
 
                 const instDoc = await db.collection('institutions').doc(instId).get();
                 if (instDoc.exists) {
@@ -400,6 +406,17 @@
             .replace('MAGIC_Q1', encodeURIComponent(currentData.Q1 || ""))
             .replace('MAGIC_A', currentData.scoreA || "") 
             .replace('MAGIC_D', currentData.scoreD || ""); 
+
+        // --- START TRACKING CODE (ADDED) ---
+        if (typeof gtag === 'function') {
+            gtag('event', 'clinical_action', {
+                'event_category': 'Clinical Scanner',
+                'event_label': 'scanned_data_sent_to_google_form',
+                'institution_id': userInstId || 'unknown_institution',
+                'form_type': currentData ? currentData.t : 'unknown_form'
+            });
+        }
+        // --- END TRACKING CODE ---
 
         window.open(targetUrl, '_blank');
     }
