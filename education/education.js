@@ -3,6 +3,19 @@
 // Includes: Suspension Logic, Race Condition Fix, Safari Crash Fix & Branding Footer
 // ==========================================
 
+// --- Auto-Inject Favicon into Header ---
+(function() {
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+    }
+    // Adjust path based on where this script runs. 
+    // If diagnostic.js is in a subfolder, use '../favicon.png'
+    link.href = '/favicon.png'; 
+})();
+
 // --- 1. FIREBASE CONFIGURATION ---
 const firebaseConfig = { 
     apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s", 
