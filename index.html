@@ -255,31 +255,31 @@
     </div>
 
     <div id="disclaimer-modal" class="login-modal" role="dialog" aria-labelledby="disclaimer-title" aria-modal="true">
-        <div class="login-content">
-            <span class="login-close" id="disclaimer-close" aria-label="Close disclaimer">&times;</span>
-            <h2 class="login-title" id="disclaimer-title">⚠️ PalliCalc Disclaimer</h2>
-            <div style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
-                <p><strong>This calculator is for educational purposes only.</strong> It does not replace clinical judgment or individualized patient assessment (age, body mass, liver/kidney function, medications, psychological status, treatment goals).</p>
-                <ul style="margin: 12px 0; padding-left: 20px; font-size: 14px;">
-                    <li>Provides general opioid dose conversions - not tailored to specific pain conditions</li>
-                    <li>Does not advise on initiation, tapering, drug interactions, side effects, or special populations</li>
-                    <li>Long-term opioid therapy for chronic non-cancer pain is controversial - consult guidelines</li>
-                    <li>Methadone, fentanyl lozenges, and neuraxial opioids excluded (complex pharmacokinetics)</li>
-                </ul>
-                <p><strong>Liability:</strong> Developer not responsible for errors, omissions, or outcomes. Always use clinical judgment and consult institutional protocols.</p>
-            </div>
-<label for="disclaimer-agree" style="font-size: 14px; color: #334155; cursor: pointer;">
-    I have read, understand, and agree to the 
-    <strong>Disclaimer</strong>, 
-    <a href="legal.html" target="_blank" style="color: #0061f2; text-decoration: underline;">Terms</a>, and 
-    <a href="legal.html" target="_blank" style="color: #0061f2; text-decoration: underline;">Privacy Policy</a>.
-</label>
-            <button id="disclaimer-proceed" class="login-btn-submit" disabled style="background: #94a3b8;">I Agree & Proceed</button>
-<p style="font-size: 12px; color: #64748b; text-align: center; margin-top: 12px;">
-    <a href="legal.html" target="_blank">Terms</a> | 
-    <a href="legal.html" target="_blank">Privacy</a>
-</p>
-        </div>
+<div class="login-content">
+    <span class="login-close" id="disclaimer-close" aria-label="Close disclaimer">&times;</span>
+    <h2 class="login-title" id="disclaimer-title">⚠️ PalliCalc Disclaimer</h2>
+    <div style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
+        <p><strong>This calculator is for educational purposes only.</strong> It does not replace clinical judgment or individualized patient assessment (age, body mass, liver/kidney function, medications, psychological status, treatment goals).</p>
+        <ul style="margin: 12px 0; padding-left: 20px; font-size: 14px;">
+            <li>Provides general opioid dose conversions - not tailored to specific pain conditions</li>
+            <li>Does not advise on initiation, tapering, drug interactions, side effects, or special populations</li>
+            <li>Long-term opioid therapy for chronic non-cancer pain is controversial - consult guidelines</li>
+            <li>Methadone, fentanyl lozenges, and neuraxial opioids excluded (complex pharmacokinetics)</li>
+        </ul>
+        <p><strong>Liability:</strong> Developer not responsible for errors, omissions, or outcomes. Always use clinical judgment and consult institutional protocols.</p>
+    </div>
+    
+    <label for="disclaimer-agree" style="display: block; margin: 20px 0 12px 0; font-size: 14px; font-weight: 500; color: #334155; cursor: pointer; line-height: 1.5; text-align: center;">
+        <input type="checkbox" id="disclaimer-agree" style="margin-right: 8px; transform: scale(1.2);"> 
+        I have read, understand, and agree to the 
+        <strong>Disclaimer</strong>, 
+        <a href="legal.html" target="_blank" style="color: #0061f2; text-decoration: underline;">Terms</a>, and 
+        <a href="legal.html" target="_blank" style="color: #0061f2; text-decoration: underline;">Privacy Policy</a>.
+    </label>
+    
+    <button id="disclaimer-proceed" class="login-btn-submit" disabled style="background: #94a3b8;">I Agree & Proceed</button>
+</div>
+
     </div>
 <script src="/js/ga-tracking.js"></script>
 </body>
