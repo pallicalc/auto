@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal, Disclaimer & Privacy Policy | PalliCalc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --primary-color: #0f172a;
+            --accent-color: #007bff;
+            --bg-color: #f8fafc;
+            --text-color: #334155;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .legal-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Headers */
+        h1 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-top: 40px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2 i { color: var(--accent-color); font-size: 1.2rem; }
+
+        h3 {
+            color: #475569;
+            font-size: 1.1rem;
+            margin-top: 25px;
+            font-weight: 700;
+        }
+
+        /* Lists */
+        ul { margin-bottom: 20px; padding-left: 20px; }
+        li { margin-bottom: 10px; }
+
+        /* Alert Boxes */
+        .alert-box {
+            background-color: #fff1f2;
+            border-left: 5px solid #e11d48;
+            padding: 20px;
+            margin: 25px 0;
+            color: #9f1239;
+            font-weight: 600;
+            border-radius: 6px;
+        }
+
+        .disclaimer-box {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.95rem;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tool-item {
+            background: #f1f5f9;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Navigation */
+        .back-nav { margin-bottom: 30px; }
+        .back-link {
+            text-decoration: none; color: #64748b; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 8px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--primary-color); }
+
+        /* Footer */
+        .legal-footer {
+            margin-top: 60px; padding-top: 30px;
+            border-top: 1px solid var(--border-color);
+            text-align: center; font-size: 0.85rem; color: #94a3b8;
+        }
+    </style>
+    <script src="js/ga-tracking.js"></script>
+</head>
+<body>
+
+<div class="legal-container">
+    <div class="back-nav">
+        <a href="index.html" class="back-link"><i class="bi bi-arrow-left"></i> Return to PalliCalc</a>
+    </div>
+
+    <h1>Legal Disclaimer & Terms of Use</h1>
+    <p class="text-muted"><strong>Last Updated:</strong> December 2025</p>
+
+    <div class="alert-box">
+        <i class="bi bi-exclamation-triangle-fill"></i> <strong>CRITICAL MEDICAL DISCLAIMER:</strong><br>
+        PalliCalc is a clinical decision support tool intended solely for use by qualified healthcare professionals. It is <strong>NOT</strong> a substitute for professional medical judgment, diagnosis, or treatment.
+    </div>
+
+    <h2><i class="bi bi-shield-check"></i> 1. Terms of Use</h2>
+    <p>By accessing or using PalliCalc ("the Platform"), you acknowledge and agree to the following:</p>
+    <ul>
+        <li><strong>Verification is Mandatory:</strong> All calculations (e.g., Opioid conversions, PRN doses) and assessment scores must be independently verified against standard medical references and your institution's local protocols before application.</li>
+        <li><strong>No Liability:</strong> Alivioscript Solutions, its developers, and contributors accept no liability for any medication errors, adverse clinical outcomes, misdiagnoses, or damages resulting from the use of this software. You assume full responsibility for patient care.</li>
+        <li><strong>No Doctor-Patient Relationship:</strong> Use of this software does not establish a doctor-patient relationship between the developers and any individual.</li>
+    </ul>
+
+    <h2><i class="bi bi-clipboard-data"></i> 2. Validated Diagnostic Tools (Intellectual Property)</h2>
+    <p>PalliCalc incorporates internationally recognized diagnostic and assessment tools to facilitate clinical workflow. <strong>We do not claim ownership of these validated tools.</strong> The intellectual property rights remain with their respective creators and institutions.</p>
+    
+    <div class="disclaimer-box">
+        <strong>We provide the digital scoring interface for the following tools:</strong>
+        <div class="tool-grid">
+            <div class="tool-item">SPICT™ (Univ. of Edinburgh)</div>
+            <div class="tool-item">IPOS (Cicely Saunders Inst.)</div>
+            <div class="tool-item">HADS (Anxiety/Depression)</div>
+            <div class="tool-item">AKPS (Performance Status)</div>
+            <div class="tool-item">RDOS (Respiratory Distress)</div>
+            <div class="tool-item">RUG-ADL (Resource Use)</div>
+            <div class="tool-item">FLACC (Pain Scale)</div>
+            <div class="tool-item">RASS (Sedation Scale)</div>
+        </div>
+        <p style="margin-top: 15px; font-size: 0.9em; color: #64748b;">
+            <em>These tools are provided "as-is" for clinical assessment purposes. Users are responsible for ensuring their use complies with any local licensing requirements where applicable.</em>
+        </p>
+    </div>
+
+    <h2><i class="bi bi-journal-medical"></i> 3. Patient Education & Guides</h2>
+    <p>The platform contains patient education pamphlets and healthcare guides covering palliative care topics. While these materials reflect widely accepted clinical practices, they are subject to the following limitations:</p>
+    
+    <div class="disclaimer-box">
+        <strong style="color: #b91c1c;">Educational Use Only - Not Validated Tools</strong>
+        <ul style="margin-top: 10px;">
+            <li><strong>Nature of Content:</strong> The guides (including <em>Seizure, Breathlessness, Bleeding, Pain, Opioids, Delirium, Subcutaneous Meds, TD Fentanyl, Malignant Bowel Obstruction, End of Life Care</em>) are educational aids. Unlike the diagnostic scales above, these are <strong>not validated clinical tools</strong>.</li>
+            <li><strong>Not a Replacement:</strong> These materials do <strong>not</strong> replace proper healthcare education provided by a doctor, nurse, or pharmacist. They are intended to support, not replace, the consent and education process.</li>
+            <li><strong>Language Variations:</strong> Materials are provided in multiple languages (English, Malay, Chinese). Slight variations in terminology may exist; the English version should be considered primary.</li>
+        </ul>
+    </div>
+
+    <h2><i class="bi bi-lock"></i> 4. Privacy Policy & Data Security</h2>
+    <p>We utilize a <strong>"Privacy-by-Design"</strong> architecture to ensure compliance with medical data privacy standards (including PDPA/GDPR principles).</p>
+    <ul>
+        <li><strong>No Cloud Storage of PHI:</strong> All scores and calculations are processed locally. We do not transmit or store patient names or IC numbers.</li>
+        <li><strong>Ephemeral Handovers:</strong> Clinical handovers generated via QR code encode data directly into the image string. This data is ephemeral and never saved to a database.</li>
+        <li><strong>Institutional Data:</strong> We store configuration data (e.g., Hospital Logo) for registered accounts, but no patient health records are linked to these accounts.</li>
+    </ul>
+
+    <h2><i class="bi bi-slash-circle"></i> 5. Limitation of Liability & Warranty</h2>
+    <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.</p>
+    <ul>
+        <li><strong>Software Availability:</strong> We do not guarantee that the software will be uninterrupted, error-free, or free of viruses/harmful components.</li>
+        <li><strong>No Consequential Damages:</strong> In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software.</li>
+    </ul>
+
+    <h2><i class="bi bi-shield-exclamation"></i> 6. Indemnification</h2>
+    <p>You agree to indemnify, defend, and hold harmless Alivioscript Solutions and its contributors from any and all claims, liabilities, damages, and costs (including legal fees) arising from your use of the Platform, your violation of these Terms, or your violation of any third-party rights (including intellectual property or privacy rights).</p>
+
+    <h2><i class="bi bi-globe-asia-australia"></i> 7. Governing Law</h2>
+    <p>These Terms shall be governed by and construed in accordance with the laws of <strong>Malaysia</strong>. Any disputes arising under or in connection with these Terms shall be subject to the exclusive jurisdiction of the courts of Malaysia.</p>
+
+    <div class="legal-footer">
+        <strong>&copy; 2026 Alivioscript Solutions. All rights reserved.</strong><br>
+        Developed by Clinical Palliative Pharmacist & Multidisciplinary Team.<br>
+        <span style="font-size: 0.8em; color: #cbd5e1;">v2.5.0-production</span>
+    </div>
+</div>
+
+</body>
+</html>
