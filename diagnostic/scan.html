@@ -63,8 +63,23 @@
         .remark-input { width: 100%; padding: 10px; border: 1px dashed var(--primary); border-radius: 6px; margin-top: 8px; font-size: 0.95rem; background: #fff; }
 
         .clinical-summary { background: #f8f9fa; border-radius: 6px; padding: 10px; max-height: 250px; overflow-y: auto; border: 1px solid #eee; }
-        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef; font-size: 0.95rem; }
+        
+        /* UPDATED: Summary row aligns items */
+        .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e9ecef; font-size: 0.95rem; }
         .summary-row:last-child { border-bottom: none; }
+        
+        /* NEW: Editable Input Styling - Looks like text but allows typing */
+        .editable-val { 
+            background: transparent; 
+            border: none; 
+            border-bottom: 1px dashed #ccc; 
+            text-align: right; 
+            font-family: 'Inter', sans-serif;
+            width: 80px;
+            font-size: 1rem;
+        }
+        .editable-val:focus { outline: none; border-bottom: 2px solid var(--primary); background: white; }
+
         .val-high { color: var(--danger); font-weight: 800; }
         .val-normal { color: var(--text-dark); font-weight: 600; }
 
@@ -146,7 +161,7 @@
             </div>
             <div id="clinical-preview" class="clinical-summary"></div>
             
-            <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; background:#eef2f5; padding:10px; border-radius:6px;">
+            <div id="score-container" style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; background:#eef2f5; padding:10px; border-radius:6px;">
                 <strong>Total Score</strong>
                 <span id="total-score" style="font-size:1.2rem; color:var(--primary); font-weight:800;">0</span>
             </div>
@@ -194,10 +209,7 @@
     let availableCameras = [];
     let currentCameraIndex = 0;
     
-    // --- ADDED GLOBAL VARIABLE FOR TRACKING ---
     let userInstId = null; 
-
-    // --- REMOVED DISPLAY_LABELS: Now Generic ---
 
     auth.onAuthStateChanged(async user => {
         if (user) {
@@ -206,7 +218,6 @@
                 if (!userDoc.exists) throw "User not found";
                 const instId = userDoc.data().institutionId;
                 
-                // --- CAPTURE ID FOR TRACKING ---
                 userInstId = instId; 
 
                 const instDoc = await db.collection('institutions').doc(instId).get();
@@ -229,7 +240,6 @@
         }
     });
 
-    // --- MANUAL CAMERA SWITCHING LOGIC ---
     async function initCameraSystem() {
         if(!html5QrCode) {
             html5QrCode = new Html5Qrcode("reader");
@@ -289,7 +299,6 @@
         }
     }
 
-    // --- GALLERY LOGIC ---
     document.getElementById('qr-input-file').addEventListener('change', async e => {
         if (e.target.files.length == 0) return;
         const imageFile = e.target.files[0];
@@ -332,35 +341,52 @@
         }
     }
 
+    // --- REPLACED FUNCTION START ---
     function renderDashboard(data) {
         document.getElementById('scan-screen').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
 
         const badge = document.getElementById('form-badge');
         badge.textContent = data.t;
-        badge.className = `badge-pill badge-${data.t.toLowerCase()}`;
-        document.getElementById('total-score').textContent = data.score || 0;
+        badge.className = `badge-pill badge-${data.t ? data.t.toLowerCase() : 'primary'}`;
+
+        // RENDER TOTAL SCORE AS EDITABLE INPUT
+        // We replace the previous span with an input
+        const scoreContainer = document.getElementById('score-container');
+        scoreContainer.innerHTML = `
+            <strong>Total Score</strong>
+            <input type="number" 
+                   class="editable-val" 
+                   style="color:var(--primary); font-weight:800; border-bottom:none; font-size:1.2rem;" 
+                   value="${data.score || 0}"
+                   onchange="currentData.score = this.value">
+        `;
+
+        // RENDER DATA ROWS AS EDITABLE INPUTS
         const container = document.getElementById('clinical-preview');
-        
         let html = "";
         
-        // Loop through all keys generically
         for (const [key, val] of Object.entries(data)) {
-            // Hide metadata keys
             if (['t', 'd', 'score'].includes(key)) continue;
 
-            // Highlight values >= 3
             const numVal = parseInt(val);
             const isHigh = (!isNaN(numVal) && numVal >= 3);
             
-            // Format Display
+            // We use the same coloring logic, but apply it to the Input class
+            const colorClass = isHigh ? 'val-high' : 'val-normal';
+            
+            // Note: Added 'onchange' to update currentData immediately
             html += `<div class="summary-row">
                         <span>${key}</span>
-                        <span class="${isHigh ? 'val-high' : 'val-normal'}">${val}</span>
+                        <input type="text" 
+                               class="editable-val ${colorClass}" 
+                               value="${val}" 
+                               onchange="currentData['${key}'] = this.value">
                      </div>`;
         }
         container.innerHTML = html;
     }
+    // --- REPLACED FUNCTION END ---
 
     function transferToCloud() {
         if (!currentData) return;
@@ -375,12 +401,10 @@
         let targetUrl = savedLinks[typeKey];
 
         if (!targetUrl) {
-            // Fallback for new generic forms not yet in config
             alert(`No Google Form configured for "${currentData.t}". Please ask Admin to add it.`);
             return;
         }
 
-        // --- Generic Report Building ---
         let report = "";
         const ignoredKeys = ['t', 'score']; 
         
@@ -396,18 +420,15 @@
         const currentUser = firebase.auth().currentUser;
         if (currentUser && currentUser.email) report += `ScannedBy: ${currentUser.email} | `;
 
-        // Replace Placeholders
         targetUrl = targetUrl
             .replace('MAGIC_ID', encodeURIComponent(ptID))
             .replace('MAGIC_NAME', encodeURIComponent(ptName || ""))
             .replace('MAGIC_SCORE', currentData.score || "0")
             .replace('MAGIC_SUMMARY', encodeURIComponent(report))
-            // Keep specific placeholders if they exist, send empty if not
             .replace('MAGIC_Q1', encodeURIComponent(currentData.Q1 || ""))
             .replace('MAGIC_A', currentData.scoreA || "") 
             .replace('MAGIC_D', currentData.scoreD || ""); 
 
-        // --- START TRACKING CODE (ADDED) ---
         if (typeof gtag === 'function') {
             gtag('event', 'clinical_action', {
                 'event_category': 'Clinical Scanner',
@@ -416,7 +437,6 @@
                 'form_type': currentData ? currentData.t : 'unknown_form'
             });
         }
-        // --- END TRACKING CODE ---
 
         window.open(targetUrl, '_blank');
     }
