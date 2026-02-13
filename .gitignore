@@ -7,6 +7,7 @@ functions/node_modules/
 firebase-debug.log*
 firestore-debug.log*
 .env
+functions/.env
 
 # 3. System Junk
 .DS_Store

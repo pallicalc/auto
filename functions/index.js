@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: "pallicalc@gmail.com",
-    pass: "iwsh izyr ledc tldk" // ⚠️ SECURITY: Generate a NEW App Password if this one was exposed.
+    pass: process.env.GMAIL_PASS // ⚠️ SECURITY: Generate a NEW App Password if this one was exposed.
   }
 });
 
@@ -464,4 +464,66 @@ exports.sendSuspensionReminder = onCall(async (request) => {
     });
 
     return { success: true };
+});
+
+// --- 7. SECURE USER STATUS CHECK ---
+exports.getUserStatus = onCall(async (request) => {
+    if (!request.auth) {
+        throw new HttpsError('unauthenticated', 'User must be logged in.');
+    }
+
+    const uid = request.auth.uid;
+    const db = admin.firestore();
+    
+    try {
+        // 1. Get User Profile
+        const userDoc = await db.collection('users').doc(uid).get();
+        if (!userDoc.exists) {
+            throw new HttpsError('not-found', 'User profile not found.');
+        }
+        
+        const userData = userDoc.data();
+        let status = 'active';
+        let institutionName = null;
+        let customRatios = null;
+        let isSuspended = false;
+
+        // 2. Check Institution Status
+        if (userData.institutionId) {
+            const instDoc = await db.collection('institutions').doc(userData.institutionId).get();
+            if (instDoc.exists) {
+                const instData = instDoc.data();
+                institutionName = instData.name;
+
+                if (instData.status === 'suspended') {
+                    status = 'suspended';
+                    isSuspended = true;
+                } else if (userData.role === 'institutionUser' && instData.customRatios) {
+                    // Only return custom ratios if NOT suspended
+                    customRatios = instData.customRatios;
+                }
+            }
+        }
+
+        // 3. Determine VIP Status
+        const isVip = userData.billingStatus === 'trial-free-lifetime' || 
+                      userData.billingStatus === 'active-first-year' || 
+                      userData.role === 'institutionUser';
+
+        return {
+            role: userData.role,
+            username: userData.username,
+            institutionId: userData.institutionId,
+            institutionName: institutionName,
+            status: status,
+            isSuspended: isSuspended,
+            customRatios: customRatios,
+            isVip: isVip,
+            billingStatus: userData.billingStatus
+        };
+
+    } catch (error) {
+        console.error("getUserStatus Error:", error);
+        throw new HttpsError('internal', 'Unable to fetch user status.');
+    }
 });

@@ -107,58 +107,44 @@ async function checkAuthState(user) {
         }
 
         try {
-            // 2. Get User Profile
-            const userDoc = await db.collection('users').doc(user.uid).get();
-            let userData = {};
+            // 2. Call Server-Side Secure Check
+            // We NO LONGER check Firestore directly for access control
+            // We use the 'getUserStatus' Cloud Function
+            console.log("Calling getUserStatus...");
+            const getStatus = firebase.functions().httpsCallable('getUserStatus');
+            const result = await getStatus();
+            const statusData = result.data;
             
-            if (userDoc.exists) {
-                userData = userDoc.data();
-                const instId = userData.institutionId;
+            console.log("Server Status Result:", statusData);
 
-                // 🛑 GATEKEEPER LOGIC
-                if (instId) {
-                    try {
-                        const instDoc = await db.collection('institutions').doc(instId).get();
-                        
-                        // Check A: Status
-                        if (instDoc.exists && instDoc.data().status === 'suspended') {
-                            handleSuspension(userData, instDoc.data().name);
-                            return; 
-                        }
-                        
-                        // ✅ ACTIVE: Load Custom Ratios
-                        if (userData.role === 'institutionUser' && instDoc.exists) {
-                            const instData = instDoc.data();
-                            if (instData.customRatios) {
-                                localStorage.setItem('palliCalc_customRatios', JSON.stringify(instData.customRatios));
-                                localStorage.setItem('palliCalc_institutionName', instData.name);
-                            }
-                        }
-
-                    } catch (err) {
-                        // Check B: Blocked by Rules
-                        console.warn("Institution Blocked (Suspended):", err);
-                        handleSuspension(userData, userData.institutionName || "your institution");
-                        return; 
-                    }
-                }
-
-                if (userData.role === 'institutionAdmin') {
-                    window.location.href = 'Admin.html';
-                    return;
-                }
-
-                isVipUser = userData.billingStatus === 'trial-free-lifetime' || 
-                            userData.billingStatus === 'active-first-year' || 
-                            userData.role === 'institutionUser';
+            if (statusData.isSuspended) {
+                // 🛑 SUSPENDED
+                handleSuspension(statusData, statusData.institutionName || "your institution");
+                return;
             }
 
-            console.log("Profile Loaded. Updating UI...");
-            updateUIForLogin(userData, user.email, false);
+            if (statusData.role === 'institutionAdmin') {
+                window.location.href = 'Admin.html';
+                return;
+            }
+
+            // ✅ ACTIVE
+            isVipUser = statusData.isVip;
+
+            if (statusData.customRatios) {
+                localStorage.setItem('palliCalc_customRatios', JSON.stringify(statusData.customRatios));
+                if (statusData.institutionName) {
+                    localStorage.setItem('palliCalc_institutionName', statusData.institutionName);
+                }
+            }
+
+            console.log("Profile Verified. Updating UI...");
+            updateUIForLogin(statusData, user.email, false);
             
         } catch(e) {
-            console.error('Profile Load Error:', e);
-            // Fallback: Show logged in state even if DB fetch fails
+            console.error('Profile/Status Load Error:', e);
+            // If the server check fails (network, etc.), we default to 'Guest' (not VIP)
+            isVipUser = false;
             updateUIForLogin({}, user.email, false);
         }
         
