@@ -26,28 +26,28 @@
         <fieldset>
             <legend>Enter Pump Contents</legend>
             <label for="morphineAmount">Amount of Morphine in pump (mg)</label>
-            <input type="number" id="morphineAmount" placeholder="Enter morphine amount" step="any" min="0">
+            <input type="number" id="morphineAmount" placeholder="Enter morphine amount" step="any" min="0" inputmode="decimal">
 
             <label for="fentanylAmount">Amount of Fentanyl in pump (mcg)</label>
-            <input type="number" id="fentanylAmount" placeholder="Enter fentanyl amount" step="any" min="0">
+            <input type="number" id="fentanylAmount" placeholder="Enter fentanyl amount" step="any" min="0" inputmode="decimal">
 
             <label for="hyoscineAmount">Amount of Hyoscine in pump (mg)</label>
-            <input type="number" id="hyoscineAmount" placeholder="Enter hyoscine amount" step="any" min="0">
+            <input type="number" id="hyoscineAmount" placeholder="Enter hyoscine amount" step="any" min="0" inputmode="decimal">
 
             <label for="midazolamAmount">Amount of Midazolam in pump (mg)</label>
-            <input type="number" id="midazolamAmount" placeholder="Enter midazolam amount" step="any" min="0">
+            <input type="number" id="midazolamAmount" placeholder="Enter midazolam amount" step="any" min="0" inputmode="decimal">
 
             <label for="levomepromazineAmount">Amount of Levomepromazine in pump (mg)</label>
-            <input type="number" id="levomepromazineAmount" placeholder="Enter levomepromazine amount" step="any" min="0">
+            <input type="number" id="levomepromazineAmount" placeholder="Enter levomepromazine amount" step="any" min="0" inputmode="decimal">
         </fieldset>
 
         <fieldset>
             <legend>Pump Settings</legend>
             <label for="totalVolume" class="bold-label">Total volume in pump (ml)</label>
-            <input type="number" id="totalVolume" placeholder="Enter total volume (drug + diluent)" step="any" min="0">
+            <input type="number" id="totalVolume" placeholder="Enter total volume (drug + diluent)" step="any" min="0" inputmode="decimal">
 
             <label for="infusionRate" class="bold-label">Infusion rate (ml/hr)</label>
-            <input type="number" id="infusionRate" placeholder="Enter infusion rate" step="any" min="0">
+            <input type="number" id="infusionRate" placeholder="Enter infusion rate" step="any" min="0" inputmode="decimal">
         </fieldset>
 
         <button id="calculateBtn" class="btn btn-primary" onclick="calculateDose()">Calculate Dose over 24 hrs and per hour</button>

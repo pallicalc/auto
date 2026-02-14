@@ -27,23 +27,23 @@
         <fieldset>
             <legend>Enter 24hr Total Dose</legend>
             <label for="morphineDose">Morphine dose (mg, 10 mg/ml)</label>
-            <input type="number" id="morphineDose" placeholder="Enter morphine dose" step="any" min="0">
+            <input type="number" id="morphineDose" placeholder="Enter morphine dose" step="any" min="0" inputmode="decimal">
 
             <label for="fentanylDose">Fentanyl dose (mcg, 50 mcg/ml)</label>
-            <input type="number" id="fentanylDose" placeholder="Enter fentanyl dose" step="any" min="0">
+            <input type="number" id="fentanylDose" placeholder="Enter fentanyl dose" step="any" min="0" inputmode="decimal">
 
             <label for="hyoscineDose">Hyoscine dose (mg, 20 mg/ml)</label>
-            <input type="number" id="hyoscineDose" placeholder="Enter hyoscine dose" step="any" min="0">
+            <input type="number" id="hyoscineDose" placeholder="Enter hyoscine dose" step="any" min="0" inputmode="decimal">
 
             <label for="midazolamDose">Midazolam dose (mg)</label>
-            <input type="number" id="midazolamDose" placeholder="Enter midazolam dose" step="any" min="0">
+            <input type="number" id="midazolamDose" placeholder="Enter midazolam dose" step="any" min="0" inputmode="decimal">
             <select id="midazolamStrength" aria-label="Select midazolam strength">
                 <option value="5">5 mg/ml (default)</option>
                 <option value="1">1 mg/5 ml</option>
             </select>
 
             <label for="levomepromazineDose">Levomepromazine dose (mg, 25 mg/ml)</label>
-            <input type="number" id="levomepromazineDose" placeholder="Enter levomepromazine dose" step="any" min="0">
+            <input type="number" id="levomepromazineDose" placeholder="Enter levomepromazine dose" step="any" min="0" inputmode="decimal">
         </fieldset>
 
         <button id="calculateVolBtn" class="btn btn-primary" onclick="calculateDrugVolumes()">Calculate Total Drug Volume</button>
@@ -53,7 +53,7 @@
         <fieldset id="dilutionSection" style="display: none; margin-top: 20px;">
             <legend>Dilution Settings</legend>
             <label for="dilutionVolume">Dilute up to volume (ml)</label>
-            <input type="number" id="dilutionVolume" placeholder="Enter total dilution volume" step="any" min="0">
+            <input type="number" id="dilutionVolume" placeholder="Enter total dilution volume" step="any" min="0" inputmode="decimal">
         </fieldset>
 
         <button id="calculateRateBtn" class="btn btn-primary" onclick="calculateDiluentAndRate()" style="display: none;">Calculate Diluent Volume and Infusion Rate</button>
