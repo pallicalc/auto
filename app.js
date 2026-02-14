@@ -8,8 +8,8 @@ if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             // Registering at root scope so it can control subfolders, but we only trigger it here.
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('SW Registered for App'))
-                .catch(err => console.log('SW Registration Failed', err));
+                .then(reg => { /* console.log('SW Registered for App') */ })
+                .catch(err => { /* console.log('SW Registration Failed', err) */ });
         });
     }
 }
@@ -46,7 +46,11 @@ let counterTimeout;
 // Initialize Firebase
 window.addEventListener('load', async () => {
     try {
-        firebaseApp = firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+        } else {
+            firebaseApp = firebase.app();
+        }
         auth = firebase.auth();
         db = firebase.firestore();
         if (firebase.functions) {
@@ -64,7 +68,7 @@ function initApp() {
     
     // ✅ OBSERVER IS KING: Always listen, never block.
     auth.onAuthStateChanged((user) => {
-        console.log("Auth State Changed:", user ? "User Logged In" : "User Logged Out");
+        // console.log("Auth State Changed:", user ? "User Logged In" : "User Logged Out");
         checkAuthState(user);
     });
 
@@ -97,7 +101,7 @@ async function updateCounters() {
 // ✅ ROBUST AUTH HANDLER
 // This function fetches data and updates the UI.
 async function checkAuthState(user) {
-    console.log("Checking Auth State for:", user?.email);
+    // console.log("Checking Auth State for:", user?.email);
     currentUser = user;
     
     // Re-select elements every time to ensure freshness
@@ -126,12 +130,12 @@ async function checkAuthState(user) {
             // 2. Call Server-Side Secure Check
             // We NO LONGER check Firestore directly for access control
             // We use the 'getUserStatus' Cloud Function
-            console.log("Calling getUserStatus...");
+            // console.log("Calling getUserStatus...");
             const getStatus = firebase.functions().httpsCallable('getUserStatus');
             const result = await getStatus();
             const statusData = result.data;
             
-            console.log("Server Status Result:", statusData);
+            // console.log("Server Status Result:", statusData);
 
             if (statusData.isSuspended) {
                 // 🛑 SUSPENDED
@@ -154,7 +158,7 @@ async function checkAuthState(user) {
                 }
             }
 
-            console.log("Profile Verified. Updating UI...");
+            // console.log("Profile Verified. Updating UI...");
             updateUIForLogin(statusData, user.email, false);
             
         } catch(e) {
@@ -166,7 +170,7 @@ async function checkAuthState(user) {
         
     } else {
         // ✅ LOGOUT STATE
-        console.log("Resetting UI to Logout state");
+        // console.log("Resetting UI to Logout state");
         localStorage.removeItem('palliCalc_customRatios');
         localStorage.removeItem('palliCalc_institutionName');
 
@@ -365,7 +369,7 @@ function setupEventListeners() {
                 localStorage.setItem('palliCalcLoginPassword', password);
                 
                 // 2. 🔥 FORCE UI UPDATE & WAIT FOR IT 🔥
-                console.log("Login success, forcing UI update...");
+                // console.log("Login success, forcing UI update...");
                 await checkAuthState(userCredential.user);
                 
                 // 3. Close modal

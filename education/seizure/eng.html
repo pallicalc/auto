@@ -13,6 +13,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="../education.css">
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -48,12 +52,12 @@
             <div class="fear-card">
                 <strong>1. Keep Calm & Note Time</strong>
                 <p>During the episode, stay calm. Take note of when the seizure started.</p>
-                <img src="seizure.png" alt="seizure" class="card-img">
+                <img src="seizure.png" alt="Illustration of a person having a seizure" class="card-img">
             </div>
             <div class="fear-card">
                 <strong>2. Position Sideways</strong>
                 <p>Turn the patient to their side (recovery position) to help breathing.</p>
-                <img src="sideway.png" alt="sideway" class="card-img">
+                <img src="sideway.png" alt="Illustration of a patient in the recovery position" class="card-img">
             </div>
         </div>
     </div>
@@ -63,7 +67,7 @@
         <div class="side-effect">
             <strong>DO NOT put items in mouth</strong>
             <p>Never place fingers, spoons, or objects into the mouth.</p>
-            <img src="Xmouth.png" alt="Xmouth" class="card-img">
+            <img src="Xmouth.png" alt="Do not put objects in mouth illustration" class="card-img">
         </div>
     </div>
 
@@ -76,7 +80,7 @@
                     <strong>Administer 1st Dose</strong>
                     <div class="dose-badge">Midazolam 1ml(5mg)/Lorazepam 1mg</div>
                     <p>Give immediately via syringe into the cheek (buccal). If seizures persist, inform your palliative care team in charge.</p>
-                    <img src="buccal.png" alt="buccal" class="card-img">
+                    <img src="buccal.png" alt="Illustration of buccal medication administration" class="card-img">
                 </div>
             </div>
             <div class="rule-card">
@@ -85,7 +89,7 @@
                     <strong>After 10 Minutes</strong>
                     <p>If fitting continues after 10 mins:</p>
                     <div class="dose-badge">2nd Dose: Midazolam 1ml(5mg)/Lorazepam 1mg</div>
-                    <img src="10mins.png" alt="10mins" class="card-img">
+                    <img src="10mins.png" alt="Wait 10 minutes icon" class="card-img">
                 </div>
             </div>
             <div class="rule-card">
@@ -95,7 +99,7 @@
                     <p>If fitting persists:</p>
                     <div class="dose-badge">3rd Dose: Midazolam 1ml(5mg)/Lorazepam 1mg</div>
                     <p style="color:red; font-weight:bold;">Call Ambulance Immediately</p>
-                    <img src="10mins.png" alt="10mins" class="card-img">
+                    <img src="10mins.png" alt="Wait 10 minutes icon" class="card-img">
                 </div>
             </div>
             <div class="rule-card" style="border-left-color: #6c5ce7;">
@@ -103,7 +107,7 @@
                 <div class="rule-content">
                     <strong>Record & Inform</strong>
                     <p>Always record the duration of the seizure, the time, and the doses administered. Inform the doctor.</p>
-                    <img src="clock.png" alt="clock" class="card-img">
+                    <img src="clock.png" alt="Record time icon" class="card-img">
                 </div>
             </div>
         </div>
@@ -134,14 +138,14 @@
 
         <h2>Immediate Actions</h2>
         <div class="print-item">
-            <img src="seizure.png" class="print-img">
+            <img src="seizure.png" class="print-img" alt="Seizure illustration">
             <div class="print-content">
                 <strong>1. Keep Calm & Note Time</strong>
                 <p>During the episode, stay calm. Take note of when the seizure started.</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="sideway.png" class="print-img">
+            <img src="sideway.png" class="print-img" alt="Recovery position illustration">
             <div class="print-content">
                 <strong>2. Position Sideways</strong>
                 <p>Turn the patient to their side (recovery position) to help breathing.</p>
@@ -150,7 +154,7 @@
 
         <h2>Safety Warning</h2>
         <div class="print-item warning-box">
-            <img src="Xmouth.png" class="print-img">
+            <img src="Xmouth.png" class="print-img" alt="Do not put objects in mouth">
             <div class="print-content">
                 <strong style="color:#cc0000;">DO NOT put items in mouth</strong>
                 <p>Never place fingers, spoons, or objects into the mouth.</p>
@@ -159,28 +163,28 @@
 
         <h2>Medication Protocol (Buccal Midazolam)</h2>
         <div class="print-item">
-            <img src="buccal.png" class="print-img">
+            <img src="buccal.png" class="print-img" alt="Buccal administration">
             <div class="print-content">
                 <strong>1. Administer 1st Dose</strong>
                 <p>Midazolam 1ml(5mg)/Lorazepam 1mg via cheek. If seizures persist, inform your palliative care team.</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="10mins.png" class="print-img">
+            <img src="10mins.png" class="print-img" alt="10 minutes wait">
             <div class="print-content">
                 <strong>2. After 10 Minutes</strong>
                 <p>If fitting continues: 2nd Dose Midazolam 1ml(5mg).</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="10mins.png" class="print-img">
+            <img src="10mins.png" class="print-img" alt="10 minutes wait">
             <div class="print-content">
                 <strong>3. After Next 10 Mins (20 Total)</strong>
                 <p>If fitting persists: 3rd Dose. CALL AMBULANCE IMMEDIATELY.</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="clock.png" class="print-img">
+            <img src="clock.png" class="print-img" alt="Record time">
             <div class="print-content">
                 <strong>4. Record & Inform</strong>
                 <p>Record duration, time, and doses. Inform doctor.</p>

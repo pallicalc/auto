@@ -59,7 +59,7 @@
         else if (data.type === 'event') {
             gtag('event', data.action, data.params);
         }
-        console.log("📊 Sent Tracking " + data.type + " for: " + (data.institution_id || 'unknown'));
+        // console.log("📊 Sent Tracking " + data.type + " for: " + (data.institution_id || 'unknown'));
     }
 
     // Global function to track events with offline support
@@ -75,7 +75,7 @@
         if (navigator.onLine) {
             sendToGA(eventData);
         } else {
-            console.log("⚠️ Offline: Queuing GA event: " + action);
+            // console.log("⚠️ Offline: Queuing GA event: " + action);
             var queue = JSON.parse(localStorage.getItem('ga_offline_queue') || '[]');
             queue.push(eventData);
             localStorage.setItem('ga_offline_queue', JSON.stringify(queue));
@@ -86,7 +86,7 @@
     function processOfflineQueue() {
         var queue = JSON.parse(localStorage.getItem('ga_offline_queue') || '[]');
         if (queue.length > 0) {
-            console.log("🔄 Processing " + queue.length + " offline events...");
+            // console.log("🔄 Processing " + queue.length + " offline events...");
             queue.forEach(function(event) {
                 sendToGA(event);
             });
@@ -103,7 +103,7 @@
         processOfflineQueue();
     } else {
         // Offline: Queue it
-        console.log("⚠️ Offline: Queuing GA pageview.");
+        // console.log("⚠️ Offline: Queuing GA pageview.");
         var queue = JSON.parse(localStorage.getItem('ga_offline_queue') || '[]');
         queue.push(Object.assign({ type: 'config' }, configData));
         localStorage.setItem('ga_offline_queue', JSON.stringify(queue));
@@ -111,7 +111,7 @@
 
     // 5. Sync Listener (When internet returns)
     window.addEventListener('online', function() {
-        console.log("🌐 Back Online: Syncing GA events...");
+        // console.log("🌐 Back Online: Syncing GA events...");
         processOfflineQueue();
     });
 

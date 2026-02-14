@@ -13,6 +13,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="../education.css">
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">

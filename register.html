@@ -129,6 +129,10 @@
         color: #856404;
     }
   </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body class="auth-body">
 
@@ -429,7 +433,7 @@
             const doc = await db.collection('setting').doc('registration').get();
             if (doc.exists) {
                 LIVE_REG_PRICES = doc.data();
-                console.log("Prices successfully loaded from Firebase");
+                // console.log("Prices successfully loaded from Firebase");
                 updateUI();
             } else {
                 console.warn("Pricing document not found in 'setting/registration'");

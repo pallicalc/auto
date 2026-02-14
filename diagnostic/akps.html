@@ -202,6 +202,10 @@
             .btn { width: 100%; margin: 5px 0 0 0 !important; }
         }
     </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body>
 

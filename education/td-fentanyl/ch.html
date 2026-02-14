@@ -14,6 +14,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="../education.css">
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -47,7 +51,7 @@
         <h2><i class="bi bi-geo-alt-fill"></i> 粘贴部位</h2>
         <p style="margin-bottom: 15px;">用于缓解慢性疼痛（如癌症疼痛）。请粘贴在<strong>胸部、大腿或手臂</strong>平坦的皮肤上。</p>
         
-        <img src="1.jpg" alt="Locations: Chest, Thigh, Arm" class="patch-img">
+        <img src="1.jpg" alt="示意图显示贴片粘贴部位：胸部、大腿或手臂" class="patch-img">
         
         <ul style="padding-left: 20px; margin-bottom: 20px;">
             <li>仅用清水清洗皮肤（确保干燥）。</li>
@@ -98,7 +102,7 @@
         <div class="fear-card" style="background: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);">
             <strong>✂️ 对角剪开</strong>
             <p>如果医生指示使用半剂量，请沿对角线剪开贴片。<strong>切勿</strong>沿着现有的直线剪开。</p>
-            <img src="2.jpg" alt="Cut Diagonally" class="card-img" style="border-radius: 4px; padding: 2px;">
+            <img src="2.jpg" alt="示意图显示如何沿对角线剪开贴片以获得半剂量" class="card-img" style="border-radius: 4px; padding: 2px;">
         </div>
     </div>
 
@@ -162,7 +166,7 @@
                 <strong>1. 粘贴部位</strong>
                 <p>胸部、大腿或手臂（皮肤干燥、无毛）。剪短毛发，<strong>切勿</strong>剃刮。</p>
                 <div style="text-align: center; margin-top: 5px;">
-                    <img src="1.jpg" style="height: 100px; width: auto;" alt="Placement">
+                    <img src="1.jpg" style="height: 100px; width: auto;" alt="贴片粘贴部位示意图">
                 </div>
             </div>
         </div>
@@ -184,7 +188,7 @@
                 <strong>3. 如需半剂量（遵医嘱）</strong>
                 <p>请<strong>对角剪开</strong>，<strong>切勿</strong>沿现有直线剪开。</p>
                 <div style="text-align: center; margin-top: 5px;">
-                    <img src="2.jpg" style="height: 80px; width: auto;" alt="Cut Diagonal">
+                    <img src="2.jpg" style="height: 80px; width: auto;" alt="沿对角线剪开示意图">
                 </div>
             </div>
         </div>

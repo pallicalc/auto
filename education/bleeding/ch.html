@@ -13,6 +13,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="../education.css">
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -61,7 +65,7 @@
             <div class="fear-card">
                 <strong>2. 使用深色毛巾</strong>
                 <p>使用深色毛巾掩盖血迹，以减少在场所有人的恐慌。</p>
-                <img src="dark-towel.png" alt="Dark Towel" class="card-img" onerror="this.style.display='none'">
+                <img src="dark-towel.png" alt="用于掩盖血迹的深色毛巾" class="card-img" onerror="this.style.display='none'">
             </div>
         </div>
     </div>
@@ -75,7 +79,7 @@
                     <strong>给予镇静药物</strong>
                     <div class="dose-badge">口颊咪达唑仑 / 劳拉西泮</div>
                     <p>给药口颊咪达唑仑或劳拉西泮以保持患者冷静。</p>
-                    <img src="1.jpg" alt="Midazolam" class="card-img">
+                    <img src="1.jpg" alt="咪达唑仑药物" class="card-img">
                 </div>
             </div>
             <div class="rule-card">
@@ -84,7 +88,7 @@
                     <strong>缓解呼吸困难</strong>
                     <div class="dose-badge">吗啡 / 阿片类药物</div>
                     <p>如果患者感到呼吸困难，请按处方给予所需剂量的吗啡/阿片类药物。</p>
-                    <img src="2.jpg" alt="Morphine" class="card-img">
+                    <img src="2.jpg" alt="吗啡药物" class="card-img">
                 </div>
             </div>
             <div class="rule-card" style="border-left-color: #e74c3c;">
@@ -146,14 +150,14 @@
 
         <h2>用药方案</h2>
         <div class="print-item">
-            <img src="1.jpg" class="print-img">
+            <img src="1.jpg" class="print-img" alt="镇静药物">
             <div class="print-content">
                 <strong>1. 给予镇静药物</strong>
                 <p>给予口颊咪达唑仑或劳拉西泮以保持患者冷静。</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="2.jpg" class="print-img">
+            <img src="2.jpg" class="print-img" alt="呼吸困难药物">
             <div class="print-content">
                 <strong>2. 治疗呼吸困难</strong>
                 <p>如果患者感到呼吸困难，请按处方给予所需剂量的吗啡/阿片类药物。</p>

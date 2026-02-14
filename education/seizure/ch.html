@@ -14,6 +14,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="../education.css">
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body>
     <div class="main-container">
@@ -52,12 +56,12 @@
                 <div class="fear-card">
                     <strong>1. 保持冷静并记录时间</strong>
                     <p>发作期间请保持冷静。记录发作开始的时间。</p>
-                    <img src="seizure.png" alt="seizure" class="card-img">
+                    <img src="seizure.png" alt="癫痫发作示意图" class="card-img">
                 </div>
                 <div class="fear-card">
                     <strong>2. 侧卧姿势</strong>
                     <p>将患者侧卧（复苏体位）以协助呼吸。</p>
-                    <img src="sideway.png" alt="sideway" class="card-img">
+                    <img src="sideway.png" alt="复苏体位示意图" class="card-img">
                 </div>
             </div>
         </div>
@@ -67,7 +71,7 @@
             <div class="side-effect">
                 <strong>切勿在口中放入任何物品</strong>
                 <p>切勿将手指、勺子或任何物体放入口中。</p>
-                <img src="Xmouth.png" alt="Xmouth" class="card-img">
+                <img src="Xmouth.png" alt="切勿放入口中示意图" class="card-img">
             </div>
         </div>
 
@@ -80,7 +84,7 @@
                         <strong>1. 给予第1剂</strong>
                         <div class="dose-badge">Midazolam 1ml(5mg) / Lorazepam 1mg</div>
                         <p>立即通过注射器注入脸颊内侧（颊粘膜）。如果发作持续，请通知负责的姑息治疗团队。</p>
-                        <img src="buccal.png" alt="buccal" class="card-img">
+                        <img src="buccal.png" alt="颊粘膜给药示意图" class="card-img">
                     </div>
                 </div>
                 <div class="rule-card">
@@ -89,7 +93,7 @@
                         <strong>2. 10分钟后</strong>
                         <p>如果抽搐在10分钟后持续：</p>
                         <div class="dose-badge">第2剂: Midazolam 1ml(5mg) / Lorazepam 1mg</div>
-                        <img src="10mins.png" alt="10mins" class="card-img">
+                        <img src="10mins.png" alt="等待10分钟图标" class="card-img">
                     </div>
                 </div>
                 <div class="rule-card">
@@ -99,7 +103,7 @@
                         <p>如果抽搐仍然持续：</p>
                         <div class="dose-badge">第3剂: Midazolam 1ml(5mg) / Lorazepam 1mg</div>
                         <p style="color:red; font-weight:bold;">立即呼叫救护车</p>
-                        <img src="10mins.png" alt="10mins" class="card-img">
+                        <img src="10mins.png" alt="等待10分钟图标" class="card-img">
                     </div>
                 </div>
                 <div class="rule-card" style="border-left-color: #6c5ce7;">
@@ -107,7 +111,7 @@
                     <div class="rule-content">
                         <strong>记录并告知</strong>
                         <p>务必记录发作持续时间、时间和给药剂量。通知医生。</p>
-                        <img src="clock.png" alt="clock" class="card-img">
+                        <img src="clock.png" alt="记录时间图标" class="card-img">
                     </div>
                 </div>
             </div>
@@ -140,14 +144,14 @@
 
             <h2>紧急措施 (Immediate Actions)</h2>
             <div class="print-item">
-                <img src="seizure.png" class="print-img">
+                <img src="seizure.png" class="print-img" alt="癫痫发作">
                 <div class="print-content">
                     <strong>1. 保持冷静并记录时间</strong>
                     <p>发作期间请保持冷静。记录发作开始的时间。</p>
                 </div>
             </div>
             <div class="print-item">
-                <img src="sideway.png" class="print-img">
+                <img src="sideway.png" class="print-img" alt="复苏体位">
                 <div class="print-content">
                     <strong>2. 侧卧姿势</strong>
                     <p>将患者侧卧（复苏体位）以协助呼吸。</p>
@@ -156,7 +160,7 @@
 
             <h2>安全警示 (Safety)</h2>
             <div class="print-item warning-box">
-                <img src="Xmouth.png" class="print-img">
+                <img src="Xmouth.png" class="print-img" alt="切勿放入物体入口">
                 <div class="print-content">
                     <strong style="color:#cc0000;">切勿在口中放入任何物品</strong>
                     <p>切勿将手指、勺子或任何物体放入口中。</p>
@@ -165,28 +169,28 @@
 
             <h2>用药方案 (Medication)</h2>
             <div class="print-item">
-                <img src="buccal.png" class="print-img">
+                <img src="buccal.png" class="print-img" alt="颊粘膜给药">
                 <div class="print-content">
                     <strong>1. 给予第1剂</strong>
                     <p>Midazolam 1ml(5mg) / lorazepam 1mg，注入脸颊内侧。如停止，通知团队。</p>
                 </div>
             </div>
             <div class="print-item">
-                <img src="10mins.png" class="print-img">
+                <img src="10mins.png" class="print-img" alt="等待10分钟">
                 <div class="print-content">
                     <strong>2. 10分钟后</strong>
                     <p>如果抽搐在10分钟后持续：给予第2剂 咪达唑仑 1ml(5mg)。</p>
                 </div>
             </div>
             <div class="print-item">
-                <img src="10mins.png" class="print-img">
+                <img src="10mins.png" class="print-img" alt="等待10分钟">
                 <div class="print-content">
                     <strong>3. 再过10分钟后 (共20分钟)</strong>
                     <p>如果持续：给予第3剂。立即呼叫救护车。</p>
                 </div>
             </div>
             <div class="print-item">
-                <img src="clock.png" class="print-img">
+                <img src="clock.png" class="print-img" alt="记录时间">
                 <div class="print-content">
                     <strong>4. 记录并告知</strong>
                     <p>务必记录发作持续时间、时间和给药剂量。通知医生。</p>

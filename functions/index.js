@@ -136,7 +136,7 @@ exports.checkGracePeriods = onSchedule("every 24 hours", async (event) => {
 
     const deletePromises = [];
     expiredUsersSnapshot.forEach(doc => {
-        console.log(`User ${doc.id} passed 12-month retention. DELETING.`);
+        // console.log(`User ${doc.id} passed 12-month retention. DELETING.`);
         deletePromises.push(admin.auth().deleteUser(doc.id));
     });
 
@@ -227,7 +227,7 @@ exports.onUserDeleted = v1.auth.user().onDelete(async (user) => {
     if (userDoc.exists && userDoc.data().institutionId) {
         await admin.firestore().collection('institutions').doc(userDoc.data().institutionId).update({
             memberCount: admin.firestore.FieldValue.increment(-1)
-        }).catch(e => console.log(e));
+        }).catch(e => { /* console.log(e) */ });
         await userDoc.ref.delete();
     }
 });

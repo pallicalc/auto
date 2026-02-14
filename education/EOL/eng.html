@@ -77,6 +77,10 @@
         #print-area ul { margin: 0; padding-left: 15px; }
         #print-area li { margin-bottom: 6px; }
     </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -104,8 +108,8 @@
             <div class="med-title">Morphine</div>
         </div>
         <div class="med-grid">
-            <img src="1a.jpg" class="med-icon-full" alt="Morphine">
-            <img src="1b.jpg" class="med-icon-full" alt="Pain/Dyspnea">
+            <img src="1a.jpg" class="med-icon-full" alt="Morphine medication">
+            <img src="1b.jpg" class="med-icon-full" alt="Pain or Dyspnea symptoms icon">
         </div>
         <div class="instruction-box">
             <ul>
@@ -122,8 +126,8 @@
             <div class="med-title">Haloperidol</div>
         </div>
         <div class="med-grid">
-            <img src="2a.jpg" class="med-icon-full" alt="Haloperidol">
-            <img src="2b.jpg" class="med-icon-full" alt="Nausea/Agitation">
+            <img src="2a.jpg" class="med-icon-full" alt="Haloperidol medication">
+            <img src="2b.jpg" class="med-icon-full" alt="Nausea or Agitation symptoms icon">
         </div>
         <div class="instruction-box">
             <ul>
@@ -141,8 +145,8 @@
             <div class="med-title">Buscopan</div>
         </div>
         <div class="med-grid">
-            <img src="3a.jpg" class="med-icon-full" alt="Buscopan">
-            <img src="3b.jpg" class="med-icon-full" alt="Secretions">
+            <img src="3a.jpg" class="med-icon-full" alt="Buscopan medication">
+            <img src="3b.jpg" class="med-icon-full" alt="Secretions symptoms icon">
         </div>
         <div class="instruction-box">
             <ul>
@@ -160,8 +164,8 @@
             <div class="med-title">Seizure/Agitation</div>
         </div>
         <div class="med-grid">
-            <img src="4a.jpg" class="med-icon-full" alt="Midazolam">
-            <img src="4b.jpg" class="med-icon-full" alt="Seizure">
+            <img src="4a.jpg" class="med-icon-full" alt="Midazolam medication">
+            <img src="4b.jpg" class="med-icon-full" alt="Seizure symptoms icon">
         </div>
         <div class="instruction-box">
             <ul>
@@ -178,8 +182,8 @@
             <div class="med-title">Paracetamol Suppository</div>
         </div>
         <div class="med-grid">
-            <img src="5a.jpg" class="med-icon-full" alt="Paracetamol Suppository">
-            <img src="5b.jpg" class="med-icon-full" alt="Fever & Shivering">
+            <img src="5a.jpg" class="med-icon-full" alt="Paracetamol Suppository medication">
+            <img src="5b.jpg" class="med-icon-full" alt="Fever and Shivering symptoms icon">
         </div>
         <div class="instruction-box">
             <ul>

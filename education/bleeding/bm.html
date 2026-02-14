@@ -13,6 +13,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="../education.css">
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -61,7 +65,7 @@
             <div class="fear-card">
                 <strong>2. Guna Tuala Gelap</strong>
                 <p>Gunakan tuala berwarna gelap untuk menyembunyikan darah dan mengurangkan kegelisahan semua yang ada.</p>
-                <img src="dark-towel.png" alt="Tuala Gelap" class="card-img" onerror="this.style.display='none'">
+                <img src="dark-towel.png" alt="Tuala gelap untuk menutup darah" class="card-img" onerror="this.style.display='none'">
             </div>
         </div>
     </div>
@@ -75,7 +79,7 @@
                     <strong>Berikan Sedasi</strong>
                     <div class="dose-badge">Midazolam / Lorazepam Bukal</div>
                     <p>Berikan Midazolam atau Lorazepam bukal untuk menenangkan pesakit.</p>
-                    <img src="1.jpg" alt="Midazolam" class="card-img">
+                    <img src="1.jpg" alt="Ubat Midazolam" class="card-img">
                 </div>
             </div>
             <div class="rule-card">
@@ -84,7 +88,7 @@
                     <strong>Untuk Sesak Nafas</strong>
                     <div class="dose-badge">Morfin / Opioid</div>
                     <p>Jika pesakit rasa sesak nafas, berikan dos morfin/opioid seperti yang dipreskripsi.</p>
-                    <img src="2.jpg" alt="Morfin" class="card-img">
+                    <img src="2.jpg" alt="Ubat Morfin" class="card-img">
                 </div>
             </div>
             <div class="rule-card" style="border-left-color: #e74c3c;">
@@ -146,14 +150,14 @@
 
         <h2>Protokol Ubat</h2>
         <div class="print-item">
-            <img src="1.jpg" class="print-img">
+            <img src="1.jpg" class="print-img" alt="Ubat sedasi">
             <div class="print-content">
                 <strong>1. Berikan Sedasi</strong>
                 <p>Berikan Midazolam atau Lorazepam bukal untuk menenangkan pesakit.</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="2.jpg" class="print-img">
+            <img src="2.jpg" class="print-img" alt="Ubat sesak nafas">
             <div class="print-content">
                 <strong>2. Rawat Sesak Nafas</strong>
                 <p>Jika pesakit sesak nafas, berikan dos morfin/opioid seperti yang dipreskripsi.</p>

@@ -175,6 +175,10 @@
         }
     </style>
     <script src="js/ga-tracking.js"></script>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body>
 

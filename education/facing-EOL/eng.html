@@ -83,6 +83,10 @@
         .print-full-section { margin-top: 15px; padding: 10px; border: 1px solid #eee; border-radius: 6px; }
         .print-warning { margin-top: 10px; font-size: 11px; color: #e65100; font-weight: bold; background: #fff3e0; padding: 5px; }
     </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">

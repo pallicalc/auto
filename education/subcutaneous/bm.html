@@ -86,6 +86,10 @@
         .step-imgs { display: flex; gap: 10px; flex-shrink: 0; }
         .print-img-sm { width: 90px; height: 90px; object-fit: contain; border: 1px solid #eee; border-radius: 4px; padding: 2px; background: white; }
     </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -140,7 +144,7 @@
                     <li>Bekas sisa tajam (Sharps box)</li>
                 </ul>
             </div>
-            <img src="1.jpg" alt="Check and Gather" class="card-img">
+            <img src="1.jpg" alt="Ilustrasi mencuci tangan dan mengumpulkan barang" class="card-img">
         </div>
     </div>
 
@@ -153,7 +157,7 @@
                 <div class="rule-content">
                     <strong>Sedut Ubat</strong>
                     <p>Patahkan ampul (patahkan pada titik berwarna). Masukkan jarum, tarik omboh untuk sedut jumlah yang tepat. Ketuk picagari untuk buang buih, tolak omboh sedikit untuk keluarkan udara.</p>
-                    <img src="2.jpg" alt="Draw Medicine Step A" class="card-img">
+                    <img src="2.jpg" alt="Ilustrasi menyedut ubat dari ampul" class="card-img">
                 </div>
             </div>
 
@@ -162,7 +166,7 @@
                 <div class="rule-content">
                     <strong>Beri Ubat</strong>
                     <p>Lap penyumbat port dengan putik alkohol, tunggu 30 saat. Cucuk jarum perlahan-lahan ke dalam port. Tolak omboh <strong>perlahan-lahan</strong> sehingga kosong. Cabut jarum dengan segera.</p>
-                    <img src="3.jpg" alt="Give Medicine" class="card-img">
+                    <img src="3.jpg" alt="Ilustrasi menyuntik ubat ke dalam port" class="card-img">
                 </div>
             </div>
 
@@ -239,7 +243,7 @@
                     <p>Patahkan ampul. Sedut jumlah yang tepat. Ketuk untuk buang buih, keluarkan udara.</p>
                 </div>
                 <div class="step-imgs">
-                    <img src="2.jpg" class="print-img-sm" alt="Ampoule">
+                    <img src="2.jpg" class="print-img-sm" alt="Menyedut ubat">
                 </div>
             </div>
 
@@ -250,7 +254,7 @@
                     <p>Lap penyumbat port dengan putik alkohol (tunggu 30s). Cucuk jarum. Suntik <strong>PERLAHAN</strong>. Cabut jarum segera.</p>
                 </div>
                 <div class="step-imgs">
-                    <img src="3.jpg" class="print-img-sm" alt="Inject">
+                    <img src="3.jpg" class="print-img-sm" alt="Menyuntik">
                 </div>
             </div>
 

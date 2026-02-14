@@ -13,6 +13,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="../education.css">
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -48,12 +52,12 @@
             <div class="fear-card">
                 <strong>1. Comfortable Position</strong>
                 <p>Help the patient into a comfortable position (usually sitting or leaning forward).</p>
-                <img src="1.jpg" alt="Sitting Position" class="card-img">
+                <img src="1.jpg" alt="Illustration of a patient in a sitting position to ease breathing" class="card-img">
             </div>
             <div class="fear-card">
                 <strong>2. Breathing Technique</strong>
                 <p>Stay calm. Inhale (Count 1,2). Pursed lip breathing (like blowing a straw). Exhale (Count 1,2,3,4).</p>
-                <img src="2.jpg" alt="Breathing Technique" class="card-img">
+                <img src="2.jpg" alt="Illustration of pursed lip breathing technique" class="card-img">
             </div>
         </div>
     </div>
@@ -64,12 +68,12 @@
             <div class="env-card">
                 <strong>3. Ventilation</strong>
                 <p>Ensure good air circulation. Open windows for fresh air.</p>
-                <img src="3.jpg" alt="Ventilation" class="card-img">
+                <img src="3.jpg" alt="Illustration showing open window for ventilation" class="card-img">
             </div>
             <div class="env-card">
                 <strong>4. Fan Therapy</strong>
                 <p>Use a handheld or table fan to blow air gently towards the patient's face.</p>
-                <img src="4.jpg" alt="Fan" class="card-img">
+                <img src="4.jpg" alt="Illustration of fan therapy for breathlessness" class="card-img">
             </div>
         </div>
     </div>
@@ -80,7 +84,7 @@
             <strong style="color: #0277bd;">5. Oxygen Concentrator</strong>
             <p>Use oxygen concentrator if available/prescribed.</p>
             <p style="font-size: 13px; margin-top:5px; font-style: italic;">*Note: Not everyone benefits from oxygen therapy.</p>
-            <img src="5.jpg" alt="Oxygen Concentrator" class="card-img">
+            <img src="5.jpg" alt="Illustration of an oxygen concentrator" class="card-img">
         </div>
     </div>
 
@@ -93,7 +97,7 @@
                     <strong>6. Administer 1st Dose</strong>
                     <div class="dose-badge">Aq Morphine (Liquid) OR Injection</div>
                     <p>If breathlessness persists, take Morphine as prescribed. Record the time.</p>
-                    <img src="6.jpg" alt="Medication" class="card-img">
+                    <img src="6.jpg" alt="Illustration of morphine medication" class="card-img">
                 </div>
             </div>
             <div class="rule-card">
@@ -103,7 +107,7 @@
                     <p>If symptoms are not relieved after 1 hour:</p>
                     <div class="dose-badge">Take 2nd Dose Morphine</div>
                     <p>Record the time of administration.</p>
-                    <img src="7.jpg" alt="1 Hour Clock" class="card-img">
+                    <img src="7.jpg" alt="1 Hour Clock Icon" class="card-img">
                 </div>
             </div>
             <div class="rule-card" style="border-left-color: #e74c3c; background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);">
@@ -113,7 +117,7 @@
                     <p>If symptoms persist:</p>
                     <div class="dose-badge">Take 3rd Dose Morphine</div>
                     <p>Record time and <strong>inform your palliative care team in charge immediately</strong>.</p>
-                    <img src="7.jpg" alt="Urgent Action" class="card-img">
+                    <img src="7.jpg" alt="Urgent Action Icon" class="card-img">
                 </div>
             </div>
         </div>
@@ -144,28 +148,28 @@
 
         <h2>Non-Pharmacological Measures</h2>
         <div class="print-item">
-            <img src="1.jpg" class="print-img">
+            <img src="1.jpg" class="print-img" alt="Sitting Position">
             <div class="print-content">
                 <strong>1. Position</strong>
                 <p>Help the patient into a comfortable position (usually sitting upright).</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="2.jpg" class="print-img">
+            <img src="2.jpg" class="print-img" alt="Breathing Technique">
             <div class="print-content">
                 <strong>2. Breathing</strong>
                 <p>Stay calm. Inhale (Count 1,2). Pursed lip breathing. Exhale (Count 1,2,3,4).</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="3.jpg" class="print-img">
+            <img src="3.jpg" class="print-img" alt="Ventilation">
             <div class="print-content">
                 <strong>3. Ventilation</strong>
                 <p>Ensure good air circulation around the patient's room.</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="4.jpg" class="print-img">
+            <img src="4.jpg" class="print-img" alt="Fan Therapy">
             <div class="print-content">
                 <strong>4. Fan Therapy</strong>
                 <p>Use a fan to blow air gently across the patient's face.</p>
@@ -174,28 +178,28 @@
 
         <h2>Oxygen & Medication</h2>
         <div class="print-item">
-            <img src="5.jpg" class="print-img">
+            <img src="5.jpg" class="print-img" alt="Oxygen Concentrator">
             <div class="print-content">
                 <strong>5. Oxygen Concentrator</strong>
                 <p>Use if available. (Note: Not everyone benefits from oxygen).</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="6.jpg" class="print-img">
+            <img src="6.jpg" class="print-img" alt="Medication">
             <div class="print-content">
                 <strong>6. Administer 1st Dose</strong>
                 <p>If breathless, take Liquid Morphine or Injection. Record time.</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="7.jpg" class="print-img">
+            <img src="7.jpg" class="print-img" alt="1 Hour Clock">
             <div class="print-content">
                 <strong>7. After 1 Hour</strong>
                 <p>If not relieved, take 2nd Dose of Morphine. Record time.</p>
             </div>
         </div>
         <div class="print-item warning-box">
-            <img src="7.jpg" class="print-img">
+            <img src="7.jpg" class="print-img" alt="Urgent Action">
             <div class="print-content">
                 <strong style="color:#cc0000;">8. After Another 1 Hour</strong>
                 <p>If not relieved, take 3rd Dose. inform your palliative care team in charge immediately.</p>

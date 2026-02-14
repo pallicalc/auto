@@ -72,6 +72,10 @@
         #print-area ul { margin: 0; padding-left: 15px; }
         #print-area li { margin-bottom: 6px; }
     </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -99,8 +103,8 @@
             <div class="med-title">Morphine</div>
         </div>
         <div class="med-grid">
-            <img src="1a.jpg" class="med-icon-full" alt="Morphine">
-            <img src="1b.jpg" class="med-icon-full" alt="疼痛/呼吸困难">
+            <img src="1a.jpg" class="med-icon-full" alt="Morphine 药物">
+            <img src="1b.jpg" class="med-icon-full" alt="疼痛或呼吸困难症状图标">
         </div>
         <div class="instruction-box">
             <ul>
@@ -117,8 +121,8 @@
             <div class="med-title">Haloperidol</div>
         </div>
         <div class="med-grid">
-            <img src="2a.jpg" class="med-icon-full" alt="Haloperidol">
-            <img src="2b.jpg" class="med-icon-full" alt="恶心/躁动">
+            <img src="2a.jpg" class="med-icon-full" alt="Haloperidol 药物">
+            <img src="2b.jpg" class="med-icon-full" alt="恶心或躁动症状图标">
         </div>
         <div class="instruction-box">
             <ul>
@@ -136,8 +140,8 @@
             <div class="med-title">Buscopan</div>
         </div>
         <div class="med-grid">
-            <img src="3a.jpg" class="med-icon-full" alt="Buscopan">
-            <img src="3b.jpg" class="med-icon-full" alt="分泌物">
+            <img src="3a.jpg" class="med-icon-full" alt="Buscopan 药物">
+            <img src="3b.jpg" class="med-icon-full" alt="分泌物症状图标">
         </div>
         <div class="instruction-box">
             <ul>
@@ -155,8 +159,8 @@
             <div class="med-title">癫痫发作/躁动</div>
         </div>
         <div class="med-grid">
-            <img src="4a.jpg" class="med-icon-full" alt="Midazolam">
-            <img src="4b.jpg" class="med-icon-full" alt="癫痫">
+            <img src="4a.jpg" class="med-icon-full" alt="Midazolam 药物">
+            <img src="4b.jpg" class="med-icon-full" alt="癫痫症状图标">
         </div>
         <div class="instruction-box">
             <ul>
@@ -173,8 +177,8 @@
             <div class="med-title">栓剂 Paracetamol</div>
         </div>
         <div class="med-grid">
-            <img src="5a.jpg" class="med-icon-full" alt="Suppository Paracetamol">
-            <img src="5b.jpg" class="med-icon-full" alt="发烧与寒战">
+            <img src="5a.jpg" class="med-icon-full" alt="Suppository Paracetamol 药物">
+            <img src="5b.jpg" class="med-icon-full" alt="发烧与寒战症状图标">
         </div>
         <div class="instruction-box">
             <ul>

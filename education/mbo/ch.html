@@ -64,6 +64,10 @@
         
         @media print { .step-number { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">

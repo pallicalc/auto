@@ -13,6 +13,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="../education.css">
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -61,7 +65,7 @@
             <div class="fear-card">
                 <strong>2. Use Dark Towels</strong>
                 <p>Use dark towels to disguise the visibility of blood and reduce distress for everyone present.</p>
-                <img src="dark-towel.png" alt="Dark Towel" class="card-img" onerror="this.style.display='none'">
+                <img src="dark-towel.png" alt="Dark towel used to cover bleeding" class="card-img" onerror="this.style.display='none'">
             </div>
         </div>
     </div>
@@ -75,7 +79,7 @@
                     <strong>Administer Sedation</strong>
                     <div class="dose-badge">Buccal Midazolam / Lorazepam</div>
                     <p>Administer buccal Midazolam or Buccal Lorazepam to keep the patient calm.</p>
-                    <img src="1.jpg" alt="Midazolam" class="card-img">
+                    <img src="1.jpg" alt="Midazolam medication" class="card-img">
                 </div>
             </div>
             <div class="rule-card">
@@ -84,7 +88,7 @@
                     <strong>For Breathlessness</strong>
                     <div class="dose-badge">Morphine / Opioid</div>
                     <p>If the patient feels breathless, give the prescribed dose of as-needed morphine/opioid.</p>
-                    <img src="2.jpg" alt="Morphine" class="card-img">
+                    <img src="2.jpg" alt="Morphine medication" class="card-img">
                 </div>
             </div>
             <div class="rule-card" style="border-left-color: #e74c3c;">
@@ -146,14 +150,14 @@
 
         <h2>Medication Protocol</h2>
         <div class="print-item">
-            <img src="1.jpg" class="print-img">
+            <img src="1.jpg" class="print-img" alt="Sedation medication">
             <div class="print-content">
                 <strong>1. Administer Sedation</strong>
                 <p>Administer buccal Midazolam or Buccal Lorazepam to keep the patient calm.</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="2.jpg" class="print-img">
+            <img src="2.jpg" class="print-img" alt="Breathlessness medication">
             <div class="print-content">
                 <strong>2. Treat Breathlessness</strong>
                 <p>If patient feels breathless, give the prescribed dose of as-needed morphine/opioid.</p>

@@ -31,7 +31,7 @@ async function initApp() {
 
     try {
         await db.enablePersistence({ synchronizeTabs: true });
-        console.log("🔥 Firestore Offline Persistence Enabled");
+        // console.log("🔥 Firestore Offline Persistence Enabled");
     } catch (err) {
         if (err.code == 'failed-precondition') {
             console.warn("Persistence failed: Multiple tabs open.");

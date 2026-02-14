@@ -84,6 +84,10 @@
             border-radius: 8px; color: #cc0000;
         }
     </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -165,8 +169,8 @@
                 <div class="rule-content">
                     <strong>Medication Protocol</strong>
                     <div class="med-images">
-                        <img src="1.jpg" alt="Medication 1" class="med-img">
-                        <img src="2.jpg" alt="Medication 2" class="med-img">
+                        <img src="1.jpg" alt="Medication option 1" class="med-img">
+                        <img src="2.jpg" alt="Medication option 2" class="med-img">
                     </div>
                     <p>Administer prescribed medication (Buccal/Subcut). Repeat every 1 hour if required.</p>
                 </div>
@@ -260,8 +264,8 @@
             <div class="print-content">
                 <strong>Administer as Prescribed</strong>
                 <div style="display:flex; gap:10px; margin: 5px 0;">
-                    <img src="1.jpg" style="max-width: 100px; height:auto; display:block;">
-                    <img src="2.jpg" style="max-width: 100px; height:auto; display:block;">
+                    <img src="1.jpg" style="max-width: 100px; height:auto; display:block;" alt="Medication 1">
+                    <img src="2.jpg" style="max-width: 100px; height:auto; display:block;" alt="Medication 2">
                 </div>
                 <p>Give medication via Buccal or Subcut route. Repeat every 1 hr if needed.</p>
             </div>

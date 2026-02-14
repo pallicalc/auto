@@ -84,6 +84,10 @@
             border-radius: 8px; color: #cc0000;
         }
     </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -165,8 +169,8 @@
                 <div class="rule-content">
                     <strong>用药方案</strong>
                     <div class="med-images">
-                        <img src="1.jpg" alt="Medication 1" class="med-img">
-                        <img src="2.jpg" alt="Medication 2" class="med-img">
+                        <img src="1.jpg" alt="药物选项 1" class="med-img">
+                        <img src="2.jpg" alt="药物选项 2" class="med-img">
                     </div>
                     <p>按医嘱给药（颊粘膜/皮下注射）。如有需要，每1小时重复一次。</p>
                 </div>
@@ -260,8 +264,8 @@
             <div class="print-content">
                 <strong>按处方给药</strong>
                 <div style="display:flex; gap:10px; margin: 5px 0;">
-                    <img src="1.jpg" style="max-width: 100px; height:auto; display:block;">
-                    <img src="2.jpg" style="max-width: 100px; height:auto; display:block;">
+                    <img src="1.jpg" style="max-width: 100px; height:auto; display:block;" alt="药物 1">
+                    <img src="2.jpg" style="max-width: 100px; height:auto; display:block;" alt="药物 2">
                 </div>
                 <p>通过颊粘膜（Buccal）或皮下注射（Subcut）给药。如有需要，每1小时重复一次。</p>
             </div>

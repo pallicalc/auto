@@ -42,12 +42,12 @@ const CRITICAL_FILES = [
 
 // Install Event - Best Effort Pre-caching
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing New Version:', CACHE_NAME);
+  // console.log('[SW] Installing New Version:', CACHE_NAME);
   self.skipWaiting();
 
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      console.log('[SW] Pre-caching critical files...');
+      // console.log('[SW] Pre-caching critical files...');
       
       // Loop through files one by one (Best Effort)
       for (const file of CRITICAL_FILES) {
@@ -63,7 +63,7 @@ self.addEventListener('install', (event) => {
           console.warn(`[SW] Failed to fetch ${file}:`, error);
         }
       }
-      console.log('[SW] Pre-caching complete.');
+      // console.log('[SW] Pre-caching complete.');
     })
   );
 });
@@ -73,7 +73,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keyList) => {
       return Promise.all(keyList.map((key) => {
         if (key !== CACHE_NAME) {
-          console.log('[SW] Removing old cache:', key);
+          // console.log('[SW] Removing old cache:', key);
           return caches.delete(key);
         }
       }));

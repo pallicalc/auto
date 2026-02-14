@@ -13,6 +13,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="../education.css">
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -48,12 +52,12 @@
             <div class="fear-card">
                 <strong>1. 舒适体位</strong>
                 <p>协助患者采取舒适体位（通常为坐姿或前倾）。</p>
-                <img src="1.jpg" alt="Sitting Position" class="card-img">
+                <img src="1.jpg" alt="舒适坐姿示意图" class="card-img">
             </div>
             <div class="fear-card">
                 <strong>2. 呼吸技巧</strong>
                 <p>不要焦虑。吸气(数1,2)，缩唇像吹吸管一样呼气(数1,2,3,4)。</p>
-                <img src="2.jpg" alt="Breathing Technique" class="card-img">
+                <img src="2.jpg" alt="呼吸技巧示意图" class="card-img">
             </div>
         </div>
     </div>
@@ -64,12 +68,12 @@
             <div class="env-card">
                 <strong>3. 保持通风</strong>
                 <p>打开门窗，确保患者房间或区域空气流通。</p>
-                <img src="3.jpg" alt="Ventilation" class="card-img">
+                <img src="3.jpg" alt="保持通风示意图" class="card-img">
             </div>
             <div class="env-card">
                 <strong>4. 风扇辅助</strong>
                 <p>使用手持或台式风扇，对着患者面部吹风以缓解气促感。</p>
-                <img src="4.jpg" alt="Fan" class="card-img">
+                <img src="4.jpg" alt="风扇辅助呼吸示意图" class="card-img">
             </div>
         </div>
     </div>
@@ -80,7 +84,7 @@
             <strong style="color: #0277bd;">5. 制氧机使用</strong>
             <p>如有医嘱或设备，请使用制氧机。</p>
             <p style="font-size: 13px; margin-top:5px; font-style: italic;">*注意：并非所有人都受益于氧疗。</p>
-            <img src="5.jpg" alt="Oxygen Concentrator" class="card-img">
+            <img src="5.jpg" alt="制氧机示意图" class="card-img">
         </div>
     </div>
 
@@ -93,7 +97,7 @@
                     <strong>6. 给予第1剂</strong>
                     <div class="dose-badge">吗啡口服液 (Aq Morphine) 或 注射吗啡</div>
                     <p>如果气促持续，请按照处方剂量服用吗啡。请务必记录服药时间。</p>
-                    <img src="6.jpg" alt="Medication" class="card-img">
+                    <img src="6.jpg" alt="药物示意图" class="card-img">
                 </div>
             </div>
             <div class="rule-card">
@@ -103,7 +107,7 @@
                     <p>如果1小时后症状未缓解：</p>
                     <div class="dose-badge">服用第2剂 吗啡</div>
                     <p>并记录时间。</p>
-                    <img src="7.jpg" alt="1 Hour Clock" class="card-img">
+                    <img src="7.jpg" alt="1小时时钟图标" class="card-img">
                 </div>
             </div>
             <div class="rule-card" style="border-left-color: #e74c3c; background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);">
@@ -113,7 +117,7 @@
                     <p>如果症状仍未缓解：</p>
                     <div class="dose-badge">服用第3剂 吗啡</div>
                     <p>记录时间，并立即<strong>通知安宁疗护团队</strong>。</p>
-                    <img src="7.jpg" alt="Urgent Action" class="card-img">
+                    <img src="7.jpg" alt="紧急行动图标" class="card-img">
                 </div>
             </div>
         </div>
@@ -146,28 +150,28 @@
 
         <h2>非药物措施 (Non-Pharmacological Measures)</h2>
         <div class="print-item">
-            <img src="1.jpg" class="print-img">
+            <img src="1.jpg" class="print-img" alt="舒适体位">
             <div class="print-content">
                 <strong>1. 舒适体位</strong>
                 <p>协助患者采取舒适体位（通常为坐姿或前倾）。</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="2.jpg" class="print-img">
+            <img src="2.jpg" class="print-img" alt="呼吸技巧">
             <div class="print-content">
                 <strong>2. 呼吸技巧</strong>
                 <p>不要焦虑。吸气(数1,2)，缩唇像吹吸管一样呼气(数1,2,3,4)。</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="3.jpg" class="print-img">
+            <img src="3.jpg" class="print-img" alt="保持通风">
             <div class="print-content">
                 <strong>3. 保持通风</strong>
                 <p>打开门窗，确保房间空气流通。</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="4.jpg" class="print-img">
+            <img src="4.jpg" class="print-img" alt="风扇辅助">
             <div class="print-content">
                 <strong>4. 风扇辅助</strong>
                 <p>使用手持或台式风扇，对着患者面部吹风。</p>
@@ -176,28 +180,28 @@
 
         <h2>氧气与药物 (Oxygen & Medication)</h2>
         <div class="print-item">
-            <img src="5.jpg" class="print-img">
+            <img src="5.jpg" class="print-img" alt="制氧机">
             <div class="print-content">
                 <strong>5. 制氧机</strong>
                 <p>如有医嘱或设备，使用制氧机。（注：并非所有人都受益）。</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="6.jpg" class="print-img">
+            <img src="6.jpg" class="print-img" alt="药物">
             <div class="print-content">
                 <strong>6. 给予第1剂</strong>
                 <p>若气促持续，服用吗啡(Aq Morphine)或注射吗啡。记录时间。</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="7.jpg" class="print-img">
+            <img src="7.jpg" class="print-img" alt="1小时时钟">
             <div class="print-content">
                 <strong>7. 1小时后</strong>
                 <p>若未缓解，服用第2剂吗啡，并记录时间。</p>
             </div>
         </div>
         <div class="print-item warning-box">
-            <img src="7.jpg" class="print-img">
+            <img src="7.jpg" class="print-img" alt="紧急行动">
             <div class="print-content">
                 <strong style="color:#cc0000;">8. 再过1小时后</strong>
                 <p>若仍未缓解，服用第3剂，记录时间并通知安宁疗护团队。</p>

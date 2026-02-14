@@ -20,6 +20,10 @@
     
     <script src="app.js" defer></script>
     <!-- Service Worker Registration Removed -->
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body>
     <header>

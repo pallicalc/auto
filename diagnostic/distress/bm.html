@@ -71,6 +71,10 @@
         .yn-btn input:checked + label.lbl-no { background: #e8f5e9; border-color: #2e7d32; color: #2e7d32; } 
         .yn-btn input:checked + label.lbl-yes { background: #ffebee; border-color: #c62828; color: #c62828; }
     </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body>
 
@@ -133,7 +137,7 @@
                         <div class="label-text text-none">Tiada distres</div>
                     </div>
                     <div class="image-column">
-                        <img src="1.png" alt="Visual Termometer" class="thermo-img">
+                        <img src="1.png" alt="Visual termometer menunjukkan skala 0 hingga 10" class="thermo-img">
                     </div>
                 </div>
             </div>
@@ -182,6 +186,13 @@
                 <div id="qrcode-container" style="background:white; padding:8px; border-radius:8px; display:inline-block;">
                     <div id="qrcode"></div>
                     <div style="font-size:9px; color:#999; margin-top:4px;">NCCN-DT Secure Payload</div>
+                </div>
+                <div class="offline-hint" style="margin-top: 15px; padding: 12px; background: #e8f0fe; border: 1px solid #d2e3fc; border-radius: 8px; color: #174ea6; font-size: 13px; line-height: 1.5;">
+                    <div style="font-weight: bold; margin-bottom: 5px;"><i class="bi bi-camera-fill"></i> Simpan Keputusan Anda</div>
+                    1. <strong>Tiada Internet / Doktor Tiada?</strong><br>
+                    Tangkap layar (screenshot) skrin ini untuk dihantar kemudian.<br><br>
+                    2. <strong>Guna iPad Klinik?</strong><br>
+                    Ambil gambar kod ini menggunakan telefon anda sendiri.
                 </div>
             </div>
 

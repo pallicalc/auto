@@ -14,6 +14,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="../education.css">
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -47,7 +51,7 @@
         <h2><i class="bi bi-geo-alt-fill"></i> Application Site</h2>
         <p style="margin-bottom: 15px;">Used to relieve chronic pain (e.g., cancer pain). Apply to flat skin on the <strong>Chest, Thigh, or Arm</strong>.</p>
         
-        <img src="1.jpg" alt="Locations: Chest, Thigh, Arm" class="patch-img">
+        <img src="1.jpg" alt="Illustration showing patch application sites: chest, thigh, or arm" class="patch-img">
         
         <ul style="padding-left: 20px; margin-bottom: 20px;">
             <li>Clean skin with water only (make sure it is dry).</li>
@@ -98,7 +102,7 @@
         <div class="fear-card" style="background: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);">
             <strong>✂️ Cut DIAGONALLY</strong>
             <p>If the doctor prescribes a half dose, cut the patch diagonally. <strong>DO NOT</strong> cut along the existing straight line.</p>
-            <img src="2.jpg" alt="Cut Diagonally" class="card-img" style="border-radius: 4px; padding: 2px;">
+            <img src="2.jpg" alt="Illustration showing how to cut the patch diagonally for a half dose" class="card-img" style="border-radius: 4px; padding: 2px;">
         </div>
     </div>
 
@@ -162,7 +166,7 @@
                 <strong>1. Application Site</strong>
                 <p>Chest, Thigh, or Arm (Clean, dry skin, hairless). Cut hair, <strong>DO NOT</strong> shave.</p>
                 <div style="text-align: center; margin-top: 5px;">
-                    <img src="1.jpg" style="height: 100px; width: auto;" alt="Placement">
+                    <img src="1.jpg" style="height: 100px; width: auto;" alt="Illustration of patch placement sites">
                 </div>
             </div>
         </div>
@@ -184,7 +188,7 @@
                 <strong>3. If Half Dose (Doctor's Order)</strong>
                 <p>Cut <strong>DIAGONALLY</strong>, <strong>DO NOT</strong> cut along the existing straight line.</p>
                 <div style="text-align: center; margin-top: 5px;">
-                    <img src="2.jpg" style="height: 80px; width: auto;" alt="Cut Diagonal">
+                    <img src="2.jpg" style="height: 80px; width: auto;" alt="Illustration of cutting the patch diagonally">
                 </div>
             </div>
         </div>

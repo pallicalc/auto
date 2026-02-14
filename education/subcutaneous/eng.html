@@ -82,6 +82,10 @@
         .step-imgs { display: flex; gap: 10px; flex-shrink: 0; }
         .print-img-sm { width: 90px; height: 90px; object-fit: contain; border: 1px solid #eee; border-radius: 4px; padding: 2px; background: white; }
     </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -136,7 +140,7 @@
                     <li>Sharps box</li>
                 </ul>
             </div>
-            <img src="1.jpg" alt="Check and Gather" class="card-img">
+            <img src="1.jpg" alt="Illustration of hand washing and gathering medical supplies" class="card-img">
         </div>
     </div>
 
@@ -149,7 +153,7 @@
                 <div class="rule-content">
                     <strong>Draw Medicine</strong>
                     <p>Snap open ampoule (break at colored dot). Stick needle in, pull plunger to exact amount. Tap to remove bubbles, push plunger slightly to expel air.</p>
-                    <img src="2.jpg" alt="Draw Medicine Step A" class="card-img">
+                    <img src="2.jpg" alt="Illustration showing how to draw medicine from an ampoule" class="card-img">
                 </div>
             </div>
 
@@ -158,7 +162,7 @@
                 <div class="rule-content">
                     <strong>Give Medicine</strong>
                     <p>Wipe port stopper with alcohol wipe, wait 30s. Push needle gently into port. Push plunger <strong>slowly</strong> until empty. Pull needle out straight away.</p>
-                    <img src="3.jpg" alt="Give Medicine" class="card-img">
+                    <img src="3.jpg" alt="Illustration showing how to inject medicine into the port" class="card-img">
                 </div>
             </div>
 
@@ -235,7 +239,7 @@
                     <p>Snap ampoule. Draw exact amount. Tap to remove bubbles, push plunger slightly to expel air.</p>
                 </div>
                 <div class="step-imgs">
-                    <img src="2.jpg" class="print-img-sm" alt="Ampoule">
+                    <img src="2.jpg" class="print-img-sm" alt="Drawing medicine">
                 </div>
             </div>
 
@@ -246,7 +250,7 @@
                     <p>Wipe port stopper with alcohol wipe (wait 30s). Push needle in. Inject <strong>SLOWLY</strong>. Pull out straight away.</p>
                 </div>
                 <div class="step-imgs">
-                    <img src="3.jpg" class="print-img-sm" alt="Inject">
+                    <img src="3.jpg" class="print-img-sm" alt="Injecting medicine">
                 </div>
             </div>
 

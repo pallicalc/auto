@@ -32,6 +32,10 @@
         display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
   </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body>
 

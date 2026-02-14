@@ -20,6 +20,10 @@
     <link rel="stylesheet" href="style.css">
     
     <script src="app-dashboard.js" defer></script>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body class="app-dashboard">
 

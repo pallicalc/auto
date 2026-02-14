@@ -203,6 +203,10 @@
         .item { font-size: 14px; padding: 12px 40px 12px 15px; }
     }
 </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body>
 

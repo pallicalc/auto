@@ -14,6 +14,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="../education.css">
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -49,12 +53,12 @@
             <div class="fear-card">
                 <strong>1. Tenang & Catat Masa</strong>
                 <p>Semasa episod berlaku, kekal tenang. Catat waktu sawan bermula.</p>
-                <img src="seizure.png" alt="sawan" class="card-img">
+                <img src="seizure.png" alt="Ilustrasi orang diserang sawan" class="card-img">
             </div>
             <div class="fear-card">
                 <strong>2. Baringkan Mengiring</strong>
                 <p>Pusingkan pesakit ke sisi (posisi pemulihan) untuk membantu pernafasan.</p>
-                <img src="sideway.png" alt="mengiring" class="card-img">
+                <img src="sideway.png" alt="Ilustrasi posisi pemulihan" class="card-img">
             </div>
         </div>
     </div>
@@ -64,7 +68,7 @@
         <div class="side-effect">
             <strong>JANGAN masukkan objek ke dalam mulut</strong>
             <p>Jangan sesekali memasukkan jari, sudu, atau sebarang objek ke dalam mulut.</p>
-            <img src="Xmouth.png" alt="Xmouth" class="card-img">
+            <img src="Xmouth.png" alt="Jangan masukkan objek ke dalam mulut" class="card-img">
         </div>
     </div>
 
@@ -77,7 +81,7 @@
                     <strong>1. Berikan Dos Pertama</strong>
                     <div class="dose-badge">Midazolam 1ml(5mg) / Lorazepam 1mg</div>
                     <p>Berikan segera melalui picagari ke dalam pipi (buccal). Jika sawan berterusan, maklumkan pasukan penjagaan paliatif anda.</p>
-                    <img src="buccal.png" alt="buccal" class="card-img">
+                    <img src="buccal.png" alt="Ilustrasi pemberian ubat buccal" class="card-img">
                 </div>
             </div>
             <div class="rule-card">
@@ -86,7 +90,7 @@
                     <strong>2. Selepas 10 Minit</strong>
                     <p>Jika sawan berterusan selepas 10 minit:</p>
                     <div class="dose-badge">Dos Ke-2: Midazolam 1ml(5mg) / Lorazepam 1mg</div>
-                    <img src="10mins.png" alt="10mins" class="card-img">
+                    <img src="10mins.png" alt="Ikon tunggu 10 minit" class="card-img">
                 </div>
             </div>
             <div class="rule-card">
@@ -96,7 +100,7 @@
                     <p>Jika sawan masih berterusan:</p>
                     <div class="dose-badge">Dos Ke-3: Midazolam 1ml(5mg) / Lorazepam 1mg</div>
                     <p style="color:red; font-weight:bold;">Panggil Ambulans Segera</p>
-                    <img src="10mins.png" alt="10mins" class="card-img">
+                    <img src="10mins.png" alt="Ikon tunggu 10 minit" class="card-img">
                 </div>
             </div>
             <div class="rule-card" style="border-left-color: #6c5ce7;">
@@ -104,7 +108,7 @@
                 <div class="rule-content">
                     <strong>Rekod & Maklumkan</strong>
                     <p>Sentiasa rekod tempoh sawan, masa, dan dos yang diberikan. Maklumkan kepada doktor.</p>
-                    <img src="clock.png" alt="jam" class="card-img">
+                    <img src="clock.png" alt="Ikon rekod masa" class="card-img">
                 </div>
             </div>
         </div>
@@ -137,14 +141,14 @@
 
         <h2>Tindakan Segera (Immediate Actions)</h2>
         <div class="print-item">
-            <img src="seizure.png" class="print-img">
+            <img src="seizure.png" class="print-img" alt="Ilustrasi sawan">
             <div class="print-content">
                 <strong>1. Tenang & Catat Masa</strong>
                 <p>Semasa episod berlaku, kekal tenang. Catat waktu sawan bermula.</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="sideway.png" class="print-img">
+            <img src="sideway.png" class="print-img" alt="Posisi pemulihan">
             <div class="print-content">
                 <strong>2. Baringkan Mengiring</strong>
                 <p>Pusingkan pesakit ke sisi (posisi pemulihan) untuk membantu pernafasan.</p>
@@ -153,7 +157,7 @@
 
         <h2>Amaran Keselamatan (Safety)</h2>
         <div class="print-item warning-box">
-            <img src="Xmouth.png" class="print-img">
+            <img src="Xmouth.png" class="print-img" alt="Jangan masukkan objek">
             <div class="print-content">
                 <strong style="color:#cc0000;">JANGAN masukkan objek ke dalam mulut</strong>
                 <p>Jangan sesekali memasukkan jari, sudu, atau sebarang objek ke dalam mulut.</p>
@@ -162,28 +166,28 @@
 
         <h2>Protokol Ubat (Medication)</h2>
         <div class="print-item">
-            <img src="buccal.png" class="print-img">
+            <img src="buccal.png" class="print-img" alt="Pemberian buccal">
             <div class="print-content">
                 <strong>1. Berikan Dos Pertama</strong>
                 <p>Midazolam 1ml(5mg) / Lorazepam 1mg. Berikan segera melalui picagari ke dalam pipi (buccal).</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="10mins.png" class="print-img">
+            <img src="10mins.png" class="print-img" alt="Tunggu 10 minit">
             <div class="print-content">
                 <strong>2. Selepas 10 Minit</strong>
                 <p>Jika sawan berterusan selepas 10 minit: Berikan Dos Ke-2.</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="10mins.png" class="print-img">
+            <img src="10mins.png" class="print-img" alt="Tunggu 10 minit">
             <div class="print-content">
                 <strong>3. Selepas 10 Minit Berikutnya (20 Jumlah)</strong>
                 <p>Jika sawan masih berterusan: Berikan Dos Ke-3. PANGGIL AMBULANS SEGERA.</p>
             </div>
         </div>
         <div class="print-item">
-            <img src="clock.png" class="print-img">
+            <img src="clock.png" class="print-img" alt="Rekod masa">
             <div class="print-content">
                 <strong>4. Rekod & Maklumkan</strong>
                 <p>Sentiasa rekod tempoh sawan, masa, dan dos yang diberikan. Maklumkan doktor.</p>

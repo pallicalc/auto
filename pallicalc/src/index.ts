@@ -11,7 +11,7 @@ export const onUserCreated = functions.auth.user().onCreate(async (user: any) =>
   const email = user.email || "";
   const uid = user.uid;
 
-  console.log(`[Auth] Checking new user: ${email}`);
+  // console.log(`[Auth] Checking new user: ${email}`);
 
   // 1. Is this an MOH user?
   let isMOH = false;
@@ -31,7 +31,7 @@ export const onUserCreated = functions.auth.user().onCreate(async (user: any) =>
   // 3. Save to Database
   try {
     await admin.firestore().collection("users").doc(uid).set(userUpdates, { merge: true });
-    console.log(`[Auth] Success! User ${email} is set to ${isMOH ? "Premium" : "Free"}.`);
+    // console.log(`[Auth] Success! User ${email} is set to ${isMOH ? "Premium" : "Free"}.`);
   } catch (error) {
     console.error("[Auth] Error creating user profile:", error);
   }
@@ -51,7 +51,7 @@ export const onUserJoinedHospital = functions.firestore.document('users/{userId}
   const oldInstId = oldData?.institutionId;
 
   if (newInstId && newInstId !== oldInstId) {
-    console.log(`[DB] User joined hospital ${newInstId}. Incrementing count.`);
+    // console.log(`[DB] User joined hospital ${newInstId}. Incrementing count.`);
     await admin.firestore().collection("institutions").doc(newInstId).update({
       memberCount: admin.firestore.FieldValue.increment(1)
     });
@@ -60,7 +60,7 @@ export const onUserJoinedHospital = functions.firestore.document('users/{userId}
   // SCENARIO 2: A user LEFT a hospital (or was deleted)
   // (They had an institutionId before, but not anymore)
   if (oldInstId && newInstId !== oldInstId) {
-    console.log(`[DB] User left hospital ${oldInstId}. Decrementing count.`);
+    // console.log(`[DB] User left hospital ${oldInstId}. Decrementing count.`);
     await admin.firestore().collection("institutions").doc(oldInstId).update({
       memberCount: admin.firestore.FieldValue.increment(-1)
     });

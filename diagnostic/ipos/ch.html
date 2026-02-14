@@ -18,6 +18,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script src="../diagnostic.js"></script>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body>
 
@@ -300,6 +304,13 @@
                 <div id="qrcode-container" style="background:white; padding:8px; border-radius:8px; display:inline-block;">
                     <div id="qrcode"></div>
                     <div style="font-size:9px; color:#999; margin-top:4px;">IPOS 安全载荷</div>
+                </div>
+                <div class="offline-hint" style="margin-top: 15px; padding: 12px; background: #e8f0fe; border: 1px solid #d2e3fc; border-radius: 8px; color: #174ea6; font-size: 13px; line-height: 1.5;">
+                    <div style="font-weight: bold; margin-bottom: 5px;"><i class="bi bi-camera-fill"></i> 保存您的结果</div>
+                    1. <strong>无网络 / 医生不在？</strong><br>
+                    请截屏保存此页面，稍后发送。<br><br>
+                    2. <strong>使用诊所 iPad？</strong><br>
+                    请用您的手机拍下此二维码。
                 </div>
             </div>
 

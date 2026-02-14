@@ -13,6 +13,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="../education.css">
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -60,7 +64,7 @@
                 <div style="background: #ffe5e5; color: #c0392b; padding: 8px; border-radius: 6px; margin-top:8px; font-weight:bold; font-size:13px;">
                     <i class="bi bi-exclamation-triangle-fill"></i> 给药前务必取下针头
                 </div>
-                <img src="1.jpg" alt="安瓿瓶准备" class="card-img">
+                <img src="1.jpg" alt="折断安瓿瓶并抽取药物示意图" class="card-img">
             </div>
         </div>
     </div>
@@ -68,7 +72,7 @@
     <div class="section">
         <h2><i class="bi bi-person-check-fill"></i> 给药方法</h2>
         
-        <img src="2.jpg" alt="颊粘膜给药" style="width:100%; border-radius:12px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+        <img src="2.jpg" alt="颊粘膜给药示意图" style="width:100%; border-radius:12px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
 
         <div class="rules-grid">
             <div class="rule-card buccal-theme">

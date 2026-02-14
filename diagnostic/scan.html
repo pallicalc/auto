@@ -92,6 +92,10 @@
         @keyframes scanLine { 0% { top: 10px; opacity: 0; } 50% { opacity: 1; } 100% { top: 240px; opacity: 0; } }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body>
 

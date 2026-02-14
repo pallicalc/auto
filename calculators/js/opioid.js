@@ -78,7 +78,7 @@ const firebaseConfig = {
    INITIALIZATION
    ========================================= */
 function init() {
-  console.log("Initializing Opioid Calc...");
+  // console.log("Initializing Opioid Calc...");
   try {
     document.getElementById("calcPage").style.display = "block";
     document.getElementById("editPage").style.display = "none";
@@ -161,7 +161,7 @@ async function applyMemberRules() {
     
     if (cachedRatios) {
         // A. Load from Local Cache (Synced by app.js)
-        console.log("Loading Cached Institution Ratios...");
+        // console.log("Loading Cached Institution Ratios...");
         const data = JSON.parse(cachedRatios);
         applyInstitutionData(data);
     } else {

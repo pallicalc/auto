@@ -72,6 +72,10 @@
         #print-area ul { margin: 0; padding-left: 15px; }
         #print-area li { margin-bottom: 6px; }
     </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -99,8 +103,8 @@
             <div class="med-title">Morfin</div>
         </div>
         <div class="med-grid">
-            <img src="1a.jpg" class="med-icon-full" alt="Morfin">
-            <img src="1b.jpg" class="med-icon-full" alt="Sakit/Sesak Nafas">
+            <img src="1a.jpg" class="med-icon-full" alt="Ubat Morfin">
+            <img src="1b.jpg" class="med-icon-full" alt="Ikon simptom Sakit atau Sesak Nafas">
         </div>
         <div class="instruction-box">
             <ul>
@@ -117,8 +121,8 @@
             <div class="med-title">Haloperidol</div>
         </div>
         <div class="med-grid">
-            <img src="2a.jpg" class="med-icon-full" alt="Haloperidol">
-            <img src="2b.jpg" class="med-icon-full" alt="Loya/Keresahan">
+            <img src="2a.jpg" class="med-icon-full" alt="Ubat Haloperidol">
+            <img src="2b.jpg" class="med-icon-full" alt="Ikon simptom Loya atau Keresahan">
         </div>
         <div class="instruction-box">
             <ul>
@@ -136,8 +140,8 @@
             <div class="med-title">Buscopan</div>
         </div>
         <div class="med-grid">
-            <img src="3a.jpg" class="med-icon-full" alt="Buscopan">
-            <img src="3b.jpg" class="med-icon-full" alt="Rembesan">
+            <img src="3a.jpg" class="med-icon-full" alt="Ubat Buscopan">
+            <img src="3b.jpg" class="med-icon-full" alt="Ikon simptom Rembesan">
         </div>
         <div class="instruction-box">
             <ul>
@@ -155,8 +159,8 @@
             <div class="med-title">Sawan/Keresahan</div>
         </div>
         <div class="med-grid">
-            <img src="4a.jpg" class="med-icon-full" alt="Midazolam">
-            <img src="4b.jpg" class="med-icon-full" alt="Sawan">
+            <img src="4a.jpg" class="med-icon-full" alt="Ubat Midazolam">
+            <img src="4b.jpg" class="med-icon-full" alt="Ikon simptom Sawan">
         </div>
         <div class="instruction-box">
             <ul>
@@ -173,8 +177,8 @@
             <div class="med-title">Supositori Paracetamol</div>
         </div>
         <div class="med-grid">
-            <img src="5a.jpg" class="med-icon-full" alt="Supositori Paracetamol">
-            <img src="5b.jpg" class="med-icon-full" alt="Demam & Menggigil">
+            <img src="5a.jpg" class="med-icon-full" alt="Ubat Supositori Paracetamol">
+            <img src="5b.jpg" class="med-icon-full" alt="Ikon simptom Demam dan Menggigil">
         </div>
         <div class="instruction-box">
             <ul>

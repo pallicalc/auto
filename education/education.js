@@ -98,7 +98,7 @@ async function loadInstitutionHeader() {
             
             // 🛑 CRITICAL TWEAK: CHECK SUSPENSION STATUS
             if (data.status === 'suspended') {
-                console.log("Institution suspended. Wiping branding data.");
+                // console.log("Institution suspended. Wiping branding data.");
                 // Wipe local cache so it doesn't show up offline later
                 localStorage.removeItem('cached_inst_' + context.instId);
                 localStorage.removeItem('institutionSettings');
@@ -181,7 +181,7 @@ async function getFooterData() {
                 
                 // 🛑 PDF SECURITY: If Suspended, Return Generic Data
                 if (firebaseData.status === 'suspended') {
-                    console.log("Institution suspended. Generating generic PDF.");
+                    // console.log("Institution suspended. Generating generic PDF.");
                     return {
                         name: "PalliCalc Patient Education",
                         contact: "",

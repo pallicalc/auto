@@ -91,6 +91,10 @@
             border-radius: 8px; color: #cc0000;
         }
     </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
 </head>
 <body><div class="main-container">
     <div id="pdf-loading">
@@ -172,8 +176,8 @@
                 <div class="rule-content">
                     <strong>Protokol Ubat</strong>
                     <div class="med-images">
-                        <img src="1.png" alt="Medication 1" class="med-img">
-                        <img src="2.png" alt="Medication 2" class="med-img">
+                        <img src="1.png" alt="Pilihan ubat 1" class="med-img">
+                        <img src="2.png" alt="Pilihan ubat 2" class="med-img">
                     </div>
                     <p>Berikan ubat yang dipreskripsi (Pipi/Bawah Kulit). Ulang setiap 1 jam jika perlu.</p>
                 </div>
@@ -267,8 +271,8 @@
             <div class="print-content">
                 <strong>Berikan Seperti Dipreskripsi</strong>
                 <div style="display:flex; gap:10px; margin: 5px 0;">
-                    <img src="1.png" style="max-width: 100px; height:auto; display:block;">
-                    <img src="2.png" style="max-width: 100px; height:auto; display:block;">
+                    <img src="1.png" style="max-width: 100px; height:auto; display:block;" alt="Ubat 1">
+                    <img src="2.png" style="max-width: 100px; height:auto; display:block;" alt="Ubat 2">
                 </div>
                 <p>Berikan ubat melalui Pipi (Buccal) atau Bawah Kulit (Subcut). Ulang setiap 1 jam jika perlu.</p>
             </div>
