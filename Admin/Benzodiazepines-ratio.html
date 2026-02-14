@@ -15,6 +15,15 @@
   <link rel="stylesheet" href="../admin-style.css">
   
   <link rel="stylesheet" href="benzo-ratio.css">
+  <style>
+      .legal-warning {
+            font-size: 0.75rem; 
+            color: #dc3545; 
+            font-weight: 600; 
+            text-align: center; 
+            margin-top: 30px;
+        }
+  </style>
 </head>
 
 <body>
@@ -42,56 +51,62 @@
         <div class="alert alert-info d-flex align-items-center" role="alert">
           <i class="bi bi-info-circle-fill me-2"></i>
           <div>
-            <strong>Instructions:</strong> Check the box "Use" to include a drug.
-            <br><strong>Equiv:</strong> Dose (mg) equivalent to 1mg Alprazolam.
-            <br>To add a custom benzodiazepine, fill in the <strong>empty rows at the bottom</strong>.
+            <strong>Conversion Ratios:</strong> Set the multiplication factor to convert <strong>Oral Diazepam</strong> to other Benzodiazepines.
           </div>
         </div>
 
-        <form id="ratioForm">
+        <form id="benzoForm">
           
-          <div class="d-flex justify-content-end mb-3">
-            <button type="button" class="btn btn-outline-danger btn-sm" id="resetBtn">
-              <i class="bi bi-arrow-counterclockwise"></i> Reset Defaults
-            </button>
-          </div>
+          <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Target Benzodiazepine (from Oral Diazepam)</h6>
 
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th class="text-center" style="width: 50px;">Use</th>
-                  <th style="width: 100px;">Route</th>
-                  <th style="min-width: 150px;">Drug Name</th>
-                  <th style="width: 100px;">Equiv <small>(mg)</small></th>
-                  <th style="width: 150px;">Onset</th>
-                  <th style="width: 150px;">Duration</th>
-                </tr>
-              </thead>
-              <tbody id="ratioTableBody">
-                </tbody>
-            </table>
+          <div class="row g-3">
+            
+            <div class="col-md-6">
+              <label class="form-label">Midazolam (SC)</label>
+              <div class="input-group">
+                <span class="input-group-text">x</span>
+                <input type="number" step="0.01" class="form-control" id="diazepam_to_midazolam" placeholder="Default: 0.33">
+              </div>
+              <div class="form-text">e.g. 10mg Diazepam x 0.33 = 3.3mg Midazolam</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Lorazepam (Oral)</label>
+              <div class="input-group">
+                <span class="input-group-text">x</span>
+                <input type="number" step="0.01" class="form-control" id="diazepam_to_lorazepam" placeholder="Default: 0.1">
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Alprazolam (Oral)</label>
+              <div class="input-group">
+                <span class="input-group-text">x</span>
+                <input type="number" step="0.01" class="form-control" id="diazepam_to_alprazolam" placeholder="Default: 0.1">
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Clonazepam (Oral)</label>
+              <div class="input-group">
+                <span class="input-group-text">x</span>
+                <input type="number" step="0.01" class="form-control" id="diazepam_to_clonazepam" placeholder="Default: 0.05">
+              </div>
+            </div>
+
           </div>
           
           <div class="rotate-hint">Rotate phone for better view</div>
 
-          <hr class="my-4">
-
-          <div class="card bg-light border-0">
-            <div class="card-body">
-              <label for="confirmPassword" class="form-label fw-bold">
-                <i class="bi bi-lock-fill"></i> Verify Identity to Save
-              </label>
-              <div class="input-group mb-3">
-                <input type="password" class="form-control" id="confirmPassword" placeholder="Enter your login password" required>
-                <button class="btn btn-primary px-4" type="submit" id="saveBtn">
-                  <i class="bi bi-save"></i> Save Changes
-                </button>
-              </div>
-              <div id="msgArea" class="alert alert-success mt-2" style="display:none;"></div>
-              <div id="errorArea" class="alert alert-danger mt-2" style="display:none;"></div>
-            </div>
+          <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+            <button type="submit" class="btn btn-primary px-4 fw-bold">
+              <i class="bi bi-save"></i> Save Changes
+            </button>
+            <button type="button" class="btn btn-link text-muted text-decoration-none btn-sm" onclick="resetToDefaults()">
+              <i class="bi bi-arrow-counterclockwise"></i> Reset Defaults
+            </button>
           </div>
+          <p class="legal-warning">For Educational Use Only. Not a Medical Device.<br>Verify all results.</p>
 
         </form>
       </div>
@@ -99,7 +114,5 @@
   </div>
 
   <script src="benzo-ratio.js"></script>
-
-<script src="/js/ga-tracking.js"></script>
 </body>
 </html>
