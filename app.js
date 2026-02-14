@@ -1,4 +1,20 @@
-﻿// --- Auto-Inject Favicon into Header ---
+﻿// --- Service Worker Registration (Restricted to App) ---
+if ('serviceWorker' in navigator) {
+    // Check if we are NOT on the landing page (index.html) before registering
+    // flexible check for root '/' or '/index.html'
+    const isLandingPage = window.location.pathname === '/' || window.location.pathname.endsWith('index.html');
+    
+    if (!isLandingPage) {
+        window.addEventListener('load', () => {
+            // Registering at root scope so it can control subfolders, but we only trigger it here.
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW Registered for App'))
+                .catch(err => console.log('SW Registration Failed', err));
+        });
+    }
+}
+
+// --- Auto-Inject Favicon into Header ---
 (function() {
     let link = document.querySelector("link[rel~='icon']");
     if (!link) {

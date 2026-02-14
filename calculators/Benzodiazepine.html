@@ -69,9 +69,13 @@
       <select id="outputName"></select>
     </fieldset>
 
-    <button class="btn btn-primary" onclick="convert()">Calculate</button>
+    <button class="btn btn-primary" onclick="convert(); trackEvent('calculator_use', { type: 'Benzodiazepine', action: 'Convert' })">Calculate</button>
     
-    <div id="resultBox" class="result-box blue-theme" style="display:none;"></div>
+    <div id="resultBox" class="result-box blue-theme" style="display:none;">
+      <!-- TRACKING WRAPPER -->
+      <div id="tracking-result-content"></div>
+      <!-- END TRACKING WRAPPER -->
+    </div>
     
     <button class="btn btn-danger" onclick="clearCalculator()">Clear</button>
   </div>

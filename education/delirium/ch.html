@@ -107,7 +107,7 @@
         <div id="backBtn" class="nav-link delirium-theme" onclick="window.history.back()">
             <i class="bi bi-arrow-left"></i> 返回
         </div>
-        <div class="nav-link delirium-theme" onclick="showQR()">
+        <div class="nav-link delirium-theme" onclick="showQR(); trackEvent('share_content', { method: 'QR', type: 'Education' })">
             <i class="bi bi-share-fill"></i> 分享
         </div>
     </div>

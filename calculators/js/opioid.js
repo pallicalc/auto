@@ -580,15 +580,21 @@ window.convert = function() {
   if (doses.some(d => d < 0)) { alert("Please enter valid non-negative doses."); return; }
   if (doses.every(d => d === 0)) { alert("Please enter at least one positive opioid dose."); return; }
 
-  // --- START TRACKING CODE ---
-  if (typeof gtag === 'function') {
-      gtag('event', 'calculator_used', {
+  // --- TRACKING ---
+  if (typeof window.trackEvent === 'function') {
+      let drugName = 'Unknown';
+      if (types[0]) {
+         const opObj = opioidTypes.find(op => op.key === types[0]);
+         if(opObj) drugName = opObj.label;
+      }
+      
+      window.trackEvent('clinical_calculation', {
           'event_category': 'Opioid Calculator',
-          'event_label': 'convert_success',
+          'event_label': drugName,
           'institution_id': (typeof window.PALLICALC_USER !== 'undefined' && window.PALLICALC_USER.institutionId) ? window.PALLICALC_USER.institutionId : 'personal_user'
       });
   }
-  // --- END TRACKING CODE ---
+  // ----------------
 
   let totalPoMorphine = 0;
   for (let i = 0; i < 4; i++) {
@@ -658,8 +664,18 @@ window.convert = function() {
   }
 
   const resultDiv = document.getElementById("resultBox");
-  resultDiv.innerHTML = message;
-  resultDiv.style.display = "block";
+  // Ensure we are targeting the inner content div if it exists, to preserve the tracking wrapper
+  const trackingContent = document.getElementById("tracking-result-content");
+  
+  if (trackingContent) {
+      trackingContent.innerHTML = message;
+      resultDiv.style.display = 'block';
+  } else {
+      // Fallback for old structure
+      resultDiv.innerHTML = message;
+      resultDiv.style.display = 'block';
+  }
+
   resultDiv.scrollIntoView({ behavior: "smooth", block: "center" });
 
   document.getElementById("prnCalculation").style.display = "block";

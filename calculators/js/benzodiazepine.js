@@ -380,15 +380,17 @@ function convert() {
         alert("Please enter at least one valid dose.");
         return;
     }
-// --- START TRACKING CODE ---
-    if (typeof gtag === 'function') {
-        gtag('event', 'calculator_used', {
+
+    // --- TRACKING ---
+    if (typeof window.trackEvent === 'function') {
+        const drugName = document.getElementById('inputName1') ? document.getElementById('inputName1').value : 'Unknown';
+        window.trackEvent('clinical_calculation', {
             'event_category': 'Benzodiazepine Calculator',
-            'event_label': 'convert_success',
+            'event_label': drugName,
             'institution_id': (typeof window.PALLICALC_USER !== 'undefined' && window.PALLICALC_USER.institutionId) ? window.PALLICALC_USER.institutionId : 'personal_user'
         });
     }
-    // --- END TRACKING CODE ---
+    // ----------------
     
     const res = (totalUnits * target.equiv).toFixed(2);
     
@@ -453,8 +455,18 @@ function convert() {
     }
 
     const resultBox = document.getElementById("resultBox");
-    resultBox.innerHTML = html;
-    resultBox.style.display = 'block';
+    // Ensure we are targeting the inner content div if it exists, to preserve the tracking wrapper
+    const trackingContent = document.getElementById("tracking-result-content");
+    
+    if (trackingContent) {
+        trackingContent.innerHTML = html;
+        resultBox.style.display = 'block';
+    } else {
+        // Fallback for old structure
+        resultBox.innerHTML = html;
+        resultBox.style.display = 'block';
+    }
+    
     resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 

@@ -304,7 +304,7 @@
             </div>
 
             <div class="action-buttons no-print" style="margin-top:20px; display:flex; gap:8px; flex-direction:column;">
-                <button type="button" class="btn btn-buccal" onclick="generateQR()" style="width:100%;">
+                <button type="button" class="btn btn-buccal" onclick="trackAndGenerateQR()" style="width:100%;">
                     <i class="bi bi-qr-code-scan"></i> 生成结果二维码
                 </button>
                 <button type="button" class="btn btn-pdf" onclick="printPDF()" style="width:100%;">
@@ -316,9 +316,21 @@
     </div>
 
 <script>
-        function updateCharCount(textarea) {
-            document.getElementById('char-count').innerText = `${textarea.value.length}/100`;
+    function trackAndGenerateQR() {
+        // --- TRACKING ADDED ---
+        if (typeof window.trackEvent === 'function') {
+            window.trackEvent('generate_qr', {
+                'event_category': 'Diagnostic Tool',
+                'event_label': 'IPOS (Chinese)'
+            });
         }
+        // ---------------------
+        generateQR();
+    }
+
+    function updateCharCount(textarea) {
+        document.getElementById('char-count').innerText = `${textarea.value.length}/100`;
+    }
 
         async function printPDF() {
             const loading = document.getElementById('pdf-loading');
@@ -462,5 +474,35 @@
 </script>
 
 <script src="/js/ga-tracking.js"></script>
+<script>
+  function trackAndGenerateQR() {
+    // 1. Track the event
+    if (typeof window.trackEvent === 'function') {
+        window.trackEvent('generate_qr', {
+            'event_category': 'Diagnostic Tool',
+            'event_label': document.title.split('|')[0].trim()
+        });
+    }
+    // 2. Call the original function
+    generateQR();
+  }
+</script>
+<script>
+    function trackAndGenerateQR() {
+        if (typeof window.trackEvent === 'function') {
+            var toolName = document.title.split('|')[0].trim() || 'Diagnostic_Tool';
+            window.trackEvent('form_filled', {
+                tool: toolName,
+                status: 'Generated_QR'
+            });
+        }
+        if (typeof generateQR === 'function') {
+            generateQR();
+        } else {
+            console.error("Error: generateQR() function is missing!");
+            alert("System Error: QR Generator not loaded.");
+        }
+    }
+</script>
 </body>
 </html>

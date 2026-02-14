@@ -90,7 +90,7 @@
 
     <div class="nav-bar">
         <div id="backBtn" class="nav-link eol-theme" onclick="window.history.back()"><i class="bi bi-arrow-left"></i> Kembali</div>
-        <div class="nav-link eol-theme" onclick="showQR()"><i class="bi bi-share-fill"></i> Kongsi</div>
+        <div class="nav-link eol-theme" onclick="showQR(); trackEvent('share_content', { method: 'QR', type: 'Education' })"><i class="bi bi-share-fill"></i> Kongsi</div>
     </div>
 
     <div class="section">

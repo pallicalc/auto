@@ -306,7 +306,7 @@
 </div>
 
 <div class="save-bar">
-    <button class="btn-save" onclick="saveAndExit()">Save & Finish</button>
+    <button class="btn-save" onclick="trackAndSaveAssessment()">Save & Finish</button>
 </div>
 
 <script>
@@ -486,5 +486,28 @@
 </script>
 
 <script src="/js/ga-tracking.js"></script>
+<script>
+    function trackAndSaveAssessment() {
+        // 1. Track the Clinical Action
+        if (typeof window.trackEvent === 'function') {
+            // Grab tool name from title (e.g. "RASS Calculator" -> "RASS")
+            var toolName = document.title.split(' ')[0] || 'Diagnostic_Tool';
+            window.trackEvent('clinical_action', {
+                action: 'assessment_saved',
+                tool: toolName,
+                source: 'clinician_dashboard'
+            });
+        }
+        
+        // 2. Execute the original Save function
+        if (typeof saveAndExit === 'function') {
+            saveAndExit();
+        } else {
+            console.error("Error: saveAndExit() is missing. Redirecting...");
+            // Fallback if save fails: go back to dashboard
+            window.location.href = '../diagnostic-c.html';
+        }
+    }
+</script>
 </body>
 </html>

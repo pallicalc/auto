@@ -492,5 +492,35 @@
         }
     </script>
 <script src="/js/ga-tracking.js"></script>
+<script>
+  function trackAndGenerateQR() {
+    // 1. Track the event
+    if (typeof window.trackEvent === 'function') {
+        window.trackEvent('generate_qr', {
+            'event_category': 'Diagnostic Tool',
+            'event_label': document.title.split('|')[0].trim()
+        });
+    }
+    // 2. Call the original function
+    generateQR();
+  }
+</script>
+<script>
+    function trackAndGenerateQR() {
+        if (typeof window.trackEvent === 'function') {
+            var toolName = document.title.split('|')[0].trim() || 'Diagnostic_Tool';
+            window.trackEvent('form_filled', {
+                tool: toolName,
+                status: 'Generated_QR'
+            });
+        }
+        if (typeof generateQR === 'function') {
+            generateQR();
+        } else {
+            console.error("Error: generateQR() function is missing!");
+            alert("System Error: QR Generator not loaded.");
+        }
+    }
+</script>
 </body>
 </html>

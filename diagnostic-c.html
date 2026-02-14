@@ -283,11 +283,11 @@
             </div>
 
             <div class="report-actions-vertical" style="display:flex; flex-direction:column; gap:10px; margin-top: 20px;">
-                <button class="btn-start-assess" style="background:#25D366; border:none; margin-top:0;" onclick="copyReport()">
+                <button class="btn-start-assess" style="background:#25D366; border:none; margin-top:0;" onclick="trackAndCopyReport()">
                     <i class="bi bi-clipboard"></i> Copy Text
                 </button>
 
-                <button class="btn-start-assess" style="background:#4285F4; border:none; margin-top:0;" onclick="sendToGoogleForm()">
+                <button class="btn-start-assess" style="background:#4285F4; border:none; margin-top:0;" onclick="trackAndSendToGoogleForm()">
                     <i class="bi bi-cloud-upload"></i> Fill Patient Details & Submit
                 </button>
 
@@ -299,6 +299,39 @@
     </div>
 
     <script src="diagnostic.js"></script>
+    <script>
+        function trackAndCopyReport() {
+            if (typeof window.trackEvent === 'function') {
+                window.trackEvent('clinical_action', {
+                    'event_category': 'Diagnostic Dashboard',
+                    'event_label': 'copied_handover_report',
+                    'institution_id': (context && context.instId) ? context.instId : 'personal_user'
+                });
+            }
+            // Ensure copyReport exists or define it if it's supposed to be in diagnostic.js but missing
+            if (typeof copyReport === 'function') {
+                 copyReport();
+            } else {
+                 console.error("copyReport function not found");
+            }
+        }
+
+        function trackAndSendToGoogleForm() {
+            if (typeof window.trackEvent === 'function') {
+                window.trackEvent('clinical_action', {
+                    'event_category': 'Diagnostic Dashboard',
+                    'event_label': 'submitted_google_form',
+                    'institution_id': (context && context.instId) ? context.instId : 'personal_user'
+                });
+            }
+             // Ensure sendToGoogleForm exists
+            if (typeof sendToGoogleForm === 'function') {
+                sendToGoogleForm();
+            } else {
+                console.error("sendToGoogleForm function not found");
+            }
+        }
+    </script>
 
     <footer class="legal-footer">
         <div class="container">

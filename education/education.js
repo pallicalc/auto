@@ -349,16 +349,20 @@ async function generateAndPrintPDF(filename) {
 }
 
 // --- 6. QR CODE LOGIC ---
-function showQR() {
+function trackAndShowQR() {
     // --- START TRACKING CODE ---
-    if (typeof gtag === 'function') {
-        gtag('event', 'patient_action', {
+    if (typeof window.trackEvent === 'function') {
+        window.trackEvent('patient_share', {
             'event_category': 'Patient Education',
-            'event_label': 'generated_qr_code',
+            'event_label': document.title, // Tracks which leaflet is being shared
             'institution_id': (context && context.instId) ? context.instId : 'personal_user'
         });
     }
     // --- END TRACKING CODE ---
+    showQR();
+}
+
+function showQR() {
     const modal = document.getElementById('qr-modal');
     const container = document.getElementById('qrcode');
     container.innerHTML = '';

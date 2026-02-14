@@ -429,16 +429,38 @@
             .replace('MAGIC_A', currentData.scoreA || "") 
             .replace('MAGIC_D', currentData.scoreD || ""); 
 
-        if (typeof gtag === 'function') {
-            gtag('event', 'clinical_action', {
+        // --- TRACKING ---
+        if (typeof window.trackEvent === 'function') {
+            window.trackEvent('clinical_action', {
                 'event_category': 'Clinical Scanner',
                 'event_label': 'scanned_data_sent_to_google_form',
                 'institution_id': userInstId || 'unknown_institution',
-                'form_type': currentData ? currentData.t : 'unknown_form'
+                // Note: 'form_type' is not a standard GA4 parameter, so we pack it into label or a custom dimension if configured.
+                // But for now, let's keep it clean.
+                'value': 1
             });
         }
+        // ----------------
 
-        window.open(targetUrl, '_blank');
+        // 3. Store & Forward Logic
+        const offlineQueue = JSON.parse(localStorage.getItem('palliCalc_offlineQueue') || '[]');
+        
+        offlineQueue.push({
+            url: targetUrl,
+            timestamp: new Date().toISOString(),
+            type: 'google_form_submission',
+            patient_id: ptID, // For user reference only
+            form_type: currentData.t
+        });
+        
+        localStorage.setItem('palliCalc_offlineQueue', JSON.stringify(offlineQueue));
+        
+        // 4. Try to open immediately
+        if (navigator.onLine) {
+            window.open(targetUrl, '_blank');
+        } else {
+            alert("⚠️ You are OFFLINE. \n\nThe form has been saved to the 'Pending Uploads' queue. \n\nPlease open the queue when you have internet connection.");
+        }
     }
 
     function resetScanner() { location.reload(); }

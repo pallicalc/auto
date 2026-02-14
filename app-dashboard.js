@@ -5,11 +5,6 @@
         document.getElementById('locked-overlay').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-                .then((reg) => console.log('✅ Service Worker Registered.', reg.scope))
-                .catch((err) => console.log('❌ SW Fail:', err));
-        }
 
         detectBrowserAndShowInstructions();
 
@@ -45,25 +40,44 @@ function logout() {
 const updateBtn = document.getElementById('update-btn');
 if (updateBtn) {
     updateBtn.addEventListener('click', async () => {
-        if (!confirm("This will clear the cache and re-download the latest version of all files. Continue?")) return;
+        // 1. Check Connection First
+        if (!navigator.onLine) {
+            alert("You are offline. Cannot update.");
+            return;
+        }
 
+        // 2. Confirm
+        if (!confirm("This will clear the cache and download the latest version. Continue?")) {
+            return;
+        }
+
+        // 3. Loading State
         updateBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Updating...';
         updateBtn.disabled = true;
 
         try {
+            // 4. Hard Reset
+            
+            // Unregister Service Workers
             if ('serviceWorker' in navigator) {
                 const registrations = await navigator.serviceWorker.getRegistrations();
                 for (const registration of registrations) {
                     await registration.unregister();
                 }
             }
-            const cacheNames = await caches.keys();
-            await Promise.all(cacheNames.map(name => caches.delete(name)));
-            alert("Update complete! App will reload to download fresh files.");
-            window.location.reload();
+
+            // Delete All Caches
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+            }
+
+            // Force Reload (true forces reload from server)
+            window.location.reload(true);
+
         } catch (error) {
-            console.error(error);
-            alert("Update failed. Please manually clear browser data.");
+            console.error("Update failed:", error);
+            alert("Update failed. Please try again or manually clear browser data.");
             updateBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Update';
             updateBtn.disabled = false;
         }

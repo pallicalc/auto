@@ -98,6 +98,17 @@ function generateBlankFormQR(instId) {
 // --- RESULT GENERATION LOGIC ---
 
 function generateQR() {
+    // --- TRACKING ---
+    if (typeof window.trackEvent === 'function') {
+        const toolName = (typeof REPORT_KEY !== 'undefined') ? REPORT_KEY.replace('report_', '').toUpperCase() : "TOOL";
+        window.trackEvent('clinical_use', {
+            'event_category': 'Diagnostic Tool',
+            'event_label': toolName, // Tracks WHICH tool (AKPS, ESAS, etc.)
+            'institution_id': (context && context.instId) ? context.instId : 'personal_user'
+        });
+    }
+    // ----------------
+
     const modal = document.getElementById('pdpa-modal');
     if (modal) {
         modal.style.display = 'flex';
@@ -163,8 +174,19 @@ function executeQRGeneration() {
     const qrDiv = document.getElementById("qrcode");
     if (qrDiv) {
         qrDiv.innerHTML = "";
+        
+        // 1. Get Base URL (e.g. https://pallicalc.web.app/diagnostic/scan.html)
+        // We go up one level from the current diagnostic tool to find scan.html
+        const baseUrl = window.location.origin + "/diagnostic/scan.html";
+        
+        // 2. Encode the payload safely
         const safeData = encodeURIComponent(JSON.stringify(payload));
-        new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+        
+        // 3. Construct the Full URL
+        const fullUrl = `${baseUrl}?data=${safeData}`;
+        
+        // 4. Generate QR
+        new QRCode(qrDiv, { text: fullUrl, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
     }
 
     const section = document.getElementById('qr-section');

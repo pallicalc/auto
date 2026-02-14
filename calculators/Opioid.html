@@ -103,9 +103,13 @@
       <select id="outputName" aria-label="Output opioid name"></select>
     </fieldset>
 
-    <button id="convertBtn" class="btn btn-primary" onclick="convert()">Convert</button>
+    <button id="convertBtn" class="btn btn-primary" onclick="convert(); trackEvent('calculator_use', { type: 'Opioid', action: 'Convert' })">Convert</button>
 
-    <div id="resultBox" class="result-box" style="display:none;"></div>
+    <div id="resultBox" class="result-box" style="display:none;">
+      <!-- TRACKING WRAPPER -->
+      <div id="tracking-result-content"></div>
+      <!-- END TRACKING WRAPPER -->
+    </div>
 
     <fieldset id="prnCalculation" class="fieldset-prn" style="margin-top:20px;">
       <legend class="legend-aqua">Calculate PRN Dose</legend>
