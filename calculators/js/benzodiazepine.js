@@ -1,4 +1,11 @@
-﻿// --- Auto-Inject Favicon into Header ---
+﻿/**
+ * @file Benzodiazepine Equivalence Calculator
+ * @description This script handles the logic for the Benzodiazepine Equivalence Calculator.
+ * It calculates the equivalent dose of a target benzodiazepine based on the doses of one or more input benzodiazepines.
+ * The conversion is based on pre-defined equivalence ratios relative to Diazepam.
+ * This tool is intended for estimation purposes only, as inter-patient variability can be high.
+ */
+// --- Auto-Inject Favicon into Header ---
 (function() {
     let link = document.querySelector("link[rel~='icon']");
     if (!link) {
@@ -337,6 +344,13 @@ function fillAllSelects() {
 /* =========================================
    CALCULATION & LOGIC
    ========================================= */
+/**
+ * @description Calculates the equivalent dose of a target benzodiazepine.
+ * It sums up the Diazepam-equivalent units of all input drugs and converts that total
+ * to the equivalent dose of the selected target benzodiazepine.
+ * Also generates a comparison table and safety alerts.
+ * @returns {void} This function does not return a value but updates the DOM with the result.
+ */
 function convert() {
     const targetKey = document.getElementById("outputName").value;
     if(!targetKey) { alert("Select target."); return; }
@@ -470,6 +484,11 @@ function convert() {
     resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
+/**
+ * @description Clears all input fields and hides the result box.
+ * Resets the calculator to its initial state for a new calculation.
+ * @returns {void}
+ */
 function clearCalculator() {
     document.querySelectorAll('input[type="number"]').forEach(i => i.value="");
     document.getElementById("resultBox").style.display='none';
@@ -479,6 +498,12 @@ function clearCalculator() {
     }
 }
 
+/**
+ * @description Generates the HTML table for editing benzodiazepine ratios.
+ * Populates the table with existing benzodiazepine data and adds empty rows for new entries.
+ * This function is called when navigating to the edit page.
+ * @returns {void}
+ */
 function generateEditTable() {
     const tbody = document.getElementById("ratioTableBody");
     tbody.innerHTML = "";
@@ -515,6 +540,13 @@ function generateEditTable() {
     }
 }
 
+/**
+ * @description Saves the modified benzodiazepine ratios to local storage.
+ * It collects data from the edit table, validates the user's password,
+ * and then updates the `benzoTypes` and `includedKeys` in localStorage.
+ * Restricted to "personal" user role.
+ * @returns {boolean} Returns `false` to prevent form submission.
+ */
 function saveRatios() {
     const userRole = window.PALLICALC_USER ? window.PALLICALC_USER.role : "personal";
 
@@ -584,6 +616,11 @@ function saveRatios() {
     return false;
 }
 
+/**
+ * @description Resets the benzodiazepine ratios to the hardcoded default values.
+ * Prompts the user for confirmation before removing the custom ratios from local storage.
+ * @returns {void}
+ */
 function resetToDefaults() {
     if(confirm("Reset to system defaults?")) { localStorage.removeItem("benzoTypes"); loadSavedData(); generateEditTable(); }
 }

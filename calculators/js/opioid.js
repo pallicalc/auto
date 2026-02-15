@@ -1,4 +1,9 @@
-﻿// --- Auto-Inject Favicon into Header ---
+﻿/**
+ * @file This file contains the logic for the Opioid Rotation and Equianalgesic Conversion Calculator.
+ * It handles dose calculations, conversions between different opioids, and provides safety warnings
+ * for cross-tolerance and high doses.
+ */
+// --- Auto-Inject Favicon into Header ---
 (function() {
     let link = document.querySelector("link[rel~='icon']");
     if (!link) {
@@ -572,6 +577,13 @@ window.getKeyByPrn = function () {
 /* =========================================
    CALCULATION LOGIC
    ========================================= */
+/**
+ * Calculates the total oral morphine equivalent dose from multiple opioid inputs
+ * and converts it to a target opioid dose. It also displays warnings for high
+ * dose increases and incomplete cross-tolerance when switching between opioids.
+ *
+ * @returns {void} This function does not return a value but updates the DOM with the results.
+ */
 window.convert = function() {
   const doses = [getDoseValue("inputDose1"), getDoseValue("inputDose2"), getDoseValue("inputDose3"), getDoseValue("inputDose4")];
   const types = [window.getKeyByInput(1), window.getKeyByInput(2), window.getKeyByInput(3), window.getKeyByInput(4)];
@@ -683,6 +695,13 @@ window.convert = function() {
   document.getElementById("prnDoseOutput").style.display = "none";
 };
 
+/**
+ * Calculates and displays the recommended PRN (as-needed) dose range for a selected opioid
+ * based on the total daily oral morphine equivalent dose calculated previously.
+ * The PRN dose is typically 1/6th to 1/12th of the total 24-hour dose.
+ *
+ * @returns {void} This function updates the DOM to show the calculated PRN dose range.
+ */
 window.calculateNewPrnDose = function() {
   const outputDiv = document.getElementById("prnDoseOutput");
   const selectedRoute = document.getElementById("prnRouteSelect").value;
@@ -706,6 +725,12 @@ window.calculateNewPrnDose = function() {
   outputDiv.scrollIntoView({ behavior: "smooth", block: "center" });
 };
 
+/**
+ * Resets the calculator form to its initial state. It clears all input fields,
+ * resets dropdowns, hides results and PRN sections, and resets internal state variables.
+ *
+ * @returns {void}
+ */
 window.clearCalculator = function() {
   document.querySelectorAll('input[type="number"]').forEach(input => (input.value = ""));
   document.querySelectorAll("select").forEach(select => (select.selectedIndex = 0));

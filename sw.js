@@ -1,4 +1,8 @@
-﻿const CACHE_NAME = 'pallicalc-v22-diagnostic-tools';
+﻿/**
+ * @file This service worker uses a "Network-First" strategy for HTML/JS
+ * to ensure clinicians always have the latest calculation logic.
+ */
+const CACHE_NAME = 'pallicalc-v22-diagnostic-tools';
 
 const CRITICAL_FILES = [
   // Core
