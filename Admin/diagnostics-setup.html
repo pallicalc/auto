@@ -42,136 +42,133 @@
       border: 1px solid #e2e8f0;
       border-radius: 10px;
       padding: 20px;
-      margin-bottom: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      margin-bottom: 20px;
       transition: all 0.2s;
     }
+
     .tool-card:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      border-color: #d6d6d6;
+      border-color: #bfa5e9;
+      box-shadow: 0 4px 12px rgba(111, 66, 193, 0.05);
     }
-    
-    .form-switch .form-check-input {
-      width: 3em;
-      height: 1.5em;
-      cursor: pointer;
+
+    .magic-badge {
+      background-color: #f3e8ff;
+      color: #6f42c1;
+      border: 1px solid #d8b4fe;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-family: monospace;
+      margin-right: 5px;
+      margin-bottom: 5px;
+      display: inline-block;
     }
-    .legal-warning {
-            font-size: 0.75rem; 
-            color: #dc3545; 
-            font-weight: 600; 
-            text-align: center; 
-            margin-top: 30px;
-        }
+
+    #loadingOverlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255,255,255,0.9); z-index: 9999;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+    }
+
+    #premiumOverlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #f8f9fa; z-index: 10000;
+      display: none;
+      flex-direction: column;
+      justify-content: center; align-items: center;
+    }
+
+    .premium-msg-card {
+        background: white;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        text-align: center;
+        max-width: 450px;
+        border: 1px solid #e9ecef;
+    }
   </style>
-<script>
-    // SAFETY: Prevent crash if Analytics is blocked
-    window.trackEvent = window.trackEvent || function() {};
-</script>
 </head>
 <body>
 
   <div id="loadingOverlay">
     <div class="spinner-border text-primary mb-3" role="status"></div>
-    <div class="text-muted fw-bold">Loading Preferences...</div>
+    <div class="text-muted fw-bold">Verifying Access...</div>
   </div>
 
-  <div class="container px-3">
+  <div id="premiumOverlay">
+    <div class="premium-msg-card">
+        <div class="mb-3">
+            <i class="bi bi-gem text-warning" style="font-size: 3.5rem;"></i>
+        </div>
+        <h3 class="fw-bold text-dark mb-2">Premium Feature</h3>
+        <p class="text-muted mb-4">
+            Diagnostic Tool Configuration is exclusively available to Premium Institution Admins.
+        </p>
+        <div class="d-grid gap-2">
+            <a href="upgrade.html" class="btn btn-warning fw-bold text-dark py-2">
+                Upgrade Now <i class="bi bi-arrow-right"></i>
+            </a>
+            <a href="../Admin.html" class="btn btn-outline-secondary py-2">
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+  </div>
+
+  <div class="container px-3" id="mainContent" style="display:none;">
     <div class="main-container">
-      
+
       <div class="header-bar">
         <div>
-          <h4 class="mb-0 fw-bold"><i class="bi bi-clipboard-check"></i> Diagnostic Tools</h4>
-          <small class="opacity-75">Enable/Disable Tools for Your Institution</small>
+          <h4 class="mb-0 fw-bold"><i class="bi bi-clipboard-pulse"></i> Diagnostic Configuration</h4>
+          <small class="opacity-75">Link your Google Forms here</small>
         </div>
         <a href="../admin.html" class="btn btn-outline-light btn-sm">
-          <i class="bi bi-arrow-left"></i> Back
+          <i class="bi bi-arrow-left"></i> Back to Dashboard
         </a>
       </div>
 
       <div class="content-area">
-        
-        <div class="alert alert-light border shadow-sm mb-4">
-          <i class="bi bi-info-circle-fill text-primary me-2"></i>
-          Selected tools will appear in the <strong>Clinician Assessment</strong> and <strong>Patient Reported</strong> sections for your users.
+
+        <div class="alert alert-info shadow-sm mb-4">
+          <h5><i class="bi bi-info-circle-fill"></i> Setup Instructions:</h5>
+          <ol class="mb-0 ps-3 small">
+            <li>Create a Google Form for the tool.</li>
+            <li>Click "Get Pre-filled Link" (three dots menu).</li>
+            <li>Fill the fields with the <strong>Magic Codes</strong> shown below (e.g., MAGIC_ID).</li>
+            <li>Click "Get Link" and paste it into the boxes below.</li>
+          </ol>
         </div>
 
-        <form id="toolsForm">
-          
-          <div class="tool-card">
-            <div class="d-flex align-items-center mb-3">
-              <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
-                <i class="bi bi-speedometer2 text-primary fs-4"></i>
-              </div>
-              <div>
-                <h5 class="mb-0 fw-bold text-primary">AKPS</h5>
-                <small class="text-muted">Australia-modified Karnofsky Performance Status</small>
-              </div>
-            </div>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="tool_akps">
-            </div>
-          </div>
+        <form id="configForm">
 
-          <div class="tool-card">
+          <div class="tool-card" style="border-left: 5px solid #198754;">
             <div class="d-flex align-items-center mb-3">
-              <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
-                <i class="bi bi-clipboard-pulse text-primary fs-4"></i>
+              <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3">
+                <i class="bi bi-clipboard-check text-success fs-4"></i>
               </div>
               <div>
-                <h5 class="mb-0 fw-bold text-primary">SPICT</h5>
-                <small class="text-muted">Supportive and Palliative Care Indicators Tool</small>
+                <h5 class="mb-0 fw-bold text-success">Clinical Assessment Handover</h5>
+                <small class="text-muted">Master form for FLACC, RASS, AKPS, etc.</small>
               </div>
             </div>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="tool_spict">
-            </div>
-          </div>
 
-          <div class="tool-card">
-            <div class="d-flex align-items-center mb-3">
-              <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
-                <i class="bi bi-emoji-frown text-primary fs-4"></i>
-              </div>
-              <div>
-                <h5 class="mb-0 fw-bold text-primary">FLACC</h5>
-                <small class="text-muted">Pain Scale for Non-Verbal Patients</small>
-              </div>
+            <div class="mb-2">
+              <label class="form-label fw-bold small text-secondary">Google Form Pre-filled Link</label>
+              <input type="url" class="form-control" id="link_handover" placeholder="https://docs.google.com/forms/..." required>
             </div>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="tool_flacc">
-            </div>
-          </div>
 
-          <div class="tool-card">
-            <div class="d-flex align-items-center mb-3">
-              <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
-                <i class="bi bi-activity text-primary fs-4"></i>
-              </div>
+            <div class="bg-light p-2 rounded border">
+              <small class="text-muted d-block mb-1 fw-bold">Required Magic Codes (Fill one per question):</small>
               <div>
-                <h5 class="mb-0 fw-bold text-primary">RASS</h5>
-                <small class="text-muted">Richmond Agitation-Sedation Scale</small>
+                <span class="magic-badge">MAGIC_FLACC</span>
+                <span class="magic-badge">MAGIC_RASS</span>
+                <span class="magic-badge">MAGIC_AKPS</span>
+                <span class="magic-badge">MAGIC_RUG</span>
+                <span class="magic-badge">MAGIC_RDOS</span>
               </div>
-            </div>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="tool_rass">
-            </div>
-          </div>
-
-          <div class="tool-card">
-            <div class="d-flex align-items-center mb-3">
-              <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
-                <i class="bi bi-lungs text-primary fs-4"></i>
-              </div>
-              <div>
-                <h5 class="mb-0 fw-bold text-primary">RDOS</h5>
-                <small class="text-muted">Respiratory Distress Observation Scale</small>
-              </div>
-            </div>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="tool_rdos">
             </div>
           </div>
 
@@ -185,47 +182,84 @@
                 <small class="text-muted">Integrated Palliative care Outcome Scale</small>
               </div>
             </div>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="tool_ipos">
+            <div class="mb-2">
+              <label class="form-label fw-bold small text-secondary">Google Form Pre-filled Link</label>
+              <input type="url" class="form-control" id="link_ipos" placeholder="https://docs.google.com/forms/..." required>
+            </div>
+            <div class="bg-light p-2 rounded border">
+              <small class="text-muted d-block mb-1 fw-bold">Required Magic Codes:</small>
+              <div>
+                <span class="magic-badge">MAGIC_ID</span>
+                <span class="magic-badge">MAGIC_Q1</span>
+                <span class="magic-badge">MAGIC_SUMMARY</span>
+              </div>
             </div>
           </div>
 
           <div class="tool-card">
             <div class="d-flex align-items-center mb-3">
-              <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
-                <i class="bi bi-chat-square-heart text-primary fs-4"></i>
+              <div class="bg-warning bg-opacity-10 p-2 rounded-circle me-3">
+                <i class="bi bi-emoji-frown text-warning fs-4"></i>
               </div>
               <div>
-                <h5 class="mb-0 fw-bold text-primary">HADS</h5>
+                <h5 class="mb-0 fw-bold text-warning" style="color:#b45309!important">HADS</h5>
                 <small class="text-muted">Hospital Anxiety and Depression Scale</small>
               </div>
             </div>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="tool_hads">
+            <div class="mb-2">
+              <label class="form-label fw-bold small text-secondary">Google Form Pre-filled Link</label>
+              <input type="url" class="form-control" id="link_hads" placeholder="https://docs.google.com/forms/..." required>
+            </div>
+            <div class="bg-light p-2 rounded border">
+              <small class="text-muted d-block mb-1 fw-bold">Required Magic Codes:</small>
+              <div>
+                <span class="magic-badge">MAGIC_ID</span>
+                <span class="magic-badge">MAGIC_A</span>
+                <span class="magic-badge">MAGIC_D</span>
+              </div>
             </div>
           </div>
 
           <div class="tool-card">
             <div class="d-flex align-items-center mb-3">
-              <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
-                <i class="bi bi-thermometer text-primary fs-4"></i>
+              <div class="bg-danger bg-opacity-10 p-2 rounded-circle me-3">
+                <i class="bi bi-thermometer-half text-danger fs-4"></i>
               </div>
               <div>
-                <h5 class="mb-0 fw-bold text-primary">Distress Thermometer</h5>
-                <small class="text-muted">Psychological Distress Assessment</small>
+                <h5 class="mb-0 fw-bold text-danger">Distress Thermometer</h5>
+                <small class="text-muted">Rapid screening tool</small>
               </div>
             </div>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="tool_distress">
+            <div class="mb-2">
+              <label class="form-label fw-bold small text-secondary">Google Form Pre-filled Link</label>
+              <input type="url" class="form-control" id="link_distress" placeholder="https://docs.google.com/forms/..." required>
+            </div>
+            <div class="bg-light p-2 rounded border">
+              <small class="text-muted d-block mb-1 fw-bold">Required Magic Codes:</small>
+              <div>
+                <span class="magic-badge">MAGIC_ID</span>
+                <span class="magic-badge">MAGIC_SCORE</span>
+              </div>
             </div>
           </div>
 
-          <div class="d-flex justify-content-end mt-4 pt-3 border-top">
-            <button type="submit" class="btn btn-primary px-4 fw-bold">
-              <i class="bi bi-save"></i> Save Preferences
-            </button>
+          <hr class="my-4">
+
+          <div class="card bg-light border-0">
+            <div class="card-body">
+              <label for="confirmPassword" class="form-label fw-bold">
+                <i class="bi bi-lock-fill"></i> Verify Identity to Save
+              </label>
+              <div class="input-group mb-3">
+                <input type="password" class="form-control" id="confirmPassword" placeholder="Enter your login password" required>
+                <button class="btn btn-primary px-4 fw-bold" type="submit" id="saveBtn" style="background-color: #6f42c1; border-color: #6f42c1;">
+                  <i class="bi bi-save"></i> Save Links
+                </button>
+              </div>
+              <div id="msgArea" class="alert alert-success mt-2" style="display:none;"></div>
+              <div id="errorArea" class="alert alert-danger mt-2" style="display:none;"></div>
+            </div>
           </div>
-          <p class="legal-warning">For Educational Use Only. Not a Medical Device.<br>Verify all results.</p>
 
         </form>
       </div>
@@ -233,20 +267,142 @@
   </div>
 
   <script>
-    // ... Firebase Config (Same as institution.html) ...
-    // Placeholder Logic
-    document.getElementById('toolsForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      alert('Preferences Saved!');
+    /* ================= FIREBASE CONFIG ================= */
+    const firebaseConfig = {
+      apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
+      authDomain: "pallicalc-eabdc.firebaseapp.com",
+      projectId: "pallicalc-eabdc",
+      storageBucket: "pallicalc-eabdc.firebasestorage.app",
+      messagingSenderId: "347532270864",
+      appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentInstitutionId = null;
+
+    /* ================= INIT & LISTENERS ================= */
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('configForm').addEventListener('submit', saveLinks);
     });
-    
-    // Simulate Loading
-    setTimeout(() => {
-      document.getElementById('loadingOverlay').style.display = 'none';
-      // Pre-check some boxes
-      document.getElementById('tool_akps').checked = true;
-      document.getElementById('tool_spict').checked = true;
-    }, 800);
+
+    /* ================= AUTH CHECK & PREMIUM GATE ================= */
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        window.location.href = "../index.html";
+        return;
+      }
+      try {
+        const snap = await db.collection("users").doc(user.uid).get();
+
+        if (!snap.exists) {
+            alert("User profile not found.");
+            window.location.href = "../index.html";
+            return;
+        }
+
+        const data = snap.data();
+
+        if (data.role !== "institutionAdmin") {
+          alert("Access Denied: Only Institution Admins can access this page.");
+          window.location.href = "../admin.html";
+          return;
+        }
+
+        if (!data.isPremium) {
+            document.getElementById("loadingOverlay").style.display = "none";
+            document.getElementById("premiumOverlay").style.display = "flex";
+            return; 
+        }
+
+        currentInstitutionId = data.institutionId;
+        await loadLinksFromFirebase();
+
+        document.getElementById("loadingOverlay").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+
+      } catch (e) {
+        console.error(e);
+        alert("Error loading profile: " + e.message);
+      }
+    });
+
+    /* ================= LOAD DATA ================= */
+    async function loadLinksFromFirebase() {
+      try {
+        const doc = await db.collection("institutions").doc(currentInstitutionId).get();
+        if (doc.exists) {
+            const data = doc.data().diagnosticLinks || {};
+            
+            // Populate Inputs
+            if(data.handover) document.getElementById('link_handover').value = data.handover; // <--- NEW KEY
+            if(data.ipos)     document.getElementById('link_ipos').value = data.ipos;
+            if(data.hads)     document.getElementById('link_hads').value = data.hads;
+            if(data.dt)       document.getElementById('link_distress').value = data.dt; 
+        }
+      } catch (e) {
+        console.error("Load Failed:", e);
+        showErr("Failed to load existing links.");
+      }
+    }
+
+    /* ================= SAVE LOGIC ================= */
+    async function saveLinks(e) {
+      e.preventDefault();
+
+      const password = document.getElementById("confirmPassword").value;
+      const btn = document.getElementById("saveBtn");
+      const msgArea = document.getElementById("msgArea");
+      const errorArea = document.getElementById("errorArea");
+
+      msgArea.style.display = "none";
+      errorArea.style.display = "none";
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+
+      try {
+        const user = auth.currentUser;
+        const cred = firebase.auth.EmailAuthProvider.credential(user.email, password);
+        await user.reauthenticateWithCredential(cred);
+
+        const links = {
+            handover: document.getElementById('link_handover').value.trim(), // <--- NEW KEY
+            ipos:     document.getElementById('link_ipos').value.trim(),
+            hads:     document.getElementById('link_hads').value.trim(),
+            dt:       document.getElementById('link_distress').value.trim()
+        };
+
+        await db.collection("institutions").doc(currentInstitutionId).set({
+            diagnosticLinks: links
+        }, { merge: true });
+
+        msgArea.textContent = "Success! Links saved securely.";
+        msgArea.style.display = "block";
+        document.getElementById("confirmPassword").value = "";
+
+      } catch (err) {
+        console.error(err);
+        let errorMsg = err.message;
+        if (err.code === 'auth/wrong-password') {
+          errorMsg = "Incorrect password. Please try again.";
+        }
+        errorArea.textContent = "Error: " + errorMsg;
+        errorArea.style.display = "block";
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-save"></i> Save Links';
+      }
+    }
+
+    function showErr(txt) {
+      const el = document.getElementById("errorArea");
+      el.textContent = txt;
+      el.style.display = "block";
+    }
   </script>
+
+<script src="/js/ga-tracking.js"></script>
 </body>
 </html>

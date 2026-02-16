@@ -16,19 +16,6 @@
   <link rel="stylesheet" href="../admin-style.css">
 
   <link rel="stylesheet" href="institution.css">
-  <style>
-      .legal-warning {
-            font-size: 0.75rem; 
-            color: #dc3545; 
-            font-weight: 600; 
-            text-align: center; 
-            margin-top: 30px;
-        }
-  </style>
-<script>
-    // SAFETY: Prevent crash if Analytics is blocked
-    window.trackEvent = window.trackEvent || function() {};
-</script>
 </head>
 <body>
 
@@ -55,39 +42,50 @@
           
           <div class="mb-4">
             <label class="form-label">Institution Logos (Max 2)</label>
-            <div class="logo-upload-area" id="dropZone">
-              <i class="bi bi-cloud-arrow-up text-primary fs-1 mb-2"></i>
-              <p class="mb-0 text-muted">Click or Drag & Drop to Upload</p>
-              <input type="file" id="logoInput" accept="image/*" multiple hidden>
+            <div class="text-muted small mb-2">
+              Select from presets or upload new. <br>
+              <span class="text-success"><i class="bi bi-check-circle"></i> <b>Hybrid Mode:</b> Presets load from Cloudflare (Free), Uploads from Firebase.</span>
             </div>
             
             <div class="logo-gallery" id="logoGallery"></div>
-          </div>
 
-          <div class="mb-4">
-            <label class="form-label">Institution Name</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-building"></i></span>
-              <input type="text" class="form-control" id="instName" placeholder="e.g. Hospital Kuala Lumpur">
+            <div class="logo-preview-area" id="logoContainer">
+              <div class="upload-box" id="uploadTrigger">
+                <i class="bi bi-cloud-arrow-up-fill fs-4"></i>
+                <span class="upload-text">UPLOAD</span>
+              </div>
+            </div>
+            
+            <input type="file" id="logoInput" accept="image/*" style="display: none;">
+            
+            <div id="processingIndicator" class="text-primary small fw-bold mt-2" style="display:none;">
+              <span class="spinner-border spinner-border-sm"></span> Processing image...
             </div>
           </div>
 
+          <div class="mb-3">
+            <label for="instName" class="form-label">Institution Name</label>
+            <input type="text" class="form-control" id="instName" placeholder="e.g. Hospital Kuala Lumpur" required>
+          </div>
+
           <div class="mb-4">
-            <label class="form-label">Contact / Ward Info</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-              <input type="text" class="form-control" id="instContact" placeholder="e.g. Palliative Unit: 03-1234 5678">
-            </div>
+            <label for="instContact" class="form-label">Contact Number</label>
+            <input type="tel" class="form-control" id="instContact" placeholder="e.g. +60 3-2615 5555" required>
           </div>
 
           <hr class="my-4">
 
-          <div class="d-flex justify-content-end">
-            <button type="submit" class="btn btn-primary px-4 fw-bold">
-              <i class="bi bi-save"></i> Save Changes
+          <div class="alert alert-light border">
+            <label class="form-label mb-2"><i class="bi bi-shield-lock"></i> Security Verification</label>
+            <input type="password" class="form-control mb-3" id="adminPassword" placeholder="Enter login password to save" required>
+            
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-2" id="saveBtn">
+              <i class="bi bi-save2"></i> Update Institution Details
             </button>
+            
+            <div id="msgArea" class="alert alert-success mt-3 text-center" style="display:none;"></div>
+            <div id="errorArea" class="alert alert-danger mt-3 text-center" style="display:none;"></div>
           </div>
-          <p class="legal-warning">For Educational Use Only. Not a Medical Device.<br>Verify all results.</p>
 
         </form>
       </div>
@@ -95,5 +93,7 @@
   </div>
 
   <script src="institution.js"></script>
+
+<script src="/js/ga-tracking.js"></script>
 </body>
 </html>
