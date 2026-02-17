@@ -119,20 +119,31 @@ async function updateCounters() {
     }
 }
 
-// ✅ ROBUST AUTH HANDLER
+// ==========================================
+// ✅ AUTH STATE HANDLER (RACE CONDITION FIX)
+// ==========================================
 async function checkAuthState(user) {
     currentUser = user;
-    
-    // Re-select elements every time to ensure freshness
+
+    // Grab elements we need to hide/show
     const userInfo = document.getElementById('user-info');
-    const vipBadge = document.getElementById('user-tier-badge');
-    const vipLock = document.getElementById('vip-lock-opioid');
     const actionBtns = document.getElementById('action-buttons');
     const toolsSection = document.getElementById('tools-section');
     const featureSection = document.getElementById('features-section');
+    const vipBadge = document.getElementById('user-tier-badge');
+    const vipLock = document.getElementById('vip-lock-opioid');
 
+    // --- SCENARIO A: USER IS LOGGED IN ---
     if (user) {
-        // 1. Email Verification Check
+        // 1. INSTANTLY HIDE EVERYTHING (Fixes the race condition)
+        if (toolsSection) toolsSection.style.display = 'none';
+        if (featureSection) featureSection.style.display = 'none';
+        if (actionBtns) actionBtns.classList.add('hidden');
+        
+        // 2. SHOW "LOADING" STATUS
+        if (userInfo) userInfo.innerHTML = '<span style="font-size:13px; color:#475569">Verifying account...</span>';
+
+        // 3. CHECK EMAIL VERIFICATION
         if (!user.emailVerified) {
             await auth.signOut();
             openLoginModal();
@@ -145,24 +156,27 @@ async function checkAuthState(user) {
         }
 
         try {
-            // 2. Call Server-Side Secure Check
+            // 4. FORCE REFRESH & CHECK SERVER
+            await user.getIdToken(true);
+            
             const getStatus = firebase.functions().httpsCallable('getUserStatus');
             const result = await getStatus();
             const statusData = result.data;
-            
+
+            // 5. REDIRECT IF ADMIN (The Critical Step)
+            if (statusData.role === 'institutionAdmin') {
+                window.location.href = 'Admin.html';
+                return; // STOP! Do not run the code below.
+            }
+
+            // 6. IF NOT ADMIN, SHOW THE APP
             if (statusData.isSuspended) {
                 handleSuspension(statusData, statusData.institutionName || "your institution");
                 return;
             }
 
-            if (statusData.role === 'institutionAdmin') {
-                window.location.href = 'Admin.html';
-                return;
-            }
-
-            // ✅ ACTIVE
+            // Save preferences
             isVipUser = statusData.isVip;
-
             if (statusData.customRatios) {
                 localStorage.setItem('palliCalc_customRatios', JSON.stringify(statusData.customRatios));
                 if (statusData.institutionName) {
@@ -170,79 +184,63 @@ async function checkAuthState(user) {
                 }
             }
 
+            // Update Header
             updateUIForLogin(statusData, user.email, false);
-            
+
+            // NOW we can safely show the tools
+            if (toolsSection) {
+                toolsSection.classList.add('visible');
+                toolsSection.style.display = 'grid';
+            }
+
         } catch(e) {
             console.error('Profile Load Error:', e);
-            // Fallback to basic user if server check fails (offline/error)
+            // If server fails, fallback to basic user but still show tools
             isVipUser = false;
             updateUIForLogin({}, user.email, false);
+            
+            if (toolsSection) {
+                toolsSection.classList.add('visible');
+                toolsSection.style.display = 'grid';
+            }
         }
-        
-    } else {
-        // ✅ LOGOUT STATE
+
+    } 
+    // --- SCENARIO B: USER IS LOGGED OUT ---
+    else {
+        // Clear data
         localStorage.removeItem('palliCalc_customRatios');
         localStorage.removeItem('palliCalc_institutionName');
 
         // Reset Header
         if (userInfo) {
             userInfo.innerHTML = '<button id="login-btn" class="login-btn" aria-label="Login to access calculators">🔐 Login</button>';
+            const newLoginBtn = document.getElementById('login-btn');
+            if (newLoginBtn) newLoginBtn.addEventListener('click', openLoginModal);
         }
-        
+
         if (actionBtns) actionBtns.classList.remove('hidden');
-        
-        // Hide Tools & Reset HTML
+
+        // Hide Tools
         if (toolsSection) {
             toolsSection.classList.remove('visible');
             toolsSection.style.display = 'none';
             
-            // Standard Tools Layout
-            toolsSection.innerHTML = `
-                <h2 id="tools-title"
-                    style="text-align:center;font-size:24px;font-weight:700;color:#1e293b;margin-bottom:20px;"
-                    aria-label="Tools available">
-                    🛠️ Tools Available
-                </h2>
-
-                <a href="all-calculators.html" class="tool-btn" aria-label="All calculators page">
-                    <span class="tool-icon" role="img" aria-label="Pill icon">💊</span>
-                    <span>All calculators
-                        <span id="user-tier-badge" class="vip-badge" style="display:none;">PRO</span>
-                    </span>
-                </a>
-
-                <a href="diagnostic-p.html" class="tool-btn" aria-label="Patient Reported Measures page">
-                    <span class="tool-icon" role="img" aria-label="Patient icon">👤</span>
-                    <span>Patient Measures (PROMs)
-                        <span class="vip-badge" style="background-color: #0ea5e9; font-size: 0.7em;">NEW</span>
-                    </span>
-                </a>
-
-                <a href="diagnostic-c.html" class="tool-btn" aria-label="Clinician Assessment tools page">
-                    <span class="tool-icon" role="img" aria-label="Clinician icon">🩺</span>
-                    <span>Clinician Assessments
-                        <span class="vip-badge" style="background-color: #28a745; font-size: 0.7em;">NEW</span>
-                    </span>
-                </a>
-
-                <a href="patient-education.html" class="tool-btn" aria-label="Patient information pamphlets">
-                    <span class="tool-icon" role="img" aria-label="Information sheets icon">📄</span>
-                    <span>Patient information pamphlets</span>
-                </a>
-
-                <a href="healthcare-guidelines.html" class="tool-btn" aria-label="Healthcare guidelines">
-                    <span class="tool-icon" role="img" aria-label="Guidelines icon">📘</span>
-                    <span>Healthcare guidelines</span>
-                </a>
+            // Restore default text
+             toolsSection.innerHTML = `
+                <h2 id="tools-title" style="text-align:center;font-size:24px;font-weight:700;color:#1e293b;margin-bottom:20px;">🛠️ Tools Available</h2>
+                <a href="all-calculators.html" class="tool-btn"><span class="tool-icon">💊</span><span>All calculators</span></a>
+                <a href="diagnostic-p.html" class="tool-btn"><span class="tool-icon">👤</span><span>Patient Measures (PROMs)</span></a>
+                <a href="diagnostic-c.html" class="tool-btn"><span class="tool-icon">🩺</span><span>Clinician Assessments</span></a>
+                <a href="patient-education.html" class="tool-btn"><span class="tool-icon">📄</span><span>Patient information pamphlets</span></a>
+                <a href="healthcare-guidelines.html" class="tool-btn"><span class="tool-icon">📘</span><span>Healthcare guidelines</span></a>
             `;
         }
 
+        // Show Marketing
         if (featureSection) featureSection.style.display = 'block';
         if (vipBadge) vipBadge.style.display = 'none';
         if (vipLock) vipLock.style.display = 'none';
-
-        const newLoginBtn = document.getElementById('login-btn');
-        if (newLoginBtn) newLoginBtn.addEventListener('click', openLoginModal);
     }
 }
 
@@ -351,7 +349,10 @@ function showSuspensionNotice(instName) {
 async function handleLogout() {
     try {
         await auth.signOut();
+        // Clear critical data
         localStorage.removeItem('palliCalcLoginPassword');
+        localStorage.removeItem('palliCalc_customRatios');
+        // Force reload to clear all memory states
         window.location.reload(); 
     } catch (error) {
         console.error('Logout error:', error);
