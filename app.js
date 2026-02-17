@@ -1,54 +1,58 @@
 ﻿// ==========================================
 // 1. SMART SERVICE WORKER REGISTRATION
 // ==========================================
-// --- Auto-Inject Full Favicon Suite ---
-(function() {
-    // 1. Define the icons we need
-    const icons = [
-        // The modern standard (fixes Safari Desktop issues)
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-        
-        // The specific mask for Safari Pinned Tabs (change color to your brand brand)
-        { rel: 'mask-icon', href: '/favicon.svg', color: '#000000' },
-        
-        // The icon for iPhone/iPad home screens (prevents white box on iOS)
-        { rel: 'apple-touch-icon', href: '/favicon.png' }
-    ];
-
-    // 2. Loop through and inject/update them
-    icons.forEach(iconDef => {
-        // Look for existing link of this specific type
-        let link = document.querySelector(`link[rel='${iconDef.rel}']`);
-        
-        if (!link) {
-            link = document.createElement('link');
-            link.rel = iconDef.rel;
-            document.head.appendChild(link);
-        }
-        
-        // Update attributes
-        if (iconDef.type) link.type = iconDef.type;
-        if (iconDef.color) link.setAttribute('color', iconDef.color);
-        
-        // Set the path
-        link.href = iconDef.href;
-    });
-})();
-
+i       .then(reg => {
+                    console.log('✅ [App] Service Worker Registered');
+                })
+                .catch(err => {
+                    console.warn('❌ [App] SW Registration Failed', err);
+                });
+        });
+    }
+}
 
 // ==========================================
 // 2. AUTO-INJECT FAVICON
 // ==========================================
+
 (function() {
-    let link = document.querySelector("link[rel~='icon']");
-    if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
+    // We add '?v=2' to the end of filenames. 
+    // This forces the browser to download the file again, ignoring the old cache.
+    const version = '?v=2'; 
+
+    const icons = [
+        // 1. The Modern SVG (For Desktop Safari, Chrome, Firefox)
+        // This stops the "White Box" issue
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' + version },
+        
+        // 2. Safari Pinned Tab Mask
+        // Change color: '#000000' to your actual brand color (e.g., '#5AAB8B')
+        { rel: 'mask-icon', href: '/favicon.svg' + version, color: '#000000' },
+        
+        // 3. Apple Touch Icon (iPhone/iPad Home Screen)
+        // Ensure this points to a PNG, not SVG, for best iOS compatibility
+        { rel: 'apple-touch-icon', href: '/favicon.png' + version }
+    ];
+
+    icons.forEach(iconDef => {
+        // Remove any existing conflicting tags first to ensure a clean slate
+        let existingLink = document.querySelector(`link[rel='${iconDef.rel}']`);
+        if (existingLink) {
+            existingLink.remove();
+        }
+
+        // Create the new link
+        let link = document.createElement('link');
+        link.rel = iconDef.rel;
+        link.href = iconDef.href;
+
+        if (iconDef.type) link.type = iconDef.type;
+        if (iconDef.color) link.setAttribute('color', iconDef.color);
+
         document.head.appendChild(link);
-    }
-    // Ensures favicon loads even if this script is cached/run from different depths
-    link.href = '/favicon.png'; 
+    });
 })();
+
 
 // ==========================================
 // 3. FIREBASE CONFIGURATION
