@@ -1,24 +1,40 @@
 ﻿// ==========================================
 // 1. SMART SERVICE WORKER REGISTRATION
 // ==========================================
-if ('serviceWorker' in navigator) {
-    // Logic: Only register the Service Worker (offline cache) if we are NOT 
-    // on the landing page. This prevents caching the app for casual visitors.
-    const isLandingPage = window.location.pathname === '/' || window.location.pathname.endsWith('index.html');
-    
-    if (!isLandingPage) {
-        window.addEventListener('load', () => {
-            // Registers sw.js at the root scope so it can control all subfolders
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => {
-                    console.log('✅ [App] Service Worker Registered');
-                })
-                .catch(err => {
-                    console.warn('❌ [App] SW Registration Failed', err);
-                });
-        });
-    }
-}
+// --- Auto-Inject Full Favicon Suite ---
+(function() {
+    // 1. Define the icons we need
+    const icons = [
+        // The modern standard (fixes Safari Desktop issues)
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        
+        // The specific mask for Safari Pinned Tabs (change color to your brand brand)
+        { rel: 'mask-icon', href: '/favicon.svg', color: '#000000' },
+        
+        // The icon for iPhone/iPad home screens (prevents white box on iOS)
+        { rel: 'apple-touch-icon', href: '/favicon.png' }
+    ];
+
+    // 2. Loop through and inject/update them
+    icons.forEach(iconDef => {
+        // Look for existing link of this specific type
+        let link = document.querySelector(`link[rel='${iconDef.rel}']`);
+        
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = iconDef.rel;
+            document.head.appendChild(link);
+        }
+        
+        // Update attributes
+        if (iconDef.type) link.type = iconDef.type;
+        if (iconDef.color) link.setAttribute('color', iconDef.color);
+        
+        // Set the path
+        link.href = iconDef.href;
+    });
+})();
+
 
 // ==========================================
 // 2. AUTO-INJECT FAVICON
