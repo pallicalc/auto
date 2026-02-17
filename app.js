@@ -1,20 +1,28 @@
-﻿// --- Service Worker Registration (Restricted to App) ---
+﻿// ==========================================
+// 1. SMART SERVICE WORKER REGISTRATION
+// ==========================================
 if ('serviceWorker' in navigator) {
-    // Check if we are NOT on the landing page (index.html) before registering
-    // flexible check for root '/' or '/index.html'
+    // Logic: Only register the Service Worker (offline cache) if we are NOT 
+    // on the landing page. This prevents caching the app for casual visitors.
     const isLandingPage = window.location.pathname === '/' || window.location.pathname.endsWith('index.html');
     
     if (!isLandingPage) {
         window.addEventListener('load', () => {
-            // Registering at root scope so it can control subfolders, but we only trigger it here.
+            // Registers sw.js at the root scope so it can control all subfolders
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => { /* console.log('SW Registered for App') */ })
-                .catch(err => { /* console.log('SW Registration Failed', err) */ });
+                .then(reg => {
+                    console.log('✅ [App] Service Worker Registered');
+                })
+                .catch(err => {
+                    console.warn('❌ [App] SW Registration Failed', err);
+                });
         });
     }
 }
 
-// --- Auto-Inject Favicon into Header ---
+// ==========================================
+// 2. AUTO-INJECT FAVICON
+// ==========================================
 (function() {
     let link = document.querySelector("link[rel~='icon']");
     if (!link) {
@@ -22,12 +30,13 @@ if ('serviceWorker' in navigator) {
         link.rel = 'icon';
         document.head.appendChild(link);
     }
-    // Adjust path based on where this script runs. 
-    // If diagnostic.js is in a subfolder, use '../favicon.png'
+    // Ensures favicon loads even if this script is cached/run from different depths
     link.href = '/favicon.png'; 
 })();
 
-// 🔥 PRODUCTION FIREBASE CONFIG
+// ==========================================
+// 3. FIREBASE CONFIGURATION
+// ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
   authDomain: "pallicalc-eabdc.firebaseapp.com",
@@ -43,19 +52,29 @@ let currentUser = null;
 let isVipUser = false;
 let counterTimeout;
 
-// Initialize Firebase
+// SAFETY: Stub analytics if blocked to prevent crashes
+window.trackEvent = window.trackEvent || function() {};
+
+// ==========================================
+// 4. INITIALIZATION
+// ==========================================
 window.addEventListener('load', async () => {
     try {
+        // Safer Initialization: Checks if Firebase is already running
         if (!firebase.apps.length) {
             firebaseApp = firebase.initializeApp(firebaseConfig);
         } else {
             firebaseApp = firebase.app();
         }
+        
         auth = firebase.auth();
         db = firebase.firestore();
+        
+        // Only load functions if the library is available
         if (firebase.functions) {
             functions = firebase.functions();
         }
+        
         initApp();
     } catch (error) {
         console.error('Firebase init failed:', error);
@@ -68,7 +87,6 @@ function initApp() {
     
     // ✅ OBSERVER IS KING: Always listen, never block.
     auth.onAuthStateChanged((user) => {
-        // console.log("Auth State Changed:", user ? "User Logged In" : "User Logged Out");
         checkAuthState(user);
     });
 
@@ -76,7 +94,10 @@ function initApp() {
     setupDisclaimerHandlers();
 }
 
-// Debounced counters
+// ==========================================
+// 5. CORE LOGIC (Counters & Auth)
+// ==========================================
+
 function debounceCounters() {
     clearTimeout(counterTimeout);
     counterTimeout = setTimeout(updateCounters, 500);
@@ -94,14 +115,12 @@ async function updateCounters() {
         const iEl = document.getElementById('total-institutions');
         if(iEl) iEl.textContent = instSnap.size;
     } catch(e) {
-        console.error('Counter Error:', e);
+        // console.error('Counter Error:', e);
     }
 }
 
 // ✅ ROBUST AUTH HANDLER
-// This function fetches data and updates the UI.
 async function checkAuthState(user) {
-    // console.log("Checking Auth State for:", user?.email);
     currentUser = user;
     
     // Re-select elements every time to ensure freshness
@@ -115,7 +134,6 @@ async function checkAuthState(user) {
     if (user) {
         // 1. Email Verification Check
         if (!user.emailVerified) {
-            console.warn("Email not verified");
             await auth.signOut();
             openLoginModal();
             const errDiv = document.getElementById('login-error-msg');
@@ -128,17 +146,11 @@ async function checkAuthState(user) {
 
         try {
             // 2. Call Server-Side Secure Check
-            // We NO LONGER check Firestore directly for access control
-            // We use the 'getUserStatus' Cloud Function
-            // console.log("Calling getUserStatus...");
             const getStatus = firebase.functions().httpsCallable('getUserStatus');
             const result = await getStatus();
             const statusData = result.data;
             
-            // console.log("Server Status Result:", statusData);
-
             if (statusData.isSuspended) {
-                // 🛑 SUSPENDED
                 handleSuspension(statusData, statusData.institutionName || "your institution");
                 return;
             }
@@ -158,35 +170,33 @@ async function checkAuthState(user) {
                 }
             }
 
-            // console.log("Profile Verified. Updating UI...");
             updateUIForLogin(statusData, user.email, false);
             
         } catch(e) {
-            console.error('Profile/Status Load Error:', e);
-            // If the server check fails (network, etc.), we default to 'Guest' (not VIP)
+            console.error('Profile Load Error:', e);
+            // Fallback to basic user if server check fails (offline/error)
             isVipUser = false;
             updateUIForLogin({}, user.email, false);
         }
         
     } else {
         // ✅ LOGOUT STATE
-        // console.log("Resetting UI to Logout state");
         localStorage.removeItem('palliCalc_customRatios');
         localStorage.removeItem('palliCalc_institutionName');
 
-        // Force reset User Info Button
+        // Reset Header
         if (userInfo) {
             userInfo.innerHTML = '<button id="login-btn" class="login-btn" aria-label="Login to access calculators">🔐 Login</button>';
         }
         
         if (actionBtns) actionBtns.classList.remove('hidden');
         
-        // Force reset Tools Section
+        // Hide Tools & Reset HTML
         if (toolsSection) {
             toolsSection.classList.remove('visible');
-            toolsSection.style.display = 'none'; // Ensure it hides
+            toolsSection.style.display = 'none';
             
-            // 🔥 UPDATED HTML BLOCK MATCHING YOUR NEW INDEX.HTML
+            // Standard Tools Layout
             toolsSection.innerHTML = `
                 <h2 id="tools-title"
                     style="text-align:center;font-size:24px;font-weight:700;color:#1e293b;margin-bottom:20px;"
@@ -231,13 +241,15 @@ async function checkAuthState(user) {
         if (vipBadge) vipBadge.style.display = 'none';
         if (vipLock) vipLock.style.display = 'none';
 
-        // Re-attach login listener
         const newLoginBtn = document.getElementById('login-btn');
         if (newLoginBtn) newLoginBtn.addEventListener('click', openLoginModal);
     }
 }
 
-// 🛡️ HELPER: Handle Suspension
+// ==========================================
+// 6. UI & SUSPENSION HELPERS
+// ==========================================
+
 function handleSuspension(userData, instName) {
     localStorage.removeItem('palliCalc_customRatios');
     localStorage.removeItem('palliCalc_institutionName');
@@ -251,7 +263,6 @@ function handleSuspension(userData, instName) {
     showSuspensionNotice(instName);
 }
 
-// Helper: Update UI Elements
 function updateUIForLogin(userData, email, isSuspended) {
     const userInfo = document.getElementById('user-info');
     const vipBadge = document.getElementById('user-tier-badge');
@@ -265,7 +276,7 @@ function updateUIForLogin(userData, email, isSuspended) {
     let welcomeText = `Welcome, ${displayName}`;
     if (isVipUser) welcomeText += ' PRO';
 
-    // 1. UPDATE HEADER
+    // Update Header
     if (userInfo) {
         userInfo.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
@@ -278,15 +289,15 @@ function updateUIForLogin(userData, email, isSuspended) {
         if(logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     }
 
-    // 2. HIDE MARKETING SECTIONS
+    // Hide Marketing
     if (actionBtns) actionBtns.classList.add('hidden');
     if (featureSection) featureSection.style.display = 'none';
     
-    // 3. SHOW TOOLS (If not suspended)
+    // Show Tools (If Active)
     if (!isSuspended) {
         if (toolsSection) {
             toolsSection.classList.add('visible');
-            toolsSection.style.display = 'grid'; // Force display grid
+            toolsSection.style.display = 'grid'; 
         }
         if (toolsTitle) toolsTitle.textContent = '🛠️ Tools Available';
         if (vipBadge) vipBadge.style.display = isVipUser ? 'inline' : 'none';
@@ -294,7 +305,6 @@ function updateUIForLogin(userData, email, isSuspended) {
     }
 }
 
-// 📢 SHOW NOTICE
 function showSuspensionNotice(instName) {
     const toolsSection = document.getElementById('tools-section');
     if (toolsSection) {
@@ -334,7 +344,10 @@ function showSuspensionNotice(instName) {
     }
 }
 
-// Handle logout
+// ==========================================
+// 7. EVENT LISTENERS
+// ==========================================
+
 async function handleLogout() {
     try {
         await auth.signOut();
@@ -345,7 +358,6 @@ async function handleLogout() {
     }
 }
 
-// Event listeners setup
 function setupEventListeners() {
     const loginForm = document.getElementById('login-form');
     const errorMsgDiv = document.getElementById('login-error-msg'); 
@@ -364,21 +376,19 @@ function setupEventListeners() {
             submitBtn.innerHTML = 'Logging in...';
             
             try {
-                // 1. Authenticate
+                // Authenticate
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
                 localStorage.setItem('palliCalcLoginPassword', password);
                 
-                // 2. 🔥 FORCE UI UPDATE & WAIT FOR IT 🔥
-                // console.log("Login success, forcing UI update...");
+                // Force UI Update
                 await checkAuthState(userCredential.user);
                 
-                // 3. Close modal
                 closeLoginModal();
             } catch (error) {
                 console.error("Login Error:", error.code);
                 let userMessage = "Login failed. Please check credentials.";
                 if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-                     userMessage = "Incorrect email or password.";
+                      userMessage = "Incorrect email or password.";
                 }
                 if (errorMsgDiv) {
                     errorMsgDiv.textContent = userMessage;
@@ -399,7 +409,6 @@ function setupEventListeners() {
     });
 }
 
-// DISCLAIMER MODAL HANDLERS
 function setupDisclaimerHandlers() {
     const disclaimerModal = document.getElementById('disclaimer-modal');
     const disclaimerAgree = document.getElementById('disclaimer-agree');

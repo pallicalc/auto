@@ -124,39 +124,62 @@ exports.completeAdminTransfer = onRequest({ cors: true }, async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// --- 3. THE GRIM REAPER (12-MONTH RETENTION) ---
+// --- 3. THE LONG-TERM RETENTION MONITOR (Month 13) ---
+// preventing auto-deletion. Now notifies Admin instead.
 exports.checkGracePeriods = onSchedule("every 24 hours", async (event) => {
     const now = new Date();
     const retentionLimit = new Date();
+    
+    // Set 'Month 13' threshold (1 year ago)
     retentionLimit.setMonth(now.getMonth() - 12); 
 
+    // Find users older than 12 months who haven't been flagged yet
     const expiredUsersSnapshot = await admin.firestore().collection('users')
         .where('gracePeriodEnd', '<=', admin.firestore.Timestamp.fromDate(retentionLimit))
+        .where('retentionAlertSent', '!=', true) // ✅ Prevents spamming you every day
         .get();
 
-    const deletePromises = [];
+    if (expiredUsersSnapshot.empty) return;
+
+    const batch = admin.firestore().batch();
+    const emailPromises = [];
+
     expiredUsersSnapshot.forEach(doc => {
-        // console.log(`User ${doc.id} passed 12-month retention. DELETING.`);
-        deletePromises.push(admin.auth().deleteUser(doc.id));
+        const userData = doc.data();
+        
+        // 1. Force Suspend & Flag as "Review Needed"
+        batch.update(doc.ref, { 
+            billingStatus: 'suspended',
+            retentionAlertSent: true,
+            needsAdminReview: true
+        });
+
+        // 2. Notify YOU (The Admin)
+        emailPromises.push(transporter.sendMail({
+            from: '"PalliCalc System" <pallicalc@gmail.com>',
+            to: "pallicalc@gmail.com",
+            subject: `⚠️ RETENTION ALERT: Month 13 Reached`,
+            html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #f0ad4e;">
+                <h3 style="color: #d9534f;">Long-Term Retention Alert</h3>
+                <p>The following user has passed the 12-month retention period:</p>
+                <ul>
+                    <li><strong>User Email:</strong> ${userData.email}</li>
+                    <li><strong>Institution:</strong> ${userData.institutionName || 'N/A'}</li>
+                    <li><strong>Role:</strong> ${userData.role}</li>
+                </ul>
+                <p><strong>Action Taken:</strong> Account suspended & flagged.</p>
+                <p>Please review this account manually to decide on deletion or archival.</p>
+            </div>
+            `
+        }));
     });
 
-    if (deletePromises.length > 0) await Promise.all(deletePromises);
+    await batch.commit();
+    if (emailPromises.length > 0) await Promise.all(emailPromises);
 });
 
-exports.notifyStaffRemoval = onDocumentUpdated("users/{userId}", async (event) => {
-    const newData = event.data.after.data();
-    if (newData.gracePeriodEnd) {
-        const dateString = newData.gracePeriodEnd.toDate().toLocaleDateString("en-GB");
-        try {
-            await transporter.sendMail({
-                from: '"PalliCalc Admin" <pallicalc@gmail.com>',
-                to: newData.email,
-                subject: `Account Removal Notice`,
-                html: `<p>Your account is scheduled for deletion on ${dateString}. Contact admin to restore.</p>`
-            });
-        } catch (error) { console.error(error); }
-    }
-});
+// (Removed 'notifyStaffRemoval' to prevent sending confusing "Deletion" emails to users)
 
 // --- 4. COUNTER & COUPONS (Updated: One-Time Use Logic) ---
 exports.onUserCreated = onDocumentCreated("users/{userId}", async (event) => {

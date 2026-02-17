@@ -1,27 +1,25 @@
-﻿// --- Auto-Inject Favicon into Header ---
-(function() {
-    let link = document.querySelector("link[rel~='icon']");
-    if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
-        document.head.appendChild(link);
-    }
-    // Adjust path based on where this script runs. 
-    // If diagnostic.js is in a subfolder, use '../favicon.png'
-    link.href = '/favicon.png'; 
-})();
-
-window.addEventListener('load', () => {
+﻿window.addEventListener('load', () => {
     const storedPassword = localStorage.getItem('palliCalcLoginPassword');
     
+    // 1. Check Login Status
     if (storedPassword) {
-        document.getElementById('locked-overlay').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
+        // Unlock the UI
+        const overlay = document.getElementById('locked-overlay');
+        const dashboard = document.getElementById('dashboard');
+        if (overlay) overlay.style.display = 'none';
+        if (dashboard) dashboard.style.display = 'block';
 
+        // ✅ CRITICAL RESTORATION: Start the Offline Engine (Service Worker)
+        // This was missing in your 2nd version. Without this, the app won't work offline.
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then((reg) => console.log('✅ Service Worker Registered.', reg.scope))
+                .catch((err) => console.log('❌ SW Fail:', err));
+        }
 
         detectBrowserAndShowInstructions();
 
-        // Offline Notification Logic
+        // 2. Offline Notification Logic (If redirected from sw.js)
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('offline_mode') === 'true') {
             const offlineMsg = document.createElement('div');
@@ -39,6 +37,7 @@ window.addEventListener('load', () => {
                 </div>
             `;
             document.body.appendChild(offlineMsg);
+            // Clean the URL so the message doesn't appear on refresh
             window.history.replaceState({}, document.title, window.location.pathname);
             setTimeout(() => { if(offlineMsg) offlineMsg.remove(); }, 5000);
         }
@@ -50,6 +49,7 @@ function logout() {
     window.location.href = 'index.html';
 }
 
+// ✅ ROBUST UPDATE LOGIC (From Version 2)
 const updateBtn = document.getElementById('update-btn');
 if (updateBtn) {
     updateBtn.addEventListener('click', async () => {
@@ -69,7 +69,7 @@ if (updateBtn) {
         updateBtn.disabled = true;
 
         try {
-            // 4. Hard Reset
+            // 4. Hard Reset of Caches
             
             // Unregister Service Workers
             if ('serviceWorker' in navigator) {
@@ -85,7 +85,7 @@ if (updateBtn) {
                 await Promise.all(cacheNames.map(name => caches.delete(name)));
             }
 
-            // Force Reload (true forces reload from server)
+            // Force Reload (true forces fetch from server)
             window.location.reload(true);
 
         } catch (error) {
