@@ -12,8 +12,8 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: "pallicalc@gmail.com",
-    // ✅ READ FROM SERVER CONFIG
-    pass: v1.config().gmail.pass 
+    // ✅ This now reads from the .env file in your functions folder
+    pass: process.env.GMAIL_PASS 
   }
 });
 
