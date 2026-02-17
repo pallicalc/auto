@@ -1,41 +1,38 @@
 ﻿// ==========================================
-// 1. SMART SERVICE WORKER REGISTRATION
+// 1. SMART SERVICE WORKER REGISTRATION (Fixed)
 // ==========================================
-i       .then(reg => {
-                    console.log('✅ [App] Service Worker Registered');
-                })
-                .catch(err => {
-                    console.warn('❌ [App] SW Registration Failed', err);
-                });
-        });
-    }
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => {
+                console.log('✅ [App] Service Worker Registered');
+            })
+            .catch(err => {
+                console.warn('❌ [App] SW Registration Failed', err);
+            });
+    });
 }
 
 // ==========================================
-// 2. AUTO-INJECT FAVICON
+// 2. SMART FAVICON INJECTOR (Updated)
 // ==========================================
-
 (function() {
-    // We add '?v=2' to the end of filenames. 
-    // This forces the browser to download the file again, ignoring the old cache.
+    // We add '?v=2' to the end of filenames to force a cache refresh
     const version = '?v=2'; 
 
     const icons = [
         // 1. The Modern SVG (For Desktop Safari, Chrome, Firefox)
-        // This stops the "White Box" issue
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' + version },
         
-        // 2. Safari Pinned Tab Mask
-        // Change color: '#000000' to your actual brand color (e.g., '#5AAB8B')
-        { rel: 'mask-icon', href: '/favicon.svg' + version, color: '#000000' },
+        // 2. Safari Pinned Tab Mask (Change color if needed)
+        { rel: 'mask-icon', href: '/favicon.svg' + version, color: '#5AAB8B' },
         
         // 3. Apple Touch Icon (iPhone/iPad Home Screen)
-        // Ensure this points to a PNG, not SVG, for best iOS compatibility
         { rel: 'apple-touch-icon', href: '/favicon.png' + version }
     ];
 
     icons.forEach(iconDef => {
-        // Remove any existing conflicting tags first to ensure a clean slate
+        // Remove existing links to prevent conflicts
         let existingLink = document.querySelector(`link[rel='${iconDef.rel}']`);
         if (existingLink) {
             existingLink.remove();
@@ -52,7 +49,6 @@ i       .then(reg => {
         document.head.appendChild(link);
     });
 })();
-
 
 // ==========================================
 // 3. FIREBASE CONFIGURATION
