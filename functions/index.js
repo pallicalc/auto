@@ -12,7 +12,8 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: "pallicalc@gmail.com",
-    pass: process.env.GMAIL_PASS // ⚠️ SECURITY: Generate a NEW App Password if this one was exposed.
+    // ✅ READ FROM SERVER CONFIG
+    pass: v1.config().gmail.pass 
   }
 });
 
