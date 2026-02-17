@@ -8,14 +8,21 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="/favicon.png">
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
   <style>
-    /* --- PAGE LAYOUT ADJUSTMENTS --- */
+    /* --- PAGE LAYOUT & RESET --- */
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
     .auth-body {
         display: flex;
         flex-direction: column;
@@ -23,32 +30,151 @@
         justify-content: center;
         min-height: 100vh;
         padding: 40px 20px;
-        background-color: #f1f5f9; /* Soft gray background */
+        background-color: #f1f5f9; /* Slate-100 */
+        font-family: 'Inter', sans-serif;
+        color: #334155;
     }
 
-    /* The White Card */
+    /* --- CARD CONTAINER --- */
     .auth-card {
         background: white;
         width: 100%;
-        max-width: 500px;
+        max-width: 520px;
         padding: 32px;
         border-radius: 16px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        margin-bottom: 24px; /* Space between card and footer */
+        margin-bottom: 24px;
     }
 
-    /* The Footer (Now Outside) */
-    .legal-footer {
+    .auth-header {
         text-align: center;
-        color: #64748b;
-        font-size: 0.8rem;
-        width: 100%;
-        max-width: 500px;
+        margin-bottom: 24px;
     }
-    .legal-footer p { margin: 4px 0; }
-    .legal-warning { color: #94a3b8; font-size: 0.75rem; margin-top: 8px; }
 
-    /* --- PRICING BOX STYLES --- */
+    .auth-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 8px;
+        margin-top: 0;
+    }
+
+    .auth-subtitle {
+        color: #64748b;
+        font-size: 14px;
+        margin: 0;
+    }
+    
+    /* --- FORM ELEMENTS --- */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #cbd5e1; /* Slate-300 */
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background-color: #fff;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #0ea5e9; /* Sky-500 */
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+    }
+
+    /* --- BUTTONS --- */
+    .btn-primary {
+        width: 100%;
+        padding: 12px;
+        background-color: #0ea5e9;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        margin-top: 10px;
+    }
+
+    .btn-primary:hover {
+        background-color: #0284c7; /* Sky-600 */
+    }
+
+    .btn-primary:disabled {
+        background-color: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    /* --- ROLE SELECTION GRID --- */
+    .role-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+    }
+
+    .role-card {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 10px;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+    }
+
+    .role-card:hover {
+        border-color: #0ea5e9;
+        background-color: #f0f9ff;
+    }
+
+    .role-card.selected {
+        border-color: #0ea5e9;
+        background-color: #e0f2fe;
+        color: #0284c7;
+        box-shadow: 0 0 0 1px #0ea5e9;
+    }
+
+    .role-content strong {
+        display: block;
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+    }
+
+    .role-content span {
+        display: block;
+        font-size: 0.65rem;
+        color: #64748b;
+        line-height: 1.2;
+    }
+
+    /* --- INSTITUTION SECTION --- */
+    .institution-section {
+        display: none;
+        margin-top: 15px;
+        padding: 15px;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* --- PRICING & PAYMENT BOX --- */
     .pricing-box {
         background: #f8fafc;
         border: 1px solid #e2e8f0;
@@ -56,7 +182,7 @@
         padding: 20px;
         margin: 20px 0;
     }
-    
+
     .pricing-header {
         display: flex;
         justify-content: space-between;
@@ -76,34 +202,73 @@
         box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
     }
 
+    /* --- SERVICE BREAKDOWN (COMPLIANCE) --- */
+    .service-breakdown {
+        background-color: #f0f9ff;
+        border-left: 4px solid #0ea5e9;
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        font-size: 0.8rem;
+        color: #334155;
+    }
+
+    .service-breakdown strong {
+        color: #0369a1;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .service-breakdown ul {
+        margin: 5px 0 0 20px;
+        padding: 0;
+    }
+
+    .service-breakdown li {
+        margin-bottom: 3px;
+        color: #475569;
+    }
+
+    /* --- PREMIUM TOGGLE --- */
     .premium-toggle-label {
         display: flex;
         align-items: center;
         cursor: pointer;
         color: #0f172a;
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         margin-bottom: 8px;
         padding: 8px;
         border-radius: 6px;
         transition: background 0.2s;
     }
-    .premium-toggle-label:hover { background: #e2e8f0; }
-    .premium-toggle-label input { margin-right: 12px; transform: scale(1.3); accent-color: #0ea5e9; }
-    
-    .perks-list { margin: 0 0 15px 32px; font-size: 0.85rem; color: #64748b; list-style: none; padding: 0; }
-    .perks-list li { margin-bottom: 6px; display: flex; align-items: center; }
-    .perks-list i { color: #10b981; margin-right: 8px; font-size: 1rem; }
 
-    .doc-buttons { display: flex; gap: 10px; margin-top: 15px; margin-bottom: 15px; }
+    .premium-toggle-label:hover {
+        background: #e2e8f0;
+    }
+
+    .premium-toggle-label input {
+        margin-right: 12px;
+        transform: scale(1.3);
+        accent-color: #0ea5e9;
+    }
+    
+    /* --- DOC BUTTONS --- */
+    .doc-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        margin-bottom: 15px;
+    }
+
     .btn-small-outline {
-        flex: 1; 
-        padding: 10px; 
-        border: 1px solid #cbd5e1; 
-        background: white; 
-        border-radius: 8px; 
-        cursor: pointer; 
-        color: #475569; 
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #cbd5e1;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        color: #475569;
         font-size: 0.85rem;
         font-weight: 500;
         transition: all 0.2s;
@@ -112,27 +277,111 @@
         justify-content: center;
         gap: 6px;
     }
-    .btn-small-outline:hover { 
-        border-color: #0ea5e9; 
-        color: #0ea5e9; 
+
+    .btn-small-outline:hover {
+        border-color: #0ea5e9;
+        color: #0ea5e9;
         background: #f0f9ff;
     }
 
-    /* Warning box for printing receipt */
     .print-warning {
-        background: #fff8e1; 
-        border: 1px solid #ffecb3; 
-        padding: 10px; 
-        border-radius: 8px; 
-        margin-bottom: 15px; 
-        font-size: 0.8rem; 
+        background: #fff8e1;
+        border: 1px solid #ffecb3;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-size: 0.8rem;
         color: #856404;
     }
+
+    /* --- FOOTER --- */
+    .legal-footer {
+        text-align: center;
+        color: #64748b;
+        font-size: 0.8rem;
+        width: 100%;
+        max-width: 500px;
+        padding-top: 20px;
+    }
+
+    .legal-warning {
+        color: #94a3b8;
+        font-size: 0.75rem;
+        margin-top: 8px;
+        font-weight: 500;
+    }
+
+    /* --- MODAL --- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: white;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 12px;
+      padding: 24px;
+      position: relative;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-title {
+      font-weight: 700;
+      font-size: 18px;
+      color: #0f172a;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #64748b;
+    }
+
+    .role-explainer {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .role-explainer:last-child {
+      border-bottom: none;
+    }
+
+    .role-explainer h4 {
+      margin: 0 0 4px 0;
+      font-size: 15px;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .role-explainer p {
+      margin: 0;
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
+    }
   </style>
-<script>
-    // SAFETY: Prevent crash if Analytics is blocked
-    window.trackEvent = window.trackEvent || function() {};
-</script>
+  <script>window.trackEvent = window.trackEvent || function() {};</script>
 </head>
 <body class="auth-body">
 
@@ -177,28 +426,44 @@
                 <option value="Philippines">Philippines</option>
                 <option value="Thailand">Thailand</option>
                 <option value="Vietnam">Vietnam</option>
+                <option value="Cambodia">Cambodia</option>
+                <option value="Laos">Laos</option>
+                <option value="Myanmar">Myanmar</option>
             </optgroup>
 
-            <optgroup label="Oceania">
+            <optgroup label="Asia Pacific">
                 <option value="Australia">Australia</option>
                 <option value="New Zealand">New Zealand</option>
+                <option value="Hong Kong">Hong Kong</option>
+                <option value="Japan">Japan</option>
+                <option value="China">China</option>
+                <option value="South Korea">South Korea</option>
+                <option value="Taiwan">Taiwan</option>
+                <option value="India">India</option>
             </optgroup>
 
             <optgroup label="Europe">
                 <option value="United Kingdom">United Kingdom</option>
                 <option value="Ireland">Ireland</option>
+                <option value="France">France</option>
+                <option value="Germany">Germany</option>
+                <option value="Italy">Italy</option>
+                <option value="Spain">Spain</option>
+                <option value="Netherlands">Netherlands</option>
+                <option value="Switzerland">Switzerland</option>
             </optgroup>
 
-            <optgroup label="Americas">
+            <optgroup label="North America">
                 <option value="United States">United States</option>
                 <option value="Canada">Canada</option>
+                <option value="Mexico">Mexico</option>
             </optgroup>
 
-            <optgroup label="Asia (Others)">
-                <option value="Hong Kong">Hong Kong</option>
-                <option value="India">India</option>
-                <option value="Japan">Japan</option>
-                <option value="China">China</option>
+             <optgroup label="Middle East">
+                <option value="United Arab Emirates">United Arab Emirates</option>
+                <option value="Saudi Arabia">Saudi Arabia</option>
+                <option value="Qatar">Qatar</option>
+                <option value="Kuwait">Kuwait</option>
             </optgroup>
 
             <option value="Other">Other</option>
@@ -209,34 +474,30 @@
         <div class="form-group">
           <label class="form-label">
             Account Type 
-            <i class="bi bi-info-circle-fill info-icon" id="role-info-btn" title="Click for details"></i>
+            <i class="bi bi-info-circle-fill" id="role-info-btn" style="color:#0ea5e9; cursor:pointer;" title="Click for details"></i>
           </label>
-          <div class="role-grid" id="role-container">
-            
+          <div class="role-grid">
             <label class="role-card selected">
-              <input type="radio" name="role" value="personal" checked style="margin-top:4px">
+              <input type="radio" name="role" value="personal" checked style="display:none">
               <div class="role-content">
                 <strong>Personal</strong>
-                <span>Individual use only.</span>
+                <span>Individual use.</span>
               </div>
             </label>
-
             <label class="role-card">
-              <input type="radio" name="role" value="institutionUser" style="margin-top:4px">
+              <input type="radio" name="role" value="institutionUser" style="display:none">
               <div class="role-content">
                 <strong>Inst. User</strong>
-                <span>Join existing team.</span>
+                <span>Join team.</span>
               </div>
             </label>
-
             <label class="role-card">
-              <input type="radio" name="role" value="institutionAdmin" style="margin-top:4px">
+              <input type="radio" name="role" value="institutionAdmin" style="display:none">
               <div class="role-content">
                 <strong>Inst. Admin</strong>
-                <span>Create new team.</span>
+                <span>Create team.</span>
               </div>
             </label>
-
           </div>
         </div>
 
@@ -249,7 +510,7 @@
 
         <div id="inst-admin-section" class="institution-section">
           <label class="form-label">Institution Name</label>
-          <input id="institution-name" type="text" class="form-input" placeholder="e.g. Hospital Kuala Lumpur Palliative Unit">
+          <input id="institution-name" type="text" class="form-input" placeholder="e.g. HKL Palliative Unit">
         </div>
 
         <div id="pricing-section" class="pricing-box" style="display:none;">
@@ -257,54 +518,37 @@
             <div id="premium-options" style="display:none;">
                 <label class="premium-toggle-label">
                     <input type="checkbox" id="wantsPremium">
-                    <span>Enable Premium Data Bridge</span>
-                    <i class="bi bi-stars ms-2" style="color:#eab308; margin-left:8px;"></i>
+                    <span>Add Premium Setup Pack</span>
+                    <i class="bi bi-stars ms-2" style="color:#eab308;"></i>
                 </label>
-                <ul class="perks-list">
-                    <li><i class="bi bi-check-circle-fill"></i> QR Code Data Transfer</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Auto-Sync to Google Sheets</li>
-                </ul>
-
-                <div style="margin: 0 0 15px 32px; font-size: 0.75rem; color: #854d0e; background-color: #fef9c3; border: 1px solid #fde047; padding: 10px; border-radius: 6px;">
-                    <strong>Cost breakdown:</strong> Service fee for a datasheet setup pack, 4 hrs max online consultation.
-                </div>
-                <hr style="border:0; border-top:1px solid #e2e8f0; margin: 15px 0;">
             </div>
 
+            <div id="service-breakdown-box" class="service-breakdown">
+                </div>
+
             <div class="pricing-header">
-                <span id="paymentFrequency" style="font-size:0.85rem; color:#64748b">Verification Fee</span>
+                <span id="paymentFrequency" style="font-size:0.85rem; color:#64748b">Total Due</span>
                 <span class="total-badge"><span id="currencySymbol">RM</span> <span id="totalDisplay">0</span></span>
             </div>
 
-            <button type="button" id="proceed-payment-btn" class="btn-primary" style="font-size: 0.9rem; padding: 10px; margin-top: 10px; background-color: #475569;" onclick="showPaymentFields()">
+            <button type="button" id="proceed-payment-btn" class="btn-primary" style="background-color: #475569;" onclick="showPaymentFields()">
                 Confirm & Proceed to Payment
             </button>
 
             <div id="payment-input-container" style="display:none;">
-                
                 <div class="print-warning">
-                    <i class="bi bi-exclamation-triangle-fill"></i> <strong>Important:</strong> Please print/save your documents <strong>now</strong>. Automatic generation is not available after leaving this page.
+                    <i class="bi bi-exclamation-triangle-fill"></i> <strong>Important:</strong> Please print your Document <strong>now</strong>.
                 </div>
-
                 <div class="doc-buttons">
                     <button type="button" class="btn-small-outline" onclick="generateInvoice()"><i class="bi bi-file-text"></i> Invoice</button>
                     <button type="button" class="btn-small-outline" onclick="generateInstantReceipt()"><i class="bi bi-printer"></i> Receipt</button>
                 </div>
-
                 <label class="form-label">Payment Reference / Receipt No.</label>
                 <input id="paymentRef" type="text" class="form-input" placeholder="Paste DuitNow / Stripe Ref">
-                <p style="font-size:0.75rem; color:#059669; margin-top:5px; display:flex; align-items:center;">
-                    <i class="bi bi-shield-check" style="margin-right:5px;"></i> Instant access granted upon submission.
-                </p>
-
-                <div style="margin-top:15px; padding-top:10px; border-top:1px dashed #cbd5e1;">
-                    <label style="font-size:0.8rem; display:flex; align-items:center; cursor:pointer; color:#475569;">
-                        <input type="checkbox" id="requestEInvoice" style="margin-right:8px;">
-                        Request Official LHDN e-Invoice (Sent in 30 days)
+                <div style="margin-top:10px;">
+                    <label style="font-size:0.8rem; color:#475569;">
+                        <input type="checkbox" id="requestEInvoice"> Request Official LHDN e-Invoice
                     </label>
-                    <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 4px; padding-left: 24px;">
-                        If you forgot to tick this, email <strong>support@pallicalc.com</strong>. <br>Response may take up to 60 days.
-                    </p>
                 </div>
             </div>
         </div>
@@ -326,120 +570,85 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Promo / Event Code <span style="font-weight:400; color:#94a3b8">(Optional)</span></label>
-          <input id="promo-code" type="text" class="form-input" placeholder="e.g. CONF2026">
+          <label class="form-label">Promo / Event Code</label>
+          <input id="promo-code" type="text" class="form-input" placeholder="Optional">
         </div>
 
         <button type="submit" id="submit-btn" class="btn-primary">Create Account</button>
-        
-        <div id="message" class="error" style="display:none;"></div>
+        <div id="message" style="display:none; color:red; margin-top:10px; font-size:0.9rem; text-align:center;"></div>
       </form>
 
       <div style="margin-top: 24px; text-align: center; font-size: 13px; color: #64748b;">
-        Already have an account? <a href="index.html" style="color: #0ea5e9; text-decoration: none; font-weight: 500;">Log in</a>
+        Already have an account? <a href="index.html" style="color: #0ea5e9; text-decoration: none;">Log in</a>
       </div>
-
     </div>
 
-    <div id="success-view" style="display:none;">
-      <div class="success-icon">
-        <i class="bi bi-envelope-check-fill"></i>
-      </div>
-      <h2 class="auth-title">Verify Your Email</h2>
-      <p style="font-size: 14px; color: #475569; line-height: 1.6; margin-bottom: 24px;">
-        We've sent a verification link to <br>
-        <span id="display-email" class="email-display"></span>
-      </p>
-      <p style="font-size:13px; color:#64748b; background:#f1f5f9; padding:10px; border-radius:8px; margin-bottom: 24px;">
-        <i class="bi bi-clock-history"></i> Please verify within <strong>24 hours</strong> to fully activate your account.
-      </p>
-      <a href="index.html" class="btn-primary" style="display:block; text-decoration:none; text-align:center;">
-        Back to Login
-      </a>
+    <div id="success-view" style="display:none; text-align:center;">
+      <i class="bi bi-envelope-check-fill" style="font-size:3rem; color:#0ea5e9;"></i>
+      <h2 class="auth-title mt-3">Verify Your Email</h2>
+      <p style="color:#64748b;">We've sent a link to <span id="display-email"></span></p>
+      <a href="index.html" class="btn-primary" style="display:block; text-decoration:none;">Back to Login</a>
     </div>
 
   </div>
   
   <div class="legal-footer">
     <p><strong>&copy; 2026 Alivioscript Solutions</strong></p>
-    <p>Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
-    <p class="legal-warning">For Educational Use Only. Not a Medical Device.<br>Verify all results.</p>
+    <p class="legal-warning">For Educational Use Only. Not a Medical Device.</p>
   </div>
 
   <div class="modal-overlay" id="info-modal">
     <div class="modal-content">
       <div class="modal-header">
-        <div class="modal-title">Account Types Explained</div>
+        <div class="modal-title">Account Types</div>
         <button class="modal-close" id="close-modal">&times;</button>
       </div>
-      
       <div class="role-explainer">
         <h4><i class="bi bi-person"></i> Personal</h4>
-        <p>
-          Best for private practice. You set your own custom reference parameters in local storage (not shared between device) 
-          <br><strong>Price:</strong> One time registration, no annual fee. (ALL: Free)
-        </p>
+        <p>Private practice. Local storage parameters.</p>
       </div>
-
       <div class="role-explainer">
-        <h4>
-            <i class="bi bi-building-check"></i> Institution User 
-            <span class="role-badge badge-rec">Recommended</span>
-        </h4>
-        <p>
-          Best for hospital teams. You use custom reference parameters set by your Admin.
-          <br><strong>Price:</strong> One time registration fee, no annual fee. (MOH: Free)
-        </p>
+        <h4><i class="bi bi-building-check"></i> Institution User</h4>
+        <p>Join a verified hospital team. Prevents unauthorized access via verification fee.</p>
       </div>
-
       <div class="role-explainer">
         <h4><i class="bi bi-person-gear"></i> Institution Admin</h4>
-        <p>
-          For the Team Lead. You manage the team subscription and reference parameters. Enable Premium Cloud Features (Logo + Firebase Sync on patient/public materials).
-          <br><strong>Price:</strong> One time registration fee, then annual fee. (MOH: Free)
-        </p>
+        <p>Manage team parameters, logo injection for forms, and consultation services.</p>
       </div>
     </div>
   </div>
 
   <script>
     let auth, db;
-
-    let LIVE_REG_PRICES = {
+    // Default prices to 0 to avoid NaN errors before Firebase loads
+    let LIVE_REG_PRICES = { 
         malaysia: { personal: 0, institutionUser: 0, admin_reg: 0, admin_premium: 0 },
         international: { personal: 0, institutionUser: 0, admin_reg: 0, admin_premium: 0 }
     };
 
+    // --- HELPER: NORMALIZE INST NAME ---
     function normalizeInstitutionName(name) {
       return name.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     }
 
-    async function initFirebase() {
-      if (typeof firebase === 'undefined') return;
-      const config = {
-          apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
-          authDomain: "pallicalc-eabdc.firebaseapp.com",
-          projectId: "pallicalc-eabdc"
-      };
-      try {
+    // --- INIT ---
+    async function init() {
+        if (typeof firebase === 'undefined') return;
+        const config = {
+            apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
+            authDomain: "pallicalc-eabdc.firebaseapp.com",
+            projectId: "pallicalc-eabdc"
+        };
         if (!firebase.apps.length) firebase.initializeApp(config);
         auth = firebase.auth();
         db = firebase.firestore();
-      } catch(e) { console.error("Firebase Init Error:", e); }
-    }
 
-    async function fetchLivePrices() {
         try {
             const doc = await db.collection('setting').doc('registration').get();
-            if (doc.exists) {
-                LIVE_REG_PRICES = doc.data();
-                // console.log("Prices successfully loaded from Firebase");
-                updateUI();
-            } else {
-                console.warn("Pricing document not found in 'setting/registration'");
-            }
-        } catch(e) {
-            console.error("Using defaults (0). Fetch failed:", e);
+            if (doc.exists) LIVE_REG_PRICES = doc.data();
+            console.log("Prices loaded");
+        } catch(e) { 
+            console.warn("Using default prices"); 
         }
     }
 
@@ -449,221 +658,200 @@
     };
 
     document.addEventListener('DOMContentLoaded', async () => {
-        await initFirebase();
-        await fetchLivePrices();
+        await init();
         
-        const form = document.getElementById('register-form');
         const roleInputs = document.querySelectorAll('input[name="role"]');
+        const roleCards = document.querySelectorAll('.role-card');
         const countrySelect = document.getElementById('country');
-        const instSelect = document.getElementById('institution-select');
-        const emailInput = document.getElementById('email');
         const premiumToggle = document.getElementById('wantsPremium');
-
-        const infoBtn = document.getElementById('role-info-btn');
-        const modal = document.getElementById('info-modal');
-        const closeModal = document.getElementById('close-modal');
-        if(infoBtn) infoBtn.addEventListener('click', () => { modal.style.display = 'flex'; });
-        if(closeModal) closeModal.addEventListener('click', () => { modal.style.display = 'none'; });
-        if(modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
-
+        
+        // --- UI UPDATER ---
         function updateUI() {
-            document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
-            const selected = document.querySelector('input[name="role"]:checked');
-            if(selected) selected.closest('.role-card').classList.add('selected');
+            // Highlight selected card
+            roleCards.forEach(card => card.classList.remove('selected'));
+            const selectedRadio = document.querySelector('input[name="role"]:checked');
+            if(selectedRadio) selectedRadio.parentElement.classList.add('selected');
 
-            const role = selected ? selected.value : 'personal';
+            const role = selectedRadio ? selectedRadio.value : 'personal';
             const country = countrySelect.value;
-            const email = emailInput.value.trim().toLowerCase();
-            const isMoH = email.endsWith('@moh.gov.my');
+            const isMoH = document.getElementById('email').value.toLowerCase().endsWith('@moh.gov.my');
             
-            const isMalaysia = (country === 'Malaysia' || country === 'Select country...'); 
-            const geo = isMalaysia ? 'malaysia' : 'international';
-            const prices = LIVE_REG_PRICES[geo] || LIVE_REG_PRICES['international'];
-
+            // Check if Country is Malaysia (handles both dropdown types)
+            const isMalaysia = (country === 'Malaysia' || country === 'Select country...');
+            
+            // Show/Hide Sections
             document.getElementById('inst-user-section').style.display = role === 'institutionUser' ? 'block' : 'none';
             document.getElementById('inst-admin-section').style.display = role === 'institutionAdmin' ? 'block' : 'none';
-            
-            instSelect.required = (role === 'institutionUser');
-            document.getElementById('institution-name').required = (role === 'institutionAdmin');
+            document.getElementById('premium-options').style.display = role === 'institutionAdmin' ? 'block' : 'none';
 
-            const pricingBox = document.getElementById('pricing-section');
-            const premOptions = document.getElementById('premium-options');
-            const currencySpan = document.getElementById('currencySymbol');
-            const totalSpan = document.getElementById('totalDisplay');
-            const freqLabel = document.getElementById('paymentFrequency');
-            const proceedBtn = document.getElementById('proceed-payment-btn');
-            const payInputs = document.getElementById('payment-input-container');
-
+            // Pricing Logic
+            let prices = LIVE_REG_PRICES[isMalaysia ? 'malaysia' : 'international'] || LIVE_REG_PRICES.international;
             let total = 0;
-            currencySpan.textContent = isMalaysia ? 'RM' : 'USD';
+            let breakdownHtml = "";
+            let freqText = "Verification Fee";
 
-            if (role === 'personal') {
-                total = isMoH ? 0 : prices.personal;
-                pricingBox.style.display = total > 0 ? 'block' : 'none';
-                premOptions.style.display = 'none';
-                freqLabel.textContent = "One-time Account Activation";
-            } 
-            else if (role === 'institutionUser') {
+            if(role === 'institutionUser') {
                 total = isMoH ? 0 : prices.institutionUser;
-                pricingBox.style.display = total > 0 ? 'block' : 'none';
-                premOptions.style.display = 'none';
-                freqLabel.textContent = "One-time Account Activation";
+                // DESCRIPTION FOR INST USER
+                breakdownHtml = `
+                    <strong>Identity Verification Service</strong>
+                    <ul>
+                        <li>One-off security vetting fee.</li>
+                        <li>Ensures only verified staff join the institution roster.</li>
+                        <li>Prevents unauthorized account creation.</li>
+                    </ul>`;
+                freqText = "One-time Verification";
             } 
-            else if (role === 'institutionAdmin') {
-                pricingBox.style.display = 'block';
-                premOptions.style.display = 'block';
-
-                if (isMoH) {
-                    total = premiumToggle.checked ? prices.admin_premium : 0;
-                    freqLabel.textContent = "Lifetime Activation (MOH Special)";
-                } else {
-                    total = prices.admin_reg + (premiumToggle.checked ? prices.admin_premium : 0);
-                    freqLabel.textContent = premiumToggle.checked ? "Registration + Premium Bridge" : "Registration Fee Only";
+            else if(role === 'institutionAdmin') {
+                total = prices.admin_reg;
+                let desc = `
+                    <strong>Standard Institution Setup</strong>
+                    <ul>
+                        <li>Custom Calculator Ratio Configuration.</li>
+                        <li>Institution Logo Injection (Pamphlets/Forms).</li>
+                        <li><strong>2 Hours</strong> Online Technical Consultation.</li>
+                    </ul>`;
+                
+                if(premiumToggle.checked) {
+                    total += prices.admin_premium;
+                    desc = `
+                    <strong>Premium Setup & Config Pack</strong>
+                    <ul>
+                        <li>Includes Standard Setup Features.</li>
+                        <li><strong>Datasheet Setup Pack:</strong> Google Sheets Integration.</li>
+                        <li><strong>4 Hours</strong> Technical Consultation Retainer.</li>
+                    </ul>`;
                 }
+                if(isMoH) { 
+                    total = premiumToggle.checked ? prices.admin_premium : 0; 
+                    desc += "<br><em>*Base registration fee waived for MOH.</em>";
+                }
+                breakdownHtml = desc;
+                freqText = "Service & Setup Fee";
+            }
+            else {
+                // Personal
+                total = prices.personal;
+                breakdownHtml = `<strong>Personal Account</strong><ul><li>Local storage access.</li></ul>`;
             }
 
-            totalSpan.textContent = total;
-
-            if (total > 0) {
-                proceedBtn.style.display = 'block';
-                payInputs.style.display = 'none';
-            } else {
-                proceedBtn.style.display = 'none';
-                payInputs.style.display = 'none';
-            }
+            // Update DOM
+            document.getElementById('pricing-section').style.display = total > 0 ? 'block' : 'none';
+            document.getElementById('totalDisplay').textContent = total;
+            document.getElementById('currencySymbol').textContent = isMalaysia ? 'RM' : 'USD';
+            document.getElementById('service-breakdown-box').innerHTML = breakdownHtml;
+            document.getElementById('paymentFrequency').textContent = freqText;
+            
+            // Handle Proceed Button visibility
+            const proceedBtn = document.getElementById('proceed-payment-btn');
+            const payFields = document.getElementById('payment-input-container');
+            if(total > 0 && payFields.style.display === 'none') proceedBtn.style.display = 'block';
+            else proceedBtn.style.display = 'none';
         }
 
+        // --- EVENT LISTENERS ---
         roleInputs.forEach(r => r.addEventListener('change', updateUI));
         countrySelect.addEventListener('change', updateUI);
-        emailInput.addEventListener('input', updateUI);
+        document.getElementById('email').addEventListener('input', updateUI);
         premiumToggle.addEventListener('change', updateUI);
+        
+        // Modal Logic
+        const modal = document.getElementById('info-modal');
+        document.getElementById('role-info-btn').onclick = () => modal.style.display = 'flex';
+        document.getElementById('close-modal').onclick = () => modal.style.display = 'none';
+        window.onclick = (e) => { if(e.target == modal) modal.style.display = 'none'; };
 
+        // Occupation "Other" Toggle
         document.getElementById('occupation').addEventListener('change', (e) => {
-            const isOther = e.target.value === 'Other';
-            document.getElementById('occupation-other').style.display = isOther ? 'block' : 'none';
-            document.getElementById('occupation-other').required = isOther;
+             document.getElementById('occupation-other').style.display = e.target.value === 'Other' ? 'block' : 'none';
         });
 
+        // Load Institutions (Corrected for Optgroups)
         countrySelect.addEventListener('change', async () => {
-            const isOther = countrySelect.value === 'Other';
-            document.getElementById('country-other').style.display = isOther ? 'block' : 'none';
-            document.getElementById('country-other').required = isOther;
-            
-            const country = isOther ? document.getElementById('country-other').value : countrySelect.value;
-            if(country && country !== 'Other') await loadInstitutions(country);
-            updateUI(); 
+             const val = countrySelect.value;
+             // If they selected "Other" at the bottom
+             document.getElementById('country-other').style.display = val === 'Other' ? 'block' : 'none';
+             
+             if(val !== 'Other' && val !== '' && val !== 'Select country...') {
+                 const sel = document.getElementById('institution-select');
+                 sel.innerHTML = '<option>Loading...</option>';
+                 const snap = await db.collection('institutions').where('country', '==', val).get();
+                 sel.innerHTML = '<option value="">Select Institution</option>';
+                 
+                 let docs = [];
+                 snap.forEach(doc => docs.push({ id: doc.id, name: doc.data().name }));
+                 docs.sort((a, b) => a.name.localeCompare(b.name));
+                 docs.forEach(inst => {
+                     sel.innerHTML += `<option value="${inst.id}">${inst.name}</option>`;
+                 });
+             }
         });
 
-        async function loadInstitutions(country) {
-            instSelect.innerHTML = '<option>Loading...</option>';
-            try {
-                const snap = await db.collection('institutions').where('country', '==', country).get();
-                instSelect.innerHTML = '<option value="">Select Institution</option>';
-                if(snap.empty) {
-                    instSelect.innerHTML += '<option disabled>No institutions found</option>';
-                } else {
-                    let docs = [];
-                    snap.forEach(doc => docs.push({ id: doc.id, name: doc.data().name }));
-                    docs.sort((a, b) => a.name.localeCompare(b.name));
-                    docs.forEach(inst => {
-                        instSelect.innerHTML += `<option value="${inst.id}">${inst.name}</option>`;
-                    });
-                }
-            } catch(e) { 
-                console.error(e); 
-                instSelect.innerHTML = '<option value="">Error loading list</option>'; 
-            }
-        }
-
-        form.addEventListener('submit', async (e) => {
+        // --- SUBMIT LOGIC ---
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
             const msg = document.getElementById('message');
-            
-            btn.disabled = true;
-            btn.textContent = 'Verifying & Creating...';
-            msg.style.display = 'none';
-            
+            btn.disabled = true; btn.textContent = 'Processing...'; msg.style.display = 'none';
+
             try {
-                const email = emailInput.value.trim().toLowerCase();
-                const password = document.getElementById('password').value;
-                const confirm = document.getElementById('confirm-password').value;
+                const email = document.getElementById('email').value.trim().toLowerCase();
+                const pwd = document.getElementById('password').value;
                 const role = document.querySelector('input[name="role"]:checked').value;
-                const countryVal = countrySelect.value;
-                const country = countryVal === 'Other' ? document.getElementById('country-other').value : countryVal;
-                
                 const total = parseInt(document.getElementById('totalDisplay').textContent);
-                const paymentRef = document.getElementById('paymentRef').value.trim();
+                const payRef = document.getElementById('paymentRef').value.trim();
 
-                if(password !== confirm) throw new Error("Passwords do not match");
-                if(password.length < 6) throw new Error("Password too short");
+                if(document.getElementById('confirm-password').value !== pwd) throw new Error("Passwords mismatch");
+                if(total > 0 && !payRef) throw new Error("Please enter Payment Reference.");
 
-                if (total > 0) {
-                    if (!paymentRef) throw new Error("Please enter Payment Reference Number.");
-                    const dupeCheck = await db.collection('users').where('paymentReference', '==', paymentRef).get();
-                    if (!dupeCheck.empty) throw new Error("This Reference Number is already in use.");
-                }
-
-                const cred = await auth.createUserWithEmailAndPassword(email, password);
-                const uid = cred.user.uid;
-
+                // --- RESTORED LOGIC FOR BETA PROMO ---
                 const isMoH = email.endsWith('@moh.gov.my');
                 const promo = document.getElementById('promo-code').value.trim().toUpperCase();
-                let isPremium = false;
                 let manualDiscount = 0;
+                let isPremium = premiumToggle.checked;
 
                 if (isMoH && promo === 'BETAMOH2026') {
                     manualDiscount = 100;
-                    isPremium = true;
-                } else if (role === 'institutionAdmin' && premiumToggle.checked && (total > 0 || isMoH)) {
-                    isPremium = true;
+                    isPremium = true; 
                 }
+                // ------------------------------------
 
-                let instId = null;
-                let instName = null;
-
-                if (role === 'institutionAdmin') {
-                    instName = document.getElementById('institution-name').value.trim();
-                    if(!instName) throw new Error("Institution Name Required");
+                const cred = await auth.createUserWithEmailAndPassword(email, pwd);
+                const uid = cred.user.uid;
+                
+                // DATA PREP
+                let instId = null, instName = null;
+                if(role === 'institutionUser') instId = document.getElementById('institution-select').value;
+                
+                if(role === 'institutionAdmin') {
+                    instName = document.getElementById('institution-name').value;
                     instId = normalizeInstitutionName(instName);
                     
+                    // --- RESTORED TRANSACTION SAFETY FOR INSTITUTIONS ---
                     const instRef = db.collection('institutions').doc(instId);
                     await db.runTransaction(async (tx) => {
                         const snap = await tx.get(instRef);
-                        if (snap.exists) throw new Error("Institution name already exists.");
-                        tx.set(instRef, { name: instName, country: country, adminUid: uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                        if (snap.exists) throw new Error("Institution name already exists. Please choose another.");
+                        tx.set(instRef, {
+                            name: instName, 
+                            country: countrySelect.value, 
+                            adminUid: uid, 
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
                     });
-
-                } else if (role === 'institutionUser') {
-                    instId = instSelect.value;
-                    if(!instId) throw new Error("Please select an institution.");
                 }
 
-                let billStatus = 'trial-free-lifetime';
-                if (role === 'institutionAdmin' && !isMoH && total === 0) billStatus = 'active-first-year';
-                if (total > 0) billStatus = 'active';
-
-                // SAVE DATA TO FIREBASE (With Fixed Amount)
                 await db.collection('users').doc(uid).set({
                     username: document.getElementById('username').value,
-                    email: email,
-                    role: role,
-                    occupation: document.getElementById('occupation').value,
-                    country: country,
-                    isMoH: isMoH,
-                    isPremium: isPremium,
-                    billingStatus: billStatus,
+                    email: email, role: role,
+                    country: countrySelect.value,
+                    isPremium: isPremium, 
                     trustStatus: total > 0 ? 'pending-verification' : 'verified',
-                    paymentReference: paymentRef || "N/A",
-                    
-                    registrationAmount: total, // <--- FIXED: Now saves the amount
-
+                    paymentReference: payRef || "N/A",
+                    registrationAmount: total,
+                    manualDiscount: manualDiscount, // Saved for record
                     requestEInvoice: document.getElementById('requestEInvoice').checked,
-                    manualDiscount: manualDiscount,
-                    promoCode: promo,
-                    subscriptionEnd: (!isMoH && role === 'institutionAdmin') ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)) : null,
-                    institutionId: instId,
-                    institutionName: instName,
+                    institutionId: instId, institutionName: instName,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
@@ -672,28 +860,47 @@
                 document.getElementById('success-view').style.display = 'block';
                 document.getElementById('display-email').textContent = email;
 
-            } catch(error) {
-                console.error(error);
-                let text = error.message;
-                if(error.code === 'auth/email-already-in-use') text = "Email already registered.";
-                msg.textContent = text;
-                msg.style.display = 'block';
-                btn.disabled = false;
-                btn.textContent = 'Create Account';
+            } catch(err) {
+                console.error(err);
+                msg.style.display = 'block'; 
+                // Better error message handling
+                let errMsg = err.message;
+                if(err.code === 'auth/email-already-in-use') errMsg = "This email is already registered.";
+                msg.textContent = errMsg;
+                btn.disabled = false; btn.textContent = 'Create Account';
             }
         });
 
+        // --- PDF GENERATORS (SPECIFIC DESCRIPTIONS) ---
+        function getFeeDescription() {
+            const role = document.querySelector('input[name="role"]:checked').value;
+            const premium = premiumToggle.checked;
+            
+            if (role === 'institutionUser') {
+                return "Identity Verification & Access Security Fee (One-off)";
+            } else if (role === 'institutionAdmin') {
+                if (premium) {
+                    return "Premium Setup Package: Datasheet Integration, Logo Injection & 4-Hour Consultation Retainer";
+                } else {
+                    return "Standard Institution Setup: Custom Ratio Config, Logo Injection & 2-Hour Consultation";
+                }
+            } else {
+                return "Personal Account Setup";
+            }
+        }
+
         window.generateInvoice = function() {
-            printDoc("PRO-FORMA INVOICE", "DuitNow / Stripe", "Please attach your proof of payment to this document.");
+            printDoc("PRO-FORMA INVOICE", "DuitNow / Stripe", "Please attach proof of payment.", getFeeDescription());
         };
         window.generateInstantReceipt = function() {
             const ref = document.getElementById('paymentRef').value || "PENDING";
-            printDoc("INSTANT RECEIPT", `Payment Ref: ${ref}`, "Keep this as your pro-forma proof of transaction.");
+            printDoc("INSTANT RECEIPT", `Payment Ref: ${ref}`, "Keep as proof of transaction.", getFeeDescription());
         };
 
-        function printDoc(title, payInfo, note) {
+        function printDoc(title, payInfo, note, description) {
             const amt = document.getElementById('totalDisplay').textContent;
             const curr = document.getElementById('currencySymbol').textContent;
+            
             const win = window.open('', '_blank');
             win.document.write(`
                 <html><head><title>${title}</title>
@@ -712,27 +919,23 @@
                     <strong>Payable To:</strong> Alivioscript Solutions<br><strong>Method:</strong> ${payInfo}
                 </div>
                 <table class="table table-bordered">
-                    <tr><th>Description</th><th class=\"text-end\">Amount</th></tr>
-                    <tr><td>Account Activation Fee</td><td class=\"text-end fw-bold\">${curr} ${amt}</td></tr>
+                    <tr><th>Service Description</th><th class="text-end">Amount</th></tr>
+                    <tr><td>${description}</td><td class="text-end fw-bold">${curr} ${amt}</td></tr>
                 </table>
-                
-                <div class=\"verification-notice\">
+                <div class="verification-notice">
                     <strong>STATUS: PENDING VERIFICATION</strong><br>
                     Note: ${note}<br><br>
-                    <em>PalliCalc operates on a trust system. Immediate access is granted upon registration; however, accounts will be suspended if payment verification fails.</em>
+                    <em>Charges are for administrative verification, technical configuration, and consultation services only.</em>
                 </div>
-
-                <p class=\"text-center text-muted mt-5 small\">
-                    For support, contact support@pallicalc.com<br>
-                    Alison Chai, RPh: 9093
+                <p class="text-center text-muted mt-5 small">
+                    For support, contact support@pallicalc.com<br>Alison Chai, RPh: 9093
                 </p>
             `);
             win.document.close();
         }
 
-        updateUI(); 
+        updateUI(); // Initial run
     });
   </script>
-<script src="/js/ga-tracking.js"></script>
 </body>
 </html>

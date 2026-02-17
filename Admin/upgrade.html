@@ -68,6 +68,18 @@
             font-size: 0.85rem; 
             color: #856404;
         }
+        
+        /* NEW SERVICE BREAKDOWN BOX */
+        .service-breakdown {
+            background-color: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+        .service-breakdown ul { margin-bottom: 0; padding-left: 20px; margin-top: 5px; }
+        .service-breakdown li { margin-bottom: 4px; color: #475569; }
     </style>
 </head>
 <body>
@@ -76,7 +88,7 @@
     
     <div class="d-flex justify-content-center mb-4" style="max-width: 600px; margin: 0 auto;">
         <div class="w-100 d-flex justify-content-between align-items-center">
-            <h4 class="fw-bold text-dark mb-0">Premium Upgrade</h4>
+            <h4 class="fw-bold text-dark mb-0">Premium Service Upgrade</h4>
             <a href="../admin.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-lg"></i> Cancel</a>
         </div>
     </div>
@@ -90,7 +102,7 @@
         
         <div class="gold-header text-center">
             <h2 class="fw-bold mb-1"><i class="bi bi-stars"></i> Unlock Premium</h2>
-            <p class="mb-0 small opacity-75">One-time upgrade for data power.</p>
+            <p class="mb-0 small opacity-75">One-time service fee for advanced configuration.</p>
         </div>
 
         <div class="card-body p-4">
@@ -103,9 +115,18 @@
 
             <hr class="my-4">
 
+            <div class="service-breakdown">
+                <strong><i class="bi bi-info-circle-fill me-1"></i> What this Service Fee covers:</strong>
+                <ul>
+                    <li><strong>Datasheet Setup Pack:</strong> Configuration of private cloud storage (Google Sheets) integration.</li>
+                    <li><strong>Consultation Retainer:</strong> Up to <strong>4 Hours</strong> of online technical consultation & training.</li>
+                    <li><strong>Data Bridge:</strong> Server-side configuration for secure QR data transfer.</li>
+                </ul>
+            </div>
+
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h6 class="fw-bold mb-0 text-secondary">Upgrade Fee</h6>
+                    <h6 class="fw-bold mb-0 text-secondary">One-Time Service Fee</h6>
                     <small class="text-muted" id="regionLabel">Checking region...</small>
                 </div>
                 <div class="text-end">
@@ -190,7 +211,6 @@
             const doc = await db.collection('setting').doc('registration').get();
             if (doc.exists) {
                 const data = doc.data();
-                // We use the admin_premium price from your settings
                 if (data.malaysia && data.malaysia.admin_premium) PRICE_MY = data.malaysia.admin_premium;
                 if (data.international && data.international.admin_premium) PRICE_INT = data.international.admin_premium;
             }
@@ -202,7 +222,6 @@
         if (!user) return window.location.href = 'index.html';
 
         try {
-            // Fetch User & Pricing in parallel
             const [userDoc, _] = await Promise.all([
                 db.collection('users').doc(user.uid).get(),
                 fetchPricing()
@@ -210,24 +229,20 @@
 
             const userData = userDoc.data();
 
-            // Check if already premium
             if (userData.isPremium) {
                 alert("You are already a Premium member!");
                 window.location.href = 'admin.html';
                 return;
             }
 
-            // Determine Country & Price
             const isMY = (userData.country === 'Malaysia');
             currentCurrency = isMY ? 'RM' : 'USD';
             currentAmount = isMY ? PRICE_MY : PRICE_INT;
 
-            // Update UI
             document.getElementById('currencySymbol').textContent = currentCurrency;
             document.getElementById('priceDisplay').textContent = currentAmount;
             document.getElementById('regionLabel').textContent = isMY ? "Malaysia Pricing" : "International Pricing";
 
-            // Show Content
             document.getElementById('loading').classList.add('d-none');
             document.getElementById('upgradeContent').classList.remove('d-none');
 
@@ -249,7 +264,7 @@
         
         if (!ref) return alert("Please enter your payment reference number.");
 
-        if(!confirm("Confirm Upgrade? Premium features will unlock immediately.")) return;
+        if(!confirm("Confirm Service Upgrade? Premium features will unlock immediately.")) return;
 
         const btn = document.getElementById('btnSubmit');
         btn.disabled = true;
@@ -258,22 +273,21 @@
         try {
             const uid = auth.currentUser.uid;
 
-            // UPDATE FIRESTORE
             await db.collection('users').doc(uid).update({
-                isPremium: true, // INSTANT UNLOCK
+                isPremium: true,
                 paymentReference: ref,
-                trustStatus: 'pending-verification', // Sends to your Audit Queue
+                trustStatus: 'pending-verification',
                 lastUpgradeDate: firebase.firestore.FieldValue.serverTimestamp(),
                 upgradeAmount: currentAmount,
                 requestEInvoice: requestEInvoice
             });
 
-            // NO REDIRECT - Show Success Section
             document.getElementById('paymentSection').style.display = 'none';
             document.querySelector('.gold-header').style.display = 'none';
             document.querySelector('.perks-list').style.display = 'none';
+            document.querySelector('.service-breakdown').style.display = 'none'; // Hide breakdown on success
             document.querySelector('hr').style.display = 'none';
-            document.querySelector('.d-flex.justify-content-between.align-items-center.mb-4').style.display = 'none'; // Hide Price
+            document.querySelector('.d-flex.justify-content-between.align-items-center.mb-4').style.display = 'none';
             
             document.getElementById('successSection').style.display = 'block';
 
@@ -284,17 +298,29 @@
         }
     });
 
-    // --- 5. DOCUMENT GENERATORS ---
+    // --- 5. DOCUMENT GENERATORS (UPDATED) ---
     window.generateInvoice = function() {
-        printDoc("PRO-FORMA INVOICE", "DuitNow / Stripe", "Payment Pending. Please attach proof of payment to this document.");
+        // Detailed description for Service Fee
+        const desc = `
+            <strong>Premium Service Package:</strong><br>
+            1. Datasheet Setup Pack (Google Sheets Integration)<br>
+            2. Data Bridge Configuration<br>
+            3. Technical Consultation (Max 4 Hours)
+        `;
+        printDoc("SERVICE INVOICE", "DuitNow / Stripe", "Payment Pending. Please attach proof of payment.", desc);
     };
 
     window.generateInstantReceipt = function() {
         const ref = document.getElementById('paymentRef').value || "PENDING";
-        printDoc("INSTANT RECEIPT", `Payment Ref: ${ref}`, "Keep this as your pro-forma proof of transaction.");
+        const desc = `
+            <strong>Premium Service Package:</strong><br>
+            - Datasheet Setup & Configuration<br>
+            - 4 Hours Technical Consultation
+        `;
+        printDoc("OFFICIAL RECEIPT", `Payment Ref: ${ref}`, "Proof of Service Payment.", desc);
     };
 
-    function printDoc(title, payInfo, note) {
+    function printDoc(title, payInfo, note, description) {
         const amt = document.getElementById('priceDisplay').textContent;
         const curr = document.getElementById('currencySymbol').textContent;
         
@@ -316,14 +342,14 @@
                 <strong>Payable To:</strong> Alivioscript Solutions<br><strong>Method:</strong> ${payInfo}
             </div>
             <table class="table table-bordered">
-                <tr><th>Description</th><th class="text-end">Amount</th></tr>
-                <tr><td>Premium Data Bridge (Upgrade)</td><td class="text-end fw-bold">${curr} ${amt}</td></tr>
+                <tr><th>Service Description</th><th class="text-end">Amount</th></tr>
+                <tr><td>${description}</td><td class="text-end fw-bold">${curr} ${amt}</td></tr>
             </table>
             
             <div class="verification-notice">
                 <strong>STATUS: PENDING VERIFICATION</strong><br>
                 Note: ${note}<br><br>
-                <em>PalliCalc operates on a trust system. Immediate upgrade is granted; however, accounts will be suspended if payment verification fails.</em>
+                <em>Charges are for technical setup, configuration, and consultation services only.</em>
             </div>
 
             <p class="text-center text-muted mt-5 small">

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Annual Renewal | PalliCalc</title>
+    <title>Annual Service Renewal | PalliCalc</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -23,43 +23,29 @@
         .date-badge.active { background: #d1e7dd; color: #0f5132; }
         .date-badge.expired { background: #f8d7da; color: #842029; }
 
+        .service-breakdown {
+            background-color: #f1f5f9;
+            border-left: 4px solid #0ea5e9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+        .service-breakdown ul { margin-bottom: 0; padding-left: 20px; }
+        .service-breakdown li { margin-bottom: 6px; color: #475569; }
+
         .doc-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
         .btn-small-outline {
-            flex: 1; 
-            padding: 10px; 
-            border: 1px solid #cbd5e1; 
-            background: white; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            color: #475569; 
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            flex: 1; padding: 10px; border: 1px solid #cbd5e1; background: white; border-radius: 8px; 
+            cursor: pointer; color: #475569; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
         }
-        .btn-small-outline:hover { 
-            border-color: #0ea5e9; 
-            color: #0ea5e9; 
-            background: #f0f9ff;
-        }
+        .btn-small-outline:hover { border-color: #0ea5e9; color: #0ea5e9; background: #f0f9ff; }
         .print-warning {
-            background: #fff8e1; 
-            border: 1px solid #ffecb3; 
-            padding: 12px; 
-            border-radius: 8px; 
-            margin-bottom: 15px; 
-            font-size: 0.85rem; 
-            color: #856404;
+            background: #fff8e1; border: 1px solid #ffecb3; padding: 12px; border-radius: 8px; 
+            margin-bottom: 15px; font-size: 0.85rem; color: #856404;
         }
-
-        /* --- FIX FOR CLICK CONFLICT --- */
-        /* This prevents the checkbox itself from capturing clicks, letting the parent div handle it */
-        .pointer-events-none { 
-            pointer-events: none; 
-        }
+        .pointer-events-none { pointer-events: none; }
     </style>
 </head>
 <body>
@@ -69,13 +55,13 @@
         <div class="col-lg-8">
             
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold text-dark"><i class="bi bi-arrow-repeat text-primary me-2"></i>Renewal</h3>
+                <h3 class="fw-bold text-dark"><i class="bi bi-gear-wide-connected text-primary me-2"></i>Service Renewal</h3>
                 <a href="../admin.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-house"></i> Dashboard</a>
             </div>
 
             <div id="loading" class="text-center py-5">
                 <div class="spinner-border text-primary" role="status"></div>
-                <p class="mt-2 text-muted small fw-bold">Calculating staff tiers & discounts...</p>
+                <p class="mt-2 text-muted small fw-bold">Calculating data usage & hosting tiers...</p>
             </div>
 
             <div id="renewalContent" class="d-none animate__animated animate__fadeIn">
@@ -86,12 +72,12 @@
                             <div class="col-md-7">
                                 <h5 class="fw-bold mb-1" id="instName">Loading...</h5>
                                 <div class="d-flex gap-2 mt-2">
-                                    <span class="badge bg-primary">Tier <span id="tierNum">1</span></span>
-                                    <span class="badge bg-light text-dark border"><i class="bi bi-people"></i> <span id="staffCountLabel">0</span> Staff</span>
+                                    <span class="badge bg-primary">Hosting Tier <span id="tierNum">1</span></span>
+                                    <span class="badge bg-light text-dark border"><i class="bi bi-people"></i> <span id="staffCountLabel">0</span> Active Users</span>
                                 </div>
                             </div>
                             <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                                <small class="text-muted d-block fw-bold text-uppercase" style="font-size: 0.7rem;">Current Expiry</small>
+                                <small class="text-muted d-block fw-bold text-uppercase" style="font-size: 0.7rem;">Service Expiry</small>
                                 <div id="currentExpiryBadge" class="date-badge mt-1">Checking...</div>
                             </div>
                         </div>
@@ -100,14 +86,23 @@
 
                 <div class="card renewal-card mb-4">
                     <div class="card-header bg-white py-3 border-bottom">
-                        <h6 class="fw-bold mb-0 text-primary">Extend Subscription (1 Year)</h6>
+                        <h6 class="fw-bold mb-0 text-primary">Annual Administrative Service Fee</h6>
                     </div>
                     <div class="card-body p-4">
                         
+                        <div class="service-breakdown">
+                            <strong><i class="bi bi-info-circle-fill me-1"></i> What this fee covers:</strong>
+                            <ul class="mt-2">
+                                <li><strong>Cloud Data Hosting:</strong> Tiered storage fees based on the number of staff accounts (<span id="tierUserCount"></span> users) and database read/write volume.</li>
+                                <li><strong>Administrative Customization:</strong> Injection of Institution Logo/Details into patient pamphlets and forms.</li>
+                                <li><strong>Technical Retainer:</strong> Includes up to <strong>2 hours</strong> of technical consultation or customization support per year.</li>
+                            </ul>
+                        </div>
+
                         <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                             <div>
-                                <h6 class="fw-bold mb-0">Base Admin License</h6>
-                                <small class="text-muted">Tiered rate based on current staff count.</small>
+                                <h6 class="fw-bold mb-0">Base Hosting & Service Fee</h6>
+                                <small class="text-muted">Calculated based on current user load.</small>
                             </div>
                             <div class="fw-bold fs-5">
                                 <span class="currencySymbol"></span> <span id="basePriceDisplay">0</span>
@@ -120,10 +115,10 @@
                             </div>
                             <div class="ms-3 flex-grow-1">
                                 <label class="form-check-label fw-bold d-block">
-                                    Include Premium Data Bridge
+                                    Premium Identity & Data Bridge
                                 </label>
                                 <small class="text-muted">
-                                    Keep or Enable QR Transfer & Custom Headers for the next year.
+                                    Enables high-resolution custom logo injection on all PDF outputs + QR Data Transfer features.
                                 </small>
                             </div>
                             <div class="fw-bold text-success">
@@ -132,18 +127,18 @@
                         </div>
 
                         <div id="discountRow" class="d-none mt-3 p-2 rounded bg-light border border-success d-flex justify-content-between align-items-center text-success">
-                            <span class="fw-bold small"><i class="bi bi-tag-fill me-1"></i> Discount Applied</span>
+                            <span class="fw-bold small"><i class="bi bi-tag-fill me-1"></i> Special Waiver/Discount</span>
                             <span class="fw-bold">- <span id="discountDisplay">0</span>%</span>
                         </div>
 
                         <div class="mt-4 p-3 bg-light rounded border text-center">
-                            <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">New Expiry Date After Payment</small>
+                            <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">New Service Expiry Date</small>
                             <h5 class="fw-bold text-dark mt-1" id="previewNewDate">...</h5>
                             
                             <hr class="my-3">
                             
                             <div class="d-flex justify-content-between align-items-center px-2">
-                                <span class="fw-bold text-secondary">Total Renewal Due:</span>
+                                <span class="fw-bold text-secondary">Total Service Fee Due:</span>
                                 <h2 class="fw-bold text-primary mb-0"><span class="currencySymbol"></span> <span id="totalDisplay">0.00</span></h2>
                             </div>
                         </div>
@@ -160,7 +155,7 @@
                         <h5 class="fw-bold mb-3">Trust Payment Verification</h5>
                         
                         <div class="print-warning">
-                            <i class="bi bi-exclamation-triangle-fill"></i> <strong>Important:</strong> Please print your Invoice or Receipt <strong>now</strong>. Automatic generation is not available after leaving this page.
+                            <i class="bi bi-exclamation-triangle-fill"></i> <strong>Important:</strong> Please print your Service Invoice or Receipt <strong>now</strong>.
                         </div>
 
                         <div class="doc-buttons">
@@ -171,7 +166,7 @@
                         <div class="alert alert-warning border-0 small d-flex align-items-center">
                             <i class="bi bi-shield-lock-fill fs-4 me-3"></i>
                             <div>
-                                <strong>Instant Extension:</strong> Submit your payment reference below. Your subscription will be extended immediately while we verify in the background.
+                                <strong>Instant Extension:</strong> Submit your payment reference below. Your service period will be extended immediately while we verify.
                             </div>
                         </div>
 
@@ -190,13 +185,10 @@
                                     Request Official LHDN e-Invoice (Sent in 30 days)
                                 </label>
                             </div>
-                            <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 4px; padding-left: 24px; margin-bottom: 0;">
-                                If you forgot to tick this, email <strong>support@pallicalc.com</strong>. <br>Response may take up to 60 days.
-                            </p>
                         </div>
 
                         <button id="btnSubmit" class="btn btn-success w-100 py-3 fw-bold shadow-sm">
-                            <i class="bi bi-check-circle-fill me-2"></i> Submit & Extend Instantly
+                            <i class="bi bi-check-circle-fill me-2"></i> Submit & Extend Service
                         </button>
                     </div>
                 </div>
@@ -251,7 +243,7 @@
             const userData = userDoc.data();
 
             if (userData.isMoH) {
-                alert("MOH Accounts have lifetime access.");
+                alert("MOH Accounts have lifetime service access.");
                 window.location.href = '../admin.html';
                 return;
             }
@@ -266,7 +258,7 @@
             const geo = isMY ? 'malaysia' : 'international';
             const prices = LIVE_RENEWAL_PRICES[geo] || LIVE_RENEWAL_PRICES['international'];
             
-            // Base Price Logic
+            // Base Price Logic (RENAME to Hosting Fee Logic)
             if (count <= 10) state.basePrice = prices.tier1;
             else if (count <= 50) state.basePrice = prices.tier2;
             else state.basePrice = prices.tier3;
@@ -282,6 +274,7 @@
             document.querySelectorAll('.currencySymbol').forEach(el => el.textContent = state.currency);
             document.getElementById('instName').textContent = (userData.username || "User") + "'s Institution";
             document.getElementById('staffCountLabel').textContent = count;
+            document.getElementById('tierUserCount').textContent = count; // New field in breakdown
             document.getElementById('tierNum').textContent = (count > 50) ? 3 : (count > 10 ? 2 : 1);
             document.getElementById('basePriceDisplay').textContent = state.basePrice;
             document.getElementById('premiumPriceDisplay').textContent = state.premiumPrice;
@@ -357,7 +350,7 @@
         document.getElementById('paymentSection').scrollIntoView({ behavior: 'smooth' });
     }
 
-    // --- SUBMIT LOGIC (SIMPLIFIED) ---
+    // --- SUBMIT LOGIC ---
     document.getElementById('btnSubmit').addEventListener('click', async () => {
         const ref = document.getElementById('paymentRef').value.trim();
         const wantsPremium = document.getElementById('premiumToggle').checked;
@@ -367,7 +360,7 @@
         if (total > 0 && !ref) return alert("Please enter your payment reference number.");
         if (total === 0 && !ref) return alert("Please enter 'WAIVER' or 'PROMO' in the reference box.");
 
-        if(!confirm("Confirm Renewal? Access will be extended immediately.")) return;
+        if(!confirm("Confirm Service Renewal?")) return;
 
         const btn = document.getElementById('btnSubmit');
         btn.disabled = true;
@@ -376,10 +369,9 @@
         try {
             const uid = auth.currentUser.uid;
 
-            // Simplified Update: Only lastRenewalDate and isPremium are strictly enforced
             await db.collection('users').doc(uid).update({
                 subscriptionEnd: firebase.firestore.Timestamp.fromDate(state.newExpiry),
-                isPremium: wantsPremium, // Directly set based on user choice
+                isPremium: wantsPremium, 
                 billingStatus: 'active',
                 trustStatus: 'pending-verification', 
                 paymentReference: ref, 
@@ -388,19 +380,18 @@
                 renewalAmount: total
             });
 
-            // Hide Forms & Show Success Message IN-PLACE
             document.getElementById('paymentSection').style.display = 'none';
-            document.querySelector('.renewal-card:nth-child(2)').style.display = 'none'; // Hide Price Card
+            document.querySelector('.renewal-card:nth-child(2)').style.display = 'none'; 
             
             const container = document.getElementById('renewalContent');
             const successDiv = document.createElement('div');
             successDiv.className = 'text-center py-5 animate__animated animate__fadeIn';
             successDiv.innerHTML = `
                 <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
-                <h3 class="fw-bold mt-3">Renewal Successful!</h3>
-                <p class="text-muted">Your subscription has been extended to ${state.newExpiry.toLocaleDateString('en-GB')}.</p>
+                <h3 class="fw-bold mt-3">Service Renewed!</h3>
+                <p class="text-muted">Hosting and support extended to ${state.newExpiry.toLocaleDateString('en-GB')}.</p>
                 <div class="alert alert-info small text-start mx-auto" style="max-width: 400px;">
-                    <strong>Note:</strong> Verification is pending. Immediate access granted via Trust System.
+                    <strong>Note:</strong> Verification is pending. Immediate access granted.
                 </div>
                 <a href="../admin.html" class="btn btn-primary mt-3 px-4">Back to Dashboard</a>
             `;
@@ -409,20 +400,24 @@
         } catch (e) {
             alert("Error: " + e.message);
             btn.disabled = false;
-            btn.innerText = "Submit & Extend Instantly";
+            btn.innerText = "Submit & Extend Service";
         }
     });
 
-    // --- DOC GENERATORS ---
+    // --- UPDATED DOC GENERATORS FOR SERVICE FEE COMPLIANCE ---
     window.generateInvoice = function() {
-        let desc = "Annual Renewal: Base Admin License";
-        if(document.getElementById('premiumToggle').checked) desc += " + Premium Data Bridge";
-        printDoc("PRO-FORMA INVOICE", "DuitNow / Stripe", "Payment Pending. Please attach proof of payment to this document.", desc);
+        // Changed description to emphasize Hosting/Service
+        let desc = "Annual Hosting & Administrative Service Fee";
+        if(document.getElementById('premiumToggle').checked) desc += " <br>+ Premium Identity Injection (Logos/Forms)";
+        
+        // Added 'Service' to title
+        printDoc("SERVICE INVOICE", "DuitNow / Stripe", "Payment Pending.", desc);
     };
 
     window.generateInstantReceipt = function() {
         const ref = document.getElementById('paymentRef').value || "PENDING";
-        printDoc("INSTANT RECEIPT", `Payment Ref: ${ref}`, "Keep this as your pro-forma proof of transaction.", "Annual Subscription Renewal");
+        // Changed description
+        printDoc("OFFICIAL RECEIPT", `Payment Ref: ${ref}`, "Proof of Service Payment.", "Annual Hosting & Admin Retainer");
     };
 
     function printDoc(title, payInfo, note, description) {
@@ -450,16 +445,17 @@
                 <strong>Method:</strong> ${payInfo}
             </div>
             <table class="table table-bordered">
-                <tr><th>Description</th><th class="text-end">Amount</th></tr>
-                <tr><td>${description}</td><td class="text-end fw-bold">${curr} ${amt}</td></tr>
+                <tr><th>Service Description</th><th class="text-end">Amount</th></tr>
+                <tr><td>${description}
+                    <br><small class="text-muted">Includes: Database maintenance, pamphlet customization, and 2hrs technical consultation.</small>
+                </td><td class="text-end fw-bold">${curr} ${amt}</td></tr>
             </table>
             <div class="verification-notice">
                 <strong>STATUS: PENDING VERIFICATION</strong><br>
                 Note: ${note}<br><br>
-                <em>PalliCalc operates on a trust system. Immediate extension is granted; however, accounts will be suspended if payment verification fails.</em>
+                <em>Charges are for administrative hosting, technical consultation, and document customization services only.</em>
             </div>
             <p class="text-center text-muted mt-5 small">For support, contact support@pallicalc.com<br>Alison Chai, RPh: 9093</p>
-
         `);
         win.document.close();
     }
