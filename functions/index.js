@@ -490,6 +490,39 @@ exports.sendSuspensionReminder = onCall(async (request) => {
     return { success: true };
 });
 
+// --- 6B. REMOVAL NOTIFICATION TRIGGER ---
+// Sends an email to staff when an Admin schedules them for removal
+exports.notifyStaffRemoval = onDocumentUpdated("users/{userId}", async (event) => {
+    const beforeData = event.data.before.data();
+    const afterData = event.data.after.data();
+
+    // Only send if deletionStatus WAS NOT pending, and NOW IT IS pending
+    if (beforeData.deletionStatus !== "pending" && afterData.deletionStatus === "pending") {
+        try {
+            await transporter.sendMail({
+                from: '"PalliCalc System" <pallicalc@gmail.com>',
+                to: afterData.email,
+                subject: 'Account Update: Scheduled Removal',
+                html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #d9534f; max-width: 600px;">
+                    <h3 style="color: #d9534f;">Notice of Scheduled Removal</h3>
+                    <p>Dear ${afterData.username || 'User'},</p>
+                    <p>Your account at <strong>${afterData.institutionName || 'your institution'}</strong> has been scheduled for removal by an administrator.</p>
+                    <div style="background-color: #f8f9fa; padding: 15px; border-left: 5px solid #d9534f; margin: 20px 0;">
+                        <p style="margin: 0;"><strong>Grace Period:</strong> You have 14 days of continued access before the account is suspended.</p>
+                    </div>
+                    <p>If you believe this is an error, please contact your Institution Admin immediately.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                    <small style="color: #777;">&copy; 2026 Alivioscript Solutions</small>
+                </div>`
+            });
+            console.log(`Removal email sent to: ${afterData.email}`);
+        } catch (error) {
+            console.error("Error sending removal email:", error);
+        }
+    }
+});
+
 // --- 7. SECURE USER STATUS CHECK ---
 exports.getUserStatus = onCall(async (request) => {
     if (!request.auth) {
