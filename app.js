@@ -3,7 +3,6 @@
 // ==========================================
 if ('serviceWorker' in navigator) {
     // Logic: Only register if NOT on the public pages.
-    // This prevents the 50+ cached files from downloading for casual visitors.
     const path = window.location.pathname;
     const isPublicPage = path === '/' || 
                          path.endsWith('index.html') || 
@@ -12,7 +11,6 @@ if ('serviceWorker' in navigator) {
 
     if (!isPublicPage) {
         window.addEventListener('load', () => {
-            // FIXED: Uses root path '/sw.js'
             navigator.serviceWorker.register('/sw.js')
                 .then(reg => {
                     // console.log('✅ [App] Service Worker Registered');
@@ -25,18 +23,14 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================
-// 2. SMART FAVICON INJECTOR (Fixed for Safari)
+// 2. SMART FAVICON INJECTOR
 // ==========================================
 (function() {
-    // We add '?v=2' to force devices to ignore the old white-box icon
     const version = '?v=2'; 
 
     const icons = [
-        // 1. Modern SVG (Desktop)
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' + version },
-        // 2. Safari Pinned Tab (The Mask)
         { rel: 'mask-icon', href: '/favicon.svg' + version, color: '#5AAB8B' },
-        // 3. iOS Home Screen
         { rel: 'apple-touch-icon', href: '/favicon.png' + version }
     ];
 
@@ -71,7 +65,6 @@ let currentUser = null;
 let isVipUser = false;
 let counterTimeout;
 
-// SAFETY: Stub analytics if blocked
 window.trackEvent = window.trackEvent || function() {};
 
 // ==========================================
@@ -111,7 +104,7 @@ function initApp() {
 }
 
 // ==========================================
-// 5. CORE LOGIC (Counters & Auth)
+// 5. CORE LOGIC
 // ==========================================
 
 function debounceCounters() {
@@ -129,13 +122,11 @@ async function updateCounters() {
         const instSnap = await db.collection('institutions').get();
         const iEl = document.getElementById('total-institutions');
         if(iEl) iEl.textContent = instSnap.size;
-    } catch(e) {
-        // console.error('Counter Error:', e);
-    }
+    } catch(e) { /* console.error(e) */ }
 }
 
 // ==========================================
-// ✅ AUTH STATE HANDLER (Persistence Check)
+// ✅ AUTH STATE HANDLER (Persistence)
 // ==========================================
 async function checkAuthState(user) {
     currentUser = user;
@@ -147,16 +138,15 @@ async function checkAuthState(user) {
     const vipBadge = document.getElementById('user-tier-badge');
     const vipLock = document.getElementById('vip-lock-opioid');
 
-    // --- SCENARIO A: USER IS LOGGED IN ---
+    // --- USER LOGGED IN ---
     if (user) {
-        // 1. INSTANTLY HIDE UI to prevent race conditions
+        // Hide UI immediately to prevent glitches
         if (toolsSection) toolsSection.style.display = 'none';
         if (featureSection) featureSection.style.display = 'none';
         if (actionBtns) actionBtns.classList.add('hidden');
         
         if (userInfo) userInfo.innerHTML = '<span style="font-size:13px; color:#475569">Verifying account...</span>';
 
-        // 3. CHECK EMAIL VERIFICATION
         if (!user.emailVerified) {
             await auth.signOut();
             openLoginModal();
@@ -169,30 +159,24 @@ async function checkAuthState(user) {
         }
 
         try {
-            // 4. CHECK SERVER
             await user.getIdToken(true);
-            
             const getStatus = firebase.functions().httpsCallable('getUserStatus');
             const result = await getStatus();
             const statusData = result.data;
 
-            // 5. REDIRECT IF ADMIN (Persistence check)
-            // If they are on index.html and are an admin, move them.
+            // ⛔️ ADMIN REDIRECT LOGIC
             if (statusData.role === 'institutionAdmin') {
-                // If we are NOT already on the admin page, redirect.
                 if (!window.location.pathname.includes('Admin.html')) {
                     window.location.href = 'Admin.html';
                     return; 
                 }
             }
 
-            // 6. SUSPENSION CHECK
             if (statusData.isSuspended) {
                 handleSuspension(statusData, statusData.institutionName || "your institution");
                 return;
             }
 
-            // Save preferences
             isVipUser = statusData.isVip;
             if (statusData.customRatios) {
                 localStorage.setItem('palliCalc_customRatios', JSON.stringify(statusData.customRatios));
@@ -201,18 +185,16 @@ async function checkAuthState(user) {
                 }
             }
 
-            // Update Header
             updateUIForLogin(statusData, user.email, false);
 
-            // Show Tools
             if (toolsSection) {
                 toolsSection.classList.add('visible');
                 toolsSection.style.display = 'grid';
             }
 
         } catch(e) {
-            console.error('Profile Load Error:', e);
-            // Fallback
+            console.error('Profile Error:', e);
+            // Fallback for network issues
             isVipUser = false;
             updateUIForLogin({}, user.email, false);
             if (toolsSection) {
@@ -222,7 +204,7 @@ async function checkAuthState(user) {
         }
 
     } 
-    // --- SCENARIO B: USER IS LOGGED OUT ---
+    // --- USER LOGGED OUT ---
     else {
         localStorage.removeItem('palliCalc_customRatios');
         localStorage.removeItem('palliCalc_institutionName');
@@ -382,22 +364,22 @@ function setupEventListeners() {
             submitBtn.innerHTML = 'Logging in...';
             
             try {
-                // 1. Authenticate
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
                 localStorage.setItem('palliCalcLoginPassword', password);
                 
-                // 2. CHECK ROLE IMMEDIATELY (FIX FOR INDEX.HTML)
-                // We force a token refresh to get custom claims immediately
+                // 1. Get Token & Role Immediately
                 const user = userCredential.user;
                 const token = await user.getIdTokenResult(true);
                 
-                // 3. ROUTING LOGIC
+                console.log("Login Role:", token.claims.role);
+
+                // 2. FORCE REDIRECT FOR ADMIN
                 if (token.claims.role === 'institutionAdmin') {
-                    console.log("Admin detected. Redirecting to Admin.html");
                     window.location.href = 'Admin.html';
                 } else {
-                    // Regular User -> Go to App Dashboard
-                    window.location.href = 'app.html';
+                    // 3. REGULAR USER: JUST RELOAD CURRENT PAGE (Index.html)
+                    // This updates the UI state without sending them to app.html
+                    window.location.reload();
                 }
                 
                 closeLoginModal();
