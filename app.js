@@ -13,6 +13,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+
 // ==========================================
 // 2. SMART FAVICON INJECTOR (Updated)
 // ==========================================
