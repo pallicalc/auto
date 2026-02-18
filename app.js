@@ -1,52 +1,54 @@
-﻿// ==========================================
-// 1. SMART SERVICE WORKER REGISTRATION (Fixed)
+// ==========================================
+// 1. SMART SERVICE WORKER REGISTRATION
 // ==========================================
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(reg => {
-                console.log('✅ [App] Service Worker Registered');
-            })
-            .catch(err => {
-                console.warn('❌ [App] SW Registration Failed', err);
-            });
-    });
+    // Logic: Only register if NOT on the public pages.
+    // This prevents the 50+ cached files from downloading for casual visitors.
+    const path = window.location.pathname;
+    const isPublicPage = path === '/' || 
+                         path.endsWith('index.html') || 
+                         path.endsWith('register.html') || 
+                         path.endsWith('forgot-password.html');
+
+    if (!isPublicPage) {
+        window.addEventListener('load', () => {
+            // FIXED: Uses root path '/sw.js'
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => {
+                    // console.log('✅ [App] Service Worker Registered');
+                })
+                .catch(err => {
+                    console.warn('❌ [App] SW Registration Failed', err);
+                });
+        });
+    }
 }
 
-
 // ==========================================
-// 2. SMART FAVICON INJECTOR (Updated)
+// 2. SMART FAVICON INJECTOR (Fixed for Safari)
 // ==========================================
 (function() {
-    // We add '?v=2' to the end of filenames to force a cache refresh
+    // We add '?v=2' to force devices to ignore the old white-box icon
     const version = '?v=2'; 
 
     const icons = [
-        // 1. The Modern SVG (For Desktop Safari, Chrome, Firefox)
+        // 1. Modern SVG (Desktop)
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' + version },
-        
-        // 2. Safari Pinned Tab Mask (Change color if needed)
+        // 2. Safari Pinned Tab (The Mask)
         { rel: 'mask-icon', href: '/favicon.svg' + version, color: '#5AAB8B' },
-        
-        // 3. Apple Touch Icon (iPhone/iPad Home Screen)
+        // 3. iOS Home Screen
         { rel: 'apple-touch-icon', href: '/favicon.png' + version }
     ];
 
     icons.forEach(iconDef => {
-        // Remove existing links to prevent conflicts
         let existingLink = document.querySelector(`link[rel='${iconDef.rel}']`);
-        if (existingLink) {
-            existingLink.remove();
-        }
+        if (existingLink) existingLink.remove();
 
-        // Create the new link
         let link = document.createElement('link');
         link.rel = iconDef.rel;
         link.href = iconDef.href;
-
         if (iconDef.type) link.type = iconDef.type;
         if (iconDef.color) link.setAttribute('color', iconDef.color);
-
         document.head.appendChild(link);
     });
 })();
@@ -69,7 +71,7 @@ let currentUser = null;
 let isVipUser = false;
 let counterTimeout;
 
-// SAFETY: Stub analytics if blocked to prevent crashes
+// SAFETY: Stub analytics if blocked
 window.trackEvent = window.trackEvent || function() {};
 
 // ==========================================
@@ -77,7 +79,6 @@ window.trackEvent = window.trackEvent || function() {};
 // ==========================================
 window.addEventListener('load', async () => {
     try {
-        // Safer Initialization: Checks if Firebase is already running
         if (!firebase.apps.length) {
             firebaseApp = firebase.initializeApp(firebaseConfig);
         } else {
@@ -87,7 +88,6 @@ window.addEventListener('load', async () => {
         auth = firebase.auth();
         db = firebase.firestore();
         
-        // Only load functions if the library is available
         if (firebase.functions) {
             functions = firebase.functions();
         }
@@ -102,7 +102,6 @@ function initApp() {
     updateCounters();
     setInterval(() => debounceCounters(), 30000);
     
-    // ✅ OBSERVER IS KING: Always listen, never block.
     auth.onAuthStateChanged((user) => {
         checkAuthState(user);
     });
@@ -120,7 +119,6 @@ function debounceCounters() {
     counterTimeout = setTimeout(updateCounters, 500);
 }
 
-// Counts ALL users and institutions
 async function updateCounters() {
     if (!db) return;
     try {
@@ -137,12 +135,11 @@ async function updateCounters() {
 }
 
 // ==========================================
-// ✅ AUTH STATE HANDLER (RACE CONDITION FIX)
+// ✅ AUTH STATE HANDLER (Persistence Check)
 // ==========================================
 async function checkAuthState(user) {
     currentUser = user;
 
-    // Grab elements we need to hide/show
     const userInfo = document.getElementById('user-info');
     const actionBtns = document.getElementById('action-buttons');
     const toolsSection = document.getElementById('tools-section');
@@ -152,12 +149,11 @@ async function checkAuthState(user) {
 
     // --- SCENARIO A: USER IS LOGGED IN ---
     if (user) {
-        // 1. INSTANTLY HIDE EVERYTHING (Fixes the race condition)
+        // 1. INSTANTLY HIDE UI to prevent race conditions
         if (toolsSection) toolsSection.style.display = 'none';
         if (featureSection) featureSection.style.display = 'none';
         if (actionBtns) actionBtns.classList.add('hidden');
         
-        // 2. SHOW "LOADING" STATUS
         if (userInfo) userInfo.innerHTML = '<span style="font-size:13px; color:#475569">Verifying account...</span>';
 
         // 3. CHECK EMAIL VERIFICATION
@@ -173,20 +169,24 @@ async function checkAuthState(user) {
         }
 
         try {
-            // 4. FORCE REFRESH & CHECK SERVER
+            // 4. CHECK SERVER
             await user.getIdToken(true);
             
             const getStatus = firebase.functions().httpsCallable('getUserStatus');
             const result = await getStatus();
             const statusData = result.data;
 
-            // 5. REDIRECT IF ADMIN (The Critical Step)
+            // 5. REDIRECT IF ADMIN (Persistence check)
+            // If they are on index.html and are an admin, move them.
             if (statusData.role === 'institutionAdmin') {
-                window.location.href = 'Admin.html';
-                return; // STOP! Do not run the code below.
+                // If we are NOT already on the admin page, redirect.
+                if (!window.location.pathname.includes('Admin.html')) {
+                    window.location.href = 'Admin.html';
+                    return; 
+                }
             }
 
-            // 6. IF NOT ADMIN, SHOW THE APP
+            // 6. SUSPENSION CHECK
             if (statusData.isSuspended) {
                 handleSuspension(statusData, statusData.institutionName || "your institution");
                 return;
@@ -204,7 +204,7 @@ async function checkAuthState(user) {
             // Update Header
             updateUIForLogin(statusData, user.email, false);
 
-            // NOW we can safely show the tools
+            // Show Tools
             if (toolsSection) {
                 toolsSection.classList.add('visible');
                 toolsSection.style.display = 'grid';
@@ -212,10 +212,9 @@ async function checkAuthState(user) {
 
         } catch(e) {
             console.error('Profile Load Error:', e);
-            // If server fails, fallback to basic user but still show tools
+            // Fallback
             isVipUser = false;
             updateUIForLogin({}, user.email, false);
-            
             if (toolsSection) {
                 toolsSection.classList.add('visible');
                 toolsSection.style.display = 'grid';
@@ -225,11 +224,9 @@ async function checkAuthState(user) {
     } 
     // --- SCENARIO B: USER IS LOGGED OUT ---
     else {
-        // Clear data
         localStorage.removeItem('palliCalc_customRatios');
         localStorage.removeItem('palliCalc_institutionName');
 
-        // Reset Header
         if (userInfo) {
             userInfo.innerHTML = '<button id="login-btn" class="login-btn" aria-label="Login to access calculators">🔐 Login</button>';
             const newLoginBtn = document.getElementById('login-btn');
@@ -238,12 +235,9 @@ async function checkAuthState(user) {
 
         if (actionBtns) actionBtns.classList.remove('hidden');
 
-        // Hide Tools
         if (toolsSection) {
             toolsSection.classList.remove('visible');
             toolsSection.style.display = 'none';
-            
-            // Restore default text
              toolsSection.innerHTML = `
                 <h2 id="tools-title" style="text-align:center;font-size:24px;font-weight:700;color:#1e293b;margin-bottom:20px;">🛠️ Tools Available</h2>
                 <a href="all-calculators.html" class="tool-btn"><span class="tool-icon">💊</span><span>All calculators</span></a>
@@ -254,7 +248,6 @@ async function checkAuthState(user) {
             `;
         }
 
-        // Show Marketing
         if (featureSection) featureSection.style.display = 'block';
         if (vipBadge) vipBadge.style.display = 'none';
         if (vipLock) vipLock.style.display = 'none';
@@ -291,7 +284,6 @@ function updateUIForLogin(userData, email, isSuspended) {
     let welcomeText = `Welcome, ${displayName}`;
     if (isVipUser) welcomeText += ' PRO';
 
-    // Update Header
     if (userInfo) {
         userInfo.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
@@ -304,11 +296,9 @@ function updateUIForLogin(userData, email, isSuspended) {
         if(logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     }
 
-    // Hide Marketing
     if (actionBtns) actionBtns.classList.add('hidden');
     if (featureSection) featureSection.style.display = 'none';
     
-    // Show Tools (If Active)
     if (!isSuspended) {
         if (toolsSection) {
             toolsSection.classList.add('visible');
@@ -366,10 +356,8 @@ function showSuspensionNotice(instName) {
 async function handleLogout() {
     try {
         await auth.signOut();
-        // Clear critical data
         localStorage.removeItem('palliCalcLoginPassword');
         localStorage.removeItem('palliCalc_customRatios');
-        // Force reload to clear all memory states
         window.location.reload(); 
     } catch (error) {
         console.error('Logout error:', error);
@@ -394,12 +382,23 @@ function setupEventListeners() {
             submitBtn.innerHTML = 'Logging in...';
             
             try {
-                // Authenticate
+                // 1. Authenticate
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
                 localStorage.setItem('palliCalcLoginPassword', password);
                 
-                // Force UI Update
-                await checkAuthState(userCredential.user);
+                // 2. CHECK ROLE IMMEDIATELY (FIX FOR INDEX.HTML)
+                // We force a token refresh to get custom claims immediately
+                const user = userCredential.user;
+                const token = await user.getIdTokenResult(true);
+                
+                // 3. ROUTING LOGIC
+                if (token.claims.role === 'institutionAdmin') {
+                    console.log("Admin detected. Redirecting to Admin.html");
+                    window.location.href = 'Admin.html';
+                } else {
+                    // Regular User -> Go to App Dashboard
+                    window.location.href = 'app.html';
+                }
                 
                 closeLoginModal();
             } catch (error) {
