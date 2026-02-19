@@ -90,7 +90,6 @@ async function initFirebaseAuth() {
   auth.onAuthStateChanged(async (user) => {
     if (!user) { window.location.href = "../index.html"; return; } 
     
-    // 🛑 EMAIL VERIFICATION CHECK
     if (!user.emailVerified) { 
         alert("Please verify your email before using PalliCalc.");
         await auth.signOut();
@@ -98,27 +97,37 @@ async function initFirebaseAuth() {
         return; 
     }
     
-    // 🛑 ROLE CHECK
-    const snap = await db.collection("users").doc(user.uid).get();
-    if (!snap.exists) { 
-        await auth.signOut();
-        window.location.href = "../index.html";
-        return; 
-    }
-    
-    const profile = snap.data();
-    
-    // Redirect Admins to Dashboard
-    if (profile.role === "institutionAdmin") { 
-        window.location.href = "../Admin.html"; 
-        return; 
-    }
-    
-    window.PALLICALC_USER = { role: profile.role, institutionId: profile.institutionId || null };
-    
-    // Auth success - Load logic
-    await applyMemberRules();
-    document.getElementById("calcPage").style.display = "block";
+    try {
+        const snap = await db.collection("users").doc(user.uid).get();
+        if (!snap.exists) { 
+            await auth.signOut();
+            window.location.href = "../index.html";
+            return; 
+        }
+        
+        const profile = snap.data();
+        if (profile.role === "institutionAdmin") { 
+            window.location.href = "../Admin.html"; 
+            return; 
+        }
+        
+        window.PALLICALC_USER = { role: profile.role, institutionId: profile.institutionId || null };
+
+        // --- BRANDING LOOKUP ---
+        if (profile.institutionId) {
+            try {
+                const instDoc = await db.collection("institutions").doc(profile.institutionId).get();
+                if (instDoc.exists) {
+                    const instData = instDoc.data();
+                    const realName = instData.headerName || instData.name || "Institution";
+                    localStorage.setItem('palliCalc_institutionName', realName);
+                }
+            } catch (e) { console.warn("Name fetch failed:", e); }
+        }
+
+        await applyMemberRules();
+        document.getElementById("calcPage").style.display = "block";
+    } catch(e) { console.error("Auth Init Error", e); }
   });
 }
 
@@ -129,11 +138,10 @@ async function applyMemberRules() {
   
   if (role === "institutionUser") {
     // 🛑 INSTITUTION USER LOGIC
-    // 1. Remove Personal Ratios (Cleanup)
     localStorage.removeItem("benzoTypes");
     localStorage.removeItem("benzoIncluded");
     
-    // 2. Fetch Ratios (Will fail if Suspended)
+    // Fetch from Firebase (which handles our offline PWA backup)
     await loadRatiosFromFirebase();
   } else {
     // ✅ PERSONAL USER LOGIC
@@ -149,90 +157,64 @@ async function applyMemberRules() {
   }
 }
 
-function updateBanner(userType, isCustom, timestamp = null, instName = null) {
-  const banner = document.getElementById("ratioBanner");
-  let html = "";
-  let dateStr = "";
-  if (timestamp) {
-    const dateObj = (timestamp && typeof timestamp.toDate === 'function') ? timestamp.toDate() : new Date(timestamp);
-    if (!isNaN(dateObj)) dateStr = ` (Saved: ${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})`;
-  }
-
-  if (userType === "personal") {
-    html = isCustom 
-        ? `<strong>Personal User:</strong> <span style="color:#198754; font-weight:bold;">Custom Ratios</span>${dateStr}` 
-        : `<strong>Personal User:</strong> <span style="color:#6c757d; font-style:italic;">Default Ratios</span>`;
-  } else if (userType === "institution") {
-    // 🛑 SUSPENSION VISUAL CHECK
-    if (instName === "Suspended") {
-        html = `<strong>Access Restricted:</strong> <span style="color: #dc3545; font-weight: bold;">System Default Ratios</span> (Contact Admin)`;
-    } else {
-        html = isCustom 
-            ? `<strong>${instName || "Institution"}:</strong> <span style="color:#198754; font-weight:bold;">Custom Ratios</span>${dateStr}` 
-            : `<strong>${instName || "Institution"}:</strong> <span style="color:#6c757d; font-style:italic;">Default Ratios</span>`;
-    }
-  }
-  banner.innerHTML = html;
-  banner.style.display = "block";
-}
 
 /* =========================================
    DATA LOADING (UPDATED FOR SECURITY)
    ========================================= */
-async function loadRatiosFromFirebase() {
+async function loadRatiosFromFirebase(retries = 2) {
     try {
       const instId = window.PALLICALC_USER.institutionId;
       if (!instId) { loadHardcodedDefaults(); updateBanner("institution", false); return; }
       
-      // 🛑 SECURITY CHECK:
-      // If Institution is SUSPENDED, this .get() will fail due to Firestore Rules.
       const ref = await db.collection("benzoRatios").doc(instId).get();
       
       if (ref.exists) {
         const data = ref.data();
+        
+        // MODIFICATION: Specifically handling Benzo structure
         benzoTypes = data.benzoTypes || [];
         includedKeys = data.includedKeys ? new Set(data.includedKeys) : new Set(benzoTypes.map(b => b.key));
+        
+        // CREATE PWA OFFLINE BACKUP
+        localStorage.setItem('palliCalc_customRatios_benzo', JSON.stringify(data));
+        
         fillAllSelects();
         updateBanner("institution", true, data.updatedAt);
       } else {
-        // No custom data exists yet
         loadHardcodedDefaults();
         updateBanner("institution", false);
       }
     } catch (e) { 
-      console.warn("Benzo Fetch Error (Likely Suspended):", e);
-      // 🛑 FALLBACK TO DEFAULTS
-      loadHardcodedDefaults(); 
+      console.warn("Benzo Fetch Error (Likely offline or locked):", e);
       
       if (e.code === 'permission-denied') {
-          // Explicitly show suspension state in banner
+          loadHardcodedDefaults();
           updateBanner("institution", false, null, "Suspended");
+          return;
+      } 
+
+      if (retries > 0) {
+          console.warn(`Retrying Benzo fetch... (${retries} left)`);
+          await new Promise(resolve => setTimeout(resolve, 800));
+          return await loadRatiosFromFirebase(retries - 1);
+      }
+      
+      // PWA OFFLINE RESCUE: Specifically using the Benzo backup
+      const offlineBackup = localStorage.getItem('palliCalc_customRatios_benzo');
+      if (offlineBackup) {
+          console.log("App offline: Using Benzo PWA backup");
+          const data = JSON.parse(offlineBackup);
+          benzoTypes = data.benzoTypes || [];
+          includedKeys = data.includedKeys ? new Set(data.includedKeys) : new Set(benzoTypes.map(b => b.key));
+          fillAllSelects();
+          updateBanner("institution", true, data.updatedAt);
       } else {
+          loadHardcodedDefaults(); 
           updateBanner("institution", false);
       }
     }
 }
 
-function loadHardcodedDefaults() {
-  benzoTypes = JSON.parse(JSON.stringify(defaultBenzoTypes));
-  includedKeys = new Set(benzoTypes.map(b => b.key));
-  fillAllSelects();
-}
-
-function loadSavedData() {
-  let savedTypes = localStorage.getItem("benzoTypes");
-  let savedIncluded = localStorage.getItem("benzoIncluded");
-  let savedTime = localStorage.getItem("benzoSavedTime");
-  if (savedTypes) {
-    benzoTypes = JSON.parse(savedTypes);
-    if (savedIncluded) { try { const incl = JSON.parse(savedIncluded); includedKeys = new Set(incl); } catch {} }
-    updateBanner("personal", true, savedTime);
-  } else {
-    benzoTypes = JSON.parse(JSON.stringify(defaultBenzoTypes));
-    includedKeys = new Set(benzoTypes.map(b => b.key));
-    updateBanner("personal", false);
-  }
-}
 
 /* =========================================
    BUG FIX: LOCK FUNCTION
