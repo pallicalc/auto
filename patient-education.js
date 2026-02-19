@@ -1,14 +1,28 @@
-﻿// --- Auto-Inject Favicon into Header ---
+﻿// ==========================================
+// 2. SMART FAVICON INJECTOR
+// ==========================================
 (function() {
-    let link = document.querySelector("link[rel~='icon']");
-    if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
-        document.head.appendChild(link);
-    }
-    link.href = '../../favicon.png';
+    const version = '?v=2'; 
 
+    const icons = [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' + version },
+        { rel: 'mask-icon', href: '/favicon.svg' + version, color: '#5AAB8B' },
+        { rel: 'apple-touch-icon', href: '/icon-192.png' + version } // <-- Changed to icon-192.png!
+    ];
+
+    icons.forEach(iconDef => {
+        let existingLink = document.querySelector(`link[rel='${iconDef.rel}']`);
+        if (existingLink) existingLink.remove();
+
+        let link = document.createElement('link');
+        link.rel = iconDef.rel;
+        link.href = iconDef.href;
+        if (iconDef.type) link.type = iconDef.type;
+        if (iconDef.color) link.setAttribute('color', iconDef.color);
+        document.head.appendChild(link);
+    });
 })();
+
 // --- FIREBASE CONFIG ---
 const firebaseConfig = {
     apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",

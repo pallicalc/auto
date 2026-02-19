@@ -31,7 +31,7 @@ if ('serviceWorker' in navigator) {
     const icons = [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' + version },
         { rel: 'mask-icon', href: '/favicon.svg' + version, color: '#5AAB8B' },
-        { rel: 'apple-touch-icon', href: '/favicon.png' + version }
+        { rel: 'apple-touch-icon', href: '/icon-192.png' + version }
     ];
 
     icons.forEach(iconDef => {

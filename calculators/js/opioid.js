@@ -3,18 +3,31 @@
  * It handles dose calculations, conversions between different opioids, and provides safety warnings
  * for cross-tolerance and high doses.
  */
-// --- Auto-Inject Favicon into Header ---
+// ==========================================
+// 2. SMART FAVICON INJECTOR
+// ==========================================
 (function() {
-    let link = document.querySelector("link[rel~='icon']");
-    if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
+    const version = '?v=2'; 
+
+    const icons = [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' + version },
+        { rel: 'mask-icon', href: '/favicon.svg' + version, color: '#5AAB8B' },
+        { rel: 'apple-touch-icon', href: '/icon-192.png' + version } // <-- Changed to icon-192.png!
+    ];
+
+    icons.forEach(iconDef => {
+        let existingLink = document.querySelector(`link[rel='${iconDef.rel}']`);
+        if (existingLink) existingLink.remove();
+
+        let link = document.createElement('link');
+        link.rel = iconDef.rel;
+        link.href = iconDef.href;
+        if (iconDef.type) link.type = iconDef.type;
+        if (iconDef.color) link.setAttribute('color', iconDef.color);
         document.head.appendChild(link);
-    }
-    // Adjust path based on where this script runs. 
-    // If diagnostic.js is in a subfolder, use '../favicon.png'
-    link.href = '../favicon.png'; 
+    });
 })();
+
 
 /* =========================================
    GLOBAL VARIABLES & CONFIG
