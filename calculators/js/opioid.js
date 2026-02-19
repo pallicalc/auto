@@ -123,7 +123,6 @@ async function initFirebaseAuth() {
   auth.onAuthStateChanged(async (user) => {
     if (!user) { window.location.href = "../index.html"; return; }
     
-    // 🛑 EMAIL VERIFICATION CHECK
     if (!user.emailVerified) {
       alert("Please verify your email before using PalliCalc.");
       await auth.signOut();
@@ -131,7 +130,6 @@ async function initFirebaseAuth() {
       return;
     }
 
-    // 🛑 ROLE CHECK
     try {
       const snap = await db.collection("users").doc(user.uid).get();
       if (!snap.exists) {
@@ -142,7 +140,6 @@ async function initFirebaseAuth() {
 
       const profile = snap.data();
       
-      // Redirect Admins to Dashboard
       if (profile.role === "institutionAdmin") { 
           window.location.href = "../Admin.html"; 
           return; 
@@ -153,7 +150,19 @@ async function initFirebaseAuth() {
           institutionId: profile.institutionId || null,
           billingStatus: profile.billingStatus
       };
-      
+
+      // --- BRANDING FIX: Look up the real Name using the ID ---
+      if (profile.institutionId) {
+        try {
+          const instDoc = await db.collection("institutions").doc(profile.institutionId).get();
+          if (instDoc.exists) {
+            const instData = instDoc.data();
+            const realName = instData.headerName || instData.name || "Institution";
+            localStorage.setItem('palliCalc_institutionName', realName);
+          }
+        } catch (e) { console.warn("Name fetch failed:", e); }
+      }
+
       await applyMemberRules();
 
     } catch(e) {
@@ -162,6 +171,7 @@ async function initFirebaseAuth() {
   });
 }
 
+
 async function applyMemberRules() {
   const role = window.PALLICALC_USER.role;
   const editLink = document.getElementById("toEditLink");
@@ -169,26 +179,16 @@ async function applyMemberRules() {
 
   if (role === "institutionUser") {
     // 🛑 INSTITUTION USER LOGIC
-    // 1. Remove Personal Ratios (Cleanup)
+    // 1. Remove Personal Ratios (Cleanup to prevent conflicts)
     localStorage.removeItem("opioidTypes");
     localStorage.removeItem("opioidIncluded");
 
-    // 2. Try to load Institution Ratios
-    // We check if app.js already cached them in 'palliCalc_customRatios'
-    const cachedRatios = localStorage.getItem('palliCalc_customRatios');
+    // 2. Fetch directly from Firebase (which will handle our offline PWA backup)
+    await loadRatiosFromFirebase();
     
-    if (cachedRatios) {
-        // A. Load from Local Cache (Synced by app.js)
-        // console.log("Loading Cached Institution Ratios...");
-        const data = JSON.parse(cachedRatios);
-        applyInstitutionData(data);
-    } else {
-        // B. If no cache (e.g. fresh reload or suspended), try Fetching
-        // This will FAIL if suspended due to Security Rules
-        await loadRatiosFromFirebase();
-    }
   } else {
     // ✅ PERSONAL USER LOGIC
+    // Strictly load from Local Storage
     loadSavedRatios();
     fillAllSelects(); 
   }
@@ -202,6 +202,7 @@ async function applyMemberRules() {
     };
   }
 }
+
 
 // Helper to apply data to variables
 function applyInstitutionData(data) {
@@ -263,17 +264,20 @@ function updateBanner(userType, isCustom, timestamp = null, instName = null) {
 /* =========================================
    DATA HANDLING (UPDATED FOR SECURITY)
    ========================================= */
-async function loadRatiosFromFirebase() {
+async function loadRatiosFromFirebase(retries = 2) {
     try {
       const instId = window.PALLICALC_USER.institutionId;
       if (!instId) { loadHardcodedDefaults(); updateBanner("institution", false); return; }
 
-      // 🛑 SECURITY CHECK:
-      // If Institution is SUSPENDED, this .get() will fail due to Firestore Rules.
+      // 1. FETCH FROM FIREBASE (Will use Firebase's own offline cache if available)
       const ref = await db.collection("opioidRatios").doc(instId).get();
 
       if (ref.exists) {
         const data = ref.data();
+        
+        // 2. CREATE PWA OFFLINE BACKUP: Save to localStorage for true offline support
+        localStorage.setItem('palliCalc_customRatios', JSON.stringify(data));
+        
         applyInstitutionData(data);
       } else {
         // No custom data exists yet
@@ -281,18 +285,37 @@ async function loadRatiosFromFirebase() {
         updateBanner("institution", false);
       }
     } catch (e) {
-      console.warn("Ratio Fetch Error (Likely Suspended):", e);
-      // 🛑 FALLBACK TO DEFAULTS
-      loadHardcodedDefaults();
+      console.warn("Ratio Fetch Error (Likely offline or locked):", e);
       
-      // If permission denied (suspended), show alert in banner
+      // If permission denied (suspended), show alert in banner immediately
       if (e.code === 'permission-denied') {
+          loadHardcodedDefaults();
           updateBanner("institution", false, null, "Suspended");
+          return;
+      } 
+      
+      // Fix persistence lock error: Retry fetch if it's a transient DB lock error
+      if (retries > 0) {
+          console.warn(`Retrying Firebase fetch... (${retries} attempts left)`);
+          await new Promise(resolve => setTimeout(resolve, 800));
+          await loadRatiosFromFirebase(retries - 1);
+          return;
+      } 
+      
+      // 3. PWA OFFLINE RESCUE: If all retries fail (offline), use the local backup!
+      const offlineBackup = localStorage.getItem('palliCalc_customRatios');
+      if (offlineBackup) {
+          console.log("App is offline: Loading institution ratios from Local Storage backup.");
+          const data = JSON.parse(offlineBackup);
+          applyInstitutionData(data);
       } else {
+          // Ultimate fallback if no internet AND no backup exists
+          loadHardcodedDefaults();
           updateBanner("institution", false);
       }
     }
 }
+
 
 function loadHardcodedDefaults() {
   opioidTypes = defaultOpioidTypes.map(op => {
