@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'pallicalc-smart-v23-final'; // Bumped to v23 to force update
+﻿const CACHE_NAME = 'pallicalc-smart-v24-final'; // Bumped to v24 to force update
 
 // ==========================================
 // 1. CRITICAL APP SHELL (Must load for app to start)

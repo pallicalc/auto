@@ -124,3 +124,84 @@ function detectBrowserAndShowInstructions() {
     }
     show('msg-desktop');
 }
+
+/* =========================================
+   GLOBAL PWA PRE-FETCH (SILENT HEARTBEAT)
+   ========================================= */
+function startGlobalRatioSync() {
+    // 1. Only run if online and Firebase is fully loaded
+    if (!navigator.onLine || typeof firebase === 'undefined' || !firebase.apps.length) return;
+    
+    const user = firebase.auth().currentUser;
+    if (!user) return; // Fails safely if Firebase is still loading the login state
+    
+    const uid = user.uid;
+
+    const db = firebase.firestore();
+
+    // 2. Check the user's role
+    db.collection("users").doc(uid).get().then(snap => {
+        if (!snap.exists) return;
+        const profile = snap.data();
+        
+        // 3. Only sync for Institutional Users
+        if (profile.role === "institutionUser" && profile.institutionId) {
+            const instId = profile.institutionId;
+            console.log("🔄 Global Sync: Pre-fetching clinical ratios in background...");
+
+            // Fetch & Save Benzodiazepine Rules
+            db.collection("benzoRatios").doc(instId).get().then(doc => {
+                if (doc.exists) {
+                    localStorage.setItem('palliCalc_customRatios_benzo', JSON.stringify(doc.data()));
+                }
+            }).catch(e => console.warn("Global Sync (Benzo) failed:", e));
+
+            // Fetch & Save Opioid Rules
+            db.collection("opioidRatios").doc(instId).get().then(doc => {
+                if (doc.exists) {
+                    localStorage.setItem('palliCalc_customRatios_opioid', JSON.stringify(doc.data()));
+                }
+            }).catch(e => console.warn("Global Sync (Opioid) failed:", e));
+            
+                        // Fetch & Save Education Branding Data
+            db.collection("institutions").doc(instId).get().then(doc => {
+                if (doc.exists) {
+                    // Saves it exactly how education.js expects it to be saved
+                    localStorage.setItem('cached_inst_' + instId, JSON.stringify(doc.data()));
+                    
+                    // Also updates the generic fallback settings
+                    localStorage.setItem('institutionSettings', JSON.stringify({
+                        name: doc.data().headerName || doc.data().name,
+                        contact: doc.data().headerContact || doc.data().contact,
+                        logos: doc.data().headerLogos || (doc.data().logo ? [doc.data().logo] : []),
+                        logo: doc.data().logo
+                    }));
+                    console.log("✅ Global Sync: Education branding updated.");
+                }
+            }).catch(e => console.warn("Global Sync (Education) failed:", e));
+
+        }
+    }).catch(err => console.error("Global sync auth check failed:", err));
+}
+
+// --- TRIGGERS FOR THE SILENT HEARTBEAT ---
+
+// 1. Run silently 2 seconds after the dashboard loads (prevents slowing down the UI)
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        startGlobalRatioSync();
+    }, 2000); 
+});
+
+
+// 2. Run silently if the doctor walks out of a dead zone (regains Wi-Fi)
+window.addEventListener('online', () => {
+    startGlobalRatioSync();
+});
+
+// 3. Run silently if the doctor unlocks their phone or switches back to the app
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && navigator.onLine) {
+        startGlobalRatioSync();
+    }
+});
