@@ -147,6 +147,10 @@ function startGlobalRatioSync() {
         // 3. Only sync for Institutional Users
         if (profile.role === "institutionUser" && profile.institutionId) {
             const instId = profile.institutionId;
+            
+            // 👉 ADDED: The Master Key so Education module knows who it is offline!
+            localStorage.setItem('palliCalc_currentInstId', instId);
+            
             console.log("🔄 Global Sync: Pre-fetching clinical ratios in background...");
 
             // Fetch & Save Benzodiazepine Rules
@@ -159,9 +163,13 @@ function startGlobalRatioSync() {
             // Fetch & Save Opioid Rules
             db.collection("opioidRatios").doc(instId).get().then(doc => {
                 if (doc.exists) {
+                    // 👉 FIXED: opioid.js looks for 'palliCalc_customRatios', NOT '_opioid' at the end!
+                    localStorage.setItem('palliCalc_customRatios', JSON.stringify(doc.data()));
+                    // (Keeping the old one just in case a cached version still looks for it)
                     localStorage.setItem('palliCalc_customRatios_opioid', JSON.stringify(doc.data()));
                 }
             }).catch(e => console.warn("Global Sync (Opioid) failed:", e));
+
             
             // Fetch & Save Education Branding Data
             db.collection("institutions").doc(instId).get().then(doc => {
@@ -192,27 +200,34 @@ function startGlobalRatioSync() {
 
 // --- TRIGGERS FOR THE SILENT HEARTBEAT ---
 
-// 1. The Ultimate Trigger: Wait for Firebase Auth to officially confirm identity!
-window.addEventListener('load', () => {
+function triggerSync() {
     if (typeof firebase !== 'undefined' && firebase.auth) {
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user && navigator.onLine) {
-                startGlobalRatioSync();
-            }
-        });
+        if (firebase.auth().currentUser) {
+            // If already logged in, run immediately
+            startGlobalRatioSync();
+        } else {
+            // Otherwise, wait for auth to finish
+            const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+                if (user && navigator.onLine) {
+                    startGlobalRatioSync();
+                    unsubscribe(); 
+                }
+            });
+        }
     }
+}
+
+// 1. Run 2 seconds after load (Aggressively packs the Local Storage)
+window.addEventListener('load', () => {
+    setTimeout(triggerSync, 2000); 
 });
-
-
 
 // 2. Run silently if the doctor walks out of a dead zone (regains Wi-Fi)
-window.addEventListener('online', () => {
-    startGlobalRatioSync();
-});
+window.addEventListener('online', triggerSync);
 
 // 3. Run silently if the doctor unlocks their phone or switches back to the app
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && navigator.onLine) {
-        startGlobalRatioSync();
+        triggerSync();
     }
 });
