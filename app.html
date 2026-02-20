@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,26 +6,25 @@
     <title>PalliCalc App Dashboard</title>
 
     <link rel="manifest" href="manifest.json">
-    
+
     <meta name="mobile-web-app-capable" content="yes"> 
     <meta name="apple-mobile-web-app-capable" content="yes"> 
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#007bff">
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
-<link rel="mask-icon" href="/favicon.svg?v=2" color="#5AAB8B">
-<link rel="apple-touch-icon" href="/icon-192.png?v=2">
-
+    <link rel="mask-icon" href="/favicon.svg?v=2" color="#5AAB8B">
+    <link rel="apple-touch-icon" href="/icon-192.png?v=2">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
-    
-       <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    
+
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
@@ -43,9 +42,10 @@
 
     <script src="app-dashboard.js" defer></script>
 
-    // SAFETY: Prevent crash if Analytics is blocked
-    window.trackEvent = window.trackEvent || function() {};
-</script>
+    <script>
+        // SAFETY: Prevent crash if Analytics is blocked
+        window.trackEvent = window.trackEvent || function() {};
+    </script>
 </head>
 <body class="app-dashboard">
 
@@ -115,7 +115,7 @@
                 <div class="calc-icon">💊</div>
                 <div class="calc-info"><span class="calc-name">Opioid Conversion</span><span class="calc-desc">Rotation, PRN & Safety Limits</span></div>
             </a>
-            
+
             <a href="calculators/Benzodiazepine.html" class="calc-card">
                 <div class="calc-icon">🧠</div>
                 <div class="calc-info"><span class="calc-name">Benzodiazepine</span><span class="calc-desc">Equivalence & Conversion</span></div>
@@ -131,6 +131,24 @@
             </a>
         </div>
 
+        <div class="section-title">Diagnostic Tools</div>
+        <div class="calc-grid">
+            <a href="diagnostic-p.html" class="calc-card">
+                <div class="calc-icon">👤</div>
+                <div class="calc-info">
+                    <span class="calc-name">Patient Measures (PROMs) <span style="background: #fde047; color: #1f2937; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; vertical-align: middle; margin-left: 6px;">NEW</span></span>
+                    <span class="calc-desc">Patient-reported outcomes</span>
+                </div>
+            </a>
+
+            <a href="diagnostic-c.html" class="calc-card">
+                <div class="calc-icon">🩺</div>
+                <div class="calc-info">
+                    <span class="calc-name">Clinician Assessments <span style="background: #fde047; color: #1f2937; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; vertical-align: middle; margin-left: 6px;">NEW</span></span>
+                    <span class="calc-desc">Clinical evaluation tools</span>
+                </div>
+            </a>
+        </div>
         <div class="section-title">Guides & Resources</div>
         <div class="guide-grid">
             <a href="healthcare-guidelines.html" class="guide-card">
@@ -142,16 +160,17 @@
         </div>
     </div>
 
-        <footer class="legal-footer">
-            <div class="container">
-                <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
-                <div class="author-info">
-                    <span class="author-name">Author: Alison Chai</span>
-                    <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
-                </div>
-                <p class="legal-warning">For Educational Use Only. Not a Medical Device.<br>Verify all results.</p>
+    <footer class="legal-footer">
+        <div class="container">
+            <p class="copyright-text">&copy; 2026 Alivioscript Solutions</p>
+            <div class="author-info">
+                <span class="author-name">Author: Alison Chai</span>
+                <span class="author-creds">RPh (M'sia):&nbsp;9093 &nbsp;|&nbsp; GPhC (UK):&nbsp;2077838</span>
             </div>
-        </footer>
-<script src="/js/ga-tracking.js"></script>
+            <p class="legal-warning">For Educational Use Only. Not a Medical Device.<br>Verify all results.</p>
+        </div>
+    </footer>
+    
+    <script src="/js/ga-tracking.js"></script>
 </body>
 </html>
