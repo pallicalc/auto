@@ -64,6 +64,9 @@
                     <i class="bi bi-arrow-clockwise"></i> Update
                 </button>
                 <a href="#" onclick="logout()" class="nav-link">Exit</a>
+
+                <button onclick="alert('Suitcase Check:\n\nOpioids: ' + !!localStorage.getItem('palliCalc_customRatios') + '\nBenzos: ' + !!localStorage.getItem('palliCalc_customRatios_benzo') + '\nMaster Key: ' + !!localStorage.getItem('palliCalc_currentInstId') + '\nInst Name: ' + !!localStorage.getItem('palliCalc_institutionName'));" style="background:#f59e0b; color:white; border:none; padding:6px 12px; border-radius:20px; font-size:12px; margin-top:5px; font-weight:bold; display:block; width:100%;">Check Suitcase</button>
+
             </div>
         </div>
 
