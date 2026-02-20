@@ -90,6 +90,7 @@ async function initFirebaseAuth() {
   auth.onAuthStateChanged(async (user) => {
     if (!user) { window.location.href = "../index.html"; return; } 
     
+    // 🛑 EMAIL VERIFICATION CHECK
     if (!user.emailVerified) { 
         alert("Please verify your email before using PalliCalc.");
         await auth.signOut();
@@ -97,6 +98,7 @@ async function initFirebaseAuth() {
         return; 
     }
     
+    // 🛑 ROLE CHECK
     try {
         const snap = await db.collection("users").doc(user.uid).get();
         if (!snap.exists) { 
@@ -106,6 +108,8 @@ async function initFirebaseAuth() {
         }
         
         const profile = snap.data();
+        
+        // Redirect Admins to Dashboard
         if (profile.role === "institutionAdmin") { 
             window.location.href = "../Admin.html"; 
             return; 
@@ -124,7 +128,8 @@ async function initFirebaseAuth() {
                 }
             } catch (e) { console.warn("Name fetch failed:", e); }
         }
-
+        
+        // Auth success - Load logic
         await applyMemberRules();
         document.getElementById("calcPage").style.display = "block";
     } catch(e) { console.error("Auth Init Error", e); }
@@ -138,10 +143,11 @@ async function applyMemberRules() {
   
   if (role === "institutionUser") {
     // 🛑 INSTITUTION USER LOGIC
+    // 1. Remove Personal Ratios (Cleanup)
     localStorage.removeItem("benzoTypes");
     localStorage.removeItem("benzoIncluded");
     
-    // Fetch from Firebase (which handles our offline PWA backup)
+    // 2. Fetch Ratios (Will fail if Suspended)
     await loadRatiosFromFirebase();
   } else {
     // ✅ PERSONAL USER LOGIC
@@ -149,7 +155,8 @@ async function applyMemberRules() {
   }
   
   if (role === "institutionUser") {
-    const originalNavigateToEdit = window.navigateToEdit;
+    // Override the function safely to prevent bugs
+    const originalNavigateToEdit = window.navigateToEdit || navigateToEdit;
     window.navigateToEdit = function () {
       originalNavigateToEdit();
       setTimeout(lockEditPageForInstitutionUser, 0);
@@ -157,6 +164,33 @@ async function applyMemberRules() {
   }
 }
 
+
+function updateBanner(userType, isCustom, timestamp = null, instName = null) {
+  const banner = document.getElementById("ratioBanner");
+  let html = "";
+  let dateStr = "";
+  if (timestamp) {
+    const dateObj = (timestamp && typeof timestamp.toDate === 'function') ? timestamp.toDate() : new Date(timestamp);
+    if (!isNaN(dateObj)) dateStr = ` (Saved: ${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})`;
+  }
+
+  if (userType === "personal") {
+    html = isCustom 
+        ? `<strong>Personal User:</strong> <span style="color:#198754; font-weight:bold;">Custom Ratios</span>${dateStr}` 
+        : `<strong>Personal User:</strong> <span style="color:#6c757d; font-style:italic;">Default Ratios</span>`;
+  } else if (userType === "institution") {
+    // 🛑 SUSPENSION VISUAL CHECK
+    if (instName === "Suspended") {
+        html = `<strong>Access Restricted:</strong> <span style="color: #dc3545; font-weight: bold;">System Default Ratios</span> (Contact Admin)`;
+    } else {
+        html = isCustom 
+            ? `<strong>${instName || "Institution"}:</strong> <span style="color:#198754; font-weight:bold;">Custom Ratios</span>${dateStr}` 
+            : `<strong>${instName || "Institution"}:</strong> <span style="color:#6c757d; font-style:italic;">Default Ratios</span>`;
+    }
+  }
+  banner.innerHTML = html;
+  banner.style.display = "block";
+}
 
 /* =========================================
    DATA LOADING (UPDATED FOR SECURITY)
@@ -166,12 +200,11 @@ async function loadRatiosFromFirebase(retries = 2) {
       const instId = window.PALLICALC_USER.institutionId;
       if (!instId) { loadHardcodedDefaults(); updateBanner("institution", false); return; }
       
+      // 🛑 SECURITY CHECK & FETCH
       const ref = await db.collection("benzoRatios").doc(instId).get();
       
       if (ref.exists) {
         const data = ref.data();
-        
-        // MODIFICATION: Specifically handling Benzo structure
         benzoTypes = data.benzoTypes || [];
         includedKeys = data.includedKeys ? new Set(data.includedKeys) : new Set(benzoTypes.map(b => b.key));
         
@@ -179,8 +212,12 @@ async function loadRatiosFromFirebase(retries = 2) {
         localStorage.setItem('palliCalc_customRatios_benzo', JSON.stringify(data));
         
         fillAllSelects();
-        updateBanner("institution", true, data.updatedAt);
+        
+        // Get the real name for the banner
+        const instName = localStorage.getItem('palliCalc_institutionName') || "Institution";
+        updateBanner("institution", true, data.updatedAt, instName);
       } else {
+        // No custom data exists yet
         loadHardcodedDefaults();
         updateBanner("institution", false);
       }
@@ -188,18 +225,20 @@ async function loadRatiosFromFirebase(retries = 2) {
       console.warn("Benzo Fetch Error (Likely offline or locked):", e);
       
       if (e.code === 'permission-denied') {
+          // Explicitly show suspension state in banner
           loadHardcodedDefaults();
           updateBanner("institution", false, null, "Suspended");
           return;
       } 
-
+      
+      // RACE CONDITION RETRY
       if (retries > 0) {
           console.warn(`Retrying Benzo fetch... (${retries} left)`);
           await new Promise(resolve => setTimeout(resolve, 800));
           return await loadRatiosFromFirebase(retries - 1);
       }
-      
-      // PWA OFFLINE RESCUE: Specifically using the Benzo backup
+
+      // PWA OFFLINE RESCUE
       const offlineBackup = localStorage.getItem('palliCalc_customRatios_benzo');
       if (offlineBackup) {
           console.log("App offline: Using Benzo PWA backup");
@@ -207,7 +246,9 @@ async function loadRatiosFromFirebase(retries = 2) {
           benzoTypes = data.benzoTypes || [];
           includedKeys = data.includedKeys ? new Set(data.includedKeys) : new Set(benzoTypes.map(b => b.key));
           fillAllSelects();
-          updateBanner("institution", true, data.updatedAt);
+          
+          const instName = localStorage.getItem('palliCalc_institutionName') || "Institution";
+          updateBanner("institution", true, data.updatedAt, instName);
       } else {
           loadHardcodedDefaults(); 
           updateBanner("institution", false);
@@ -215,6 +256,27 @@ async function loadRatiosFromFirebase(retries = 2) {
     }
 }
 
+
+function loadHardcodedDefaults() {
+  benzoTypes = JSON.parse(JSON.stringify(defaultBenzoTypes));
+  includedKeys = new Set(benzoTypes.map(b => b.key));
+  fillAllSelects();
+}
+
+function loadSavedData() {
+  let savedTypes = localStorage.getItem("benzoTypes");
+  let savedIncluded = localStorage.getItem("benzoIncluded");
+  let savedTime = localStorage.getItem("benzoSavedTime");
+  if (savedTypes) {
+    benzoTypes = JSON.parse(savedTypes);
+    if (savedIncluded) { try { const incl = JSON.parse(savedIncluded); includedKeys = new Set(incl); } catch {} }
+    updateBanner("personal", true, savedTime);
+  } else {
+    benzoTypes = JSON.parse(JSON.stringify(defaultBenzoTypes));
+    includedKeys = new Set(benzoTypes.map(b => b.key));
+    updateBanner("personal", false);
+  }
+}
 
 /* =========================================
    BUG FIX: LOCK FUNCTION
