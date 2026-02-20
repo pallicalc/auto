@@ -163,35 +163,46 @@ function startGlobalRatioSync() {
                 }
             }).catch(e => console.warn("Global Sync (Opioid) failed:", e));
             
-                        // Fetch & Save Education Branding Data
+            // Fetch & Save Education Branding Data
             db.collection("institutions").doc(instId).get().then(doc => {
                 if (doc.exists) {
+                    const instData = doc.data();
                     // Saves it exactly how education.js expects it to be saved
-                    localStorage.setItem('cached_inst_' + instId, JSON.stringify(doc.data()));
+                    localStorage.setItem('cached_inst_' + instId, JSON.stringify(instData));
                     
                     // Also updates the generic fallback settings
                     localStorage.setItem('institutionSettings', JSON.stringify({
-                        name: doc.data().headerName || doc.data().name,
-                        contact: doc.data().headerContact || doc.data().contact,
-                        logos: doc.data().headerLogos || (doc.data().logo ? [doc.data().logo] : []),
-                        logo: doc.data().logo
+                        name: instData.headerName || instData.name,
+                        contact: instData.headerContact || instData.contact,
+                        logos: instData.headerLogos || (instData.logo ? [instData.logo] : []),
+                        logo: instData.logo
                     }));
+                    
+                    // 👉 THE MISSING KEY FOR CALCULATORS:
+                    localStorage.setItem('palliCalc_institutionName', instData.headerName || instData.name || "Institution");
+                    
                     console.log("✅ Global Sync: Education branding updated.");
                 }
             }).catch(e => console.warn("Global Sync (Education) failed:", e));
 
-        }
+                }
+            
     }).catch(err => console.error("Global sync auth check failed:", err));
 }
 
 // --- TRIGGERS FOR THE SILENT HEARTBEAT ---
 
-// 1. Run silently 2 seconds after the dashboard loads (prevents slowing down the UI)
+// 1. The Ultimate Trigger: Wait for Firebase Auth to officially confirm identity!
 window.addEventListener('load', () => {
-    setTimeout(() => {
-        startGlobalRatioSync();
-    }, 2000); 
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user && navigator.onLine) {
+                startGlobalRatioSync();
+            }
+        });
+    }
 });
+
 
 
 // 2. Run silently if the doctor walks out of a dead zone (regains Wi-Fi)
