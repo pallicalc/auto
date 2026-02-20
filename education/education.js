@@ -1,6 +1,5 @@
-﻿// ==========================================
-// PalliCalc Education Script - Final Unified Version
-// Includes: Suspension Logic, Race Condition Fix, Safari Crash Fix & Branding Footer
+// ==========================================
+// PalliCalc Education Script - Offline Proof Version
 // ==========================================
 
 // ==========================================
@@ -12,7 +11,7 @@
     const icons = [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' + version },
         { rel: 'mask-icon', href: '/favicon.svg' + version, color: '#5AAB8B' },
-        { rel: 'apple-touch-icon', href: '/icon-192.png' + version } // <-- Changed to icon-192.png!
+        { rel: 'apple-touch-icon', href: '/icon-192.png' + version }
     ];
 
     icons.forEach(iconDef => {
@@ -39,20 +38,16 @@ const firebaseConfig = {
     appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995" 
 };
 
-// Initialize Firebase only once
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Global context to store current mode (institution/personal) and ID
 let context = { mode: 'personal', instId: null };
 
 // --- 2. INITIALIZATION & HEADER LOGIC ---
 window.addEventListener('DOMContentLoaded', async () => {
-    // A. INJECT STANDARDIZED FOOTER FIRST
     injectStandardFooter();
 
-    // B. HANDLE URL PARAMS & AUTH
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
 
@@ -62,25 +57,50 @@ window.addEventListener('DOMContentLoaded', async () => {
         const backBtn = document.getElementById('backBtn');
         if (backBtn) backBtn.style.display = 'none';
         loadInstitutionHeader();
-    } else {
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                try {
-                    const snap = await db.collection('users').doc(user.uid).get();
-                    if (snap.exists && (snap.data().role === 'institutionUser' || snap.data().role === 'institutionAdmin')) {
-                        context.mode = 'institution'; 
-                        context.instId = snap.data().institutionId;
-                        loadInstitutionHeader();
-                    }
-                } catch (e) {
-                    console.error("User Auth Error:", e);
-                }
-            }
-            if (context.mode === 'personal') {
+        return;
+    } 
+
+    // 👉 THE ULTIMATE OFFLINE BYPASS
+    if (!navigator.onLine) {
+        console.log("🔌 Offline Mode: Bypassing Firebase Auth entirely.");
+        const masterInstId = localStorage.getItem('palliCalc_currentInstId');
+        
+        if (masterInstId) {
+            context.mode = 'institution';
+            context.instId = masterInstId;
+            const cached = localStorage.getItem('cached_inst_' + masterInstId);
+            if (cached) {
+                renderHeader(JSON.parse(cached));
+            } else {
                 loadPersonalHeader();
             }
-        });
+        } else {
+            context.mode = 'personal';
+            loadPersonalHeader();
+        }
+        return; // STOP HERE! Do not run Firebase Auth.
     }
+
+    // If online, proceed normally
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            try {
+                const snap = await db.collection('users').doc(user.uid).get();
+                if (snap.exists && (snap.data().role === 'institutionUser' || snap.data().role === 'institutionAdmin')) {
+                    context.mode = 'institution'; 
+                    context.instId = snap.data().institutionId;
+                    loadInstitutionHeader();
+                    return; // Stop here if institution
+                }
+            } catch (e) {
+                console.error("User Auth Error:", e);
+            }
+        }
+        
+        // Fallback for personal users
+        context.mode = 'personal';
+        loadPersonalHeader();
+    });
 });
 
 // --- INJECT STANDARDIZED FOOTER ---
@@ -101,28 +121,33 @@ function injectStandardFooter() {
     document.body.insertAdjacentHTML('beforeend', footerHTML);
 }
 
-// --- EXISTING HEADER LOGIC (UPDATED WITH SUSPENSION CHECK) ---
+// --- EXISTING HEADER LOGIC ---
 async function loadInstitutionHeader() {
     if (!context.instId) return;
+
+    // 👉 OFFLINE FETCH BYPASS
+    if (!navigator.onLine) {
+        const cached = localStorage.getItem('cached_inst_' + context.instId);
+        if (cached) {
+            renderHeader(JSON.parse(cached));
+        } else {
+            loadPersonalHeader();
+        }
+        return;
+    }
+
     try {
         const doc = await db.collection('institutions').doc(context.instId).get();
         if (doc.exists) { 
             const data = doc.data();
-            
-            // 🛑 CRITICAL TWEAK: CHECK SUSPENSION STATUS
+
             if (data.status === 'suspended') {
-                // console.log("Institution suspended. Wiping branding data.");
-                // Wipe local cache so it doesn't show up offline later
                 localStorage.removeItem('cached_inst_' + context.instId);
                 localStorage.removeItem('institutionSettings');
-                // Return immediately so NO branding is rendered. Patient sees generic page.
                 return; 
             }
 
-            // --- CACHE FOR OFFLINE (Only if Active) ---
             localStorage.setItem('cached_inst_' + context.instId, JSON.stringify(data));
-            
-            // Sync with general settings
             localStorage.setItem('institutionSettings', JSON.stringify({
                 name: data.headerName || data.name,
                 contact: data.headerContact || data.contact,
@@ -134,9 +159,6 @@ async function loadInstitutionHeader() {
         }
     } catch (e) { 
         console.warn("Header Fetch Error (Switching to Offline Cache):", e);
-        // Fallback to cache ONLY if fetch fails (e.g. offline)
-        // If fetch failed due to permissions (Suspended), this might trigger.
-        // But app.js usually clears cache on login, so this is a safety net.
         const cached = localStorage.getItem('cached_inst_' + context.instId);
         if (cached) {
             renderHeader(JSON.parse(cached));
@@ -173,9 +195,9 @@ function renderHeader(data) {
 
     const contact = data.headerContact || data.contact;
     if (contact && contactEl) contactEl.textContent = contact;
-    
+
     const logoSrc = (data.headerLogos && data.headerLogos.length > 0) ? data.headerLogos[0] : data.logo;
-    
+
     if (logoSrc && logoEl && container) { 
         logoEl.src = logoSrc; 
         logoEl.style.display = 'block'; 
@@ -186,31 +208,10 @@ function renderHeader(data) {
 // --- 3. FOOTER DATA FETCHING (FOR PDF) ---
 async function getFooterData() {
     let data = null;
+    
     if (context.instId) {
-        try {
-            const doc = await db.collection('institutions').doc(context.instId).get();
-            if (doc.exists) {
-                const firebaseData = doc.data();
-                
-                // 🛑 PDF SECURITY: If Suspended, Return Generic Data
-                if (firebaseData.status === 'suspended') {
-                    // console.log("Institution suspended. Generating generic PDF.");
-                    return {
-                        name: "PalliCalc Patient Education",
-                        contact: "",
-                        logos: [] 
-                    };
-                }
-
-                data = {
-                    name: firebaseData.headerName || firebaseData.name,
-                    contact: firebaseData.headerContact || firebaseData.contact,
-                    logos: firebaseData.headerLogos || (firebaseData.logo ? [firebaseData.logo] : [])
-                };
-                localStorage.setItem('cached_inst_' + context.instId, JSON.stringify(firebaseData));
-            }
-        } catch (e) { 
-            console.warn("Footer: Firebase fetch failed, trying local...", e); 
+        // 👉 OFFLINE PDF BYPASS
+        if (!navigator.onLine) {
             const cached = localStorage.getItem('cached_inst_' + context.instId);
             if (cached) {
                 const c = JSON.parse(cached);
@@ -219,6 +220,35 @@ async function getFooterData() {
                     contact: c.headerContact || c.contact,
                     logos: c.headerLogos || (c.logo ? [c.logo] : [])
                 };
+            }
+        } else {
+            try {
+                const doc = await db.collection('institutions').doc(context.instId).get();
+                if (doc.exists) {
+                    const firebaseData = doc.data();
+
+                    if (firebaseData.status === 'suspended') {
+                        return { name: "PalliCalc Patient Education", contact: "", logos: [] };
+                    }
+
+                    data = {
+                        name: firebaseData.headerName || firebaseData.name,
+                        contact: firebaseData.headerContact || firebaseData.contact,
+                        logos: firebaseData.headerLogos || (firebaseData.logo ? [firebaseData.logo] : [])
+                    };
+                    localStorage.setItem('cached_inst_' + context.instId, JSON.stringify(firebaseData));
+                }
+            } catch (e) { 
+                console.warn("Footer: Firebase fetch failed, trying local...", e); 
+                const cached = localStorage.getItem('cached_inst_' + context.instId);
+                if (cached) {
+                    const c = JSON.parse(cached);
+                    data = {
+                        name: c.headerName || c.name,
+                        contact: c.headerContact || c.contact,
+                        logos: c.headerLogos || (c.logo ? [c.logo] : [])
+                    };
+                }
             }
         }
     }
@@ -240,11 +270,7 @@ async function getFooterData() {
     }
 
     if (!data) {
-        data = {
-            name: "PalliCalc Patient Education",
-            contact: "",
-            logos: [] 
-        };
+        data = { name: "PalliCalc Patient Education", contact: "", logos: [] };
     }
     return data;
 }
@@ -264,7 +290,7 @@ function loadImage(url) {
 async function generateAndPrintPDF(filename) {
     const loading = document.getElementById('pdf-loading');
     if (loading) loading.style.display = 'flex';
-    
+
     if (!filename) filename = "patient-education.pdf";
 
     try {
@@ -287,17 +313,17 @@ async function generateAndPrintPDF(filename) {
             backgroundColor: "#ffffff",
             logging: false
         });
-        
+
         const imgData = canvas.toDataURL('image/jpeg', 0.8);
 
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4'); 
-        
+
         const A4_W = 210; 
         const A4_H = 297; 
         const FOOTER_H = 25; 
         const CONTENT_H = A4_H - FOOTER_H; 
-        
+
         const imgRatio = canvas.width / canvas.height;
         const contentRatio = A4_W / CONTENT_H;
 
@@ -363,15 +389,13 @@ async function generateAndPrintPDF(filename) {
 
 // --- 6. QR CODE LOGIC ---
 function trackAndShowQR() {
-    // --- START TRACKING CODE ---
     if (typeof window.trackEvent === 'function') {
         window.trackEvent('patient_share', {
             'event_category': 'Patient Education',
-            'event_label': document.title, // Tracks which leaflet is being shared
+            'event_label': document.title, 
             'institution_id': (context && context.instId) ? context.instId : 'personal_user'
         });
     }
-    // --- END TRACKING CODE ---
     showQR();
 }
 
