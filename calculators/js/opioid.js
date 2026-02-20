@@ -265,56 +265,62 @@ function updateBanner(userType, isCustom, timestamp = null, instName = null) {
    DATA HANDLING (UPDATED FOR SECURITY)
    ========================================= */
 async function loadRatiosFromFirebase(retries = 2) {
+    // 👉 STEP 1: IMMEDIATE OFFLINE RESCUE
+    const offlineBackup = localStorage.getItem('palliCalc_customRatios');
+    
+    if (!navigator.onLine) {
+        if (offlineBackup) {
+            console.log("🔌 Offline detected: Loading Opioid ratios from Dashboard suitcase.");
+            applyInstitutionData(JSON.parse(offlineBackup));
+        } else {
+            console.log("🔌 Offline detected: No suitcase found, loading defaults.");
+            loadHardcodedDefaults();
+            updateBanner("institution", false);
+        }
+        return; // Stop here! Do not try to reach Firebase.
+    }
+
+    // 👉 STEP 2: ONLINE FETCH
     try {
       const instId = window.PALLICALC_USER.institutionId;
       if (!instId) { loadHardcodedDefaults(); updateBanner("institution", false); return; }
 
-      // 1. FETCH FROM FIREBASE (Will use Firebase's own offline cache if available)
       const ref = await db.collection("opioidRatios").doc(instId).get();
 
       if (ref.exists) {
         const data = ref.data();
-        
-        // 2. CREATE PWA OFFLINE BACKUP: Save to localStorage for true offline support
+        // Update the PWA OFFLINE BACKUP
         localStorage.setItem('palliCalc_customRatios', JSON.stringify(data));
-        
         applyInstitutionData(data);
       } else {
-        // No custom data exists yet
         loadHardcodedDefaults();
         updateBanner("institution", false);
       }
     } catch (e) {
-      console.warn("Ratio Fetch Error (Likely offline or locked):", e);
-      
-      // If permission denied (suspended), show alert in banner immediately
+      console.warn("Ratio Fetch Error (Likely locked):", e);
+
       if (e.code === 'permission-denied') {
           loadHardcodedDefaults();
           updateBanner("institution", false, null, "Suspended");
           return;
       } 
-      
-      // Fix persistence lock error: Retry fetch if it's a transient DB lock error
+
       if (retries > 0) {
-          console.warn(`Retrying Firebase fetch... (${retries} attempts left)`);
           await new Promise(resolve => setTimeout(resolve, 800));
           await loadRatiosFromFirebase(retries - 1);
           return;
       } 
-      
-      // 3. PWA OFFLINE RESCUE: If all retries fail (offline), use the local backup!
-      const offlineBackup = localStorage.getItem('palliCalc_customRatios');
+
+      // Final safety net if Firebase fails while online
       if (offlineBackup) {
-          console.log("App is offline: Loading institution ratios from Local Storage backup.");
-          const data = JSON.parse(offlineBackup);
-          applyInstitutionData(data);
+          applyInstitutionData(JSON.parse(offlineBackup));
       } else {
-          // Ultimate fallback if no internet AND no backup exists
           loadHardcodedDefaults();
           updateBanner("institution", false);
       }
     }
 }
+ 
 
 
 function loadHardcodedDefaults() {
