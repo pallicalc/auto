@@ -96,12 +96,28 @@ const firebaseConfig = {
    INITIALIZATION
    ========================================= */
 function init() {
-  // console.log("Initializing Opioid Calc...");
   try {
     document.getElementById("calcPage").style.display = "block";
     document.getElementById("editPage").style.display = "none";
     document.body.style.overflow = "auto";
     
+    // 👉 THE ULTIMATE OFFLINE BYPASS
+    if (!navigator.onLine) {
+        console.log("🔌 Offline Mode: Bypassing Firebase Auth entirely.");
+        const suitcaseData = localStorage.getItem('palliCalc_customRatios');
+        
+        if (suitcaseData) {
+            applyInstitutionData(JSON.parse(suitcaseData));
+        } else {
+            loadSavedRatios(); // Fallback for personal users
+        }
+        
+        setupEventListeners();
+        setupLiveSafetyChecks();
+        return; // STOP HERE! Do not run Firebase Auth.
+    }
+
+    // If online, proceed normally
     initFirebaseAuth();
     setupEventListeners();
     setupLiveSafetyChecks();
