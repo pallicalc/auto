@@ -22,8 +22,27 @@
 
     <link rel="stylesheet" href="style.css">
     
+       <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
+        authDomain: "pallicalc-eabdc.firebaseapp.com",
+        projectId: "pallicalc-eabdc",
+        storageBucket: "pallicalc-eabdc.firebasestorage.app",
+        messagingSenderId: "347532270864",
+        appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995",
+        measurementId: "G-6G9C984F8E"
+      };
+      if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+      }
+    </script>
+
     <script src="app-dashboard.js" defer></script>
-<script>
+
     // SAFETY: Prevent crash if Analytics is blocked
     window.trackEvent = window.trackEvent || function() {};
 </script>
