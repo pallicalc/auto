@@ -63,20 +63,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (backBtn) backBtn.style.display = 'none';
         loadInstitutionHeader();
     } else {
-        // 👉 BYPASS 1: STOP FIREBASE AUTH FROM HANGING OFFLINE
-        if (!navigator.onLine) {
-            const masterInstId = localStorage.getItem('palliCalc_currentInstId');
-            if (masterInstId) {
-                context.mode = 'institution';
-                context.instId = masterInstId;
-                loadInstitutionHeader(); 
-            } else {
-                context.mode = 'personal';
-                loadPersonalHeader();
-            }
-            return; // Stops Firebase auth from running
-        }
-
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 try {
@@ -118,18 +104,6 @@ function injectStandardFooter() {
 // --- EXISTING HEADER LOGIC (UPDATED WITH SUSPENSION CHECK) ---
 async function loadInstitutionHeader() {
     if (!context.instId) return;
-
-    // 👉 BYPASS 2: GRAB LOGO FROM SUITCASE IF OFFLINE
-    if (!navigator.onLine) {
-        const cached = localStorage.getItem('cached_inst_' + context.instId);
-        if (cached) {
-            renderHeader(JSON.parse(cached));
-        } else {
-            loadPersonalHeader();
-        }
-        return;
-    }
-
     try {
         const doc = await db.collection('institutions').doc(context.instId).get();
         if (doc.exists) { 
@@ -137,6 +111,7 @@ async function loadInstitutionHeader() {
 
             // 🛑 CRITICAL TWEAK: CHECK SUSPENSION STATUS
             if (data.status === 'suspended') {
+                // console.log("Institution suspended. Wiping branding data.");
                 // Wipe local cache so it doesn't show up offline later
                 localStorage.removeItem('cached_inst_' + context.instId);
                 localStorage.removeItem('institutionSettings');
@@ -159,6 +134,9 @@ async function loadInstitutionHeader() {
         }
     } catch (e) { 
         console.warn("Header Fetch Error (Switching to Offline Cache):", e);
+        // Fallback to cache ONLY if fetch fails (e.g. offline)
+        // If fetch failed due to permissions (Suspended), this might trigger.
+        // But app.js usually clears cache on login, so this is a safety net.
         const cached = localStorage.getItem('cached_inst_' + context.instId);
         if (cached) {
             renderHeader(JSON.parse(cached));
@@ -209,9 +187,30 @@ function renderHeader(data) {
 async function getFooterData() {
     let data = null;
     if (context.instId) {
+        try {
+            const doc = await db.collection('institutions').doc(context.instId).get();
+            if (doc.exists) {
+                const firebaseData = doc.data();
 
-        // 👉 BYPASS 3: GRAB LOGO FOR PDF IF OFFLINE
-        if (!navigator.onLine) {
+                // 🛑 PDF SECURITY: If Suspended, Return Generic Data
+                if (firebaseData.status === 'suspended') {
+                    // console.log("Institution suspended. Generating generic PDF.");
+                    return {
+                        name: "PalliCalc Patient Education",
+                        contact: "",
+                        logos: [] 
+                    };
+                }
+
+                data = {
+                    name: firebaseData.headerName || firebaseData.name,
+                    contact: firebaseData.headerContact || firebaseData.contact,
+                    logos: firebaseData.headerLogos || (firebaseData.logo ? [firebaseData.logo] : [])
+                };
+                localStorage.setItem('cached_inst_' + context.instId, JSON.stringify(firebaseData));
+            }
+        } catch (e) { 
+            console.warn("Footer: Firebase fetch failed, trying local...", e); 
             const cached = localStorage.getItem('cached_inst_' + context.instId);
             if (cached) {
                 const c = JSON.parse(cached);
@@ -220,40 +219,6 @@ async function getFooterData() {
                     contact: c.headerContact || c.contact,
                     logos: c.headerLogos || (c.logo ? [c.logo] : [])
                 };
-            }
-        } else {
-            try {
-                const doc = await db.collection('institutions').doc(context.instId).get();
-                if (doc.exists) {
-                    const firebaseData = doc.data();
-
-                    // 🛑 PDF SECURITY: If Suspended, Return Generic Data
-                    if (firebaseData.status === 'suspended') {
-                        return {
-                            name: "PalliCalc Patient Education",
-                            contact: "",
-                            logos: [] 
-                        };
-                    }
-
-                    data = {
-                        name: firebaseData.headerName || firebaseData.name,
-                        contact: firebaseData.headerContact || firebaseData.contact,
-                        logos: firebaseData.headerLogos || (firebaseData.logo ? [firebaseData.logo] : [])
-                    };
-                    localStorage.setItem('cached_inst_' + context.instId, JSON.stringify(firebaseData));
-                }
-            } catch (e) { 
-                console.warn("Footer: Firebase fetch failed, trying local...", e); 
-                const cached = localStorage.getItem('cached_inst_' + context.instId);
-                if (cached) {
-                    const c = JSON.parse(cached);
-                    data = {
-                        name: c.headerName || c.name,
-                        contact: c.headerContact || c.contact,
-                        logos: c.headerLogos || (c.logo ? [c.logo] : [])
-                    };
-                }
             }
         }
     }
