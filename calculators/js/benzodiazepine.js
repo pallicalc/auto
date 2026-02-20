@@ -61,7 +61,7 @@ const firebaseConfig = {
   measurementId: "G-6G9C984F8E"
 };
 
-/* =========================================
+/* ========================================
    INITIALIZATION
    ========================================= */
 function init() {
@@ -69,7 +69,28 @@ function init() {
     // Show calculator UI immediately to prevent flash/delay
     document.getElementById("calcPage").style.display = "block";
     document.getElementById("editPage").style.display = "none";
-    
+
+    // 👉 THE ULTIMATE OFFLINE BYPASS
+    if (!navigator.onLine) {
+        console.log("🔌 Offline Mode: Bypassing Firebase Auth entirely.");
+        const offlineBackup = localStorage.getItem('palliCalc_customRatios_benzo');
+        
+        if (offlineBackup) {
+            const data = JSON.parse(offlineBackup);
+            benzoTypes = data.benzoTypes || [];
+            includedKeys = data.includedKeys ? new Set(data.includedKeys) : new Set(benzoTypes.map(b => b.key));
+            fillAllSelects();
+            const instName = localStorage.getItem('palliCalc_institutionName') || "Institution";
+            updateBanner("institution", true, data.updatedAt, instName);
+        } else {
+            loadSavedData(); // Fallback for personal users
+        }
+        
+        setupLiveSafetyChecks();
+        return; // STOP HERE! Do not run Firebase Auth.
+    }
+
+    // If online, proceed normally
     initFirebaseAuth();
     setupLiveSafetyChecks();
   } catch (error) {
@@ -77,6 +98,7 @@ function init() {
     alert("Error loading calculator logic: " + error.message);
   }
 }
+
 
 async function initFirebaseAuth() {
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -199,20 +221,20 @@ async function loadRatiosFromFirebase(retries = 2) {
     try {
       const instId = window.PALLICALC_USER.institutionId;
       if (!instId) { loadHardcodedDefaults(); updateBanner("institution", false); return; }
-      
+
       // 🛑 SECURITY CHECK & FETCH
       const ref = await db.collection("benzoRatios").doc(instId).get();
-      
+
       if (ref.exists) {
         const data = ref.data();
         benzoTypes = data.benzoTypes || [];
         includedKeys = data.includedKeys ? new Set(data.includedKeys) : new Set(benzoTypes.map(b => b.key));
-        
+
         // CREATE PWA OFFLINE BACKUP
         localStorage.setItem('palliCalc_customRatios_benzo', JSON.stringify(data));
-        
+
         fillAllSelects();
-        
+
         // Get the real name for the banner
         const instName = localStorage.getItem('palliCalc_institutionName') || "Institution";
         updateBanner("institution", true, data.updatedAt, instName);
@@ -223,14 +245,14 @@ async function loadRatiosFromFirebase(retries = 2) {
       }
     } catch (e) { 
       console.warn("Benzo Fetch Error (Likely offline or locked):", e);
-      
+
       if (e.code === 'permission-denied') {
           // Explicitly show suspension state in banner
           loadHardcodedDefaults();
           updateBanner("institution", false, null, "Suspended");
           return;
       } 
-      
+
       // RACE CONDITION RETRY
       if (retries > 0) {
           console.warn(`Retrying Benzo fetch... (${retries} left)`);
@@ -246,7 +268,7 @@ async function loadRatiosFromFirebase(retries = 2) {
           benzoTypes = data.benzoTypes || [];
           includedKeys = data.includedKeys ? new Set(data.includedKeys) : new Set(benzoTypes.map(b => b.key));
           fillAllSelects();
-          
+
           const instName = localStorage.getItem('palliCalc_institutionName') || "Institution";
           updateBanner("institution", true, data.updatedAt, instName);
       } else {
