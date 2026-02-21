@@ -36,6 +36,7 @@ const SECONDARY_FILES = [
   './guides/infusion-dose.html',
   './guides/opioid-conversion.html',
   './guides/prn-calculation.html',
+'./diagnostic.js',
   './diagnostic-c.html',
   './diagnostic-p.html',
   './diagnostic/distress/eng.html',
