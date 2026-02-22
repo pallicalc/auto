@@ -364,26 +364,20 @@ function setupEventListeners() {
             submitBtn.innerHTML = 'Logging in...';
             
             try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                // 1. Sign the user in
+                await auth.signInWithEmailAndPassword(email, password);
                 localStorage.setItem('palliCalcLoginPassword', password);
                 
-                // 1. Get Token & Role Immediately
-                const user = userCredential.user;
-                const token = await user.getIdTokenResult(true);
-                
-                console.log("Login Role:", token.claims.role);
-
-                // 2. FORCE REDIRECT FOR ADMIN
-                if (token.claims.role === 'institutionAdmin') {
-                    window.location.href = 'Admin.html';
-                } else {
-                    // 3. REGULAR USER: JUST RELOAD CURRENT PAGE (Index.html)
-                    // This updates the UI state without sending them to app.html
-                    window.location.reload();
-                }
-                
+                // 2. Close the modal immediately
                 closeLoginModal();
+
+                // NOTE: We do NOT reload or redirect here anymore! 
+                // The moment signIn completes, your checkAuthState() function 
+                // automatically wakes up, shows "Verifying account...", 
+                // checks the database, and redirects Admins seamlessly.
+
             } catch (error) {
+
                 console.error("Login Error:", error.code);
                 let userMessage = "Login failed. Please check credentials.";
                 if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
