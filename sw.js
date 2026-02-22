@@ -21,6 +21,7 @@ const CRITICAL_FILES = [
 const SECONDARY_FILES = [
   './patient-education.js', 
   './all-calculators.html',
+  './js/qr.min.js',
   './healthcare-guidelines.html',
   './patient-education.html',
   './calculators/Benzodiazepine.html',
