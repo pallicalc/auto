@@ -40,7 +40,7 @@ const auth = firebase.auth();
 
 let context = { mode: 'personal', instId: null };
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initDiagnosticApp() {
     injectStandardFooter();
     injectConsentModal(); 
     
@@ -50,7 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const form = document.querySelector('form'); 
     if(form) form.addEventListener('change', calculateTotalScore);
 
-    // --- DETERMINE ROLE ---
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
 
@@ -77,7 +76,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             finalizeAppSetup(context.instId);
         });
     }
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDiagnosticApp);
+} else {
+    initDiagnosticApp();
+}
+
 
 async function finalizeAppSetup(instId) {
     const blankQrHeader = document.getElementById('blank-qr-header');
@@ -264,17 +270,32 @@ async function loadInstitutionHeader(instId) {
 
 function loadPersonalHeader() {
     const settingsStr = localStorage.getItem('institutionSettings');
-    if (settingsStr) { try { applyBranding(JSON.parse(settingsStr)); } catch (e) {} }
+    if (settingsStr) { 
+        try { 
+            applyBranding(JSON.parse(settingsStr)); 
+        } catch (e) { console.error(e); } 
+    }
 }
 
-function applyBranding({ name, contact, logo }) {
+function applyBranding(data) {
+    const name = data.name || data.headerName || "";
+    const contact = data.contact || data.headerContact || "";
+    
+    // Smart logo check for offline mode
+    const logo = data.logo || 
+                 (data.logos && data.logos.length > 0 ? data.logos[0] : null) || 
+                 (data.headerLogos && data.headerLogos.length > 0 ? data.headerLogos[0] : null);
+
     if(name) {
         const nameEl = document.getElementById('inst-name-display');
         const footerName = document.getElementById('footer-inst-name');
         if(nameEl) nameEl.textContent = name;
         if(footerName) footerName.textContent = name;
     }
-    if(contact) document.getElementById('inst-contact-display').textContent = contact;
+    if(contact) {
+        const contactEl = document.getElementById('inst-contact-display');
+        if(contactEl) contactEl.textContent = contact;
+    }
     if(logo) {
         const el = document.getElementById('inst-logo-img');
         const container = document.getElementById('inst-header-container');
@@ -282,6 +303,7 @@ function applyBranding({ name, contact, logo }) {
         if(container) container.style.display = 'flex';
     }
 }
+
 
 function injectStandardFooter() {
     const existing = document.querySelector('footer');
