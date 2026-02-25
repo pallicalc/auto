@@ -478,97 +478,103 @@
 
 
 </script>
+
 <script src="/js/ga-tracking.js"></script>
 <script>
-    // 1. Tell the system this is IPOS so scan.html knows how to read it
     const REPORT_KEY = 'report_ipos';
 
-    // 2. Character counter for Q1
     function updateCharCount(textarea) {
         const count = textarea.value.length;
         const countEl = document.getElementById('char-count');
         if(countEl) countEl.innerText = `${count}/100`;
     }
 
-    // 3. OVERRIDE the generic QR Generator for IPOS
-    function executeQRGeneration() {
-        // Track the event
+    // 1. Force the button to use THIS local function, exactly like HADS works
+    function trackAndGenerateQR() {
         if (typeof window.trackEvent === 'function') {
             window.trackEvent('generate_qr', {
                 'event_category': 'Diagnostic Tool',
                 'event_label': 'IPOS'
             });
         }
+        generateQR();
+    }
 
-        // Calculate standard radio buttons (uses diagnostic.js)
+    // 2. Local generateQR to prevent diagnostic.js from hijacking it
+    function generateQR() {
+        const modal = document.getElementById('pdpa-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        } else {
+            if(confirm("Generate QR Code? By clicking OK you consent to sharing this data.")) {
+                executeQRGeneration();
+            }
+        }
+    }
+
+    // 3. The precise IPOS Payload generator
+    function executeQRGeneration() {
         const totalScore = typeof calculateTotalScore === 'function' ? calculateTotalScore() : 0;
 
-        // Capture Q1 (Text Box)
+        // Safely grab text and dropdown, shortening them slightly to ensure QR doesn't crash
         const q1Input = document.getElementById('q1_input');
-        const q1Text = q1Input ? q1Input.value.substring(0, 50) : "";
+        const q1Text = q1Input ? q1Input.value.substring(0, 45) : ""; 
 
-        // Capture Q10 (Dropdown)
         const modeEl = document.getElementById('completion_mode');
-        const modeText = modeEl ? modeEl.options[modeEl.selectedIndex].text : "";
+        const modeText = modeEl ? modeEl.options[modeEl.selectedIndex].text.substring(0, 20) : "";
 
-        // Capture "Other Symptoms"
         const otherSymptoms = [];
         for (let i = 1; i <= 3; i++) {
             const labelEl = document.getElementById(`other_sym_${i}_label`);
             const radioChecked = document.querySelector(`input[name="other_sym_${i}_val"]:checked`);
             if(labelEl && labelEl.value) {
                 const val = radioChecked ? radioChecked.value : 0;
-                otherSymptoms.push(`${labelEl.value} (${val})`);
+                otherSymptoms.push(`${labelEl.value.substring(0, 15)}(${val})`);
             }
         }
 
-        // Build the specific IPOS Payload
         const payload = {
-            t: "IPOS", // Crucial: Tells scan.html exactly what tool this is
+            t: "IPOS",
             d: Date.now(),
             score: totalScore,
             q1: q1Text,
             mode: modeText,
-            details: otherSymptoms.join(", ")
+            ext: otherSymptoms.join(",")
         };
 
-        // Save for Clinical Handover Report
-        if (typeof sessionStorage !== 'undefined') {
+        try {
             sessionStorage.setItem(REPORT_KEY, totalScore);
+        } catch (e) {
+            console.warn("Session storage save failed");
         }
 
-        // Generate the QR Code
         const qrDiv = document.getElementById("qrcode");
         if (qrDiv) {
             qrDiv.innerHTML = "";
             
-            // Build the URL so the phone camera prompts to open the webpage
+            // Cloudflare Clean URL logic
             const baseUrl = window.location.origin + "/diagnostic/scan";
             const safeData = encodeURIComponent(JSON.stringify(payload));
             const fullUrl = `${baseUrl}?data=${safeData}`;
             
-            new QRCode(qrDiv, { 
-                text: fullUrl, 
-                width: 200, 
-                height: 200, 
-                correctLevel: QRCode.CorrectLevel.L 
-            });
+            try {
+                new QRCode(qrDiv, { 
+                    text: fullUrl, 
+                    width: 200, 
+                    height: 200, 
+                    correctLevel: QRCode.CorrectLevel.L 
+                });
+            } catch (err) {
+                console.error("QR Error:", err);
+                // Safety net: If they somehow typed too much and broke the QR library, warn them.
+                alert("The text you typed is too long for the QR Code. Please shorten your typed concerns.");
+            }
         }
 
-        // Scroll to QR code
         const section = document.getElementById('qr-section');
         if (section) {
             section.style.display = 'block';
             section.scrollIntoView({behavior: 'smooth'});
-        }
-    }
-
-    // 4. Clean Tracking Trigger for the Button
-    function trackAndGenerateQR() {
-        if (typeof generateQR === 'function') {
-            generateQR(); // Triggers consent modal in diagnostic.js, which then runs executeQRGeneration()
-        } else {
-            executeQRGeneration(); // Fallback if diagnostic.js hasn't loaded
         }
     }
 </script>
