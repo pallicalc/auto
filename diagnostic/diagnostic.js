@@ -207,7 +207,7 @@ function executeQRGeneration() {
         const fullUrl = `${baseUrl}?data=${safeData}`;
         
         // 4. Generate QR
-        new QRCode(qrDiv, { text: fullUrl, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+        new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
     }
 
     const section = document.getElementById('qr-section');

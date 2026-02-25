@@ -551,19 +551,18 @@
         const qrDiv = document.getElementById("qrcode");
         if (qrDiv) {
             qrDiv.innerHTML = "";
-            
-            // Cloudflare Clean URL logic
-            const baseUrl = window.location.origin + "/diagnostic/scan";
+
+            // Encode ONLY the payload data (No URL) to prevent character overflow
             const safeData = encodeURIComponent(JSON.stringify(payload));
-            const fullUrl = `${baseUrl}?data=${safeData}`;
-            
+
             try {
                 new QRCode(qrDiv, { 
-                    text: fullUrl, 
+                    text: safeData, 
                     width: 200, 
                     height: 200, 
                     correctLevel: QRCode.CorrectLevel.L 
                 });
+
             } catch (err) {
                 console.error("QR Error:", err);
                 // Safety net: If they somehow typed too much and broke the QR library, warn them.
