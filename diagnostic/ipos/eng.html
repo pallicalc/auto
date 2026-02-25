@@ -478,35 +478,97 @@
 
 
 </script>
-
 <script src="/js/ga-tracking.js"></script>
 <script>
-  function trackAndGenerateQR() {
-    // 1. Track the event
-    if (typeof window.trackEvent === 'function') {
-        window.trackEvent('generate_qr', {
-            'event_category': 'Diagnostic Tool',
-            'event_label': document.title.split('|')[0].trim()
-        });
+    // 1. Tell the system this is IPOS so scan.html knows how to read it
+    const REPORT_KEY = 'report_ipos';
+
+    // 2. Character counter for Q1
+    function updateCharCount(textarea) {
+        const count = textarea.value.length;
+        const countEl = document.getElementById('char-count');
+        if(countEl) countEl.innerText = `${count}/100`;
     }
-    // 2. Call the original function
-    generateQR();
-  }
-</script>
-<script>
-    function trackAndGenerateQR() {
+
+    // 3. OVERRIDE the generic QR Generator for IPOS
+    function executeQRGeneration() {
+        // Track the event
         if (typeof window.trackEvent === 'function') {
-            var toolName = document.title.split('|')[0].trim() || 'Diagnostic_Tool';
-            window.trackEvent('form_filled', {
-                tool: toolName,
-                status: 'Generated_QR'
+            window.trackEvent('generate_qr', {
+                'event_category': 'Diagnostic Tool',
+                'event_label': 'IPOS'
             });
         }
+
+        // Calculate standard radio buttons (uses diagnostic.js)
+        const totalScore = typeof calculateTotalScore === 'function' ? calculateTotalScore() : 0;
+
+        // Capture Q1 (Text Box)
+        const q1Input = document.getElementById('q1_input');
+        const q1Text = q1Input ? q1Input.value.substring(0, 50) : "";
+
+        // Capture Q10 (Dropdown)
+        const modeEl = document.getElementById('completion_mode');
+        const modeText = modeEl ? modeEl.options[modeEl.selectedIndex].text : "";
+
+        // Capture "Other Symptoms"
+        const otherSymptoms = [];
+        for (let i = 1; i <= 3; i++) {
+            const labelEl = document.getElementById(`other_sym_${i}_label`);
+            const radioChecked = document.querySelector(`input[name="other_sym_${i}_val"]:checked`);
+            if(labelEl && labelEl.value) {
+                const val = radioChecked ? radioChecked.value : 0;
+                otherSymptoms.push(`${labelEl.value} (${val})`);
+            }
+        }
+
+        // Build the specific IPOS Payload
+        const payload = {
+            t: "IPOS", // Crucial: Tells scan.html exactly what tool this is
+            d: Date.now(),
+            score: totalScore,
+            q1: q1Text,
+            mode: modeText,
+            details: otherSymptoms.join(", ")
+        };
+
+        // Save for Clinical Handover Report
+        if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem(REPORT_KEY, totalScore);
+        }
+
+        // Generate the QR Code
+        const qrDiv = document.getElementById("qrcode");
+        if (qrDiv) {
+            qrDiv.innerHTML = "";
+            
+            // Build the URL so the phone camera prompts to open the webpage
+            const baseUrl = window.location.origin + "/diagnostic/scan";
+            const safeData = encodeURIComponent(JSON.stringify(payload));
+            const fullUrl = `${baseUrl}?data=${safeData}`;
+            
+            new QRCode(qrDiv, { 
+                text: fullUrl, 
+                width: 200, 
+                height: 200, 
+                correctLevel: QRCode.CorrectLevel.L 
+            });
+        }
+
+        // Scroll to QR code
+        const section = document.getElementById('qr-section');
+        if (section) {
+            section.style.display = 'block';
+            section.scrollIntoView({behavior: 'smooth'});
+        }
+    }
+
+    // 4. Clean Tracking Trigger for the Button
+    function trackAndGenerateQR() {
         if (typeof generateQR === 'function') {
-            generateQR();
+            generateQR(); // Triggers consent modal in diagnostic.js, which then runs executeQRGeneration()
         } else {
-            console.error("Error: generateQR() function is missing!");
-            alert("System Error: QR Generator not loaded.");
+            executeQRGeneration(); // Fallback if diagnostic.js hasn't loaded
         }
     }
 </script>

@@ -111,7 +111,7 @@ function generateBlankFormQR(instId) {
     const qrContainer = document.getElementById("blank-qrcode");
     if (!qrContainer) return;
     qrContainer.innerHTML = ""; 
-    const baseUrl = window.location.href.split('?')[0]; 
+    const baseUrl = window.location.href.split('?')[0].replace('.html', ''); 
     const targetUrl = instId ? `${baseUrl}?ref=${instId}` : baseUrl;
     new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
 }
@@ -198,7 +198,7 @@ function executeQRGeneration() {
         
         // 1. Get Base URL (e.g. https://pallicalc.web.app/diagnostic/scan.html)
         // We go up one level from the current diagnostic tool to find scan.html
-        const baseUrl = window.location.origin + "/diagnostic/scan.html";
+        const baseUrl = window.location.origin + "/diagnostic/scan";
         
         // 2. Encode the payload safely
         const safeData = encodeURIComponent(JSON.stringify(payload));
