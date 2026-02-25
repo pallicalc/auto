@@ -489,7 +489,6 @@
         if(countEl) countEl.innerText = `${count}/100`;
     }
 
-    // 1. Force the button to use THIS local function, exactly like HADS works
     function trackAndGenerateQR() {
         if (typeof window.trackEvent === 'function') {
             window.trackEvent('generate_qr', {
@@ -500,7 +499,6 @@
         generateQR();
     }
 
-    // 2. Local generateQR to prevent diagnostic.js from hijacking it
     function generateQR() {
         const modal = document.getElementById('pdpa-modal');
         if (modal) {
@@ -512,34 +510,61 @@
         }
     }
 
-    // 3. The precise IPOS Payload generator
     function executeQRGeneration() {
         const totalScore = typeof calculateTotalScore === 'function' ? calculateTotalScore() : 0;
 
-        // Safely grab text and dropdown, shortening them slightly to ensure QR doesn't crash
+        const getVal = (name) => {
+            const el = document.querySelector(`input[name="${name}"]:checked`);
+            return el ? parseInt(el.value) : 0;
+        };
+
         const q1Input = document.getElementById('q1_input');
         const q1Text = q1Input ? q1Input.value.substring(0, 45) : ""; 
 
         const modeEl = document.getElementById('completion_mode');
-        const modeText = modeEl ? modeEl.options[modeEl.selectedIndex].text.substring(0, 20) : "";
+        const modeVal = modeEl ? parseInt(modeEl.value) : 0;
+        const modeText = String.fromCharCode(65 + modeVal); 
 
         const otherSymptoms = [];
         for (let i = 1; i <= 3; i++) {
             const labelEl = document.getElementById(`other_sym_${i}_label`);
-            const radioChecked = document.querySelector(`input[name="other_sym_${i}_val"]:checked`);
+            const val = getVal(`other_sym_${i}_val`);
             if(labelEl && labelEl.value) {
-                const val = radioChecked ? radioChecked.value : 0;
-                otherSymptoms.push(`${labelEl.value.substring(0, 15)}(${val})`);
+                otherSymptoms.push(`${labelEl.value.substring(0, 15)} (${val})`);
             }
         }
 
+        let scannedByText = "";
+        if (typeof firebase !== 'undefined' && firebase.auth().currentUser) {
+             scannedByText = firebase.auth().currentUser.email || "";
+        }
+
+        // EXACT HADS FORMAT: JSON Object mapping
         const payload = {
             t: "IPOS",
             d: Date.now(),
             score: totalScore,
-            q1: q1Text,
-            mode: modeText,
-            ext: otherSymptoms.join(",")
+            Q1: q1Text,
+            Q2a: getVal('pain'),
+            Q2b: getVal('sob'),
+            Q2c: getVal('weak'),
+            Q2d: getVal('nau'),
+            Q2e: getVal('vom'),
+            Q2f: getVal('app'),
+            Q2g: getVal('con'),
+            Q2h: getVal('mou'),
+            Q2i: getVal('dro'),
+            Q2j: getVal('mob'),
+            Q2k: otherSymptoms.join(", "),
+            Q3: getVal('anxious'),
+            Q4: getVal('family'),
+            Q5: getVal('depressed'),
+            Q6: getVal('peace'),
+            Q7: getVal('share'),
+            Q8: getVal('info'),
+            Q9: getVal('practical'),
+            Q10: modeText,
+            ScannedBy: scannedByText
         };
 
         try {
@@ -549,25 +574,16 @@
         }
 
         const qrDiv = document.getElementById("qrcode");
-        if (qrDiv) {
-            qrDiv.innerHTML = "";
-
-            // Encode ONLY the payload data (No URL) to prevent character overflow
-            const safeData = encodeURIComponent(JSON.stringify(payload));
-
-            try {
-                new QRCode(qrDiv, { 
-                    text: safeData, 
-                    width: 200, 
-                    height: 200, 
-                    correctLevel: QRCode.CorrectLevel.L 
-                });
-
-            } catch (err) {
-                console.error("QR Error:", err);
-                // Safety net: If they somehow typed too much and broke the QR library, warn them.
-                alert("The text you typed is too long for the QR Code. Please shorten your typed concerns.");
-            }
+        qrDiv.innerHTML = "";
+        
+        // EXACT HADS FORMAT: Stringify and Encode
+        const safeData = encodeURIComponent(JSON.stringify(payload));
+        
+        try {
+            new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+        } catch (err) {
+            console.error("QR Error:", err);
+            alert("Data is too large. Please shorten your typed concerns in Q1.");
         }
 
         const section = document.getElementById('qr-section');
@@ -577,5 +593,3 @@
         }
     }
 </script>
-</body>
-</html>
