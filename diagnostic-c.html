@@ -305,37 +305,46 @@
     <script src="diagnostic.js"></script>
     <script>
         function trackAndCopyReport() {
-            if (typeof window.trackEvent === 'function') {
-                window.trackEvent('clinical_action', {
-                    'event_category': 'Diagnostic Dashboard',
-                    'event_label': 'copied_handover_report',
-                    'institution_id': (context && context.instId) ? context.instId : 'personal_user'
-                });
+            try {
+                if (typeof window.trackEvent === 'function') {
+                    window.trackEvent('clinical_action', {
+                        'event_category': 'Diagnostic Dashboard',
+                        'event_label': 'copied_handover_report',
+                        'institution_id': (typeof userInstId !== 'undefined' && userInstId) ? userInstId : 'personal_user'
+                    });
+                }
+            } catch (error) { 
+                console.warn("Tracking skipped to prevent crash"); 
             }
-            // Ensure copyReport exists or define it if it's supposed to be in diagnostic.js but missing
+
             if (typeof copyReport === 'function') {
                  copyReport();
             } else {
-                 console.error("copyReport function not found");
+                 alert("Error: The copy code is missing from diagnostic.js");
             }
         }
 
         function trackAndSendToGoogleForm() {
-            if (typeof window.trackEvent === 'function') {
-                window.trackEvent('clinical_action', {
-                    'event_category': 'Diagnostic Dashboard',
-                    'event_label': 'submitted_google_form',
-                    'institution_id': (context && context.instId) ? context.instId : 'personal_user'
-                });
+            try {
+                if (typeof window.trackEvent === 'function') {
+                    window.trackEvent('clinical_action', {
+                        'event_category': 'Diagnostic Dashboard',
+                        'event_label': 'submitted_google_form',
+                        'institution_id': (typeof userInstId !== 'undefined' && userInstId) ? userInstId : 'personal_user'
+                    });
+                }
+            } catch (error) { 
+                console.warn("Tracking skipped to prevent crash"); 
             }
-             // Ensure sendToGoogleForm exists
+
             if (typeof sendToGoogleForm === 'function') {
                 sendToGoogleForm();
             } else {
-                console.error("sendToGoogleForm function not found");
+                alert("Error: The submit code is missing from diagnostic.js");
             }
         }
     </script>
+
 
     <footer class="legal-footer">
         <div class="container">
