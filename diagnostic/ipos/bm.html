@@ -497,34 +497,115 @@
 
 <script src="/js/ga-tracking.js"></script>
 <script>
-  function trackAndGenerateQR() {
-    // 1. Track the event
-    if (typeof window.trackEvent === 'function') {
-        window.trackEvent('generate_qr', {
-            'event_category': 'Diagnostic Tool',
-            'event_label': document.title.split('|')[0].trim()
-        });
+    const REPORT_KEY = 'report_ipos';
+
+    function updateCharCount(textarea) {
+        const count = textarea.value.length;
+        const countEl = document.getElementById('char-count');
+        if(countEl) countEl.innerText = `${count}/100`;
     }
-    // 2. Call the original function
-    generateQR();
-  }
-</script>
-<script>
+
     function trackAndGenerateQR() {
         if (typeof window.trackEvent === 'function') {
-            var toolName = document.title.split('|')[0].trim() || 'Diagnostic_Tool';
-            window.trackEvent('form_filled', {
-                tool: toolName,
-                status: 'Generated_QR'
+            window.trackEvent('generate_qr', {
+                'event_category': 'Diagnostic Tool',
+                'event_label': 'IPOS'
             });
         }
-        if (typeof generateQR === 'function') {
-            generateQR();
+        generateQR();
+    }
+
+    function generateQR() {
+        const modal = document.getElementById('pdpa-modal');
+        if (modal) {
+            modal.style.display = 'flex';
         } else {
-            console.error("Error: generateQR() function is missing!");
-            alert("System Error: QR Generator not loaded.");
+            if(confirm("Generate QR Code? By clicking OK you consent to sharing this data.")) {
+                executeQRGeneration();
+            }
+        }
+    }
+
+    function executeQRGeneration() {
+        const totalScore = typeof calculateTotalScore === 'function' ? calculateTotalScore() : 0;
+
+        const getVal = (name) => {
+            const el = document.querySelector(`input[name="${name}"]:checked`);
+            return el ? parseInt(el.value) : 0;
+        };
+
+        const q1Input = document.getElementById('q1_input');
+        const q1Text = q1Input ? q1Input.value.substring(0, 45) : ""; 
+
+        const modeEl = document.getElementById('completion_mode');
+        const modeVal = modeEl ? parseInt(modeEl.value) : 0;
+        const modeText = String.fromCharCode(65 + modeVal); 
+
+        const otherSymptoms = [];
+        for (let i = 1; i <= 3; i++) {
+            const labelEl = document.getElementById(`other_sym_${i}_label`);
+            const val = getVal(`other_sym_${i}_val`);
+            if(labelEl && labelEl.value) {
+                otherSymptoms.push(`${labelEl.value.substring(0, 15)} (${val})`);
+            }
+        }
+
+        let scannedByText = "";
+        if (typeof firebase !== 'undefined' && firebase.auth().currentUser) {
+             scannedByText = firebase.auth().currentUser.email || "";
+        }
+
+        // EXACT HADS FORMAT: JSON Object mapping
+        const payload = {
+            t: "IPOS",
+            d: Date.now(),
+            score: totalScore,
+            Q1: q1Text,
+            Q2a: getVal('pain'),
+            Q2b: getVal('sob'),
+            Q2c: getVal('weak'),
+            Q2d: getVal('nau'),
+            Q2e: getVal('vom'),
+            Q2f: getVal('app'),
+            Q2g: getVal('con'),
+            Q2h: getVal('mou'),
+            Q2i: getVal('dro'),
+            Q2j: getVal('mob'),
+            Q2k: otherSymptoms.join(", "),
+            Q3: getVal('anxious'),
+            Q4: getVal('family'),
+            Q5: getVal('depressed'),
+            Q6: getVal('peace'),
+            Q7: getVal('share'),
+            Q8: getVal('info'),
+            Q9: getVal('practical'),
+            Q10: modeText,
+            ScannedBy: scannedByText
+        };
+
+        try {
+            sessionStorage.setItem(REPORT_KEY, totalScore);
+        } catch (e) {
+            console.warn("Session storage save failed");
+        }
+
+        const qrDiv = document.getElementById("qrcode");
+        qrDiv.innerHTML = "";
+        
+        // EXACT HADS FORMAT: Stringify and Encode
+        const safeData = encodeURIComponent(JSON.stringify(payload));
+        
+        try {
+            new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+        } catch (err) {
+            console.error("QR Error:", err);
+            alert("Data is too large. Please shorten your typed concerns in Q1.");
+        }
+
+        const section = document.getElementById('qr-section');
+        if (section) {
+            section.style.display = 'block';
+            section.scrollIntoView({behavior: 'smooth'});
         }
     }
 </script>
-</body>
-</html>
