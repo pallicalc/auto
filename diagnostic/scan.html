@@ -150,13 +150,20 @@
     </div>
 
     <div id="result-screen">
-        <div class="step-card">
-            <span class="step-label">1. Verify Patient</span>
-            <div class="form-group">
-                <input type="text" id="pt_id" class="form-control" placeholder="Patient ID / MRN" style="font-weight:bold;">
-                <input type="text" id="pt_name" class="form-control" placeholder="Name (Optional)">
-            </div>
-        </div>
+<div class="step-card">
+    <span class="step-label">1. Identify Patient (Optional)</span>
+    
+    <p style="font-size: 0.75rem; color: #6c757d; margin: 0 0 10px 0; line-height: 1.4;">
+        <i class="bi bi-shield-check" style="color: #198754;"></i> 
+        <strong>Zero Data Retention:</strong> To protect patient privacy, you may leave these blank and fill them directly in your Google Form. No patient identifiers are stored on this app.
+    </p>
+
+    <div class="form-group">
+        <input type="text" id="pt_id" class="form-control" placeholder="Patient ID (Optional)">
+        <input type="text" id="pt_name" class="form-control" placeholder="Name (Optional)">
+    </div>
+</div>
+
 
         <div class="step-card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -399,8 +406,6 @@
         const kpiPhase = document.getElementById('kpi_timing').value;
         const remark = document.getElementById('clinical_remark').value;
 
-        if (!ptID) { alert("Please enter a Patient ID (MRN)."); return; }
-        
         const typeKey = currentData.t.toLowerCase(); 
         let targetUrl = savedLinks[typeKey];
 
