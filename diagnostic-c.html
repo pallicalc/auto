@@ -25,19 +25,23 @@
     }
 
     .btn-start-assess {
-        display: block;
+        display: flex;              /* Changed from block to flex */
+        justify-content: center;    /* Centers items horizontally */
+        align-items: center;        /* Centers items vertically */
+        gap: 8px;                   /* Adds fixed spacing between icon and text */
         width: 100%;
         padding: 12px;
-        background: #007bff; /* Matches your theme blue */
+        background: #007bff; 
         color: white;
         text-decoration: none;
         border-radius: 8px;
         font-weight: 600;
         margin-top: 15px;
         transition: background 0.2s;
-        text-align: center;
         border: none;
+        box-sizing: border-box;     /* Prevents padding from causing screen overflow */
     }
+
 
     .btn-start-assess:hover {
         background: #0056b3;
