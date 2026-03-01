@@ -92,9 +92,15 @@ async function applyViewLogic() {
         settingsSection.style.display = 'none';
         shareSection.style.display = 'block';
     } 
-    // 3. PERSONAL/GUEST VIEW
+// 3. PERSONAL/GUEST VIEW
     else {
-        settingsSection.style.display = 'block';
+        // Only show the setup header box if the user role is exactly 'personal'
+        if (currentUserRole === 'personal') {
+            settingsSection.style.display = 'block';
+        } else {
+            settingsSection.style.display = 'none'; // Hides it for 'guest'
+        }
+        
         shareSection.style.display = 'block'; 
         loadLocalSettings();
     }
