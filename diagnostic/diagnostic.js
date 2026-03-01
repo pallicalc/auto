@@ -218,7 +218,7 @@ function executeQRGeneration() {
     width: 200, 
     height: 200, 
     colorDark : "#000000",   // Force absolute black modules
-    colorLight : "#ffffff",  // Force absolute white background
+    colorLight : "#f0fdf4",  // Force absolute white background
  correctLevel: QRCode.CorrectLevel.L });
     }
 

@@ -232,19 +232,27 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 /* =========================================
-   8. QR CODE DARK MODE FIX
+   8. QR CODE DARK MODE FIX (Samsung/MIUI Override)
    ========================================= */
 #qrcode, #blank-qrcode {
-    background-color: #ffffff !important; /* Force solid white background */
-    padding: 15px !important;             /* Crucial quiet zone for scanners */
+    background-color: #f0fdf4 !important; 
+    padding: 16px !important;             
     border-radius: 8px;
-    display: inline-block;                /* Keeps the background tight to the code */
-    margin: 10px auto;
+    display: inline-block !important;                
+    margin: 15px auto;
+    
+    /* NUCLEAR OPTION: If dark mode strips padding/background, these force a boundary */
+    box-shadow: 0 0 0 16px #f0fdf4 !important; 
+    outline: 16px solid #f0fdf4 !important;
 }
 
-/* Prevent smart dark modes from color-inverting the actual code */
 #qrcode img, #qrcode canvas,
 #blank-qrcode img, #blank-qrcode canvas {
-    filter: invert(0) !important; 
+    display: block !important;
     background-color: #f0fdf4 !important;
+    border: none !important; /* Remove standard border so outline/shadow does the work */
+    filter: invert(0) !important; 
+    
+    /* Forces the element to stay isolated from background color changes */
+    isolation: isolate; 
 }
