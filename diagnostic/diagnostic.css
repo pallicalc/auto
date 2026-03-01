@@ -231,3 +231,20 @@ body {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+/* =========================================
+   8. QR CODE DARK MODE FIX
+   ========================================= */
+#qrcode, #blank-qrcode {
+    background-color: #ffffff !important; /* Force solid white background */
+    padding: 15px !important;             /* Crucial quiet zone for scanners */
+    border-radius: 8px;
+    display: inline-block;                /* Keeps the background tight to the code */
+    margin: 10px auto;
+}
+
+/* Prevent smart dark modes from color-inverting the actual code */
+#qrcode img, #qrcode canvas,
+#blank-qrcode img, #blank-qrcode canvas {
+    filter: invert(0) !important; 
+    background-color: #ffffff !important;
+}

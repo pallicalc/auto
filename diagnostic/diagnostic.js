@@ -113,7 +113,13 @@ function generateBlankFormQR(instId) {
     qrContainer.innerHTML = ""; 
     const baseUrl = window.location.href.split('?')[0].replace('.html', ''); 
     const targetUrl = instId ? `${baseUrl}?ref=${instId}` : baseUrl;
-    new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
+    new QRCode(qrContainer, { 
+        text: targetUrl, 
+        width: 100, 
+        height: 100,
+        colorDark : "#000000",   // Force absolute black modules
+        colorLight : "#ffffff"   // Force absolute white background
+    });
 }
 
 // --- RESULT GENERATION LOGIC ---
@@ -207,7 +213,13 @@ function executeQRGeneration() {
         const fullUrl = `${baseUrl}?data=${safeData}`;
         
         // 4. Generate QR
-        new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+        new QRCode(qrDiv, { 
+    text: safeData, 
+    width: 200, 
+    height: 200, 
+    colorDark : "#000000",   // Force absolute black modules
+    colorLight : "#ffffff",  // Force absolute white background
+ correctLevel: QRCode.CorrectLevel.L });
     }
 
     const section = document.getElementById('qr-section');
