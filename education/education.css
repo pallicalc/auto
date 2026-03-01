@@ -228,7 +228,7 @@ body {
 .close:active { color: #333; }
 
 #qrcode-wrapper-safe {
-    background-color: #ffffff !important;
+    background-color: #f0fdf4 !important;
     border-radius: 16px;
     padding: 20px;
     margin: 20px auto;
@@ -238,14 +238,14 @@ body {
 }
 #qrcode {
     display: inline-block;
-    background-color: #ffffff !important;
+    background-color: #f0fdf4 !important;
     padding: 10px;
     border-radius: 8px;
 }
 #qrcode img, #qrcode canvas {
     display: block;
-    background-color: #ffffff !important;
-    border: 8px solid #ffffff !important;
+    background-color: #f0fdf4 !important;
+    border: 8px solid #f0fdf4 !important;
     filter: invert(0) !important; 
 }
 

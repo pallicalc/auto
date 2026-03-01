@@ -118,7 +118,7 @@ function generateBlankFormQR(instId) {
         width: 100, 
         height: 100,
         colorDark : "#000000",   // Force absolute black modules
-        colorLight : "#ffffff"   // Force absolute white background
+        colorLight : "#f0fdf4"   // Force absolute white background
     });
 }
 

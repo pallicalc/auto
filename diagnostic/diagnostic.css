@@ -246,5 +246,5 @@ body {
 #qrcode img, #qrcode canvas,
 #blank-qrcode img, #blank-qrcode canvas {
     filter: invert(0) !important; 
-    background-color: #ffffff !important;
+    background-color: #f0fdf4 !important;
 }

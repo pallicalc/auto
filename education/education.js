@@ -387,7 +387,7 @@ function showQR() {
         width: 180, 
         height: 180, 
         colorDark : "#000000", 
-        colorLight : "#ffffff" 
+        colorLight : "#f0fdf4" 
     });
 }
 
