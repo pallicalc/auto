@@ -167,7 +167,12 @@ self.addEventListener('fetch', (event) => {
         try {
           return await fetch(event.request, { redirect: 'manual' });
         } catch (error) {
-          // Redirect completely removed. Safely fails if offline.
+          // If offline and requesting root/index, serve cached app.html instead
+          if (url.pathname === '/' || url.pathname.endsWith('index.html') || url.pathname.endsWith('index')) {
+            const offlineApp = await cache.match('./app.html');
+            if (offlineApp) return offlineApp;
+          }
+          // Safely fails for other excluded files (like admin pages)
           return new Response('', { status: 503, statusText: 'Offline' });
         }
       }
