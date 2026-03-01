@@ -258,7 +258,7 @@ body {
     background-image: linear-gradient(to bottom, #ffffff, #ffffff) !important;
     
     /* The final quiet zone */
-    border: 8px solid #ffffff !important; 
+    border: 8px solid #f0fdf4 !important; 
     
     /* Stop the OS from inverting the actual black squares */
     filter: invert(0) !important; 
