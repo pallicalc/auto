@@ -232,27 +232,34 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 /* =========================================
-   8. QR CODE DARK MODE FIX (Samsung/MIUI Override)
+   8. QR CODE DARK MODE FIX (CSS-Only Wrapper Hack)
    ========================================= */
 #qrcode, #blank-qrcode {
-    background-color: #f0fdf4 !important; 
-    padding: 16px !important;             
-    border-radius: 8px;
-    display: inline-block !important;                
-    margin: 15px auto;
+    /* The Gradient Hack: Dark modes cannot invert background images */
+    background-image: linear-gradient(to bottom, #ffffff, #ffffff) !important;
+    background-color: #ffffff !important; /* Fallback */
     
-    /* NUCLEAR OPTION: If dark mode strips padding/background, these force a boundary */
-    box-shadow: 0 0 0 16px #f0fdf4 !important; 
-    outline: 16px solid #f0fdf4 !important;
+    /* Act as the safe outer wrapper */
+    padding: 20px !important;
+    border-radius: 16px;
+    display: inline-block !important;
+    margin: 20px auto;
+    
+    /* Force light mode rendering context */
+    color-scheme: light only !important;
+    isolation: isolate;
 }
 
 #qrcode img, #qrcode canvas,
 #blank-qrcode img, #blank-qrcode canvas {
     display: block !important;
-    background-color: #f0fdf4 !important;
-    border: none !important; /* Remove standard border so outline/shadow does the work */
-    filter: invert(0) !important; 
     
-    /* Forces the element to stay isolated from background color changes */
-    isolation: isolate; 
+    /* Inner gradient hack for the canvas itself */
+    background-image: linear-gradient(to bottom, #ffffff, #ffffff) !important;
+    
+    /* The final quiet zone */
+    border: 8px solid #ffffff !important; 
+    
+    /* Stop the OS from inverting the actual black squares */
+    filter: invert(0) !important; 
 }
