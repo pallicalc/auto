@@ -113,7 +113,14 @@ function generateBlankFormQR(instId) {
     qrContainer.innerHTML = ""; 
     const baseUrl = window.location.href.split('?')[0].replace('.html', ''); 
     const targetUrl = instId ? `${baseUrl}?ref=${instId}` : baseUrl;
-    new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
+    
+    new QRCode(qrContainer, { 
+        text: targetUrl, 
+        width: 100, 
+        height: 100,
+        colorDark : "#000000", 
+        colorLight : "#ffffff" 
+    });
 }
 
 // --- RESULT GENERATION LOGIC ---
