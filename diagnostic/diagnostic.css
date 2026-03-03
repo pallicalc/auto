@@ -231,3 +231,24 @@ body {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* --- 8. QR CODE EXACT WRAPPER STYLE --- */
+#blank-qrcode, #qrcode {
+    display: inline-block !important; /* Wraps tightly around the code */
+    background-color: #ffffff !important;
+    border-radius: 16px;
+    padding: 20px;
+    margin: 20px auto;
+    text-align: center;
+    color-scheme: light only;
+    isolation: isolate;
+}
+
+#blank-qrcode img, #blank-qrcode canvas,
+#qrcode img, #qrcode canvas {
+    display: block;
+    background-color: #ffffff !important;
+    border: 8px solid #ffffff !important;
+    border-radius: 8px;
+    filter: invert(0) !important; 
+}

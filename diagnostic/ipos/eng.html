@@ -481,38 +481,6 @@
 
 <script src="/js/ga-tracking.js"></script>
 
-<script>
-let ctx={mode:'personal',instId:null};
-document.addEventListener('DOMContentLoaded',()=>{
-  let ref=new URLSearchParams(window.location.search).get('ref');
-  if(ref){ ctx.mode='shared'; ctx.instId=ref; setup(ref); }
-  else{
-    auth.onAuthStateChanged(async u=>{
-      if(u){
-        let snap=await db.collection('users').doc(u.uid).get();
-        if(snap.exists&&['institutionUser','institutionAdmin'].includes(snap.data().role)){
-          ctx.mode='institution'; ctx.instId=snap.data().institutionId;
-        }
-      }
-      setup(ctx.instId);
-    });
-  }
-});
-async function setup(id){
-  let qrH=document.getElementById('blank-qr-header'), btn=document.getElementById('backLink');
-  if(ctx.mode==='shared'){
-    if(qrH) qrH.style.display='none'; if(btn) btn.style.display='none';
-  } else {
-    if(qrH){
-      qrH.style.display='block'; let el=document.getElementById("blank-qrcode");
-      if(el){ el.innerHTML=""; let base=window.location.href.split('?')[0].replace('.html',''); new QRCode(el,{text:id?base+"?ref="+id:base,width:100,height:100}); }
-    }
-    if(btn) btn.style.display='inline-flex';
-  }
-  if(typeof loadInstitutionHeader==="function"&&id) await loadInstitutionHeader(id);
-  else if(typeof loadPersonalHeader==="function") loadPersonalHeader();
-}
-</script>
 
 <script>
     const REPORT_KEY = 'report_ipos';
