@@ -232,39 +232,25 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 /* =========================================
-   8. QR CODE DARK MODE FIX (CSS-Only Wrapper Hack)
+   8. QR CODE EXACT WRAPPER STYLE
    ========================================= */
-#qrcode, #blank-qrcode {
-    /* The Gradient Hack: Dark modes cannot invert background images */
-    background-image: linear-gradient(to bottom, #ffffff, #ffffff) !important;
-    background-color: #ffffff !important; /* Fallback */
 
-    /* Act as the safe outer wrapper */
-    padding: 20px !important;
+#blank-qrcode, #qrcode {
+    display: inline-block !important; /* Wraps tightly around the code */
+    background-color: #ffffff !important;
     border-radius: 16px;
-    display: inline-block !important;
+    padding: 20px;
     margin: 20px auto;
-
-    /* Force light mode rendering context */
-    color-scheme: light only !important;
+    text-align: center;
+    color-scheme: light only;
     isolation: isolate;
 }
 
-/* FIX FOR iPAD DOUBLE QR: Force the raw drawing canvas to stay hidden */
-#qrcode canvas, #blank-qrcode canvas {
-    display: none !important; 
-}
-
-/* Target ONLY the final image to display and protect */
-#qrcode img, #blank-qrcode img {
-    display: block !important;
-
-    /* Inner gradient hack for the canvas itself */
-    background-image: linear-gradient(to bottom, #ffffff, #ffffff) !important;
-
-    /* The final quiet zone (Your preferred green color) */
-    border: 8px solid #f0fdf4 !important; 
-
-    /* Stop the OS from inverting the actual black squares */
+#blank-qrcode img, #blank-qrcode canvas,
+#qrcode img, #qrcode canvas {
+    display: block;
+    background-color: #ffffff !important;
+    border: 8px solid #ffffff !important;
+    border-radius: 8px;
     filter: invert(0) !important; 
 }
