@@ -238,28 +238,33 @@ body {
     /* The Gradient Hack: Dark modes cannot invert background images */
     background-image: linear-gradient(to bottom, #ffffff, #ffffff) !important;
     background-color: #ffffff !important; /* Fallback */
-    
+
     /* Act as the safe outer wrapper */
     padding: 20px !important;
     border-radius: 16px;
     display: inline-block !important;
     margin: 20px auto;
-    
+
     /* Force light mode rendering context */
     color-scheme: light only !important;
     isolation: isolate;
 }
 
-#qrcode img, #qrcode canvas,
-#blank-qrcode img, #blank-qrcode canvas {
+/* FIX FOR iPAD DOUBLE QR: Force the raw drawing canvas to stay hidden */
+#qrcode canvas, #blank-qrcode canvas {
+    display: none !important; 
+}
+
+/* Target ONLY the final image to display and protect */
+#qrcode img, #blank-qrcode img {
     display: block !important;
-    
+
     /* Inner gradient hack for the canvas itself */
     background-image: linear-gradient(to bottom, #ffffff, #ffffff) !important;
-    
-    /* The final quiet zone */
+
+    /* The final quiet zone (Your preferred green color) */
     border: 8px solid #f0fdf4 !important; 
-    
+
     /* Stop the OS from inverting the actual black squares */
     filter: invert(0) !important; 
 }
