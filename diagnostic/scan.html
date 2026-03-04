@@ -332,18 +332,55 @@
             });
     });
 
-        // --- NEW: UNIVERSAL DECODER ROUTER ---
+    // --- UNIVERSAL DECODER ROUTER ---
     function decodeToolData(compactData) {
         if (!compactData || !compactData.t) return compactData;
 
         switch (compactData.t.toLowerCase()) {
             case 'dt':
                 return decodeDT(compactData);
-            // Add case 'ipos': return decodeIPOS(compactData); in the future
+            case 'ipos':
+                return decodeIPOS(compactData); // <--- ADDED IPOS ROUTE
             default:
                 return compactData; 
         }
     }
+
+    // --- NEW: IPOS Decoder ---
+    function decodeIPOS(compact) {
+        // Backward compatibility: If it already has Q2a, it's an old uncompressed QR
+        if (compact.Q2a !== undefined) return compact;
+
+        const expanded = {
+            t: 'IPOS',
+            d: compact.d,
+            score: compact.s !== undefined ? compact.s : (compact.score || 0),
+            Q1: compact.q1 || ""
+        };
+
+        // Unpack physical symptoms (sym) into Q2a -> Q2j
+        const symKeys = ['Q2a', 'Q2b', 'Q2c', 'Q2d', 'Q2e', 'Q2f', 'Q2g', 'Q2h', 'Q2i', 'Q2j'];
+        const symBits = compact.sym || "";
+        for (let i = 0; i < symKeys.length; i++) {
+            expanded[symKeys[i]] = symBits[i] || '-';
+        }
+
+        // Add custom symptoms
+        expanded.Q2k = compact.oth || "";
+
+        // Unpack emotional/practical (ep) into Q3 -> Q9
+        const epKeys = ['Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9'];
+        const epBits = compact.ep || "";
+        for (let i = 0; i < epKeys.length; i++) {
+            expanded[epKeys[i]] = epBits[i] || '-';
+        }
+
+        // Add completion mode
+        expanded.Q10 = compact.mod || "";
+
+        return expanded;
+    }
+
 
     // --- NEW: DT (Distress Thermometer) Decoder ---
     function decodeDT(compact) {
@@ -412,7 +449,7 @@
                    class="editable-val" 
                    style="color:var(--primary); font-weight:800; border-bottom:none; font-size:1.2rem;" 
                    value="${data.score || 0}"
-                   onchange="currentData.score = this.value; currentData.Q1 = this.value;">
+                   onchange="currentData.score = this.value">
         `;
 
         // RENDER DATA ROWS AS EDITABLE INPUTS
@@ -420,7 +457,7 @@
         let html = "";
         
         for (const [key, val] of Object.entries(data)) {
-            if (['t', 'd', 'score', 'Q1'].includes(key)) continue;
+            if (['t', 'd', 'score'].includes(key)) continue;
 
             const numVal = parseInt(val);
             const isHigh = (!isNaN(numVal) && numVal >= 3);
