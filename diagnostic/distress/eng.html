@@ -355,34 +355,42 @@
             }
             // ---------------------
 
-            const getVal = (name) => {
+            // NEW HELPER: Returns '0', '1', or '-' for unanswered to keep string length exact
+            const getBit = (name) => {
                 const el = document.querySelector(`input[name="${name}"]:checked`);
-                return el ? parseInt(el.value) : null;
+                return el ? el.value : '-';
             };
-            const getSuffix = (i) => String.fromCharCode(97 + i);
-            
-            const distressScore = getVal('distress_score');
+
+            const dsEl = document.querySelector('input[name="distress_score"]:checked');
+            const distressScore = dsEl ? parseInt(dsEl.value) : null;
+
+            // Compress arrays into short bitstrings
+            let pBits = ""; physicalItems.forEach((_, i) => pBits += getBit(`phy_${i}`));
+            let eBits = ""; emotionalItems.forEach((_, i) => eBits += getBit(`emo_${i}`));
+            let rBits = ""; practicalItems.forEach((_, i) => rBits += getBit(`prac_${i}`));
+            let oBits = ""; socialItems.forEach((_, i) => oBits += getBit(`soc_${i}`));
+            let uBits = ""; spiritualItems.forEach((_, i) => uBits += getBit(`spir_${i}`));
 
             const payload = {
-                t: "dt",
+                t: "dt", // Type identifier
                 d: Date.now(),
-                score: distressScore,
-                Q1: distressScore
+                s: distressScore,
+                p: pBits,
+                e: eBits,
+                r: rBits,
+                o: oBits,
+                u: uBits,
+                q7: document.getElementById('other_concerns').value.substring(0, 200)
             };
-
-            physicalItems.forEach((_, i) => { payload[`Q2${getSuffix(i)}`] = getVal(`phy_${i}`); });
-            emotionalItems.forEach((_, i) => { payload[`Q3${getSuffix(i)}`] = getVal(`emo_${i}`); });
-            practicalItems.forEach((_, i) => { payload[`Q4${getSuffix(i)}`] = getVal(`prac_${i}`); });
-            socialItems.forEach((_, i) => { payload[`Q5${getSuffix(i)}`] = getVal(`soc_${i}`); });
-            spiritualItems.forEach((_, i) => { payload[`Q6${getSuffix(i)}`] = getVal(`spir_${i}`); });
-
-            payload['Q7'] = document.getElementById('other_concerns').value.substring(0, 200);
 
             const qrDiv = document.getElementById("qrcode");
             qrDiv.innerHTML = "";
+
+            // Notice: encodeURIComponent is REMOVED to keep the payload tiny
+            const compactData = JSON.stringify(payload);
             
-            const safeData = encodeURIComponent(JSON.stringify(payload));
-            new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+            // correctLevel: L (Low) keeps the QR code as physically simple as possible
+            new QRCode(qrDiv, { text: compactData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
 
             const section = document.getElementById('qr-section');
             section.style.display = 'block';
@@ -503,35 +511,6 @@
         }
     </script>
 <script src="/js/ga-tracking.js"></script>
-<script>
-  function trackAndGenerateQR() {
-    // 1. Track the event
-    if (typeof window.trackEvent === 'function') {
-        window.trackEvent('generate_qr', {
-            'event_category': 'Diagnostic Tool',
-            'event_label': document.title.split('|')[0].trim()
-        });
-    }
-    // 2. Call the original function
-    generateQR();
-  }
-</script>
-<script>
-    function trackAndGenerateQR() {
-        if (typeof window.trackEvent === 'function') {
-            var toolName = document.title.split('|')[0].trim() || 'Diagnostic_Tool';
-            window.trackEvent('form_filled', {
-                tool: toolName,
-                status: 'Generated_QR'
-            });
-        }
-        if (typeof generateQR === 'function') {
-            generateQR();
-        } else {
-            console.error("Error: generateQR() function is missing!");
-            alert("System Error: QR Generator not loaded.");
-        }
-    }
-</script>
+
 </body>
 </html>

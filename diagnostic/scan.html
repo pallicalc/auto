@@ -332,6 +332,48 @@
             });
     });
 
+        // --- NEW: UNIVERSAL DECODER ROUTER ---
+    function decodeToolData(compactData) {
+        if (!compactData || !compactData.t) return compactData;
+
+        switch (compactData.t.toLowerCase()) {
+            case 'dt':
+                return decodeDT(compactData);
+            // Add case 'ipos': return decodeIPOS(compactData); in the future
+            default:
+                return compactData; 
+        }
+    }
+
+    // --- NEW: DT (Distress Thermometer) Decoder ---
+    function decodeDT(compact) {
+        // Backward compatibility: If it already has Q2a, it's an old uncompressed QR
+        if (compact.Q2a !== undefined) return compact;
+
+        const expanded = {
+            t: 'dt',
+            d: compact.d,
+            score: compact.s !== undefined ? compact.s : (compact.score || 0),
+            Q1: compact.s !== undefined ? compact.s : (compact.score || 0)
+        };
+
+        const sections = {
+            p: { prefix: 'Q2', count: 9 }, e: { prefix: 'Q3', count: 9 },
+            r: { prefix: 'Q4', count: 13 }, o: { prefix: 'Q5', count: 7 },
+            u: { prefix: 'Q6', count: 6 }
+        };
+
+        for (const [key, info] of Object.entries(sections)) {
+            const bits = compact[key] || '';
+            for (let i = 0; i < info.count; i++) {
+                expanded[`${info.prefix}${String.fromCharCode(97 + i)}`] = bits[i] || '-';
+            }
+        }
+        
+        expanded.Q7 = compact.q7 || compact.Q7 || "";
+        return expanded;
+    }
+
     function onScanSuccess(decodedText) {
         try {
             let rawString = decodedText;
@@ -339,11 +381,11 @@
             const data = JSON.parse(rawString);
 
             if (data.t) {
-                currentData = data;
+                currentData = decodeToolData(data);
                 if (html5QrCode && isCameraRunning) {
                     html5QrCode.stop().then(() => { isCameraRunning = false; });
                 }
-                renderDashboard(data);
+                renderDashboard(currentData);
             } else {
                 alert("Unknown QR Code format.");
             }
@@ -363,14 +405,14 @@
 
         // RENDER TOTAL SCORE AS EDITABLE INPUT
         // We replace the previous span with an input
-        const scoreContainer = document.getElementById('score-container');
+         const scoreContainer = document.getElementById('score-container');
         scoreContainer.innerHTML = `
             <strong>Total Score</strong>
             <input type="number" 
                    class="editable-val" 
                    style="color:var(--primary); font-weight:800; border-bottom:none; font-size:1.2rem;" 
                    value="${data.score || 0}"
-                   onchange="currentData.score = this.value">
+                   onchange="currentData.score = this.value; currentData.Q1 = this.value;">
         `;
 
         // RENDER DATA ROWS AS EDITABLE INPUTS
@@ -378,7 +420,7 @@
         let html = "";
         
         for (const [key, val] of Object.entries(data)) {
-            if (['t', 'd', 'score'].includes(key)) continue;
+            if (['t', 'd', 'score', 'Q1'].includes(key)) continue;
 
             const numVal = parseInt(val);
             const isHigh = (!isNaN(numVal) && numVal >= 3);
