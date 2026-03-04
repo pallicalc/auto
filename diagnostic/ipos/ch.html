@@ -327,17 +327,6 @@
     </div>
 
 <script>
-    function trackAndGenerateQR() {
-        // --- TRACKING ADDED ---
-        if (typeof window.trackEvent === 'function') {
-            window.trackEvent('generate_qr', {
-                'event_category': 'Diagnostic Tool',
-                'event_label': 'IPOS (Chinese)'
-            });
-        }
-        // ---------------------
-        generateQR();
-    }
 
     function updateCharCount(textarea) {
         document.getElementById('char-count').innerText = `${textarea.value.length}/100`;
@@ -515,12 +504,13 @@
         }
     }
 
-    function executeQRGeneration() {
+     function executeQRGeneration() {
         const totalScore = typeof calculateTotalScore === 'function' ? calculateTotalScore() : 0;
 
+        // HELPER: Returns the numeric value, or '-' if skipped
         const getVal = (name) => {
             const el = document.querySelector(`input[name="${name}"]:checked`);
-            return el ? parseInt(el.value) : 0;
+            return el ? parseInt(el.value) : '-';
         };
 
         const q1Input = document.getElementById('q1_input');
@@ -535,57 +525,45 @@
             const labelEl = document.getElementById(`other_sym_${i}_label`);
             const val = getVal(`other_sym_${i}_val`);
             if(labelEl && labelEl.value) {
-                otherSymptoms.push(`${labelEl.value.substring(0, 15)} (${val})`);
+                // Ensure no pipes (|) are typed to protect form logic
+                const safeText = labelEl.value.replace(/\|/g, '-').substring(0, 15);
+                otherSymptoms.push(`${safeText} (${val})`);
             }
         }
 
-        let scannedByText = "";
-        if (typeof firebase !== 'undefined' && firebase.auth().currentUser) {
-             scannedByText = firebase.auth().currentUser.email || "";
-        }
+        // We compress the symptoms into a single array string to save space 
+        // Example: "2,0,1,0,3,4,0,0,1,0" instead of "Q2a:2, Q2b:0..."
+        const symptomsArr = [
+            getVal('pain'), getVal('sob'), getVal('weak'), getVal('nau'), getVal('vom'),
+            getVal('app'), getVal('con'), getVal('mou'), getVal('dro'), getVal('mob')
+        ];
 
-        // EXACT HADS FORMAT: JSON Object mapping
+        // We compress the emotional/practical questions into another array
+        const epArr = [
+            getVal('anxious'), getVal('family'), getVal('depressed'), 
+            getVal('peace'), getVal('share'), getVal('info'), getVal('practical')
+        ];
+
+        // 1. COMPRESSED PAYLOAD
         const payload = {
-            t: "IPOS",
+            t: "ipos", // Match Universal Scanner logic (lowercase)
             d: Date.now(),
-            score: totalScore,
-            Q1: q1Text,
-            Q2a: getVal('pain'),
-            Q2b: getVal('sob'),
-            Q2c: getVal('weak'),
-            Q2d: getVal('nau'),
-            Q2e: getVal('vom'),
-            Q2f: getVal('app'),
-            Q2g: getVal('con'),
-            Q2h: getVal('mou'),
-            Q2i: getVal('dro'),
-            Q2j: getVal('mob'),
-            Q2k: otherSymptoms.join(", "),
-            Q3: getVal('anxious'),
-            Q4: getVal('family'),
-            Q5: getVal('depressed'),
-            Q6: getVal('peace'),
-            Q7: getVal('share'),
-            Q8: getVal('info'),
-            Q9: getVal('practical'),
-            Q10: modeText,
-            ScannedBy: scannedByText
+            s: totalScore,
+            q1: q1Text.replace(/\|/g, '-'), // Clean pipes
+            sym: symptomsArr.join(''), // e.g. "2010340010"
+            oth: otherSymptoms.join(", "),
+            ep: epArr.join(''), // e.g. "0123000"
+            mod: modeText
         };
-
-        try {
-            sessionStorage.setItem(REPORT_KEY, totalScore);
-        } catch (e) {
-            console.warn("Session storage save failed");
-        }
 
         const qrDiv = document.getElementById("qrcode");
         qrDiv.innerHTML = "";
-        
-        // EXACT HADS FORMAT: Stringify and Encode
-        const safeData = encodeURIComponent(JSON.stringify(payload));
-        
+
+        // 2. NO ENCODING (Raw JSON string)
+        const compactData = JSON.stringify(payload);
+
         try {
-            new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+            new QRCode(qrDiv, { text: compactData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
         } catch (err) {
             console.error("QR Error:", err);
             alert("Data is too large. Please shorten your typed concerns in Q1.");
@@ -597,4 +575,5 @@
             section.scrollIntoView({behavior: 'smooth'});
         }
     }
+
 </script>
