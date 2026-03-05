@@ -129,9 +129,29 @@ function generateBlankFormQR(instId) {
     const qrContainer = document.getElementById("blank-qrcode");
     if (!qrContainer) return;
     qrContainer.innerHTML = ""; 
+    
     const baseUrl = window.location.href.split('?')[0].replace('.html', ''); 
     const targetUrl = instId ? `${baseUrl}?ref=${instId}` : baseUrl;
+    
     new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
+
+    // 👉 FIX 2: Generate readable URL text right below the Blank Form QR code
+    let urlText = document.getElementById('blank-qr-url-text');
+    if (!urlText) {
+        urlText = document.createElement('p');
+        urlText.id = 'blank-qr-url-text';
+        urlText.style.fontSize = '10px';
+        urlText.style.color = '#6c757d';
+        urlText.style.wordBreak = 'break-all';
+        urlText.style.marginTop = '8px';
+        urlText.style.marginBottom = '0';
+        urlText.style.textAlign = 'center';
+        urlText.style.maxWidth = '180px';
+        
+        // Add it directly after the QR container
+        qrContainer.parentNode.appendChild(urlText);
+    }
+    urlText.innerText = targetUrl;
 }
 
 // --- RESULT GENERATION LOGIC ---
