@@ -7,7 +7,7 @@
     const icons = [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' + version },
         { rel: 'mask-icon', href: '/favicon.svg' + version, color: '#5AAB8B' },
-        { rel: 'apple-touch-icon', href: '/icon-192.png' + version } // <-- Changed to icon-192.png!
+        { rel: 'apple-touch-icon', href: '/icon-192.png' + version } 
     ];
 
     icons.forEach(iconDef => {
@@ -23,9 +23,9 @@
     });
 })();
 
-
-// admin.js - CLEANED VERSION
-
+// ==========================================
+// INITIALIZE FIREBASE INSTANCES
+// ==========================================
 // NOTE: Firebase is already initialized in Admin.html
 // We just grab the existing instances here.
 const auth = firebase.auth();
@@ -46,84 +46,94 @@ document.addEventListener('DOMContentLoaded', () => {
     const feedbackBtn = document.getElementById('submitFeedbackBtn');
     if(feedbackBtn) feedbackBtn.addEventListener('click', submitFeedback);
 
-    // Monitor Auth State
+    // Monitor Auth State (Master Unified Version)
     auth.onAuthStateChanged(async (user) => {
-        // UI Elements
-        const loginMsg = document.getElementById('loginMessage');
-        const loginText = document.getElementById('loginText');
-        const statusBar = document.getElementById('statusBar');
+        const SUPER_ADMIN_EMAIL = "chai.alison@moh.gov.my";
         
-        // Target the wrapper and feedback section
+        // UI Elements
+        const loader = document.getElementById('pageLoader');
+        const loginMsg = document.getElementById('loginMessage');
+        const statusBar = document.getElementById('statusBar');
         const mainWrapper = document.getElementById('main-wrapper');
         const feedbackSection = document.getElementById('feedbackSection');
+        
+        // 1. Always hide the loader first!
+        if (loader) loader.style.display = 'none';
 
         // Reset UI to hidden state
         if(loginMsg) loginMsg.classList.add('d-none');
         if(statusBar) statusBar.classList.add('d-none');
-        
-        // Hide the main sections
         if(mainWrapper) mainWrapper.classList.add('d-none');
         if(feedbackSection) feedbackSection.classList.add('d-none');
 
-        // 1. Check if User exists
+        // 2. Check if User exists (Not logged in)
         if (!user) {
-            if(loginText) loginText.textContent = "Institution administrator login needed for this page.";
             if(loginMsg) loginMsg.classList.remove('d-none');
             return;
         }
 
         try {
-            // 2. Check Database for Role
+            // 3. Fetch Data & Check Security Role
             const userDoc = await db.collection('users').doc(user.uid).get();
             
             // 🛑 STRICT SECURITY CHECK
             if (!userDoc.exists || userDoc.data().role !== 'institutionAdmin') {
                 console.warn("Security Alert: Unauthorized access attempt.");
-                
-                // Show Access Denied UI
                 if(loginMsg) {
+                    // Overwrite the login form with an access denied message
                     loginMsg.innerHTML = `
-                        <h4 class="alert-heading text-danger"><i class="bi bi-x-circle"></i> Access Denied</h4>
-                        <p>You are logged in as <strong>${user.email}</strong>, but this account is not an Institution Admin.</p>
-                        <hr>
-                        <div class="d-flex justify-content-center">
-                            <button onclick="handleLogout()" class="btn btn-danger me-2">Logout</button>
-                            <button onclick="window.location.href='index.html'" class="btn btn-outline-danger">Go to User Home</button>
+                        <div class="card-body p-4 text-center">
+                            <h4 class="card-title text-danger mb-4"><i class="bi bi-x-circle fs-2"></i><br>Access Denied</h4>
+                            <p>You are logged in as <strong>${user.email}</strong>, but this account is not an Institution Admin.</p>
+                            <hr>
+                            <button onclick="handleLogout()" class="btn btn-danger w-100 mb-2">Logout</button>
+                            <button onclick="window.location.href='index.html'" class="btn btn-outline-danger w-100">Go to User Home</button>
                         </div>`;
                     loginMsg.classList.remove('d-none');
                 }
                 return;
             }
 
-            // 3. Access Granted: Show the Dashboard
-            const adminEmailDisplay = document.getElementById('adminEmail');
-            if(adminEmailDisplay) adminEmailDisplay.textContent = user.email;
-            
+            // 4. Access Granted! Set up the Dashboard
+            const data = userDoc.data();
+            const email = user.email.toLowerCase().trim();
+            const isGov = email.endsWith('.gov.my') || email.endsWith('.moh.gov.my');
+            const isPremium = data.isPremium === true;
+
+            // Reveal the Main Content
             if(statusBar) statusBar.classList.remove('d-none');
-            
-            // Reveal the Main Content and Feedback Section
             if(mainWrapper) mainWrapper.classList.remove('d-none');
             if(feedbackSection) feedbackSection.classList.remove('d-none');
+            
+            const adminEmailDisplay = document.getElementById('adminEmail');
+            if(adminEmailDisplay) adminEmailDisplay.textContent = user.email;
 
-            // --- NEW LOGIC: BILLING CARD VISIBILITY ---
-            const email = user.email.toLowerCase();
-            const isGov = email.endsWith('.gov.my') || email.endsWith('.moh.gov.my');
-
-            // Only remove the 'd-none' class if they are NOT government
-            if (!isGov) {
-                const billingCard = document.getElementById('billingCard');
-                if (billingCard) {
-                    // We only show this if it wasn't hidden by the premium logic in HTML
-                    // But generally, showing it is safe here.
-                    billingCard.classList.remove('d-none');
-                }
+            // 5. Card Visibility Logic
+            
+            // Super Admin
+            const superCard = document.getElementById('superAdminCard');
+            if (superCard && email === SUPER_ADMIN_EMAIL) {
+                superCard.classList.remove('d-none');
             }
-            // ------------------------------------------
+
+            // Upgrade Premium Card
+            const upgradeCard = document.getElementById('upgradePremiumCard');
+            if (upgradeCard) {
+                if (isPremium) upgradeCard.classList.add('d-none');
+                else upgradeCard.classList.remove('d-none');
+            }
+
+            // Billing Card
+            const billingCard = document.getElementById('billingCard');
+            if (billingCard) {
+                if (isGov) billingCard.classList.add('d-none');
+                else billingCard.classList.remove('d-none');
+            }
 
         } catch (error) {
             console.error('Auth check failed:', error);
             if(loginMsg) {
-                loginMsg.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                loginMsg.innerHTML = `<div class="alert alert-danger mx-auto mt-5" style="max-width: 400px;">Error: ${error.message}</div>`;
                 loginMsg.classList.remove('d-none');
             }
         }
@@ -228,5 +238,41 @@ async function submitFeedback() {
         document.getElementById('feedbackText').value = '';
     } catch (error) {
         status.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+    }
+}
+
+// ==========================================
+// 🔑 IN-PAGE LOGIN LOGIC
+// ==========================================
+async function handleAdminLogin(event) {
+    event.preventDefault(); // Stops the page from refreshing
+
+    const email = document.getElementById('adminLoginEmail').value.trim();
+    const password = document.getElementById('adminLoginPassword').value;
+    const errorDiv = document.getElementById('loginError');
+    const submitBtn = document.getElementById('loginSubmitBtn');
+
+    // Reset UI for loading state
+    errorDiv.classList.add('d-none');
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verifying...';
+    submitBtn.disabled = true;
+
+    try {
+        // Log the user in
+        await auth.signInWithEmailAndPassword(email, password);
+        
+        // SUCCESS! 
+        // We don't need redirect code here. The existing auth.onAuthStateChanged 
+        // listener above will automatically hide the login form and show the dashboard!
+        
+    } catch (error) {
+        // Handle incorrect passwords or emails
+        console.error("Login Error:", error);
+        errorDiv.textContent = "Invalid email or password. Please try again.";
+        errorDiv.classList.remove('d-none');
+        
+        // Reset the button so they can try again
+        submitBtn.innerHTML = 'Sign In to Dashboard';
+        submitBtn.disabled = false;
     }
 }

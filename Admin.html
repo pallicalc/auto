@@ -44,13 +44,31 @@
     <p class="mt-3 text-muted fw-bold">Loading Dashboard...</p>
   </div>
 
-  <div id="loginMessage" class="alert alert-warning text-center shadow-lg d-none mx-auto mt-5" style="max-width: 500px;" role="alert">
-    <h4 class="alert-heading"><i class="bi bi-shield-lock"></i> Admin Login Required</h4>
-    <p id="loginText">Institution administrator login needed for this page.</p>
-    <hr>
-    <div class="d-flex justify-content-center">
-      <button onclick="window.location.href='index.html'" class="btn btn-primary me-2">Go to Login</button>
-      <button onclick="window.location.href='/'" class="btn btn-outline-primary">Home</button>
+  <div id="loginMessage" class="card shadow-lg d-none mx-auto mt-5 border-0" style="max-width: 400px;">
+    <div class="card-body p-4 text-center">
+      <h4 class="card-title mb-4"><i class="bi bi-shield-lock text-primary fs-2"></i><br>Admin Login</h4>
+      
+      <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+        <div class="mb-3 text-start">
+          <label class="form-label small fw-bold text-muted">Email address</label>
+          <input type="email" id="adminLoginEmail" class="form-control bg-light" placeholder="admin@institution.com" required>
+        </div>
+        <div class="mb-3 text-start">
+          <label class="form-label small fw-bold text-muted">Password</label>
+          <input type="password" id="adminLoginPassword" class="form-control bg-light" required>
+        </div>
+        
+        <div id="loginError" class="text-danger small mb-3 d-none fw-bold"></div>
+        
+        <button type="submit" id="loginSubmitBtn" class="btn btn-primary w-100 fw-bold py-2">
+          Sign In to Dashboard
+        </button>
+      </form>
+      
+      <hr class="mt-4 mb-3">
+      <button onclick="window.location.href='/'" class="btn btn-outline-secondary btn-sm w-100">
+        <i class="bi bi-arrow-left"></i> Return to Home
+      </button>
     </div>
   </div>
 
@@ -258,65 +276,6 @@
     window.auth = firebase.auth();
     window.db = firebase.firestore();
 
-    // SUPER ADMIN LOGIC & LOADER REMOVAL
-    const SUPER_ADMIN_EMAIL = "chai.alison@moh.gov.my";
-
-    window.auth.onAuthStateChanged(async user => {
-        // 1. Always hide the loader first
-        document.getElementById('pageLoader').style.display = 'none';
-
-        if (user) {
-            // 2. Reveal the Dashboard and Status Bar (REQUIRED to see the page)
-            document.getElementById('main-wrapper').classList.remove('d-none');
-            document.getElementById('statusBar').classList.remove('d-none');
-            document.getElementById('feedbackSection').classList.remove('d-none');
-            const adminSpan = document.getElementById('adminEmail');
-            if(adminSpan) adminSpan.textContent = user.email;
-
-            const email = user.email.toLowerCase().trim();
-
-            // 3. Reveal Super Admin Card
-            if (email === SUPER_ADMIN_EMAIL) {
-                const superCard = document.getElementById('superAdminCard');
-                if (superCard) superCard.classList.remove('d-none');
-            }
-
-            // 4. Premium & Upgrade Logic (CORRECTED)
-            try {
-                const doc = await window.db.collection('users').doc(user.uid).get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    const isPremium = data.isPremium === true;
-                    const isGov = email.endsWith('.gov.my') || email.endsWith('.moh.gov.my');
-
-                    const upgradeCard = document.getElementById('upgradePremiumCard');
-                    const billingCard = document.getElementById('billingCard');
-
-                    // 4a. Upgrade Card Visibility
-                    // Show Upgrade card ONLY if they are NOT premium yet
-                    if (isPremium) {
-                        upgradeCard?.classList.add('d-none');
-                    } else {
-                        upgradeCard?.classList.remove('d-none');
-                    }
-
-                    // 4b. Billing/Renewal Card Visibility
-                    // HIDE for ALL Govt/MOH (regardless of premium status)
-                    // SHOW for private users (Premium or not - they need to see billing)
-                    if (isGov) {
-                        billingCard?.classList.add('d-none');
-                    } else {
-                        billingCard?.classList.remove('d-none');
-                    }
-                }
-            } catch (e) { 
-                console.error("Firestore Error:", e); 
-            }
-        } else {
-            // 5. Not Logged In - Show Login Message
-            document.getElementById('loginMessage').classList.remove('d-none');
-        }
-    });
   </script>
   
   <script src="admin.js"></script>
