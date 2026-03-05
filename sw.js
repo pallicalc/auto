@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pallicalc-smart-v38'; // Bumped to v38 to force clean update
+const CACHE_NAME = 'pallicalc-smart-v39'; // Bumped to v39 to force clean update
 
 // ==========================================
 // 1. CRITICAL APP SHELL (Must load for app to start)
@@ -12,7 +12,10 @@ const CRITICAL_FILES = [
   './pc-logo.png',
   './style.css',       
   './app-dashboard.js', 
-  './js/ga-tracking.js'
+  './js/ga-tracking.js',
+  'https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js',
+  'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js'
 ];
 
 // ==========================================
@@ -82,7 +85,7 @@ self.addEventListener('activate', (event) => {
 // FETCH EVENT (Redirect logic completely removed)
 // ==========================================
 self.addEventListener('fetch', (event) => {
-  if (event.request.url.includes('googleapis') || event.request.url.includes('firebase')) return;
+  if (event.request.url.includes('googleapis')) return;
 
   event.respondWith(
     (async () => {
