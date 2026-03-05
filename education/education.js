@@ -286,9 +286,9 @@ async function generateAndPrintPDF(filename) {
         const element = document.getElementById('print-area');
         await new Promise(r => setTimeout(r, 200));
 
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        const pixelRatio = window.devicePixelRatio || 1;
-        const safeScale = isMobile ? (2 / pixelRatio) : 2;
+        // 👉 FIX 1: Lock scale to 2.5 universally for crisp, retina-quality text
+        // (Avoids the math that was shrinking mobile resolution)
+        const safeScale = 2.5; 
 
         const canvas = await html2canvas(element, { 
             scale: safeScale, 
@@ -298,7 +298,8 @@ async function generateAndPrintPDF(filename) {
             logging: false
         });
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.8);
+        // 👉 FIX 2: Bump JPEG quality from 80% to 100%
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
 
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4'); 
