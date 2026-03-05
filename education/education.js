@@ -1,3 +1,4 @@
+
 // ==========================================
 // PalliCalc Education Script - Final Unified Version
 // Includes: Suspension Logic, Race Condition Fix, Safari Crash Fix & Branding Footer
@@ -45,7 +46,11 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 
 // Global context to store current mode (institution/personal) and ID
-let context = { mode: 'personal', instId: null };
+const offlineInstId = localStorage.getItem('palliCalc_currentInstId');
+let context = { 
+    mode: offlineInstId ? 'institution' : 'personal', 
+    instId: offlineInstId || null 
+};
 
 // --- 2. INITIALIZATION & HEADER LOGIC ---
 window.addEventListener('DOMContentLoaded', async () => {
@@ -63,6 +68,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (backBtn) backBtn.style.display = 'none';
         loadInstitutionHeader();
     } else {
+        if (context.instId) {
+            loadInstitutionHeader();
+        }
+
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 try {
@@ -70,13 +79,14 @@ window.addEventListener('DOMContentLoaded', async () => {
                     if (snap.exists && (snap.data().role === 'institutionUser' || snap.data().role === 'institutionAdmin')) {
                         context.mode = 'institution'; 
                         context.instId = snap.data().institutionId;
+                        localStorage.setItem('palliCalc_currentInstId', context.instId);
                         loadInstitutionHeader();
                     }
                 } catch (e) {
                     console.error("User Auth Error:", e);
                 }
             }
-            if (context.mode === 'personal') {
+            if (!context.instId && context.mode === 'personal') {
                 loadPersonalHeader();
             }
         });
@@ -380,8 +390,10 @@ function showQR() {
     const container = document.getElementById('qrcode');
     container.innerHTML = '';
     modal.style.display = 'flex';
+    
     const baseUrl = window.location.origin + window.location.pathname;
     const qrUrl = context.instId ? `${baseUrl}?ref=${context.instId}` : window.location.href;
+    
     new QRCode(container, { 
         text: qrUrl, 
         width: 180, 
@@ -389,6 +401,20 @@ function showQR() {
         colorDark : "#000000", 
         colorLight : "#ffffff" 
     });
+
+    let urlText = document.getElementById('qr-url-text');
+    if (!urlText) {
+        urlText = document.createElement('p');
+        urlText.id = 'qr-url-text';
+        urlText.style.fontSize = '12px';
+        urlText.style.color = '#64748b';
+        urlText.style.wordBreak = 'break-all';
+        urlText.style.marginTop = '15px';
+        urlText.style.marginBottom = '0';
+        urlText.style.textAlign = 'center';
+        container.parentNode.appendChild(urlText);
+    }
+    urlText.innerText = `Link: ${qrUrl}`;
 }
 
 function closeQR() { 
