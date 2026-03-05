@@ -111,6 +111,15 @@
                 Look for the <strong>Install Icon</strong> <i class="bi bi-download"></i> in your address bar (Chrome/Edge).
             </div>
         </div>
+    <div id="offline-progress-container" style="display: none; margin-bottom: 20px; padding: 15px; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #0369a1;">
+            <span id="offline-progress-text">Downloading offline calculators & PDFs...</span>
+            <span id="offline-progress-percent">0%</span>
+        </div>
+        <div style="width: 100%; background-color: #e2e8f0; border-radius: 10px; height: 10px; overflow: hidden;">
+            <div id="offline-progress-bar" style="width: 0%; height: 100%; background-color: #0284c7; transition: width 0.3s ease;"></div>
+        </div>
+    </div>
 
         <div class="section-title">Clinical Calculators</div>
         <div class="calc-grid">

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pallicalc-smart-v36'; // Bumped to v36 to force clean update
+const CACHE_NAME = 'pallicalc-smart-v37'; // Bumped to v37 to force clean update
 
 // ==========================================
 // 1. CRITICAL APP SHELL (Must load for app to start)
@@ -13,67 +13,6 @@ const CRITICAL_FILES = [
   './style.css',       
   './app-dashboard.js', 
   './js/ga-tracking.js'
-];
-
-// ==========================================
-// 2. SECONDARY FILES (Education, Calculators, PDFs)
-// ==========================================
-const SECONDARY_FILES = [
-  './patient-education.js', 
-  './all-calculators.html',
-  './js/qr.min.js',
-  './healthcare-guidelines.html',
-  './patient-education.html',
-  './calculators/Benzodiazepine.html',
-  './calculators/demo-opioid.html',
-  './calculators/Infusion-dose.html',
-  './calculators/infusion-volume.html',
-  './calculators/Opioid.html',
-  './calculators/calculator.css',
-  './calculators/js/benzodiazepine.js',
-  './calculators/js/demo-opioid.js',
-  './calculators/js/opioid.js',
-  './guides/Benzodiazepines-conversion.html',
-  './guides/infusion-dose.html',
-  './guides/opioid-conversion.html',
-  './guides/prn-calculation.html',
-'./diagnostic.js',
-  './diagnostic-c.html',
-  './diagnostic-p.html',
-  './diagnostic/distress/eng.html',
-  './diagnostic/distress/bm.html',
-  './diagnostic/distress/ch.html',
-  './diagnostic/hads/eng.html',
-  './diagnostic/hads/bm.html',
-  './diagnostic/hads/ch.html',
-  './diagnostic/ipos/eng.html',
-  './diagnostic/ipos/bm.html',
-  './diagnostic/ipos/ch.html',
-'./diagnostic/akps.html',
-  './diagnostic/flacc.html',
-  './diagnostic/rass.html',
-  './diagnostic/rdos.html',
-  './diagnostic/rug-adl.html',
-  './diagnostic/scan.html',
-  './diagnostic/spict.html',
-  './diagnostic/diagnostic.css',
-  './diagnostic/diagnostic.js',
-  './education/education.css',
-  './education/education.js',
-  './education/opioids/ch.html', './education/opioids/ch.pdf',
-  './education/opioids/eng.html', './education/opioids/eng.pdf',
-  './education/opioids/bm.html', './education/opioids/bm.pdf',
-  './education/bleeding/eng.html', './education/bleeding/bm.html', './education/bleeding/ch.html', './education/bleeding/1.jpg', './education/bleeding/2.jpg',
-  './education/breathlessness/eng.html', './education/breathlessness/bm.html', './education/breathlessness/ch.html', './education/breathlessness/1.jpg', './education/breathlessness/2.jpg', './education/breathlessness/3.jpg', './education/breathlessness/4.jpg', './education/breathlessness/5.jpg', './education/breathlessness/6.jpg', './education/breathlessness/7.jpg',
-  './education/buccal/eng.html', './education/buccal/bm.html', './education/buccal/ch.html', './education/buccal/1.jpg', './education/buccal/2.jpg',
-  './education/delirium/eng.html', './education/delirium/bm.html', './education/delirium/ch.html', './education/delirium/1.jpg', './education/delirium/2.jpg',
-  './education/EOL/eng.html', './education/EOL/bm.html', './education/EOL/ch.html', './education/EOL/1a.jpg', './education/EOL/1b.jpg', './education/EOL/2a.jpg', './education/EOL/2b.jpg', './education/EOL/3a.jpg', './education/EOL/3b.jpg', './education/EOL/4a.jpg', './education/EOL/4b.jpg', './education/EOL/5a.jpg', './education/EOL/5b.jpg',
-  './education/facing-EOL/eng.html', './education/facing-EOL/bm.html', './education/facing-EOL/ch.html',
-  './education/mbo/eng.html', './education/mbo/bm.html', './education/mbo/ch.html',
-  './education/pain/eng.html', './education/pain/bm.html', './education/pain/ch.html',
-  './education/seizure/eng.html', './education/seizure/bm.html', './education/seizure/ch.html', './education/10mins.png', './education/seizure/seizure.png', './education/seizure/sideway.png', './education/seizure/Xmouth.png',
-  './education/subcutaneous/eng.html', './education/subcutaneous/bm.html', './education/subcutaneous/ch.html', './education/1.jpg', './education/subcutaneous/2.jpg', './education/subcutaneous/3.jpg',
-  './education/td-fentanyl/eng.html', './education/td-fentanyl/bm.html', './education/td-fentanyl/ch.html', './education/td-fentanyl/1.jpg', './education/td-fentanyl/2.jpg'
 ];
 
 // ==========================================
@@ -121,16 +60,6 @@ self.addEventListener('install', (event) => {
         }
       }
 
-      const downloadPromises = SECONDARY_FILES.map(async (file) => {
-        try {
-          const response = await fetchClean(file);
-          if (response.ok) await cache.put(file, response);
-        } catch (e) {
-          console.warn('⚠️ Skipped (Non-Fatal):', file);
-        }
-      });
-
-      await Promise.allSettled(downloadPromises);
       console.log('🎉 Install Complete!');
     })
   );

@@ -9,11 +9,14 @@
         if (overlay) overlay.style.display = 'none';
         if (dashboard) dashboard.style.display = 'block';
 
-        // ✅ CRITICAL RESTORATION: Start the Offline Engine (Service Worker)
-        // This was missing in your 2nd version. Without this, the app won't work offline.
+        // ✅ CRITICAL RESTORATION: Start the Offline Engine & Trigger Download
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
-                .then((reg) => console.log('✅ Service Worker Registered.', reg.scope))
+                .then((reg) => {
+                    console.log('✅ Service Worker Registered.', reg.scope);
+                    // 👉 TRIGGER THE PROGRESS BAR HERE:
+                    setTimeout(startVisibleOfflineDownload, 1000);
+                })
                 .catch((err) => console.log('❌ SW Fail:', err));
         }
 
@@ -70,7 +73,7 @@ if (updateBtn) {
 
         try {
             // 4. Hard Reset of Caches
-            
+
             // Unregister Service Workers
             if ('serviceWorker' in navigator) {
                 const registrations = await navigator.serviceWorker.getRegistrations();
@@ -84,6 +87,13 @@ if (updateBtn) {
                 const cacheNames = await caches.keys();
                 await Promise.all(cacheNames.map(name => caches.delete(name)));
             }
+
+            // 👉 NEW: Clear the download flags so the progress bar runs again!
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('assets_downloaded_')) {
+                    localStorage.removeItem(key);
+                }
+            });
 
             // Force Reload (true forces fetch from server)
             window.location.reload(true);
@@ -231,3 +241,86 @@ document.addEventListener('visibilitychange', () => {
         triggerSync();
     }
 });
+/* =========================================
+   VISIBLE OFFLINE ASSET DOWNLOADER
+   ========================================= */
+async function startVisibleOfflineDownload() {
+    const ASSET_CACHE_NAME = 'pallicalc-smart-v37'; // Bumping to v37
+    const downloadFlag = `assets_downloaded_${ASSET_CACHE_NAME}`;
+    if (localStorage.getItem(downloadFlag) === 'true') return; // Already downloaded
+
+    const container = document.getElementById('offline-progress-container');
+    const progressBar = document.getElementById('offline-progress-bar');
+    const progressText = document.getElementById('offline-progress-text');
+    const progressPercent = document.getElementById('offline-progress-percent');
+
+    if (!container || !navigator.onLine) return;
+    
+    container.style.display = 'block';
+
+    // Copying your exact list of heavy files from your old sw.js
+    const filesToDownload = [
+      './patient-education.js', './all-calculators.html', './js/qr.min.js', './healthcare-guidelines.html',
+      './patient-education.html', './calculators/Benzodiazepine.html', './calculators/demo-opioid.html',
+      './calculators/Infusion-dose.html', './calculators/infusion-volume.html', './calculators/Opioid.html',
+      './calculators/calculator.css', './calculators/js/benzodiazepine.js', './calculators/js/demo-opioid.js',
+      './calculators/js/opioid.js', './guides/Benzodiazepines-conversion.html', './guides/infusion-dose.html',
+      './guides/opioid-conversion.html', './guides/prn-calculation.html', './diagnostic.js', './diagnostic-c.html',
+      './diagnostic-p.html', './diagnostic/distress/eng.html', './diagnostic/distress/bm.html', './diagnostic/distress/ch.html',
+      './diagnostic/hads/eng.html', './diagnostic/hads/bm.html', './diagnostic/hads/ch.html', './diagnostic/ipos/eng.html',
+      './diagnostic/ipos/bm.html', './diagnostic/ipos/ch.html', './diagnostic/akps.html', './diagnostic/flacc.html',
+      './diagnostic/rass.html', './diagnostic/rdos.html', './diagnostic/rug-adl.html', './diagnostic/scan.html',
+      './diagnostic/spict.html', './diagnostic/diagnostic.css', './diagnostic/diagnostic.js', './education/education.css',
+      './education/education.js', './education/opioids/ch.html', './education/opioids/ch.pdf', './education/opioids/eng.html',
+      './education/opioids/eng.pdf', './education/opioids/bm.html', './education/opioids/bm.pdf', './education/bleeding/eng.html',
+      './education/bleeding/bm.html', './education/bleeding/ch.html', './education/bleeding/1.jpg', './education/bleeding/2.jpg',
+      './education/breathlessness/eng.html', './education/breathlessness/bm.html', './education/breathlessness/ch.html',
+      './education/breathlessness/1.jpg', './education/breathlessness/2.jpg', './education/breathlessness/3.jpg',
+      './education/breathlessness/4.jpg', './education/breathlessness/5.jpg', './education/breathlessness/6.jpg',
+      './education/breathlessness/7.jpg', './education/buccal/eng.html', './education/buccal/bm.html', './education/buccal/ch.html',
+      './education/buccal/1.jpg', './education/buccal/2.jpg', './education/delirium/eng.html', './education/delirium/bm.html',
+      './education/delirium/ch.html', './education/delirium/1.jpg', './education/delirium/2.jpg', './education/EOL/eng.html',
+      './education/EOL/bm.html', './education/EOL/ch.html', './education/EOL/1a.jpg', './education/EOL/1b.jpg',
+      './education/EOL/2a.jpg', './education/EOL/2b.jpg', './education/EOL/3a.jpg', './education/EOL/3b.jpg',
+      './education/EOL/4a.jpg', './education/EOL/4b.jpg', './education/EOL/5a.jpg', './education/EOL/5b.jpg',
+      './education/facing-EOL/eng.html', './education/facing-EOL/bm.html', './education/facing-EOL/ch.html',
+      './education/mbo/eng.html', './education/mbo/bm.html', './education/mbo/ch.html', './education/pain/eng.html',
+      './education/pain/bm.html', './education/pain/ch.html', './education/seizure/eng.html', './education/seizure/bm.html',
+      './education/seizure/ch.html', './education/10mins.png', './education/seizure/seizure.png', './education/seizure/sideway.png',
+      './education/seizure/Xmouth.png', './education/subcutaneous/eng.html', './education/subcutaneous/bm.html',
+      './education/subcutaneous/ch.html', './education/1.jpg', './education/subcutaneous/2.jpg', './education/subcutaneous/3.jpg',
+      './education/td-fentanyl/eng.html', './education/td-fentanyl/bm.html', './education/td-fentanyl/ch.html',
+      './education/td-fentanyl/1.jpg', './education/td-fentanyl/2.jpg'
+    ];
+
+    try {
+        const cache = await caches.open(ASSET_CACHE_NAME);
+        let loadedCount = 0;
+        const totalFiles = filesToDownload.length;
+
+        for (const file of filesToDownload) {
+            try {
+                let fetchUrl = file.endsWith('.html') ? file.slice(0, -5) : file;
+                const response = await fetch(fetchUrl);
+                if (response.ok) await cache.put(file, response.clone());
+            } catch (e) { /* skip safely */ }
+
+            loadedCount++;
+            const percent = Math.round((loadedCount / totalFiles) * 100);
+            progressBar.style.width = percent + '%';
+            progressPercent.innerText = percent + '%';
+            
+            // Give the iPad a tiny 50ms break to update the screen smoothly
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+
+        localStorage.setItem(downloadFlag, 'true');
+        progressText.innerText = '✅ Offline assets ready!';
+        progressBar.style.backgroundColor = '#10b981'; 
+        setTimeout(() => { container.style.display = 'none'; }, 4000);
+
+    } catch (error) {
+        progressText.innerText = '⚠️ Download paused.';
+        progressBar.style.backgroundColor = '#f59e0b'; 
+    }
+}
