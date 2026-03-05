@@ -38,17 +38,25 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let context = { mode: 'personal', instId: null };
+// 👉 FIX 1: Instantly grab the offline Master Key saved by the dashboard
+const offlineInstId = localStorage.getItem('palliCalc_currentInstId');
+let context = { 
+    mode: offlineInstId ? 'institution' : 'personal', 
+    instId: offlineInstId || null 
+};
 
 async function initDiagnosticApp() {
     injectStandardFooter();
     injectConsentModal(); 
-    
+
     const dateDisplay = document.getElementById('dateDisplay');
     if(dateDisplay) dateDisplay.innerText = new Date().toLocaleDateString();
 
     const form = document.querySelector('form'); 
     if(form) form.addEventListener('change', calculateTotalScore);
+
+    // Sync global context for offline use
+    window.context = context;
 
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
@@ -59,6 +67,11 @@ async function initDiagnosticApp() {
         window.context = context;
         await finalizeAppSetup(context.instId);
     } else {
+        // 👉 FIX 1 (Cont): If we found the offline key, build the header instantly
+        if (context.instId) {
+            await finalizeAppSetup(context.instId);
+        }
+
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 try {
@@ -69,11 +82,16 @@ async function initDiagnosticApp() {
                             context.mode = 'institution'; 
                             context.instId = userData.institutionId;
                             window.context = context; 
+                            // Update offline suitcase
+                            localStorage.setItem('palliCalc_currentInstId', context.instId);
+                            await finalizeAppSetup(context.instId);
                         }
                     }
                 } catch (e) { console.error("Auth Data Error:", e); }
+            } else if (!context.instId) {
+                // Only load personal if no offline ID exists
+                await finalizeAppSetup(null);
             }
-            finalizeAppSetup(context.instId);
         });
     }
 }
@@ -147,7 +165,7 @@ function executeQRGeneration() {
         const el = document.querySelector(`input[name="${name}"]:checked`);
         return el ? parseInt(el.value) : 0;
     };
-    
+
     // Generic symptom collector
     const otherSymptoms = [];
     for (let i = 1; i <= 3; i++) {
@@ -161,7 +179,7 @@ function executeQRGeneration() {
 
     // Default Payload
     const toolName = (typeof REPORT_KEY !== 'undefined') ? REPORT_KEY.replace('report_', '').toUpperCase() : "TOOL";
-    
+
     const payload = {
         t: toolName,
         d: Date.now(),
@@ -179,11 +197,11 @@ function executeQRGeneration() {
             // SPICT uses its own internal save logic in spict.html
             if (typeof REPORT_KEY !== 'undefined' && !REPORT_KEY.includes('spict')) {
                 let formattedScore = totalScore;
-                
+
                 if(REPORT_KEY.includes('flacc')) formattedScore += "/10";
                 if(REPORT_KEY.includes('akps')) formattedScore += "%";
                 if(REPORT_KEY.includes('rug')) formattedScore += ""; // RUG is just a number
-                
+
                 sessionStorage.setItem(REPORT_KEY, formattedScore);
             }
         } catch (e) {
@@ -195,17 +213,17 @@ function executeQRGeneration() {
     const qrDiv = document.getElementById("qrcode");
     if (qrDiv) {
         qrDiv.innerHTML = "";
-        
+
         // 1. Get Base URL (e.g. https://pallicalc.web.app/diagnostic/scan.html)
         // We go up one level from the current diagnostic tool to find scan.html
         const baseUrl = window.location.origin + "/diagnostic/scan";
-        
+
         // 2. Encode the payload safely
         const safeData = encodeURIComponent(JSON.stringify(payload));
-        
+
         // 3. Construct the Full URL
         const fullUrl = `${baseUrl}?data=${safeData}`;
-        
+
         // 4. Generate QR
         new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
     }
@@ -280,7 +298,7 @@ function loadPersonalHeader() {
 function applyBranding(data) {
     const name = data.name || data.headerName || "";
     const contact = data.contact || data.headerContact || "";
-    
+
     // Smart logo check for offline mode
     const logo = data.logo || 
                  (data.logos && data.logos.length > 0 ? data.logos[0] : null) || 
