@@ -1,7 +1,10 @@
 ﻿window.addEventListener('load', () => {
-    const storedPassword = localStorage.getItem('palliCalcLoginPassword');
-    
-    // 1. Check Login Status
+    // 👉 ADD IT RIGHT HERE: Request Apple VIP Storage Armor immediately
+    secureOfflineStorage();
+
+    const storedPassword = localStorage.getItem('palliCalcLoginPassword');
+    
+    // 1. Check Login Status
     if (storedPassword) {
         // Unlock the UI
         const overlay = document.getElementById('locked-overlay');
@@ -322,5 +325,20 @@ async function startVisibleOfflineDownload() {
     } catch (error) {
         progressText.innerText = '⚠️ Download paused.';
         progressBar.style.backgroundColor = '#f59e0b'; 
+    }
+}
+// 👉 NEW: The "Do Not Tow" Sticker (Persistent Storage Request)
+async function secureOfflineStorage() {
+    if (navigator.storage && navigator.storage.persist) {
+        try {
+            const isPersisted = await navigator.storage.persist();
+            if (isPersisted) {
+                console.log("🛡️ VIP Storage Granted: Apple will not silently delete PalliCalc.");
+            } else {
+                console.log("⚠️ Storage not strictly persisted, but Home Screen PWA status provides partial armor.");
+            }
+        } catch (error) {
+            console.error("Storage persist request failed:", error);
+        }
     }
 }
