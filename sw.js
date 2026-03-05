@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pallicalc-smart-v39'; // Bumped to v39 to force clean update
+const CACHE_NAME = 'pallicalc-smart-v40'; // Bumped to v40 to force clean update
 
 // ==========================================
 // 1. CRITICAL APP SHELL (Must load for app to start)

@@ -245,7 +245,7 @@ document.addEventListener('visibilitychange', () => {
    VISIBLE OFFLINE ASSET DOWNLOADER
    ========================================= */
 async function startVisibleOfflineDownload() {
-    const ASSET_CACHE_NAME = 'pallicalc-smart-v39'; // Bumping to v39
+    const ASSET_CACHE_NAME = 'pallicalc-smart-v40'; // Bumping to v40
     const downloadFlag = `assets_downloaded_${ASSET_CACHE_NAME}`;
     if (localStorage.getItem(downloadFlag) === 'true') return; // Already downloaded
 

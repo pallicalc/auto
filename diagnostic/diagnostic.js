@@ -133,26 +133,32 @@ function generateBlankFormQR(instId) {
     const baseUrl = window.location.href.split('?')[0].replace('.html', ''); 
     const targetUrl = instId ? `${baseUrl}?ref=${instId}` : baseUrl;
     
+    // Generate the QR Code
     new QRCode(qrContainer, { text: targetUrl, width: 100, height: 100 });
 
-    // 👉 FIX 2: Generate readable URL text right below the Blank Form QR code
-    let urlText = document.getElementById('blank-qr-url-text');
-    if (!urlText) {
-        urlText = document.createElement('p');
-        urlText.id = 'blank-qr-url-text';
-        urlText.style.fontSize = '10px';
-        urlText.style.color = '#6c757d';
-        urlText.style.wordBreak = 'break-all';
-        urlText.style.marginTop = '8px';
-        urlText.style.marginBottom = '0';
-        urlText.style.textAlign = 'center';
-        urlText.style.maxWidth = '180px';
-        
-        // Add it directly after the QR container
-        qrContainer.parentNode.appendChild(urlText);
-    }
+    // Center the contents of the container
+    qrContainer.style.textAlign = 'center';
+    qrContainer.style.display = 'flex';
+    qrContainer.style.flexDirection = 'column';
+    qrContainer.style.alignItems = 'center';
+
+    // Generate readable URL text
+    let urlText = document.createElement('p');
+    urlText.id = 'blank-qr-url-text';
+    urlText.style.fontSize = '9px'; // Made slightly smaller to fit neatly
+    urlText.style.color = '#888';
+    urlText.style.wordBreak = 'break-all';
+    urlText.style.marginTop = '6px';
+    urlText.style.marginBottom = '0';
+    urlText.style.maxWidth = '110px'; // Restrict width so it matches the QR code perfectly
+    urlText.style.lineHeight = '1.2';
+    
     urlText.innerText = targetUrl;
+    
+    // 👉 FIX: Append INSIDE the qrContainer, directly below the canvas image
+    qrContainer.appendChild(urlText);
 }
+
 
 // --- RESULT GENERATION LOGIC ---
 
