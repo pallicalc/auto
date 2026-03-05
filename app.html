@@ -21,9 +21,9 @@
 
     <link rel="stylesheet" href="style.css">
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
     <script>
       const firebaseConfig = {
@@ -35,8 +35,15 @@
         appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995",
         measurementId: "G-6G9C984F8E"
       };
+      
       if (!firebase.apps.length) {
           firebase.initializeApp(firebaseConfig);
+          
+          // 👉 2. THE MAGIC FIX: Turns on the unified offline suitcase!
+          firebase.firestore().enablePersistence({ synchronizeTabs: true })
+            .catch(function(err) {
+                console.log("Firebase Offline Error: ", err);
+            });
       }
     </script>
 
@@ -182,7 +189,7 @@
             <p class="legal-warning">For Educational Use Only. Not a Medical Device.<br>Verify all results.</p>
         </div>
     </footer>
-    
+
     <script src="/js/ga-tracking.js"></script>
 </body>
 </html>
