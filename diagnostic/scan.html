@@ -430,6 +430,52 @@
             console.warn("Invalid QR", e);
         }
     }
+    // --- UI LABEL DICTIONARY (IPOS) ---
+    const iposLabels = {
+        'Q1': 'Q1. Main Concerns', 'Q2a': 'Q2a. Pain', 'Q2b': 'Q2b. SOB', 
+        'Q2c': 'Q2c. Weakness', 'Q2d': 'Q2d. Nausea', 'Q2e': 'Q2e. Vomiting', 
+        'Q2f': 'Q2f. Poor Appetite', 'Q2g': 'Q2g. Constipation', 'Q2h': 'Q2h. Sore/Dry Mouth', 
+        'Q2i': 'Q2i. Drowsiness', 'Q2j': 'Q2j. Poor Mobility', 'Q2k': 'Q2k. Other Symptoms',
+        'Q3': 'Q3. Anxious', 'Q4': 'Q4. Family Anxious', 'Q5': 'Q5. Depressed', 
+        'Q6': 'Q6. At Peace', 'Q7': 'Q7. Share Feelings', 'Q8': 'Q8. Information', 
+        'Q9': 'Q9. Practical Problems', 'Q10': 'Q10. Completion Mode'
+    };
+
+    // --- UI LABEL DICTIONARY (HADS) ---
+    const hadsLabels = {
+        'scoreA': 'Anxiety Score (A)',
+        'scoreD': 'Depression Score (D)',
+        'q1': 'q1. Tense/Wound up',
+        'q2': 'q2. Still enjoy things',
+        'q3': 'q3. Frightened feeling',
+        'q4': 'q4. Laugh/Funny side',
+        'q5': 'q5. Worrying thoughts',
+        'q6': 'q6. Feel cheerful',
+        'q7': 'q7. Sit at ease',
+        'q8': 'q8. Feel slowed down',
+        'q9': 'q9. Butterflies in stomach',
+        'q10': 'q10. Lost interest in appearance',
+        'q11': 'q11. Feel restless',
+        'q12': 'q12. Look forward to things',
+        'q13': 'q13. Sudden panic',
+        'q14': 'q14. Enjoy book/radio/TV'
+    };
+    // --- UI LABEL DICTIONARY (DT) ---
+    const dtLabels = {
+        'Q1': 'Q1. Distress Score',
+        // Physical (Q2)
+        'Q2a': 'Q2a. Pain', 'Q2b': 'Q2b. Sleep', 'Q2c': 'Q2c. Fatigue', 'Q2d': 'Q2d. Tobacco use', 'Q2e': 'Q2e. Substance use', 'Q2f': 'Q2f. Memory/concentration', 'Q2g': 'Q2g. Sexual health', 'Q2h': 'Q2h. Changes in eating', 'Q2i': 'Q2i. Loss/change of physical abilities',
+        // Emotional (Q3)
+        'Q3a': 'Q3a. Worry/anxiety', 'Q3b': 'Q3b. Sadness/depression', 'Q3c': 'Q3c. Loss of interest/enjoyment', 'Q3d': 'Q3d. Grief/loss', 'Q3e': 'Q3e. Fear', 'Q3f': 'Q3f. Loneliness', 'Q3g': 'Q3g. Anger', 'Q3h': 'Q3h. Changes in appearance', 'Q3i': 'Q3i. Feelings of worthlessness/burden',
+        // Practical (Q4)
+        'Q4a': 'Q4a. Taking care of myself', 'Q4b': 'Q4b. Taking care of others', 'Q4c': 'Q4c. Safety', 'Q4d': 'Q4d. Work', 'Q4e': 'Q4e. School', 'Q4f': 'Q4f. Housing/Utilities', 'Q4g': 'Q4g. Finances', 'Q4h': 'Q4h. Insurance', 'Q4i': 'Q4i. Transportation', 'Q4j': 'Q4j. Child care', 'Q4k': 'Q4k. Having enough food', 'Q4l': 'Q4l. Access to medicine', 'Q4m': 'Q4m. Treatment decisions',
+        // Social (Q5)
+        'Q5a': 'Q5a. Relationship with spouse/partner', 'Q5b': 'Q5b. Relationship with children', 'Q5c': 'Q5c. Relationship with family members', 'Q5d': 'Q5d. Relationship with friends/coworkers', 'Q5e': 'Q5e. Communication with health care team', 'Q5f': 'Q5f. Ability to have children', 'Q5g': 'Q5g. Prejudice/discrimination',
+        // Spiritual (Q6)
+        'Q6a': 'Q6a. Sense of meaning/purpose', 'Q6b': 'Q6b. Changes in faith/beliefs', 'Q6c': 'Q6c. Death/dying/afterlife', 'Q6d': 'Q6d. Conflict between beliefs/treatments', 'Q6e': 'Q6e. Relationship with the sacred', 'Q6f': 'Q6f. Ritual or dietary needs',
+        // Other (Q7)
+        'Q7': 'Q7. Other Concerns'
+    };
 
     // --- REPLACED FUNCTION START ---
     function renderDashboard(data) {
@@ -465,9 +511,21 @@
             // We use the same coloring logic, but apply it to the Input class
             const colorClass = isHigh ? 'val-high' : 'val-normal';
             
+            // Auto-detect tool and apply friendly label if it exists, otherwise use raw key
+            let displayLabel = key;
+            const toolType = data.t ? data.t.toLowerCase() : '';
+            
+            if (toolType === 'ipos' && iposLabels[key]) {
+                displayLabel = iposLabels[key];
+            } else if (toolType === 'hads' && hadsLabels[key]) {
+                displayLabel = hadsLabels[key];
+            } else if (toolType === 'dt' && dtLabels[key]) {
+                displayLabel = dtLabels[key];
+            }
+
             // Note: Added 'onchange' to update currentData immediately
             html += `<div class="summary-row">
-                        <span>${key}</span>
+                        <span style="color:#495057; font-size:0.9rem; flex:1; padding-right:10px;">${displayLabel}</span>
                         <input type="text" 
                                class="editable-val ${colorClass}" 
                                value="${val}" 
