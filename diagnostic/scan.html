@@ -56,6 +56,8 @@
         .badge-ipos { background: #0061f2; }
         .badge-hads { background: #6f42c1; }
         .badge-dt   { background: #dc3545; }
+        .badge-sxi  { background: #fd7e14; }
+
         
         .form-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .form-control { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
@@ -340,7 +342,9 @@
             case 'dt':
                 return decodeDT(compactData);
             case 'ipos':
-                return decodeIPOS(compactData); // <--- ADDED IPOS ROUTE
+                return decodeIPOS(compactData);
+            case 'sxi':
+                return decodeSXI(compactData);
             default:
                 return compactData; 
         }
@@ -381,6 +385,19 @@
         return expanded;
     }
 
+    // --- NEW: SXI Decoder ---
+    function decodeSXI(compact) {
+        const expanded = {
+            t: 'SXI',
+            d: compact.d,
+            score: compact.s !== undefined ? compact.s : (compact.score || 0)
+        };
+        const ans = compact.ans || "";
+        for (let i = 0; i < 5; i++) {
+            expanded[`q${i+1}`] = ans[i] || '-';
+        }
+        return expanded;
+    }
 
     // --- NEW: DT (Distress Thermometer) Decoder ---
     function decodeDT(compact) {
@@ -476,6 +493,15 @@
         // Other (Q7)
         'Q7': 'Q7. Other Concerns'
     };
+        // --- UI LABEL DICTIONARY (SXI) ---
+    const sxiLabels = {
+        'q1': '1. Dry mouth when eating',
+        'q2': '2. Mouth feels dry',
+        'q3': '3. Difficulty eating dry foods',
+        'q4': '4. Difficulties swallowing',
+        'q5': '5. Lips feel dry'
+    };
+
 
     // --- REPLACED FUNCTION START ---
     function renderDashboard(data) {
@@ -521,7 +547,10 @@
                 displayLabel = hadsLabels[key];
             } else if (toolType === 'dt' && dtLabels[key]) {
                 displayLabel = dtLabels[key];
+            } else if (toolType === 'sxi' && sxiLabels[key]) {
+                displayLabel = sxiLabels[key];
             }
+
 
             // Note: Added 'onchange' to update currentData immediately
             html += `<div class="summary-row">

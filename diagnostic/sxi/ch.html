@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SXI Assessment | PalliCalc</title>
+    
+    <link rel="stylesheet" href="../diagnostic.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="/js/qr.min.js"></script>
+    
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="../diagnostic.js"></script>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
+</head>
+<body>
+
+    <div id="pdf-loading">
+        <div style="text-align:center">
+            <div style="display:inline-block; width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; font-weight: bold;">正在準備 PDF...</p>
+        </div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } #pdf-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; }</style>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="header">
+            <div id="inst-header-container" class="inst-header-container">
+                <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
+                <div class="inst-info"><h3 id="inst-name-display"></h3><p id="inst-contact-display"></p></div>
+            </div>
+            <h1>SXI Assessment</h1>
+            <p>Summated Xerostomia Inventory (SXI-D)</p>
+        </div>
+
+        <div id="blank-qr-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:20px; border: 2px dashed #ccc; padding: 15px; border-radius: 8px;">
+                <div id="blank-qrcode"></div>
+                <div style="text-align:left;">
+                    <h4 style="margin:0; color:#0061f2;">掃碼開始</h4>
+                    <small>掃描此二維碼在手機上填寫表格。</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-bar no-print">
+            <a href="../../diagnostic.html" class="nav-link" id="backLink"><i class="bi bi-arrow-left"></i> 返回</a>
+            <div class="nav-link" style="color:#6c757d; cursor:default;"><i class="bi bi-calendar-event"></i> <span id="dateDisplay"></span></div>
+        </div>
+
+        <form id="sxiForm">
+            
+            <div class="question-card">
+                <label class="q-label">1. 進食時我感覺口乾</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q1" value="1" id="q1_1" onchange="calculateScore()"><label for="q1_1">1<div class="scale-desc">從不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q1" value="2" id="q1_2" onchange="calculateScore()"><label for="q1_2">2<div class="scale-desc">偶爾</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q1" value="3" id="q1_3" onchange="calculateScore()"><label for="q1_3">3<div class="scale-desc">經常</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">2. 我感覺口乾</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q2" value="1" id="q2_1" onchange="calculateScore()"><label for="q2_1">1<div class="scale-desc">從不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q2" value="2" id="q2_2" onchange="calculateScore()"><label for="q2_2">2<div class="scale-desc">偶爾</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q2" value="3" id="q2_3" onchange="calculateScore()"><label for="q2_3">3<div class="scale-desc">經常</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">3. 我吃乾的食物有困難</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q3" value="1" id="q3_1" onchange="calculateScore()"><label for="q3_1">1<div class="scale-desc">從不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q3" value="2" id="q3_2" onchange="calculateScore()"><label for="q3_2">2<div class="scale-desc">偶爾</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q3" value="3" id="q3_3" onchange="calculateScore()"><label for="q3_3">3<div class="scale-desc">經常</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">4. 我吞嚥某些食物有困難</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q4" value="1" id="q4_1" onchange="calculateScore()"><label for="q4_1">1<div class="scale-desc">從不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q4" value="2" id="q4_2" onchange="calculateScore()"><label for="q4_2">2<div class="scale-desc">偶爾</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q4" value="3" id="q4_3" onchange="calculateScore()"><label for="q4_3">3<div class="scale-desc">經常</div></label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <label class="q-label">5. 我感覺嘴唇發乾</label>
+                <div class="scale-container">
+                    <div class="scale-opt"><input type="radio" name="q5" value="1" id="q5_1" onchange="calculateScore()"><label for="q5_1">1<div class="scale-desc">從不</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q5" value="2" id="q5_2" onchange="calculateScore()"><label for="q5_2">2<div class="scale-desc">偶爾</div></label></div>
+                    <div class="scale-opt"><input type="radio" name="q5" value="3" id="q5_3" onchange="calculateScore()"><label for="q5_3">3<div class="scale-desc">經常</div></label></div>
+                </div>
+            </div>
+
+            <div class="score-box no-print">
+                <div><div class="score-title">SXI 總分</div><small style="opacity:0.7">範圍：5 - 15</small></div>
+                <div class="score-val" id="total-score-display">0</div>
+            </div>
+
+            <div id="qr-section" style="display: none;">
+                <div class="alert alert-success" style="background:#d4edda; color:#155724; padding:8px; border-radius:6px; margin-bottom:8px; font-size:12px;">
+                    <i class="bi bi-check-circle-fill"></i> <strong>結果已生成！</strong>
+                    <p style="margin:0; font-size:13px;">請將此二維碼出示給您的醫生。</p>
+                </div>
+                <div id="qrcode-container" style="background:white; padding:8px; border-radius:8px; display:inline-block;">
+                    <div id="qrcode"></div>
+                    <div style="font-size:9px; color:#999; margin-top:4px;">SXI 安全數據</div>
+                </div>
+                <div class="offline-hint" style="margin-top: 15px; padding: 12px; background: #e8f0fe; border: 1px solid #d2e3fc; border-radius: 8px; color: #174ea6; font-size: 13px; line-height: 1.5;">
+                    <div style="font-weight: bold; margin-bottom: 5px;"><i class="bi bi-camera-fill"></i> 保存您的結果</div>
+                    1. <strong>沒有網絡 / 醫生不在？</strong><br>
+                    請截圖此頁面以便稍後發送。<br><br>
+                    2. <strong>正在使用診所的 iPad？</strong><br>
+                    請用您自己的手機拍下此二維碼。
+                </div>
+            </div>
+
+            <div class="action-buttons no-print" style="margin-top:20px; display:flex; gap:8px; flex-direction:column;">
+                <button type="button" class="btn btn-buccal" onclick="trackAndGenerateQR()" style="width:100%;">
+                    <i class="bi bi-qr-code-scan"></i> 生成結果二維碼
+                </button>
+                <button type="button" class="btn btn-pdf" onclick="printPDF()" style="width:100%;">
+                    <i class="bi bi-printer"></i> 列印空白表格
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+    <script>
+        async function printPDF() {
+            const loading = document.getElementById('pdf-loading');
+            loading.style.display = 'flex';
+            
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert("請允許「彈出視窗」以查看 PDF。");
+                loading.style.display = 'none';
+                return;
+            }
+            printWindow.document.write('請稍候，正在生成 PDF...');
+
+            try {
+                // A. GET DATA
+                let footerData = { name: "PalliCalc Patient Education", contact: "", logos: [] };
+                if (window.context && window.context.instId) {
+                    const cached = localStorage.getItem('cached_inst_' + window.context.instId);
+                    if (cached) {
+                        const d = JSON.parse(cached);
+                        footerData = { 
+                            name: d.headerName || d.name, 
+                            contact: d.headerContact || d.contact, 
+                            logos: d.headerLogos || (d.logo ? [d.logo] : [])
+                        };
+                    }
+                } else {
+                    const s = localStorage.getItem('institutionSettings');
+                    if (s) {
+                        const parsed = JSON.parse(s);
+                        footerData = { name: parsed.name, contact: parsed.contact, logos: parsed.logos || [parsed.logo] };
+                    }
+                }
+
+                // B. LOAD PDF (Force Cache Busting with '?v=timestamp')
+                const { PDFDocument, rgb, StandardFonts } = PDFLib;
+                
+                // CRITICAL FIX: Append timestamp to force new download
+                const pdfUrl = 'ch.pdf?v=' + Date.now();
+                
+                const existingPdfBytes = await fetch(pdfUrl).then(res => {
+                    if (!res.ok) throw new Error("File ch.pdf not found in sxi folder!");
+                    return res.arrayBuffer();
+                });
+
+                const pdfDoc = await PDFDocument.load(existingPdfBytes);
+                const newPdf = await PDFDocument.create();
+                
+                const helveticaFont = await newPdf.embedFont(StandardFonts.Helvetica);
+                const helveticaBold = await newPdf.embedFont(StandardFonts.HelveticaBold);
+
+                // CRITICAL FIX: Explicitly embed ALL pages by index
+                const pageIndices = pdfDoc.getPageIndices(); 
+                const embeddedPages = await newPdf.embedPdf(pdfDoc, pageIndices);
+
+                const A4_W = 595.28; 
+                const A4_H = 841.89;
+                const FOOTER_H = 80;
+
+                // C. STAMP FOOTER (Iterates through ALL pages)
+                for (const page of embeddedPages) {
+                    const newPage = newPdf.addPage([A4_W, A4_H]);
+                    
+                    // 1. Content
+                    const scale = Math.min(A4_W / page.width, (A4_H - FOOTER_H) / page.height);
+                    const w = page.width * scale;
+                    const h = page.height * scale;
+                    newPage.drawPage(page, { x: (A4_W - w)/2, y: FOOTER_H, width: w, height: h });
+
+                    // 2. Line
+                    const lineY = FOOTER_H - 10;
+                    newPage.drawLine({ 
+                        start: {x: 30, y: lineY}, 
+                        end: {x: A4_W-30, y: lineY}, 
+                        thickness: 0.5, 
+                        color: rgb(0.6, 0.6, 0.6) 
+                    });
+
+                    // 3. LOGOS (LEFT)
+                    let currentX = 30;
+                    if (footerData.logos && footerData.logos.length > 0) {
+                        for (const logoUrl of footerData.logos) {
+                            try {
+                                if (!logoUrl) continue;
+                                const logoBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
+                                let logoImg;
+                                if (logoUrl.toLowerCase().includes('png')) logoImg = await newPdf.embedPng(logoBytes);
+                                else logoImg = await newPdf.embedJpg(logoBytes);
+
+                                const lScale = 35 / logoImg.height;
+                                const lWidth = logoImg.width * lScale;
+                                
+                                newPage.drawImage(logoImg, {
+                                    x: currentX,
+                                    y: lineY - 45,
+                                    width: lWidth,
+                                    height: 35
+                                });
+                                currentX += lWidth + 15;
+                            } catch (e) { console.warn("Logo Error", e); }
+                        }
+                    }
+
+                    // 4. TEXT (RIGHT)
+                    const nameStr = footerData.name || "PalliCalc Patient Education";
+                    const contactStr = footerData.contact ? `Contact: ${footerData.contact}` : "";
+                    
+                    const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
+                    newPage.drawText(nameStr, { 
+                        x: A4_W - 30 - nameWidth, 
+                        y: lineY - 25, 
+                        size: 12, 
+                        font: helveticaBold, 
+                        color: rgb(0.2, 0.2, 0.2) 
+                    });
+
+                    if (contactStr) {
+                        const contactWidth = helveticaFont.widthOfTextAtSize(contactStr, 10);
+                        newPage.drawText(contactStr, { 
+                            x: A4_W - 30 - contactWidth, 
+                            y: lineY - 40, 
+                            size: 10, 
+                            font: helveticaFont, 
+                            color: rgb(0.4, 0.4, 0.4) 
+                        });
+                    }
+
+                    // 5. COPYRIGHT (CENTER)
+                    const copyText = "© 2026 Alivioscript Solutions | PalliCalc™";
+                    const copyWidth = helveticaFont.widthOfTextAtSize(copyText, 8);
+                    newPage.drawText(copyText, {
+                        x: (A4_W - copyWidth) / 2,
+                        y: 10,
+                        size: 8,
+                        font: helveticaFont,
+                        color: rgb(0.6, 0.6, 0.6)
+                    });
+                }
+
+                const pdfBytes = await newPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                printWindow.location.href = URL.createObjectURL(blob);
+
+            } catch (e) {
+                printWindow.close();
+                alert("Error: " + e.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+
+    <script src="/js/ga-tracking.js"></script>
+
+    <script>
+        const REPORT_KEY = 'report_sxi';
+
+        const getVal = (name) => {
+            const el = document.querySelector(`input[name="${name}"]:checked`);
+            return el ? parseInt(el.value) : 0;
+        };
+
+        function calculateScore() {
+            let total = 0;
+            let answered = 0;
+            for (let i = 1; i <= 5; i++) {
+                const val = getVal('q' + i);
+                if (val > 0) {
+                    total += val;
+                    answered++;
+                }
+            }
+            const displayEl = document.getElementById('total-score-display');
+            if (displayEl) {
+                displayEl.innerText = (answered === 5) ? total : `${total}*`;
+            }
+            return total;
+        }
+
+        function trackAndGenerateQR() {
+            if (typeof window.trackEvent === 'function') {
+                window.trackEvent('generate_qr', {
+                    'event_category': 'Diagnostic Tool',
+                    'event_label': 'SXI'
+                });
+            }
+            generateQR();
+        }
+
+        function generateQR() {
+            const modal = document.getElementById('pdpa-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+            } else {
+                if(confirm("生成二維碼？點擊「確定」即表示您同意分享這些數據。")) {
+                    executeQRGeneration();
+                }
+            }
+        }
+
+        function executeQRGeneration() {
+            const totalScore = calculateScore();
+            
+            // Collect answers as array or string for compact payload
+            const ansArr = [
+                getVal('q1') || '-',
+                getVal('q2') || '-',
+                getVal('q3') || '-',
+                getVal('q4') || '-',
+                getVal('q5') || '-'
+            ];
+
+            const payload = {
+                t: "sxi",
+                d: Date.now(),
+                s: totalScore,
+                ans: ansArr.join('') 
+            };
+
+            const qrDiv = document.getElementById("qrcode");
+            qrDiv.innerHTML = "";
+
+            const compactData = JSON.stringify(payload);
+
+            try {
+                new QRCode(qrDiv, { text: compactData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+            } catch (err) {
+                console.error("QR Error:", err);
+                alert("生成二維碼時出錯。");
+            }
+
+            const section = document.getElementById('qr-section');
+            if (section) {
+                section.style.display = 'block';
+                section.scrollIntoView({behavior: 'smooth'});
+            }
+        }
+    </script>
+</body>
+</html>
