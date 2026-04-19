@@ -85,7 +85,8 @@ const toolConfig = {
     tools: { 
         ipos:       ['en', 'zh', 'ms'],
         hads:       ['en', 'zh', 'ms'],
-        distress:   ['en', 'zh', 'ms']
+        distress:   ['en', 'zh', 'ms'],
+        sxi:        ['en', 'zh', 'ms'] // <-- Add this line
     }
 };
 
