@@ -321,13 +321,28 @@
         }
 
         // --- NEW: SAVE LOGIC (Routes back to research.html) ---
+          // --- NEW: SAVE LOGIC WITH DETAILED BREAKDOWN ---
         function saveAndExit() {
-            // Get current score text from display
             const currentScore = document.getElementById('totalScore').innerText;
 
             if (ENABLE_CLINICAL_REPORT) {
-                // Save to session storage (e.g. "5/10")
-                sessionStorage.setItem(REPORT_KEY, currentScore + "/10");
+                // 1. Loop through all 10 questions to see what was answered
+                let details = [];
+                for (let i = 0; i < codsItems.length; i++) {
+                    const selected = document.querySelector(`input[name="cods_${i}"]:checked`);
+                    let ans = "-"; // If they left it blank
+                    if (selected) {
+                        ans = selected.value === "1" ? "Y" : "N"; // Y for Yes, N for No
+                    }
+                    details.push(`Q${i+1}:${ans}`);
+                }
+                
+                // 2. Combine the score and the breakdown 
+                // Result looks like: "5/10 (Q1:Y, Q2:N, Q3:Y, Q4:- ...)"
+                const detailedReport = `${currentScore}/10 (${details.join(', ')})`;
+
+                // 3. Save to session storage
+                sessionStorage.setItem(REPORT_KEY, detailedReport);
                 
                 // Show brief confirmation
                 const btn = document.querySelector('.btn-save');
@@ -340,6 +355,7 @@
                 }, 400);
             }
         }
+
 
         // --- 5. BRANDING HELPERS ---
         async function loadInstitutionHeader(instId) {
