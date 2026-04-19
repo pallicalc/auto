@@ -690,13 +690,13 @@ window.convert = function() {
   const outputNameDisplay = document.getElementById("outputName").value;
 
   let message = alertMessage +
-    `<div class="equivalent-dose">Total Daily Equivalent dose (without cross-tolerance adjustment) [${outputRouteDisplay} ${outputNameDisplay}]: ${outputDoseNoAdjustment.toFixed(0)} ${formatUnit(outputType)}/day <a href="../guides/opioid-conversion.html" class="info-icon" data-tooltip="Opioid Conversion Calculation"><i class="bi bi-info-circle"></i></a></div>`;
+    `<div class="equivalent-dose">Total Daily Equivalent dose (without cross-tolerance adjustment) <strong>[${outputRouteDisplay} ${outputNameDisplay}]: ${outputDoseNoAdjustment.toFixed(0)} ${formatUnit(outputType)}/day </strong><a href="../guides/opioid-conversion.html" class="info-icon" data-tooltip="Opioid Conversion Calculation"><i class="bi bi-info-circle"></i></a></div>`;
 
   if (outputRouteDisplay === "TD") {
     message += `<div class="note-title" style="color: #d9534f; font-size: 13px; margin-top: 8px; font-weight: normal;">⚠️ Convert to TD patch (e.g., Fentanyl Patch) only after stable opioid dosing is established.</div>`;
   }
 
-  message += `<div class="total-morphine">Total PO morphine equivalent dose: ${totalPoMorphine.toFixed(0)} mg</div>`;
+  message += `<div class="total-morphine">Total PO morphine equivalent dose <strong>(oMED)</strong>: ${totalPoMorphine.toFixed(0)} mg</div>`;
 
   const outputOpioidKey = outputType.toLowerCase();
   if (outputOpioidKey.includes("tramadol")) {
