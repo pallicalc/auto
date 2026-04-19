@@ -745,6 +745,16 @@ window.convert = function() {
       resultDiv.innerHTML = message;
       resultDiv.style.display = 'block';
   }
+  // Checks if the box is ticked
+  const includeRenalHepaticInfo = document.getElementById('renalHepaticCheck').checked;
+  const infoBox = document.getElementById('renalHepaticInfoBox');
+  
+  // Shows or hides the warning box based on the checkbox
+  if (includeRenalHepaticInfo) {
+    infoBox.style.display = 'block';
+  } else {
+    infoBox.style.display = 'none';
+  }
 
   resultDiv.scrollIntoView({ behavior: "smooth", block: "center" });
 

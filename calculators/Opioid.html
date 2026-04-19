@@ -105,15 +105,23 @@
       <select id="outputRoute" aria-label="Output opioid route"></select>
       <label for="outputName"></label>
       <select id="outputName" aria-label="Output opioid name"></select>
-    </fieldset>
+      
+      <div style="margin-top: 15px; display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="renalHepaticCheck" style="width: 18px; height: 18px; cursor: pointer;">
+        <label for="renalHepaticCheck" style="cursor: pointer; font-weight: normal; margin: 0;">Include renal and liver adjustment info</label>
+      </div>
+      </fieldset>
+
 
     <button id="convertBtn" class="btn btn-primary" onclick="convert(); trackEvent('calculator_use', { type: 'Opioid', action: 'Convert' })">Convert</button>
 
     <div id="resultBox" class="result-box" style="display:none;">
-      <!-- TRACKING WRAPPER -->
       <div id="tracking-result-content"></div>
-      <!-- END TRACKING WRAPPER -->
-    </div>
+      <div id="renalHepaticInfoBox" style="display:none; margin-top: 15px; padding: 12px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 0.9em;">
+        <strong>⚠️ Renal and Hepatic Impairment:</strong><br>
+        <strong>Fentanyl</strong> is generally the safest opioid for patients with renal and liver impairment. Other opioids, such as <strong>morphine</strong>, can still be used safely but require careful adjustment. Ensure <strong>longer dosing intervals</strong>, closely <strong>monitor for side effects</strong> (such as excessive sedation or toxicity), and <strong>avoid prolonged-release formulations</strong>.
+      </div>
+      </div>
 
     <fieldset id="prnCalculation" class="fieldset-prn" style="margin-top:20px;">
       <legend class="legend-aqua">Calculate PRN Dose</legend>
