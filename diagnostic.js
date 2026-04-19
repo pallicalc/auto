@@ -345,6 +345,36 @@ function closeReportModal() {
 }
 
 function copyReport() {
+     // --- START RESEARCH BLOCK ---
+    if (window.location.pathname.includes("research.html")) {
+        let textToCopy = "Research Handover Data\n";
+        const ptId = document.getElementById('patient_id')?.value || "";
+        const ptIC = document.getElementById('patient_name')?.value || ""; 
+        const cods = document.getElementById('input_cods')?.value || "";
+        const ohat = document.getElementById('input_ohat')?.value || "";
+        const notes = document.getElementById('input_research_notes')?.value || "";
+
+        if(ptId) textToCopy += `Research ID: ${ptId}\n`;
+        if(ptIC) textToCopy += `Patient IC: ${ptIC}\n`;
+        textToCopy += `\nCODS: ${cods || '-'}`;
+        textToCopy += `\nWHO OHAT: ${ohat || '-'}`;
+        if(notes) textToCopy += `\n\nNotes:\n${notes}`;
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            if (typeof gtag === 'function') {
+                gtag('event', 'clinical_action', {
+                    'event_category': 'Report Management',
+                    'event_label': 'copied_to_clipboard_research',
+                    'institution_id': userInstId || 'personal_user'
+                });
+            }
+            alert("✅ Research report copied to clipboard!");
+        }).catch(err => alert("Failed to copy. Please try manually."));
+        
+        return; // <-- Stops here! Keeps your clinical code safe.
+    }
+    // --- END RESEARCH BLOCK ---
+
     const getVal = (id) => document.getElementById(id)?.value?.trim();
 
     let text = `*CLINICAL HANDOVER REPORT*\n`;
@@ -411,6 +441,43 @@ navigator.clipboard.writeText(text).then(() => {
 // [SIMPLIFIED] SEND TO GOOGLE FORM (Master Summary)
 // ============================================================
 function sendToGoogleForm() {
+        // --- START RESEARCH BLOCK ---
+    if (window.location.pathname.includes("research.html")) {
+        const settings = JSON.parse(localStorage.getItem('institutionSettings') || '{}');
+        const links = settings.links || {};
+        let targetUrl = links.research || ""; 
+
+        if (!targetUrl) {
+            alert("Research Google Form link not set. Please contact your Institution Admin.");
+            return;
+        }
+
+        const val = (id) => document.getElementById(id)?.value || "";
+        const ptId = val('patient_id');
+        const ptIC = val('patient_name'); // Re-using patient_name field for IC
+        const cods = val('input_cods');
+        const ohat = val('input_ohat');
+        const notes = val('input_research_notes');
+
+        targetUrl = targetUrl
+            .replace(/MAGIC_researchID/g, encodeURIComponent(ptId))
+            .replace(/MAGIC_IC/g, encodeURIComponent(ptIC))
+            .replace(/MAGIC_CODS/g, encodeURIComponent(cods))
+            .replace(/MAGIC_OHAT/g, encodeURIComponent(ohat))
+            .replace(/MAGIC_NOTES/g, encodeURIComponent(notes));
+
+        if (typeof gtag === 'function') {
+            gtag('event', 'clinical_action', {
+                'event_category': 'Report Management',
+                'event_label': 'sent_to_google_form_research',
+                'institution_id': userInstId || 'personal_user'
+            });
+        }
+        window.open(targetUrl, '_blank');
+        return; // <-- Stops here! Keeps your clinical code safe.
+    }
+    // --- END RESEARCH BLOCK ---
+
     // 1. Retrieve the saved settings
     const settings = JSON.parse(localStorage.getItem('institutionSettings') || '{}');
     const links = settings.links || {};

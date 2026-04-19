@@ -106,6 +106,20 @@
         resize: vertical;
         font-family: inherit;
     }
+        /* Dropdown Styling */
+    .phase-select {
+        width: 100%; 
+        padding: 10px; 
+        border: 2px solid #007bff; 
+        border-radius: 6px; 
+        background: #f0f7ff; 
+        font-weight: 600; 
+        color: #007bff; 
+        cursor: pointer; 
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
 </style>
 <script>
     // SAFETY: Prevent crash if Analytics is blocked
@@ -223,16 +237,26 @@
                 <strong>Zero Data Retention:</strong> You may leave these blank and fill them directly in your Google form. No patient identifiers are stored on this app.
             </p>
 
-            <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e9ecef;">
-                <div class="report-grid" style="margin-bottom: 0;">
+                     <div style="background: #f8f9fa; padding: 15px 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e9ecef;">
+                <div class="report-grid" style="margin-bottom: 15px;">
                     <div class="input-group">
-                        <label>Patient ID / Subject ID</label>
+                        <label>Patient Research ID</label>
                         <input type="text" id="patient_id" placeholder="Optional">
                     </div>
                     <div class="input-group">
-                        <label>Study Arm / Group</label>
+                        <label>Patient IC</label>
                         <input type="text" id="patient_name" placeholder="Optional">
                     </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Study Phase / KPI Timing</label>
+                    <select id="kpi_timing" class="phase-select">
+                        <option value="Baseline (day 0)">Baseline (day 0)</option>
+                        <option value="Post Week 2 (day 14)">Post Week 2 (day 14)</option>
+                        <option value="Post Week 4 (day 28)">Post Week 4 (day 28)</option>
+                        <option value="Other">Other</option>
+                    </select>
                 </div>
             </div>
 
@@ -272,7 +296,17 @@
 
     <script src="diagnostic.js"></script>
     <script>
+        function injectPhaseTiming() {
+            const phase = document.getElementById('kpi_timing').value;
+            const notesEl = document.getElementById('input_research_notes');
+            let currentNotes = notesEl.value;
+            currentNotes = currentNotes.replace(/\[Phase: .*?\]\s*\n?/g, '');
+            notesEl.value = `[Phase: ${phase}]\n${currentNotes}`.trim();
+        }
+        // ----------------------------------
+
         function trackAndCopyReport() {
+            injectPhaseTiming(); 
             try {
                 if (typeof window.trackEvent === 'function') {
                     window.trackEvent('clinical_action', {
@@ -293,6 +327,7 @@
         }
 
         function trackAndSendToGoogleForm() {
+            injectPhaseTiming(); 
             try {
                 if (typeof window.trackEvent === 'function') {
                     window.trackEvent('clinical_action', {
