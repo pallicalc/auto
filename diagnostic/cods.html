@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CODS Assessment | PalliCalc</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <style>
+        /* =========================================
+           1. GLOBAL RESET & LAYOUT (Standard Theme)
+           ========================================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #343a40;
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-size: 16px; 
+        }
+
+        .main-container {
+            flex: 1;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        /* =========================================
+           2. HEADER & BRANDING
+           ========================================= */
+        .header {
+            margin: -30px -30px 30px -30px; 
+            border-radius: 12px 12px 24px 24px; 
+            padding: 30px; 
+            color: white;
+            position: relative;
+            overflow: hidden;
+            text-align: left; 
+        }
+
+        .header-ipos {
+            background: linear-gradient(135deg, #0061f2 0%, #00c6f7 100%);
+            box-shadow: 0 4px 12px rgba(0, 97, 242, 0.2);
+        }
+
+        .header h1 { font-size: 28px; font-weight: 700; margin: 0 0 10px 0; line-height: 1.2; }
+        .header p { font-size: 16px; opacity: 0.95; margin: 0; }
+
+        .inst-header-container {
+            display: none; align-items: center; gap: 15px; margin-bottom: 20px;
+            padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.3);
+        }
+        .inst-logo {
+            max-height: 60px; max-width: 60px; width: auto;
+            border-radius: 8px; background: white; padding: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .inst-info h3 { font-size: 18px; font-weight: 700; margin: 0; line-height: 1.2; }
+        .inst-info p { font-size: 14px; margin: 2px 0 0 0; opacity: 0.9; }
+
+        /* =========================================
+           3. NAVIGATION & UI
+           ========================================= */
+        .nav-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding: 0 5px;
+        }
+        .nav-link {
+            text-decoration: none; color: #6c757d; font-weight: 600;
+            font-size: 14px; display: flex; align-items: center; gap: 5px;
+        }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 12px 24px; border: none; border-radius: 50px; font-weight: 600;
+            cursor: pointer; text-decoration: none; font-size: 16px;
+        }
+        .btn-reset { background: #6c757d; color: white; }
+        .btn-save { 
+            background: #28a745; 
+            color: white; 
+            box-shadow: 0 4px 6px rgba(40, 167, 69, 0.3);
+        }
+        .btn-save:hover { background: #218838; }
+
+        /* =========================================
+           4. FORM ELEMENTS & YES/NO STYLE
+           ========================================= */
+        .question-card {
+            background: #fff; border-radius: 8px; padding: 15px 20px;
+            margin-bottom: 20px; border: 1px solid #eef2f6;
+        }
+        .q-label { font-weight: 700; color: #2c3e50; margin-bottom: 15px; display: flex; align-items: center; font-size: 16px; }
+        
+        .section-header { 
+            background: #f8f9fa; padding: 10px 15px; margin: 20px -20px 10px -20px; 
+            font-weight: 700; color: #0061f2; font-size: 14px; text-transform: uppercase; 
+            border-left: 4px solid #0061f2;
+        }
+        .yes-no-row { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px 0; border-bottom: 1px solid #f0f0f0; 
+        }
+        .yes-no-row:last-child { border-bottom: none; }
+        
+        .yn-label { 
+            font-size: 15px; color: #333; flex: 1; padding-right: 10px; 
+            white-space: normal; line-height: 1.3;
+        }
+        .yn-options { display: flex; gap: 5px; width: 110px; flex-shrink: 0; }
+
+        .yn-btn { flex: 1; position: relative; text-align: center; }
+        .yn-btn input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; left:0; top:0; }
+        .yn-btn label {
+            display: flex; justify-content: center; align-items: center; height: 35px;
+            background: #fff; border: 1px solid #dee2e6; border-radius: 6px;
+            color: #6c757d; font-weight: 600; font-size: 13px; transition: all 0.2s;
+        }
+        .yn-btn input:checked + label.lbl-no { background: #e8f5e9; border-color: #2e7d32; color: #2e7d32; } 
+        .yn-btn input:checked + label.lbl-yes { background: #ffebee; border-color: #c62828; color: #c62828; }
+
+        /* =========================================
+           5. RESULT BOX & FOOTER
+           ========================================= */
+        .score-box {
+            background: #2c3e50; color: white; padding: 20px; border-radius: 12px;
+            margin-top: 30px; display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 10px;
+        }
+        .score-title { font-size: 14px; opacity: 0.9; text-transform: uppercase; }
+        .score-val { font-size: 32px; font-weight: 800; color: #00c6f7; }
+        .score-interp { font-size: 14px; text-align: left; margin-top: 5px; font-weight: 600; color: #e3f2fd; }
+
+        .standard-footer {
+            width: 100%;
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 30px 20px;
+            font-family: sans-serif;
+            font-size: 11px;
+            color: #6c757d;
+            text-align: center;
+            margin-top: auto;
+        }
+        .footer-inner { max-width: 600px; margin: 0 auto; }
+
+        @media (max-width: 600px) {
+            .main-container { margin: 0; border-radius: 0; padding: 15px; }
+            .header { margin: -15px -15px 15px -15px; border-radius: 0; }
+            .score-box { flex-direction: column; align-items: stretch; text-align: center; }
+            .score-box > div { margin-bottom: 10px; }
+            .btn { width: 100%; margin: 5px 0 0 0 !important; }
+        }
+    </style>
+<script>
+    // SAFETY: Prevent crash if Analytics is blocked
+    window.trackEvent = window.trackEvent || function() {};
+</script>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="header header-ipos">
+            <div class="inst-header-container" id="inst-header-container">
+                <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display: none;">
+                <div class="inst-info">
+                    <h3 id="inst-name-display"></h3>
+                    <p id="inst-contact-display"></p>
+                </div>
+            </div>
+            
+            <h1>CODS Assessment</h1>
+            <p>Clinical Oral Dryness Score</p>
+            <p style="font-size: 12px; opacity: 0.8; margin-top: 5px;">Evaluate the patient for the following 10 features of oral dryness.</p>
+        </div>
+
+        <div class="nav-bar">
+            <a href="../research.html" class="nav-link">
+                <span>&#8592; Back</span>
+            </a>
+            <div id="dateDisplay" style="font-size: 14px; color: #6c757d; font-weight: 600;"></div>
+        </div>
+
+        <form id="codsForm">
+            
+            <div class="question-card">
+                <div class="q-label">Select "Yes" if the feature is present, or "No" if it is absent.</div>
+                <div class="section-header" style="margin-top:0;">Clinical Features</div>
+                <div id="cods-section"></div>
+            </div>
+
+            <div class="score-box">
+                <div style="flex-grow: 1; text-align: left;">
+                    <div class="score-title">Total CODS Score</div>
+                    <div id="interp-display" class="score-interp" style="text-align: left; font-weight: normal; font-size: 13px; color: #81e6d9;">0 (No Dryness) to 10 (Severe Dryness)</div>
+                </div>
+                <div class="score-val" id="totalScore" style="margin-right: 20px;">0</div>
+
+                <button type="button" class="btn btn-save" onclick="trackAndSaveAssessment()">Save & Finish</button>
+                
+                <button type="button" class="btn btn-reset" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);" onclick="resetCODS()">Reset</button>
+            </div>
+            
+        </form>
+    </div>
+
+    <script>
+        // ===============================================
+        // ⚙️ CONFIGURATION FOR CLINICAL REPORT
+        // ===============================================
+        const ENABLE_CLINICAL_REPORT = true; 
+        const REPORT_KEY = 'report_cods';
+        // ===============================================
+
+        // --- 1. DATA CONFIGURATION ---
+        const codsItems = [ 
+            {l:'1. Mirror sticks to buccal mucosa'}, 
+            {l:'2. Mirror sticks to tongue'}, 
+            {l:'3. Frothy saliva'}, 
+            {l:'4. No saliva pooling in floor of mouth'}, 
+            {l:'5. Tongue shows loss of papillae'}, 
+            {l:'6. Altered/smooth gingival architecture'}, 
+            {l:'7. Glassy appearance to other oral mucosa especially palate'}, 
+            {l:'8. Tongue lobulated/fissured'}, 
+            {l:'9. Active or recently restored (in the last six months) cervical caries (more than two teeth)'},
+            {l:'10. Debris on palate (excluding under dentures)'} 
+        ];
+
+        // --- 2. FIREBASE CONFIG (Optional/Legacy) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
+            authDomain: "pallicalc-eabdc.firebaseapp.com",
+            projectId: "pallicalc-eabdc",
+            storageBucket: "pallicalc-eabdc.firebasestorage.app",
+            messagingSenderId: "347532270864",
+            appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995"
+        };
+        
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // --- 3. INIT ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Render the Yes/No Questions
+            renderYesNoItems(codsItems, 'cods-section', 'cods');
+
+            // Setup Listeners
+            const form = document.getElementById('codsForm');
+            if(form) form.addEventListener('change', calcCODS);
+
+            document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
+            injectStandardFooter();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            
+            if (ref) await loadInstitutionHeader(ref);
+            else loadPersonalHeader();
+            
+            // Set initial state
+            calcCODS();
+        });
+
+        // --- RENDER LOGIC ---
+        function renderYesNoItems(items, containerId, prefix) {
+            const container = document.getElementById(containerId);
+            let html = '';
+            items.forEach((item, index) => {
+                const uniqueName = `${prefix}_${index}`;
+                html += `
+                <div class="yes-no-row">
+                    <div class="yn-label">${item.l}</div>
+                    <div class="yn-options">
+                        <div class="yn-btn">
+                            <input type="radio" name="${uniqueName}" value="0" id="${uniqueName}_no">
+                            <label for="${uniqueName}_no" class="lbl-no">No</label>
+                        </div>
+                        <div class="yn-btn">
+                            <input type="radio" name="${uniqueName}" value="1" id="${uniqueName}_yes">
+                            <label for="${uniqueName}_yes" class="lbl-yes">Yes</label>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- 4. CALCULATION ---
+        function calcCODS() {
+            let total = 0;
+            
+            for (let i = 0; i < codsItems.length; i++) {
+                const selected = document.querySelector(`input[name="cods_${i}"]:checked`);
+                if (selected) {
+                    total += parseInt(selected.value);
+                }
+            }
+
+            const scoreDisplay = document.getElementById('totalScore');
+            scoreDisplay.innerText = total;
+        }
+
+        function resetCODS() {
+            document.getElementById('codsForm').reset();
+            calcCODS(); // Update score back to 0
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- NEW: SAVE LOGIC (Routes back to research.html) ---
+        function saveAndExit() {
+            // Get current score text from display
+            const currentScore = document.getElementById('totalScore').innerText;
+
+            if (ENABLE_CLINICAL_REPORT) {
+                // Save to session storage (e.g. "5/10")
+                sessionStorage.setItem(REPORT_KEY, currentScore + "/10");
+                
+                // Show brief confirmation
+                const btn = document.querySelector('.btn-save');
+                btn.innerText = "Saved!";
+                btn.style.backgroundColor = "#155724";
+
+                setTimeout(() => {
+                    // Redirect directly back to research.html dashboard
+                    window.location.href = '../research.html';
+                }, 400);
+            }
+        }
+
+        // --- 5. BRANDING HELPERS ---
+        async function loadInstitutionHeader(instId) {
+            try {
+                if (typeof firebase === 'undefined') return;
+                const db = firebase.firestore();
+                const doc = await db.collection('institutions').doc(instId).get();
+                if (doc.exists && doc.data().status !== 'suspended') { 
+                    applyBranding(normalizeBranding(doc.data())); 
+                }
+            } catch (e) { 
+                const cached = localStorage.getItem('cached_inst_' + instId);
+                if (cached) applyBranding(normalizeBranding(JSON.parse(cached)));
+            }
+        }
+
+        function loadPersonalHeader() {
+            const settingsStr = localStorage.getItem('institutionSettings');
+            if (settingsStr) try { applyBranding(JSON.parse(settingsStr)); } catch (e) {}
+        }
+
+        function normalizeBranding(data) {
+            const logos = data.headerLogos || (data.logo ? [data.logo] : []);
+            return {
+                name: data.headerName || data.name || "",
+                contact: data.headerContact || data.contact || "",
+                logo: logos.length > 0 ? logos[0] : null
+            };
+        }
+
+        function applyBranding({ name, contact, logo }) {
+            if(name) document.getElementById('inst-name-display').textContent = name;
+            if(contact) document.getElementById('inst-contact-display').textContent = contact;
+            if(logo) {
+                const el = document.getElementById('inst-logo-img');
+                const container = document.getElementById('inst-header-container');
+                if(el) { el.src = logo; el.style.display = 'block'; }
+                if(container) container.style.display = 'flex';
+            }
+        }
+
+        function injectStandardFooter() {
+            const existing = document.querySelector('footer');
+            if(existing) existing.remove();
+            document.body.insertAdjacentHTML('beforeend', `
+                <footer class="standard-footer">
+                    <div class="footer-inner">
+                        <p style="margin: 0; font-weight: bold; color: #495057;">&copy; 2026 Alivioscript Solutions</p>
+                        <p style="margin: 2px 0; color: #6c757d;">Author: Alison Chai, RPh (M'sia): 9093, GPhC (UK): 2077838</p>
+                        <p style="margin: 2px 0; font-weight: bold; color: #dc3545;">For Educational Use Only. Not a Medical Device.<br>Verify all results.</p>
+                    </div>
+                </footer>
+            `);
+        }
+    </script>
+<script src="/js/ga-tracking.js"></script>
+<script>
+    function trackAndSaveAssessment() {
+        // 1. Track the Clinical Action
+        if (typeof window.trackEvent === 'function') {
+            var toolName = document.title.split(' ')[0] || 'Diagnostic_Tool';
+            window.trackEvent('clinical_action', {
+                action: 'assessment_saved',
+                tool: toolName,
+                source: 'research_dashboard'
+            });
+        }
+        
+        // 2. Execute the original Save function
+        if (typeof saveAndExit === 'function') {
+            saveAndExit();
+        } else {
+            console.error("Error: saveAndExit() is missing. Redirecting...");
+            // Fallback if save fails: go back to dashboard
+            window.location.href = '../research.html';
+        }
+    }
+</script>
+<div id="pwa-offline-banner" style="display: none; background-color: #f59e0b; color: #fff; text-align: center; padding: 6px 10px; padding-top: max(6px, env(safe-area-inset-top)); font-size: 12px; font-weight: bold; position: fixed; top: 0; left: 0; width: 100%; z-index: 10000; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><i class="bi bi-wifi-off"></i> Offline Mode: Using Local Data</div>
+<script>
+    (function(){
+        const banner = document.getElementById('pwa-offline-banner');
+        if(!banner) return;
+        const toggleBanner = () => banner.style.display = navigator.onLine ? 'none' : 'block';
+        window.addEventListener('online', toggleBanner);
+        window.addEventListener('offline', toggleBanner);
+        toggleBanner();
+    })();
+</script>
+</body>
+</html>
