@@ -346,7 +346,7 @@ function closeReportModal() {
 
 function copyReport() {
      // --- START RESEARCH BLOCK ---
-    if (window.location.pathname.includes("research.html")) {
+    if (window.location.pathname.includes("research")) {
         let textToCopy = "Research Handover Data\n";
         const ptId = document.getElementById('patient_id')?.value || "";
         const ptIC = document.getElementById('patient_name')?.value || ""; 
@@ -442,7 +442,7 @@ navigator.clipboard.writeText(text).then(() => {
 // ============================================================
 function sendToGoogleForm() {
         // --- START RESEARCH BLOCK ---
-    if (window.location.pathname.includes("research.html")) {
+    if (window.location.pathname.includes("research")) {
         const settings = JSON.parse(localStorage.getItem('institutionSettings') || '{}');
         const links = settings.links || {};
         let targetUrl = links.research || ""; 
