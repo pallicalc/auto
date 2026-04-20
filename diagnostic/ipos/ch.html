@@ -559,14 +559,20 @@
         const qrDiv = document.getElementById("qrcode");
         qrDiv.innerHTML = "";
 
-        // 2. NO ENCODING (Raw JSON string)
+// 2. UTF-8 ENCODING FIX FOR CHINESE CHARACTERS
         const compactData = JSON.stringify(payload);
+        const utf8SafeData = unescape(encodeURIComponent(compactData));
 
         try {
-            new QRCode(qrDiv, { text: compactData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+            new QRCode(qrDiv, { 
+                text: utf8SafeData, 
+                width: 200, 
+                height: 200, 
+                correctLevel: QRCode.CorrectLevel.L 
+            });
         } catch (err) {
             console.error("QR Error:", err);
-            alert("Data is too large. Please shorten your typed concerns in Q1.");
+            alert("数据过大 (Data is too large). 请稍微缩短您的回答。");
         }
 
         const section = document.getElementById('qr-section');
