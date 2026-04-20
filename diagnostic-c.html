@@ -295,6 +295,20 @@
                     <textarea id="input_spict_clin" rows="2" placeholder="No indicators selected"></textarea>
                 </div>
             </div>
+<div class="step-card" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e9ecef;">
+    <span class="step-label" style="color: #0d6efd; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Clinical Context</span>
+    
+    <select id="kpi_timing" style="width: 100%; padding: 10px; margin-top: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1rem;">
+        <option value="Admission/Baseline">Admission/Baseline (Day 0)</option>
+        <option value="Post 3">Post 3 (Day 3)</option>
+        <option value="Post 7">Post 7 (Day 7)</option>
+        <option value="Post 14">Post Week 2 (Day 14)</option>
+        <option value="Post 28">Post Week 4 (Day 28)</option>
+        <option value="Discharge">Discharge</option>
+        <option value="Outpatient">Outpatient</option>
+        <option value="Others">Others / Ad-hoc</option>
+    </select>
+</div>
 
             <div class="report-actions-vertical" style="display:flex; flex-direction:column; gap:10px; margin-top: 20px;">
                 <button class="btn-start-assess" style="background:#25D366; border:none; margin-top:0;" onclick="trackAndCopyReport()">

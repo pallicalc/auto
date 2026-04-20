@@ -251,6 +251,7 @@
                 
                 <div class="input-group">
                     <label>Study Phase / KPI Timing</label>
+                    <select id="kpi_timing" class="phase-select">
                     <option value="Admission/Baseline">Admission/Baseline (Day 0)</option>
                     <option value="Post 3">Post 3 (Day 3)</option>
                     <option value="Post 7">Post 7 (Day 7)</option>
@@ -299,17 +300,8 @@
 
     <script src="diagnostic.js"></script>
     <script>
-        function injectPhaseTiming() {
-            const phase = document.getElementById('kpi_timing').value;
-            const notesEl = document.getElementById('input_research_notes');
-            let currentNotes = notesEl.value;
-            currentNotes = currentNotes.replace(/\[Phase: .*?\]\s*\n?/g, '');
-            notesEl.value = `[Phase: ${phase}]\n${currentNotes}`.trim();
-        }
-        // ----------------------------------
 
-        function trackAndCopyReport() {
-            injectPhaseTiming(); 
+          function trackAndCopyReport() {
             try {
                 if (typeof window.trackEvent === 'function') {
                     window.trackEvent('clinical_action', {
@@ -330,7 +322,6 @@
         }
 
         function trackAndSendToGoogleForm() {
-            injectPhaseTiming(); 
             try {
                 if (typeof window.trackEvent === 'function') {
                     window.trackEvent('clinical_action', {
@@ -349,7 +340,7 @@
                 alert("Error: The submit code is missing from diagnostic.js");
             }
         }
-        
+
         // Auto-populate modal from session storage (similar logic to diagnostic-c.html)
         document.addEventListener('DOMContentLoaded', () => {
             const codsScore = sessionStorage.getItem('report_cods');

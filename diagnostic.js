@@ -345,6 +345,10 @@ function closeReportModal() {
 }
 
 function copyReport() {
+    const kpiPhase = document.getElementById('kpi_timing')?.value || "";
+    const currentUser = firebase.auth().currentUser;
+    const reportedBy = currentUser && currentUser.email ? currentUser.email : "Unknown/Guest";
+
      // --- START RESEARCH BLOCK ---
     if (window.location.pathname.includes("research")) {
         let textToCopy = "Research Handover Data\n";
@@ -358,7 +362,10 @@ function copyReport() {
         if(ptIC) textToCopy += `Patient IC: ${ptIC}\n`;
         textToCopy += `\nCODS: ${cods || '-'}`;
         textToCopy += `\nWHO OHAT: ${ohat || '-'}`;
-        if(notes) textToCopy += `\n\nNotes:\n${notes}`;
+        
+        textToCopy += `\n\nPhase: ${kpiPhase}`;
+        if(notes) textToCopy += `\nNotes: ${notes}`;
+        textToCopy += `\nReported By: ${reportedBy}`;
 
         navigator.clipboard.writeText(textToCopy).then(() => {
             if (typeof gtag === 'function') {
@@ -417,8 +424,12 @@ function copyReport() {
         return;
     }
 
-navigator.clipboard.writeText(text).then(() => {
-       
+    // --- NEW: Append Meta Data ---
+    text += `------------------\n`;
+    text += `Phase: ${kpiPhase}\n`;
+    text += `Reported By: ${reportedBy}\n`;
+
+    navigator.clipboard.writeText(text).then(() => {
        // --- START TRACKING CODE ---
        if (typeof gtag === 'function') {
            gtag('event', 'clinical_action', {
@@ -428,10 +439,8 @@ navigator.clipboard.writeText(text).then(() => {
            });
        }
        // --- END TRACKING CODE ---
-
        alert("Report copied to clipboard.");
    }).catch(err => {
-
         console.error('Copy failed', err);
         alert("Error copying text. Please select manually.");
     });
@@ -441,7 +450,11 @@ navigator.clipboard.writeText(text).then(() => {
 // [SIMPLIFIED] SEND TO GOOGLE FORM (Master Summary)
 // ============================================================
 function sendToGoogleForm() {
-        // --- START RESEARCH BLOCK ---
+    const kpiPhase = document.getElementById('kpi_timing')?.value || "";
+    const currentUser = firebase.auth().currentUser;
+    const reportedBy = currentUser && currentUser.email ? currentUser.email : "Unknown/Guest";
+
+    // --- START RESEARCH BLOCK ---
     if (window.location.pathname.includes("research")) {
         const settings = JSON.parse(localStorage.getItem('institutionSettings') || '{}');
         const links = settings.links || {};
@@ -457,7 +470,10 @@ function sendToGoogleForm() {
         const ptIC = val('patient_name'); // Re-using patient_name field for IC
         const cods = val('input_cods');
         const ohat = val('input_ohat');
-        const notes = val('input_research_notes');
+        
+        // Combine notes with kpi and user
+        let notes = val('input_research_notes');
+        notes += ` | Phase: ${kpiPhase} | ReportedBy: ${reportedBy}`;
 
         targetUrl = targetUrl
             .replace(/MAGIC_researchID/g, encodeURIComponent(ptId))
@@ -514,6 +530,10 @@ function sendToGoogleForm() {
     if(spictGen) summaryParts.push(`SPICT Gen: ${spictGen.replace(/\n/g, ' ')}`);
     if(spictClin) summaryParts.push(`SPICT Clin: ${spictClin.replace(/\n/g, ' ')}`);
 
+    // --- NEW: Append Meta Data ---
+    summaryParts.push(`Phase: ${kpiPhase}`);
+    summaryParts.push(`ReportedBy: ${reportedBy}`);
+
     const fullSummary = summaryParts.join(" | ");
 
     // 5. REPLACE ONLY THE 3 CORE MAGIC CODES
@@ -522,8 +542,7 @@ function sendToGoogleForm() {
         .replace(/MAGIC_ID/g, encodeURIComponent(pId))
         .replace(/MAGIC_SUMMARY/g, encodeURIComponent(fullSummary));
 
-// 6. Open the final URL
-
+   // 6. Open the final URL
    // --- START TRACKING CODE ---
    if (typeof gtag === 'function') {
        gtag('event', 'clinical_action', {
@@ -547,6 +566,10 @@ function clearReport() {
         if(inputs.length > 0) {
             inputs.forEach(i => i.value = '');
         }
+        
+        // Reset dropdown
+        const timingDropdown = document.getElementById('kpi_timing');
+        if(timingDropdown) timingDropdown.selectedIndex = 0;
     }
 }
 
