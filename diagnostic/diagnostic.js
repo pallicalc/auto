@@ -236,23 +236,32 @@ function executeQRGeneration() {
     }
     // ============================================================
 
+    // ... (inside executeQRGeneration)
     const qrDiv = document.getElementById("qrcode");
     if (qrDiv) {
         qrDiv.innerHTML = "";
 
-        // 1. Get Base URL (e.g. https://pallicalc.web.app/diagnostic/scan.html)
-        // We go up one level from the current diagnostic tool to find scan.html
-        const baseUrl = window.location.origin + "/diagnostic/scan";
+        // 1. Get raw JSON string
+        const rawJson = JSON.stringify(payload);
 
-        // 2. Encode the payload safely
-        const safeData = encodeURIComponent(JSON.stringify(payload));
+        // 2. Shrink Chinese characters to raw UTF-8 bytes to prevent library crash
+        const safeData = unescape(encodeURIComponent(rawJson));
 
-        // 3. Construct the Full URL
-        const fullUrl = `${baseUrl}?data=${safeData}`;
-
-        // 4. Generate QR
-        new QRCode(qrDiv, { text: safeData, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L });
+        // 3. Generate QR code (Passing the safely compressed data)
+        try {
+            new QRCode(qrDiv, { 
+                text: safeData, 
+                width: 200, 
+                height: 200, 
+                correctLevel: QRCode.CorrectLevel.L 
+            });
+        } catch (err) {
+            console.error("QR Error:", err);
+            // Fallback warning if they still type an impossibly long paragraph
+            alert("Data is too large. Please shorten your typed concerns.");
+        }
     }
+
 
     const section = document.getElementById('qr-section');
     if (section) {
