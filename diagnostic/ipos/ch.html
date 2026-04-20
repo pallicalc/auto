@@ -559,13 +559,12 @@
         const qrDiv = document.getElementById("qrcode");
         qrDiv.innerHTML = "";
 
-// 2. UTF-8 ENCODING FIX FOR CHINESE CHARACTERS
+// 2. NO ENCODING NEEDED - New library handles Chinese natively!
         const compactData = JSON.stringify(payload);
-        const utf8SafeData = unescape(encodeURIComponent(compactData));
 
         try {
             new QRCode(qrDiv, { 
-                text: utf8SafeData, 
+                text: compactData, 
                 width: 200, 
                 height: 200, 
                 correctLevel: QRCode.CorrectLevel.L 
