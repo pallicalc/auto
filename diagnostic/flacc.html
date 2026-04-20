@@ -462,7 +462,7 @@
 
             if (ENABLE_CLINICAL_REPORT) {
                 // Save to session storage (e.g. "5/10")
-                sessionStorage.setItem(REPORT_KEY, currentScore + "/10");
+                sessionStorage.setItem(REPORT_KEY, currentScore);
                 
                 // Show brief confirmation
                 const btn = document.querySelector('.btn-save');

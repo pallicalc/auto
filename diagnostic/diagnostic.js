@@ -224,7 +224,7 @@ function executeQRGeneration() {
             if (typeof REPORT_KEY !== 'undefined' && !REPORT_KEY.includes('spict')) {
                 let formattedScore = totalScore;
 
-                if(REPORT_KEY.includes('flacc')) formattedScore += "/10";
+                if(REPORT_KEY.includes('flacc')) formattedScore;
                 if(REPORT_KEY.includes('akps')) formattedScore += "%";
                 if(REPORT_KEY.includes('rug')) formattedScore += ""; // RUG is just a number
 

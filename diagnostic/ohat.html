@@ -345,8 +345,8 @@
                 }
                 
                 // 2. Combine the score and the breakdown 
-                // Result looks like: "4/16 (Q1:0, Q2:1, Q3:0, Q4:2 ...)"
-                const detailedReport = `${currentScore}/16 (${details.join(', ')})`;
+                // Result looks like: "4 (Q1:0, Q2:1, Q3:0, Q4:2 ...)"
+                const detailedReport = `${currentScore} (${details.join(', ')})`;
 
                 // 3. Save to session storage
                 sessionStorage.setItem(REPORT_KEY, detailedReport);
