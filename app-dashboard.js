@@ -293,7 +293,7 @@ async function startVisibleOfflineDownload() {
       './education/seizure/Xmouth.png', './education/subcutaneous/eng.html', './education/subcutaneous/bm.html',
       './education/subcutaneous/ch.html', './education/1.jpg', './education/subcutaneous/2.jpg', './education/subcutaneous/3.jpg',
       './education/td-fentanyl/eng.html', './education/td-fentanyl/bm.html', './education/td-fentanyl/ch.html',
-      './education/td-fentanyl/1.jpg', './education/td-fentanyl/2.jpg'
+      './education/td-fentanyl/1.jpg', './education/td-fentanyl/2.jpg', './research.html', './diagnostic/ohat.html', './diagnostic/cods.html', './diagnostic/sxi.html',
     ];
 
     try {
