@@ -1,7 +1,6 @@
 const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
-const v1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 
@@ -125,62 +124,150 @@ exports.completeAdminTransfer = onRequest({ cors: true }, async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// --- 3. THE LONG-TERM RETENTION MONITOR (Month 13) ---
-// preventing auto-deletion. Now notifies Admin instead.
-exports.checkGracePeriods = onSchedule("every 24 hours", async (event) => {
+// --- 3. MASTER DAILY SYSTEM SWEEPER (100% FREE TIER) ---
+// This single job runs every 24 hours to handle ALL retention, billing notices, and deletions.
+// Because it is only ONE job, it costs $0.00 in Google Cloud Scheduler.
+
+exports.masterDailySystemCheck = onSchedule("every 24 hours", async (event) => {
+    const db = admin.firestore();
+    const batch = db.batch();
+    const emailPromises = [];
     const now = new Date();
+
+    // -----------------------------------------------------------------------
+    // A. LONG-TERM RETENTION (Month 13)
+    // -----------------------------------------------------------------------
     const retentionLimit = new Date();
-    
-    // Set 'Month 13' threshold (1 year ago)
     retentionLimit.setMonth(now.getMonth() - 12); 
 
-    // Find users older than 12 months who haven't been flagged yet
-    const expiredUsersSnapshot = await admin.firestore().collection('users')
+    const expiredUsers = await db.collection('users')
         .where('gracePeriodEnd', '<=', admin.firestore.Timestamp.fromDate(retentionLimit))
-        .where('retentionAlertSent', '!=', true) // ✅ Prevents spamming you every day
+        .where('retentionAlertSent', '!=', true)
         .get();
 
-    if (expiredUsersSnapshot.empty) return;
-
-    const batch = admin.firestore().batch();
-    const emailPromises = [];
-
-    expiredUsersSnapshot.forEach(doc => {
-        const userData = doc.data();
-        
-        // 1. Force Suspend & Flag as "Review Needed"
+    expiredUsers.forEach(doc => {
         batch.update(doc.ref, { 
             billingStatus: 'suspended',
             retentionAlertSent: true,
             needsAdminReview: true
         });
-
-        // 2. Notify YOU (The Admin)
         emailPromises.push(transporter.sendMail({
             from: '"PalliCalc System" <pallicalc@gmail.com>',
             to: "pallicalc@gmail.com",
             subject: `⚠️ RETENTION ALERT: Month 13 Reached`,
-            html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #f0ad4e;">
-                <h3 style="color: #d9534f;">Long-Term Retention Alert</h3>
-                <p>The following user has passed the 12-month retention period:</p>
-                <ul>
-                    <li><strong>User Email:</strong> ${userData.email}</li>
-                    <li><strong>Institution:</strong> ${userData.institutionName || 'N/A'}</li>
-                    <li><strong>Role:</strong> ${userData.role}</li>
-                </ul>
-                <p><strong>Action Taken:</strong> Account suspended & flagged.</p>
-                <p>Please review this account manually to decide on deletion or archival.</p>
-            </div>
-            `
+            html: `<p>User <strong>${doc.data().email}</strong> has passed the 12-month retention period. Account suspended & flagged for review.</p>`
         }));
     });
 
-    await batch.commit();
-    if (emailPromises.length > 0) await Promise.all(emailPromises);
-});
+    // -----------------------------------------------------------------------
+    // B. MONTH 12: 7-DAY EXPIRY WARNING
+    // -----------------------------------------------------------------------
+    const expStart = new Date(); expStart.setDate(expStart.getDate() + 7); expStart.setHours(0,0,0,0);
+    const expEnd = new Date(); expEnd.setDate(expEnd.getDate() + 7); expEnd.setHours(23,59,59,999);
+    
+    const expiryUsers = await db.collection('users').where('role', '==', 'institutionAdmin')
+        .where('subscriptionEnd', '>=', admin.firestore.Timestamp.fromDate(expStart))
+        .where('subscriptionEnd', '<=', admin.firestore.Timestamp.fromDate(expEnd)).get();
+    
+    expiryUsers.forEach(doc => {
+        emailPromises.push(transporter.sendMail({ 
+            from: '"PalliCalc Billing" <pallicalc@gmail.com>', 
+            to: doc.data().email, 
+            subject: 'Subscription Expiring in 7 Days', 
+            html: `<p>Your PalliCalc subscription is expiring in 7 days.</p>` 
+        }));
+    });
 
-// (Removed 'notifyStaffRemoval' to prevent sending confusing "Deletion" emails to users)
+    // -----------------------------------------------------------------------
+    // C. MONTH 11: 30-DAY INVOICE READY
+    // -----------------------------------------------------------------------
+    const invTarget = new Date(); invTarget.setDate(now.getDate() + 30); 
+    const invStart = new Date(invTarget.setHours(0,0,0,0)); const invEnd = new Date(invTarget.setHours(23,59,59,999));
+    
+    const invoiceUsers = await db.collection('users').where('role', '==', 'institutionAdmin')
+        .where('subscriptionEnd', '>=', admin.firestore.Timestamp.fromDate(invStart))
+        .where('subscriptionEnd', '<=', admin.firestore.Timestamp.fromDate(invEnd)).get();
+    
+    invoiceUsers.forEach(doc => {
+        if (doc.data().billingStatus !== 'trial-free-lifetime') {
+            emailPromises.push(transporter.sendMail({ 
+                from: '"PalliCalc Billing" <pallicalc@gmail.com>', 
+                to: doc.data().email, 
+                subject: 'Invoice Ready: Renewal Due in 30 Days', 
+                html: `<p>Your subscription is due for renewal in 30 days. The payment window is open.</p>` 
+            }));
+        }
+    });
+
+    // -----------------------------------------------------------------------
+    // D. MONTH 13: 7-DAY SUSPENSION WARNING
+    // -----------------------------------------------------------------------
+    const warnTarget = new Date(); warnTarget.setDate(now.getDate() - 23); 
+    const warnStart = new Date(warnTarget.setHours(0,0,0,0)); const warnEnd = new Date(warnTarget.setHours(23,59,59,999));
+    
+    const warningUsers = await db.collection('users').where('role', '==', 'institutionAdmin')
+        .where('subscriptionEnd', '>=', admin.firestore.Timestamp.fromDate(warnStart))
+        .where('subscriptionEnd', '<=', admin.firestore.Timestamp.fromDate(warnEnd))
+        .where('billingStatus', '!=', 'suspended')
+        .where('billingStatus', '!=', 'trial-free-lifetime').get();
+    
+    warningUsers.forEach(doc => {
+        emailPromises.push(transporter.sendMail({ 
+            from: '"PalliCalc Billing" <pallicalc@gmail.com>', 
+            to: doc.data().email, 
+            subject: 'FINAL WARNING: Suspension in 7 Days', 
+            html: `<p>Your account is 23 days overdue. You are in the final week of your grace period.</p>` 
+        }));
+    });
+
+    // -----------------------------------------------------------------------
+    // E. MONTH 13: SUSPENSION ENFORCER
+    // -----------------------------------------------------------------------
+    const graceLimit = new Date(); graceLimit.setDate(graceLimit.getDate() - 30); 
+    
+    const suspendUsers = await db.collection('users').where('role', '==', 'institutionAdmin')
+        .where('subscriptionEnd', '<', admin.firestore.Timestamp.fromDate(graceLimit))
+        .where('billingStatus', '!=', 'suspended').get();
+        
+    suspendUsers.forEach(doc => {
+        const data = doc.data();
+        batch.update(doc.ref, { billingStatus: 'suspended' });
+        if (data.institutionId) {
+            batch.update(db.collection('institutions').doc(data.institutionId), { status: 'suspended' });
+        }
+        emailPromises.push(transporter.sendMail({
+            from: '"PalliCalc Billing" <pallicalc@gmail.com>',
+            to: data.email,
+            subject: 'ACCOUNT SUSPENDED: Activation Fee Now Applies',
+            html: `<p>Your 30-day renewal grace period has expired. Account suspended.</p>`
+        }));
+    });
+
+    // -----------------------------------------------------------------------
+    // F. AUTO-DELETE EXPIRED STAFF (The 14-Day Subadmin Feature)
+    // -----------------------------------------------------------------------
+    const expiredStaff = await db.collection('users')
+        .where('deletionStatus', '==', 'pending')
+        .where('gracePeriodEnd', '<=', admin.firestore.Timestamp.now())
+        .get();
+
+    for (const doc of expiredStaff.docs) {
+        const userData = doc.data();
+        if (userData.institutionId) {
+            batch.update(db.collection('institutions').doc(userData.institutionId), {
+                memberCount: admin.firestore.FieldValue.increment(-1)
+            });
+        }
+        batch.delete(doc.ref);
+        try { await admin.auth().deleteUser(doc.id); } catch (e) { /* ignore */ }
+    }
+
+    // --- EXECUTE EVERYTHING ---
+    await batch.commit();
+    if (emailPromises.length > 0) {
+        await Promise.all(emailPromises);
+    }
+});
 
 // --- 4. COUNTER & COUPONS (Updated: One-Time Use Logic) ---
 exports.onUserCreated = onDocumentCreated("users/{userId}", async (event) => {
@@ -246,16 +333,6 @@ exports.onUserCreated = onDocumentCreated("users/{userId}", async (event) => {
     await batch.commit();
 });
 
-exports.onUserDeleted = v1.auth.user().onDelete(async (user) => {
-    const userDoc = await admin.firestore().collection('users').doc(user.uid).get();
-    if (userDoc.exists && userDoc.data().institutionId) {
-        await admin.firestore().collection('institutions').doc(userDoc.data().institutionId).update({
-            memberCount: admin.firestore.FieldValue.increment(-1)
-        }).catch(e => { /* console.log(e) */ });
-        await userDoc.ref.delete();
-    }
-});
-
 exports.testEmailConnection = onRequest({ cors: true }, async (req, res) => {
     try {
         await transporter.verify(); 
@@ -263,141 +340,6 @@ exports.testEmailConnection = onRequest({ cors: true }, async (req, res) => {
     } catch (error) { res.status(500).send(`FAILED: ${error.message}`); }
 });
 
-// --- 5. AUTOMATED REMINDERS ---
-
-// A. Month 12: Warning 7 Days Before Expiry
-exports.checkSubscriptionExpiry = onSchedule("every 24 hours", async (event) => {
-    const start = new Date(); start.setDate(start.getDate() + 7); start.setHours(0,0,0,0);
-    const end = new Date(); end.setDate(end.getDate() + 7); end.setHours(23,59,59,999);
-    
-    const snapshot = await admin.firestore().collection('users')
-        .where('role', '==', 'institutionAdmin')
-        .where('subscriptionEnd', '>=', admin.firestore.Timestamp.fromDate(start))
-        .where('subscriptionEnd', '<=', admin.firestore.Timestamp.fromDate(end)).get();
-    
-    snapshot.forEach(doc => {
-        transporter.sendMail({ 
-            from: '"PalliCalc Billing" <pallicalc@gmail.com>', 
-            to: doc.data().email, 
-            subject: 'Subscription Expiring in 7 Days', 
-            html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0; max-width: 600px;">
-                <h3 style="color: #333;">Subscription Renewal Reminder</h3>
-                <p>Your PalliCalc subscription is expiring in 7 days.</p>
-                <div style="background-color: #f0f8ff; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 5px solid #0d6efd;">
-                    <strong>Commitment to Equitable Access</strong><br>
-                    <small>PalliCalc is dedicated to supporting health institutions, non-profits, and hospices globally. Full and partial subsidies are available for eligible institutions. <a href="mailto:support@pallicalc.com">Contact us for assistance.</a></small>
-                </div>
-            </div>` 
-        });
-    });
-});
-
-// B. Month 11: Invoice Ready (30 Days Before Expiry)
-exports.sendBillingNotice = onSchedule("every 24 hours", async (event) => {
-    const now = new Date(); const target = new Date(); target.setDate(now.getDate() + 30); 
-    const start = new Date(target.setHours(0,0,0,0)); const end = new Date(target.setHours(23,59,59,999));
-    
-    const snapshot = await admin.firestore().collection('users')
-        .where('role', '==', 'institutionAdmin')
-        .where('subscriptionEnd', '>=', admin.firestore.Timestamp.fromDate(start))
-        .where('subscriptionEnd', '<=', admin.firestore.Timestamp.fromDate(end)).get();
-    
-    snapshot.forEach(doc => {
-        if (doc.data().billingStatus !== 'trial-free-lifetime') {
-            transporter.sendMail({ 
-                from: '"PalliCalc Billing" <pallicalc@gmail.com>', 
-                to: doc.data().email, 
-                subject: 'Invoice Ready: Renewal Due in 30 Days', 
-                html: `
-                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0; max-width: 600px;">
-                    <h3 style="color: #333;">Renewal Invoice Ready</h3>
-                    <p>Your subscription is due for renewal in 30 days. The payment window is open.</p>
-                    <div style="background-color: #f0f8ff; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 5px solid #0d6efd;">
-                        <strong>Commitment to Equitable Access</strong><br>
-                        <small>PalliCalc is dedicated to supporting health institutions, non-profits, and hospices globally. Full and partial subsidies are available for eligible institutions. <a href="mailto:support@pallicalc.com">Contact us for assistance.</a></small>
-                    </div>
-                </div>` 
-            });
-        }
-    });
-});
-
-// C. Month 13 (Minus 1 Week): Final Warning
-exports.checkGracePeriodWarning = onSchedule("every 24 hours", async (event) => {
-    const now = new Date(); const target = new Date(); target.setDate(now.getDate() - 23); 
-    const start = new Date(target.setHours(0,0,0,0)); const end = new Date(target.setHours(23,59,59,999));
-    
-    const snapshot = await admin.firestore().collection('users')
-        .where('role', '==', 'institutionAdmin')
-        .where('subscriptionEnd', '>=', admin.firestore.Timestamp.fromDate(start))
-        .where('subscriptionEnd', '<=', admin.firestore.Timestamp.fromDate(end))
-        .where('billingStatus', '!=', 'suspended')
-        .where('billingStatus', '!=', 'trial-free-lifetime').get();
-    
-    snapshot.forEach(doc => {
-        transporter.sendMail({ 
-            from: '"PalliCalc Billing" <pallicalc@gmail.com>', 
-            to: doc.data().email, 
-            subject: 'FINAL WARNING: Suspension in 7 Days', 
-            html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #d9534f; max-width: 600px;">
-                <h3 style="color: #d9534f;">Action Required Immediately</h3>
-                <p>Your account is 23 days overdue. You are in the final week of your grace period.</p>
-                <div style="background-color: #f0f8ff; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 5px solid #0d6efd;">
-                    <strong>Commitment to Equitable Access</strong><br>
-                    <small>PalliCalc is dedicated to supporting health institutions, non-profits, and hospices globally. Full and partial subsidies are available for eligible institutions. <a href="mailto:support@pallicalc.com">Contact us for assistance.</a></small>
-                </div>
-            </div>` 
-        });
-    });
-});
-
-// D. Month 13: Suspension Enforcer
-exports.enforceSuspension = onSchedule("every 24 hours", async (event) => {
-    const graceLimit = new Date(); graceLimit.setDate(graceLimit.getDate() - 30); 
-    
-    const snapshot = await admin.firestore().collection('users')
-        .where('role', '==', 'institutionAdmin')
-        .where('subscriptionEnd', '<', admin.firestore.Timestamp.fromDate(graceLimit))
-        .where('billingStatus', '!=', 'suspended') 
-        .get();
-        
-    const batch = admin.firestore().batch();
-    
-    snapshot.forEach(doc => {
-        const data = doc.data();
-        batch.update(doc.ref, { billingStatus: 'suspended' });
-        if (data.institutionId) {
-            batch.update(admin.firestore().collection('institutions').doc(data.institutionId), { status: 'suspended' });
-        }
-        transporter.sendMail({
-            from: '"PalliCalc Billing" <pallicalc@gmail.com>',
-            to: data.email,
-            subject: 'ACCOUNT SUSPENDED: Activation Fee Now Applies',
-            html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #d9534f; max-width: 600px;">
-                <div style="background-color: #d9534f; color: white; padding: 15px; text-align: center;">
-                    <h2 style="margin:0;">ACCOUNT SUSPENDED</h2>
-                </div>
-                <div style="padding: 20px;">
-                    <p>Your 30-day renewal grace period has expired.</p>
-                    <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; margin: 20px 0; color: #721c24;">
-                        <strong>Penalty Applied:</strong><br>
-                        To reactivate, you must pay the <strong>Annual Fee</strong> PLUS an <strong>Activation Penalty (RM 50 / $50 USD)</strong>.
-                    </div>
-                    <div style="background-color: #f0f8ff; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 5px solid #0d6efd;">
-                        <strong>Commitment to Equitable Access</strong><br>
-                        <small>PalliCalc is dedicated to supporting health institutions, non-profits, and hospices globally. <a href="mailto:support@pallicalc.com">Contact us for assistance.</a></small>
-                    </div>
-                </div>
-            </div>
-            `
-        });
-    });
-    
-    await batch.commit();
-});
 
 // --- 6. STAFF NOTIFICATION SYSTEM (Professional & Equitable) ---
 exports.sendSuspensionReminder = onCall(async (request) => {
@@ -583,4 +525,37 @@ exports.getUserStatus = onCall(async (request) => {
         console.error("getUserStatus Error:", error);
         throw new HttpsError('internal', 'Unable to fetch user status.');
     }
+});
+// --- IMMEDIATE DELETE (Triggered by Subadmin "Confirm Delete" Button) ---
+exports.confirmDeleteUser = onCall(async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Login required.');
+
+    const targetUid = request.data.targetUid;
+    if (!targetUid) throw new HttpsError('invalid-argument', 'Missing target UID.');
+
+    const db = admin.firestore();
+    const targetDoc = await db.collection('users').doc(targetUid).get();
+
+    if (!targetDoc.exists) return { success: true }; 
+
+    const userData = targetDoc.data();
+    const batch = db.batch();
+
+    if (userData.institutionId) {
+        const instRef = db.collection('institutions').doc(userData.institutionId);
+        batch.update(instRef, {
+            memberCount: admin.firestore.FieldValue.increment(-1)
+        });
+    }
+
+    batch.delete(targetDoc.ref);
+    await batch.commit();
+
+    try {
+        await admin.auth().deleteUser(targetUid);
+    } catch (e) {
+        console.error("Auth delete error:", e);
+    }
+
+    return { success: true };
 });
