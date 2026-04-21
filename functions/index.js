@@ -4,7 +4,9 @@ const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 
+
 admin.initializeApp();
+
 
 // --- 1. EMAIL TRANSPORTER ---
 const transporter = nodemailer.createTransport({
