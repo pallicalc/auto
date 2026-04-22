@@ -2,9 +2,9 @@
     // 👉 ADD IT RIGHT HERE: Request Apple VIP Storage Armor immediately
     secureOfflineStorage();
 
-    const storedPassword = localStorage.getItem('palliCalcLoginPassword');
-    
-    // 1. Check Login Status
+    const storedPassword = localStorage.getItem('palliCalcLoginPassword');
+
+    // 1. Check Login Status
     if (storedPassword) {
         // Unlock the UI
         const overlay = document.getElementById('locked-overlay');
@@ -144,10 +144,10 @@ function detectBrowserAndShowInstructions() {
 function startGlobalRatioSync() {
     // 1. Only run if online and Firebase is fully loaded
     if (!navigator.onLine || typeof firebase === 'undefined' || !firebase.apps.length) return;
-    
+
     const user = firebase.auth().currentUser;
     if (!user) return; // Fails safely if Firebase is still loading the login state
-    
+
     const uid = user.uid;
 
     const db = firebase.firestore();
@@ -156,14 +156,14 @@ function startGlobalRatioSync() {
     db.collection("users").doc(uid).get().then(snap => {
         if (!snap.exists) return;
         const profile = snap.data();
-        
+
         // 3. Only sync for Institutional Users
         if (profile.role === "institutionUser" && profile.institutionId) {
             const instId = profile.institutionId;
-            
+
             // 👉 ADDED: The Master Key so Education module knows who it is offline!
             localStorage.setItem('palliCalc_currentInstId', instId);
-            
+
             console.log("🔄 Global Sync: Pre-fetching clinical ratios in background...");
 
             // Fetch & Save Benzodiazepine Rules
@@ -183,14 +183,14 @@ function startGlobalRatioSync() {
                 }
             }).catch(e => console.warn("Global Sync (Opioid) failed:", e));
 
-            
+
             // Fetch & Save Education Branding Data
             db.collection("institutions").doc(instId).get().then(doc => {
                 if (doc.exists) {
                     const instData = doc.data();
                     // Saves it exactly how education.js expects it to be saved
                     localStorage.setItem('cached_inst_' + instId, JSON.stringify(instData));
-                    
+
                     // Also updates the generic fallback settings
                     localStorage.setItem('institutionSettings', JSON.stringify({
                         name: instData.headerName || instData.name,
@@ -198,16 +198,16 @@ function startGlobalRatioSync() {
                         logos: instData.headerLogos || (instData.logo ? [instData.logo] : []),
                         logo: instData.logo
                     }));
-                    
+
                     // 👉 THE MISSING KEY FOR CALCULATORS:
                     localStorage.setItem('palliCalc_institutionName', instData.headerName || instData.name || "Institution");
-                    
+
                     console.log("✅ Global Sync: Education branding updated.");
                 }
             }).catch(e => console.warn("Global Sync (Education) failed:", e));
 
                 }
-            
+
     }).catch(err => console.error("Global sync auth check failed:", err));
 }
 
@@ -248,7 +248,8 @@ document.addEventListener('visibilitychange', () => {
    VISIBLE OFFLINE ASSET DOWNLOADER
    ========================================= */
 async function startVisibleOfflineDownload() {
-    const ASSET_CACHE_NAME = 'pallicalc-smart-v40'; // Bumping to v40
+    // 🏥 SURGICAL FIX: This MUST exactly match the CACHE_NAME in sw.js!
+    const ASSET_CACHE_NAME = 'pallicalc-smart-v48'; 
     const downloadFlag = `assets_downloaded_${ASSET_CACHE_NAME}`;
     if (localStorage.getItem(downloadFlag) === 'true') return; // Already downloaded
 
@@ -258,7 +259,7 @@ async function startVisibleOfflineDownload() {
     const progressPercent = document.getElementById('offline-progress-percent');
 
     if (!container || !navigator.onLine) return;
-    
+
     container.style.display = 'block';
 
     // Copying your exact list of heavy files from your old sw.js
@@ -312,7 +313,7 @@ async function startVisibleOfflineDownload() {
             const percent = Math.round((loadedCount / totalFiles) * 100);
             progressBar.style.width = percent + '%';
             progressPercent.innerText = percent + '%';
-            
+
             // Give the iPad a tiny 50ms break to update the screen smoothly
             await new Promise(resolve => setTimeout(resolve, 50));
         }
