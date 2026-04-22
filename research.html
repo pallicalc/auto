@@ -404,15 +404,19 @@
                 }
             }
         });
-          // --- SMART SCANNER LOGIC FOR RESEARCH HANDOVER ---
+// --- UPGRADED SMART SCANNER LOGIC (PARITY WITH SCAN.HTML) ---
         let idScanner = null;
 
         function openIdScanner() {
             document.getElementById('id-scanner-modal').style.display = 'flex';
             if (!idScanner) idScanner = new Html5Qrcode("id-reader");
 
-            idScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 200 } }, onIdScanSuccess)
-            .catch(err => console.warn("Camera start failed, use gallery."));
+            const config = { fps: 10, qrbox: { width: 250, height: 200 } };
+
+            idScanner.start({ facingMode: "environment" }, config, onIdScanSuccess)
+            .catch(err => {
+                console.warn("Camera auto-start failed, please use gallery upload.");
+            });
         }
 
         function onIdScanSuccess(decodedText) {
@@ -421,23 +425,52 @@
             let parts = text.split('|');
 
             if (parts.length > 1) {
-                // Smart payload mapping: IC | Name | Notes
+                // Mapping: IC | Name (Research ID) | Notes
                 document.getElementById('patient_name').value = parts[0].substring(0, 12).trim(); 
                 document.getElementById('patient_id').value = parts[1] ? parts[1].trim() : "";   
                 if (parts[2]) document.getElementById('input_research_notes').value = parts[2].trim();
             } else {
-                // Standard Barcode mapping
+                // Mapping: Standard Hospital Barcode (12 digits)
                 document.getElementById('patient_name').value = text.substring(0, 12);
                 document.getElementById('patient_id').value = "";
             }
         }
 
+        // HARDWARE-ACCELERATED GALLERY LISTENER
         document.getElementById('id-qr-input-file').addEventListener('change', async e => {
             if (e.target.files.length == 0) return;
-            if (!idScanner) idScanner = new Html5Qrcode("id-reader");
-            idScanner.scanFile(e.target.files[0], true)
-                .then(decodedText => onIdScanSuccess(decodedText))
-                .catch(err => alert("Could not find a valid code. Try a clearer photo."));
+            const imageFile = e.target.files[0];
+
+            const img = new Image();
+            img.src = URL.createObjectURL(imageFile);
+
+            img.onload = async () => {
+                // 1. Try Hardware-Accelerated Detect (Full high-res image)
+                if ('BarcodeDetector' in window) {
+                    try {
+                        const detector = new BarcodeDetector();
+                        const barcodes = await detector.detect(img);
+                        if (barcodes.length > 0) {
+                            onIdScanSuccess(barcodes[0].rawValue);
+                            URL.revokeObjectURL(img.src);
+                            return;
+                        }
+                    } catch (err) { console.warn("Hardware ID scan failed", err); }
+                }
+
+                // 2. Standard Fallback (Low-res library scan)
+                if (!idScanner) idScanner = new Html5Qrcode("id-reader");
+                
+                idScanner.scanFile(imageFile, true)
+                    .then(decodedText => {
+                        onIdScanSuccess(decodedText);
+                        URL.revokeObjectURL(img.src);
+                    })
+                    .catch(err => {
+                        alert("Could not find a code. TIP: For small or corner barcodes, try cropping the photo first!");
+                        URL.revokeObjectURL(img.src);
+                    });
+            };
         });
 
         function closeIdScanner() {
