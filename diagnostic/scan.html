@@ -336,28 +336,51 @@
             document.getElementById('camera-error').style.display = 'block';
         }
     }
-
+    // UPGRADED MAIN GALLERY SCANNER
     document.getElementById('qr-input-file').addEventListener('change', async e => {
         if (e.target.files.length == 0) return;
         const imageFile = e.target.files[0];
         document.getElementById('gallery-status').style.display = 'block';
 
-        if (html5QrCode && isCameraRunning) {
-            try { await html5QrCode.stop(); isCameraRunning = false; } catch (err) {}
-        }
-        if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+        const img = new Image();
+        img.src = URL.createObjectURL(imageFile);
 
-        html5QrCode.scanFile(imageFile, true)
-            .then(decodedText => {
-                document.getElementById('gallery-status').style.display = 'none';
-                onScanSuccess(decodedText);
-            })
-            .catch(err => {
-                document.getElementById('gallery-status').style.display = 'none';
-                alert("Error scanning file. Try a clearer image.");
-                initCameraSystem(); 
-            });
+        img.onload = async () => {
+            // 1. Try Hardware Acceleration (Scans entire high-res image)
+            if ('BarcodeDetector' in window) {
+                try {
+                    const detector = new BarcodeDetector();
+                    const barcodes = await detector.detect(img);
+                    if (barcodes.length > 0) {
+                        document.getElementById('gallery-status').style.display = 'none';
+                        onScanSuccess(barcodes[0].rawValue);
+                        URL.revokeObjectURL(img.src);
+                        return; 
+                    }
+                } catch (err) { console.warn("Native hardware scanner failed", err); }
+            }
+
+            // 2. Fallback to Standard Scanner (Low-res center scan)
+            if (html5QrCode && isCameraRunning) {
+                try { await html5QrCode.stop(); isCameraRunning = false; } catch (err) {}
+            }
+            if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+
+            html5QrCode.scanFile(imageFile, true)
+                .then(decodedText => {
+                    document.getElementById('gallery-status').style.display = 'none';
+                    onScanSuccess(decodedText);
+                    URL.revokeObjectURL(img.src);
+                })
+                .catch(err => {
+                    document.getElementById('gallery-status').style.display = 'none';
+                    alert("Could not find a QR code. TIP: If the QR is in the corner, try cropping the photo first!");
+                    initCameraSystem(); 
+                    URL.revokeObjectURL(img.src);
+                });
+        };
     });
+
 
     // --- UNIVERSAL DECODER ROUTER ---
     function decodeToolData(compactData) {
@@ -701,16 +724,41 @@
         }
     }
 
-    // GALLERY LISTENER FOR ID SCANNER
+    // UPGRADED PATIENT ID GALLERY SCANNER
     document.getElementById('id-qr-input-file').addEventListener('change', async e => {
         if (e.target.files.length == 0) return;
         const imageFile = e.target.files[0];
         
-        if (!idScanner) idScanner = new Html5Qrcode("id-reader");
+        const img = new Image();
+        img.src = URL.createObjectURL(imageFile);
 
-        idScanner.scanFile(imageFile, true)
-            .then(decodedText => onIdScanSuccess(decodedText))
-            .catch(err => alert("Could not find a valid code in that image. Please try a clearer photo."));
+        img.onload = async () => {
+            // 1. Hardware-Accelerated Scan (Best for Barcodes in corners)
+            if ('BarcodeDetector' in window) {
+                try {
+                    const detector = new BarcodeDetector();
+                    const barcodes = await detector.detect(img);
+                    if (barcodes.length > 0) {
+                        onIdScanSuccess(barcodes[0].rawValue);
+                        URL.revokeObjectURL(img.src);
+                        return;
+                    }
+                } catch (err) { console.warn("Hardware ID scan failed", err); }
+            }
+
+            // 2. Standard Fallback
+            if (!idScanner) idScanner = new Html5Qrcode("id-reader");
+            
+            idScanner.scanFile(imageFile, true)
+                .then(decodedText => {
+                    onIdScanSuccess(decodedText);
+                    URL.revokeObjectURL(img.src);
+                })
+                .catch(err => {
+                    alert("Could not find an IC Barcode. TIP: If the barcode is in the corner, try cropping the photo first!");
+                    URL.revokeObjectURL(img.src);
+                });
+        };
     });
 
     function closeIdScanner() {
