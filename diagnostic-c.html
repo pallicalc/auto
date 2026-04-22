@@ -12,6 +12,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="/js/qr.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script>
+    if (!window.Html5Qrcode) {
+        document.write('<script src="/js/html5-qrcode.min.js"><\/script>');
+    }
+</script>
 
 <style>
     /* Specific styles for headers and buttons in this page */
@@ -249,17 +255,26 @@
                 <strong>Zero Data Retention:</strong> You may leave these blank and fill them directly in your Google form. No patient identifiers are stored on this app.
             </p>
 
-            <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e9ecef;">
-                <div class="report-grid" style="margin-bottom: 0;">
+<div style="background: #f8f9fa; padding: 15px 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e9ecef;">
+                <div class="report-grid" style="margin-bottom: 10px;">
+                    <div class="input-group">
+                        <label>Patient ID (IC Number)</label>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="text" id="patient_id" placeholder="Optional">
+                            <button type="button" onclick="openIdScanner()" style="background: #007bff; color: white; border: none; border-radius: 6px; padding: 0 12px; cursor: pointer;">
+                                <i class="bi bi-upc-scan"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div class="input-group">
                         <label>Patient Name</label>
                         <input type="text" id="patient_name" placeholder="Optional">
                     </div>
-                    <div class="input-group">
-                        <label>Patient ID </label>
-                        <input type="text" id="patient_id" placeholder="Optional">
-                    </div>
                 </div>
+                
+                <button type="button" onclick="openIdScanner()" class="btn-start-assess" style="background: #f0f7ff; color: #007bff; border: 1px solid #007bff; margin-top:0; margin-bottom:5px; font-size: 0.85rem; height: auto; padding: 8px;">
+                    <i class="bi bi-upc-scan"></i> <strong>Tap to Scan Patient Sticker</strong>
+                </button>
             </div>
 
             <div class="report-grid">
@@ -325,7 +340,18 @@
             </div>
         </div>
     </div>
-
+<div id="id-scanner-modal" class="modal-overlay" style="display:none; z-index:10001; background:rgba(0,0,0,0.9); flex-direction:column; justify-content:center; align-items:center;">
+        <div style="width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 12px; text-align: center;">
+            <h4 style="margin-top:0; color: #007bff;"><i class="bi bi-upc-scan"></i> Identify Patient</h4>
+            <div id="id-reader" style="width:100%; height:200px; overflow:hidden; border-radius:8px; margin-bottom:15px; background:black;"></div>
+            
+            <input type="file" id="id-qr-input-file" accept="image/*" style="display:none">
+            <button onclick="document.getElementById('id-qr-input-file').click()" class="btn-start-assess" style="background:#eef2f5; color:#007bff; margin-bottom:10px; border: 1px solid #007bff;">
+                <i class="bi bi-image"></i> Upload ID from Gallery
+            </button>
+            <button onclick="closeIdScanner()" class="btn-start-assess" style="background:#6c757d; margin-top:0;">Cancel</button>
+        </div>
+    </div>
     <script src="diagnostic.js"></script>
     <script>
         function trackAndCopyReport() {
@@ -367,7 +393,80 @@
                 alert("Error: The submit code is missing from diagnostic.js");
             }
         }
-    </script>
+    // --- UPGRADED SMART SCANNER LOGIC (PARITY WITH SCAN.HTML) ---
+        let idScanner = null;
+
+        function openIdScanner() {
+            document.getElementById('id-scanner-modal').style.display = 'flex';
+            if (!idScanner) idScanner = new Html5Qrcode("id-reader");
+
+            const config = { fps: 10, qrbox: { width: 250, height: 200 } };
+
+            idScanner.start({ facingMode: "environment" }, config, onIdScanSuccess)
+            .catch(err => {
+                console.warn("Camera auto-start failed, please use gallery upload.");
+            });
+        }
+
+        function onIdScanSuccess(decodedText) {
+            closeIdScanner();
+            let text = decodedText.trim();
+            let parts = text.split('|');
+
+            // Smart Mapping: IC Number -> patient_id, Name -> patient_name
+            if (parts.length > 1) {
+                document.getElementById('patient_id').value = parts[0].substring(0, 12).trim(); 
+                document.getElementById('patient_name').value = parts[1] ? parts[1].trim() : "";   
+            } else {
+                // Fallback for standard 12-digit barcodes
+                document.getElementById('patient_id').value = text.substring(0, 12);
+                document.getElementById('patient_name').value = "";
+            }
+        }
+
+        // HARDWARE-ACCELERATED GALLERY LISTENER
+        document.getElementById('id-qr-input-file').addEventListener('change', async e => {
+            if (e.target.files.length == 0) return;
+            const imageFile = e.target.files[0];
+
+            const img = new Image();
+            img.src = URL.createObjectURL(imageFile);
+
+            img.onload = async () => {
+                if ('BarcodeDetector' in window) {
+                    try {
+                        const detector = new BarcodeDetector();
+                        const barcodes = await detector.detect(img);
+                        if (barcodes.length > 0) {
+                            onIdScanSuccess(barcodes[0].rawValue);
+                            URL.revokeObjectURL(img.src);
+                            return;
+                        }
+                    } catch (err) { console.warn("Hardware ID scan failed", err); }
+                }
+
+                if (!idScanner) idScanner = new Html5Qrcode("id-reader");
+                
+                idScanner.scanFile(imageFile, true)
+                    .then(decodedText => {
+                        onIdScanSuccess(decodedText);
+                        URL.revokeObjectURL(img.src);
+                    })
+                    .catch(err => {
+                        alert("Could not find a code. TIP: For small barcodes, try cropping the photo first!");
+                        URL.revokeObjectURL(img.src);
+                    });
+            };
+        });
+
+        function closeIdScanner() {
+            document.getElementById('id-scanner-modal').style.display = 'none';
+            if (idScanner && idScanner.isScanning) {
+                idScanner.stop().catch(e => console.error("Scanner Stop Error", e));
+            }
+        }
+        
+        </script>
 
 
     <footer class="legal-footer">
