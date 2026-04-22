@@ -160,15 +160,15 @@
         <strong>Zero Data Retention:</strong> You may leave these blank and fill them directly in your Google Form. No patient identifiers are stored on this app.
     </p>
 
-    <div class="form-group">
-        <div style="display: flex; gap: 5px;">
-            <input type="text" id="pt_id" class="form-control" placeholder="Patient IC">
-            <button type="button" onclick="openIdScanner()" style="background: var(--primary); color: white; border: none; border-radius: 6px; padding: 0 15px; cursor: pointer;">
-                <i class="bi bi-upc-scan"></i>
-            </button>
-        </div>
-        <input type="text" id="pt_name" class="form-control" placeholder="Name">
-    </div>
+<div class="form-group" style="grid-template-columns: 1fr;">
+    <input type="text" id="pt_id" class="form-control" placeholder="Patient IC Number">
+    <input type="text" id="pt_name" class="form-control" placeholder="Patient Name (Optional)" style="margin-top:8px;">
+    
+    <button type="button" onclick="openIdScanner()" class="btn-action" style="background: #f0f7ff; color: #0d6efd; border: 1px solid #0d6efd; margin-top:12px; font-size: 0.9rem;">
+        <i class="bi bi-upc-scan"></i> <strong>Tap to Identify Patient</strong>
+        <br><span style="font-size: 0.7rem; font-weight: normal; opacity: 0.8;">Scans IC Barcode or Research QR</span>
+    </button>
+</div>
 
 </div>
 
@@ -209,20 +209,24 @@
         </button>
     </div>
 </div>
-    <div id="id-scanner-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; flex-direction:column; justify-content:center; align-items:center;">
-        <div style="width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 12px; text-align: center;">
-            <h4 style="margin-top:0; color: var(--primary);"><i class="bi bi-upc-scan"></i> Identify Patient</h4>
-            <p style="font-size: 0.85rem; color: #6c757d; margin-bottom: 15px;">Point camera at Barcode or Research QR</p>
-            
-            <div id="id-reader" style="width:100%; height:200px; overflow:hidden; border-radius:8px; margin-bottom:15px; background:black;"></div>
-            
-            <button onclick="closeIdScanner()" class="btn btn-secondary" style="width:100%; padding:12px; border-radius:8px; border:none; font-weight:bold;">Cancel</button>
-        </div>
-    </div>
+<div id="id-scanner-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; flex-direction:column; justify-content:center; align-items:center;">
+    <div style="width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 12px; text-align: center;">
+        <h4 style="margin-top:0; color: var(--primary);"><i class="bi bi-upc-scan"></i> Identify Patient</h4>
+        <p style="font-size: 0.85rem; color: #6c757d; margin-bottom: 15px;">Aim at hospital sticker or Research QR</p>
+        
+        <div id="id-reader" style="width:100%; height:200px; overflow:hidden; border-radius:8px; margin-bottom:15px; background:black;"></div>
+        
+        <input type="file" id="id-qr-input-file" accept="image/*" style="display:none">
+        
+        <button onclick="document.getElementById('id-qr-input-file').click()" class="btn-action" style="background:#eef2f5; color:#0d6efd; margin-bottom:10px; border: 1px solid #0d6efd;">
+            <i class="bi bi-image"></i> Upload ID from Gallery
+        </button>
 
+        <button onclick="closeIdScanner()" class="btn btn-secondary" style="width:100%; padding:12px; border-radius:8px; border:none; font-weight:bold;">Cancel</button>
+    </div>
 </div>
 
-
+</div>
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
@@ -670,38 +674,44 @@
 
         const config = { fps: 10, qrbox: { width: 250, height: 200 } };
 
-        idScanner.start({ facingMode: "environment" }, config, 
-            (decodedText) => {
-                closeIdScanner();
-                let text = decodedText.trim();
-                let parts = text.split('|');
-
-                // --- THE SMART PARSER ---
-                if (parts.length > 1) {
-                    // SCENARIO 1: Rich Payload (IC|Name|Notes)
-                    document.getElementById('pt_id').value = parts[0].substring(0, 12).trim();
-                    document.getElementById('pt_name').value = parts[1] ? parts[1].trim() : "";
-                    document.getElementById('clinical_remark').value = parts[2] ? parts[2].trim() : "";
-                } 
-                else {
-                    // SCENARIO 2: No Payload (Standard Hospital Barcode)
-                    document.getElementById('pt_id').value = text.substring(0, 12);
-                    document.getElementById('pt_name').value = ""; 
-                    
-                    // Overflow Safety Net
-                    if (text.length > 12) {
-                        document.getElementById('clinical_remark').value = "Overflow: " + text.substring(12);
-                    } else {
-                        document.getElementById('clinical_remark').value = "";
-                    }
-                }
-            },
-            (errorMessage) => { /* scanning... */ }
-        ).catch(err => {
-            alert("Camera error: " + err);
-            closeIdScanner();
+        idScanner.start({ facingMode: "environment" }, config, onIdScanSuccess)
+        .catch(err => {
+            console.warn("Camera auto-start failed, please use gallery upload.");
         });
     }
+
+    // SHARED SUCCESS LOGIC FOR BOTH CAMERA AND GALLERY
+    function onIdScanSuccess(decodedText) {
+        closeIdScanner();
+        let text = decodedText.trim();
+        let parts = text.split('|');
+
+        if (parts.length > 1) {
+            document.getElementById('pt_id').value = parts[0].substring(0, 12).trim();
+            document.getElementById('pt_name').value = parts[1] ? parts[1].trim() : "";
+            document.getElementById('clinical_remark').value = parts[2] ? parts[2].trim() : "";
+        } else {
+            document.getElementById('pt_id').value = text.substring(0, 12);
+            document.getElementById('pt_name').value = ""; 
+            if (text.length > 12) {
+                document.getElementById('clinical_remark').value = "Overflow: " + text.substring(12);
+            } else {
+                document.getElementById('clinical_remark').value = "";
+            }
+        }
+    }
+
+    // GALLERY LISTENER FOR ID SCANNER
+    document.getElementById('id-qr-input-file').addEventListener('change', async e => {
+        if (e.target.files.length == 0) return;
+        const imageFile = e.target.files[0];
+        
+        if (!idScanner) idScanner = new Html5Qrcode("id-reader");
+
+        idScanner.scanFile(imageFile, true)
+            .then(decodedText => onIdScanSuccess(decodedText))
+            .catch(err => alert("Could not find a valid code in that image. Please try a clearer photo."));
+    });
 
     function closeIdScanner() {
         document.getElementById('id-scanner-modal').style.display = 'none';
@@ -709,6 +719,7 @@
             idScanner.stop().catch(e => console.error("Scanner Stop Error", e));
         }
     }
+
 </script>
 <script src="/js/ga-tracking.js"></script>
 
