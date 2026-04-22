@@ -12,6 +12,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="/js/qr.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script>
+    if (!window.Html5Qrcode) {
+        document.write('<script src="/js/html5-qrcode.min.js"><\/script>');
+    }
+</script>
 
 <style>
     /* Specific styles for headers and buttons in this page */
@@ -248,17 +254,26 @@
             </p>
 
                      <div style="background: #f8f9fa; padding: 15px 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e9ecef;">
-                <div class="report-grid" style="margin-bottom: 15px;">
+                                <div class="report-grid" style="margin-bottom: 10px;">
                     <div class="input-group">
                         <label>Patient Research ID</label>
                         <input type="text" id="patient_id" placeholder="Optional">
                     </div>
                     <div class="input-group">
                         <label>Patient IC</label>
-                        <input type="text" id="patient_name" placeholder="Optional">
+                        <div style="display: flex; gap: 5px;">
+                            <input type="text" id="patient_name" placeholder="Optional">
+                            <button type="button" onclick="openIdScanner()" style="background: #007bff; color: white; border: none; border-radius: 6px; padding: 0 12px; cursor: pointer;">
+                                <i class="bi bi-upc-scan"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
+                <button type="button" onclick="openIdScanner()" class="btn-start-assess" style="background: #f0f7ff; color: #007bff; border: 1px solid #007bff; margin-top:0; margin-bottom:15px; font-size: 0.85rem; height: auto; padding: 8px;">
+                    <i class="bi bi-upc-scan"></i> <strong>Tap to Scan Patient Sticker</strong>
+                </button>
+
                 <div class="input-group">
                     <label>Study Phase / KPI Timing</label>
                     <select id="kpi_timing" class="phase-select">
@@ -305,6 +320,18 @@
                     Clear All Data
                 </button>
             </div>
+        </div>
+    </div>
+    <div id="id-scanner-modal" class="modal-overlay" style="display:none; z-index:10001; background:rgba(0,0,0,0.9); flex-direction:column; justify-content:center; align-items:center;">
+        <div style="width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 12px; text-align: center;">
+            <h4 style="margin-top:0; color: #007bff;"><i class="bi bi-upc-scan"></i> Identify Patient</h4>
+            <div id="id-reader" style="width:100%; height:200px; overflow:hidden; border-radius:8px; margin-bottom:15px; background:black;"></div>
+            
+            <input type="file" id="id-qr-input-file" accept="image/*" style="display:none">
+            <button onclick="document.getElementById('id-qr-input-file').click()" class="btn-start-assess" style="background:#eef2f5; color:#007bff; margin-bottom:10px; border: 1px solid #007bff;">
+                <i class="bi bi-image"></i> Upload from Gallery
+            </button>
+            <button onclick="closeIdScanner()" class="btn-start-assess" style="background:#6c757d; margin-top:0;">Cancel</button>
         </div>
     </div>
 
@@ -355,11 +382,11 @@
         document.addEventListener('DOMContentLoaded', () => {
             const codsScore = sessionStorage.getItem('report_cods');
             const ohatScore = sessionStorage.getItem('report_ohat');
-            
+
             if (codsScore) {
                 const el = document.getElementById('input_cods');
                 if(el) el.value = codsScore;
-                
+
                 const badge = document.getElementById('cardBadge');
                 if(badge) {
                     badge.innerText = "New";
@@ -369,7 +396,7 @@
             if (ohatScore) {
                 const el = document.getElementById('input_ohat');
                 if(el) el.value = ohatScore;
-                
+
                 const badge = document.getElementById('cardBadge');
                 if(badge) {
                     badge.innerText = "New";
@@ -377,7 +404,50 @@
                 }
             }
         });
-    </script>
+          // --- SMART SCANNER LOGIC FOR RESEARCH HANDOVER ---
+        let idScanner = null;
+
+        function openIdScanner() {
+            document.getElementById('id-scanner-modal').style.display = 'flex';
+            if (!idScanner) idScanner = new Html5Qrcode("id-reader");
+
+            idScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 200 } }, onIdScanSuccess)
+            .catch(err => console.warn("Camera start failed, use gallery."));
+        }
+
+        function onIdScanSuccess(decodedText) {
+            closeIdScanner();
+            let text = decodedText.trim();
+            let parts = text.split('|');
+
+            if (parts.length > 1) {
+                // Smart payload mapping: IC | Name | Notes
+                document.getElementById('patient_name').value = parts[0].substring(0, 12).trim(); 
+                document.getElementById('patient_id').value = parts[1] ? parts[1].trim() : "";   
+                if (parts[2]) document.getElementById('input_research_notes').value = parts[2].trim();
+            } else {
+                // Standard Barcode mapping
+                document.getElementById('patient_name').value = text.substring(0, 12);
+                document.getElementById('patient_id').value = "";
+            }
+        }
+
+        document.getElementById('id-qr-input-file').addEventListener('change', async e => {
+            if (e.target.files.length == 0) return;
+            if (!idScanner) idScanner = new Html5Qrcode("id-reader");
+            idScanner.scanFile(e.target.files[0], true)
+                .then(decodedText => onIdScanSuccess(decodedText))
+                .catch(err => alert("Could not find a valid code. Try a clearer photo."));
+        });
+
+        function closeIdScanner() {
+            document.getElementById('id-scanner-modal').style.display = 'none';
+            if (idScanner && idScanner.isScanning) {
+                idScanner.stop().catch(e => console.error("Scanner Stop Error", e));
+            }
+        }
+
+  </script>
 
     <footer class="legal-footer">
         <div class="container">
