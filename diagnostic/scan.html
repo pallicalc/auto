@@ -160,10 +160,16 @@
         <strong>Zero Data Retention:</strong> You may leave these blank and fill them directly in your Google Form. No patient identifiers are stored on this app.
     </p>
 
-    <div class="form-group">
-        <input type="text" id="pt_id" class="form-control" placeholder="Patient ID">
-        <input type="text" id="pt_name" class="form-control" placeholder="Name">
-    </div>
+<div class="form-group" style="grid-template-columns: 1fr;">
+    <input type="text" id="pt_id" class="form-control" placeholder="Patient IC Number">
+    <input type="text" id="pt_name" class="form-control" placeholder="Patient Name (Optional)" style="margin-top:8px;">
+    
+    <button type="button" onclick="openIdScanner()" class="btn-action" style="background: #f0f7ff; color: #0d6efd; border: 1px solid #0d6efd; margin-top:12px; font-size: 0.9rem;">
+        <i class="bi bi-upc-scan"></i> <strong>Tap to Identify Patient</strong>
+        <br><span style="font-size: 0.7rem; font-weight: normal; opacity: 0.8;">Scans IC Barcode or Research QR</span>
+    </button>
+</div>
+
 </div>
 
 
@@ -203,7 +209,24 @@
         </button>
     </div>
 </div>
+<div id="id-scanner-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; flex-direction:column; justify-content:center; align-items:center;">
+    <div style="width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 12px; text-align: center;">
+        <h4 style="margin-top:0; color: var(--primary);"><i class="bi bi-upc-scan"></i> Identify Patient</h4>
+        <p style="font-size: 0.85rem; color: #6c757d; margin-bottom: 15px;">Aim at hospital sticker or Research QR</p>
+        
+        <div id="id-reader" style="width:100%; height:200px; overflow:hidden; border-radius:8px; margin-bottom:15px; background:black;"></div>
+        
+        <input type="file" id="id-qr-input-file" accept="image/*" style="display:none">
+        
+        <button onclick="document.getElementById('id-qr-input-file').click()" class="btn-action" style="background:#eef2f5; color:#0d6efd; margin-bottom:10px; border: 1px solid #0d6efd;">
+            <i class="bi bi-image"></i> Upload ID from Gallery
+        </button>
 
+        <button onclick="closeIdScanner()" class="btn btn-secondary" style="width:100%; padding:12px; border-radius:8px; border:none; font-weight:bold;">Cancel</button>
+    </div>
+</div>
+
+</div>
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
@@ -313,28 +336,51 @@
             document.getElementById('camera-error').style.display = 'block';
         }
     }
-
+    // UPGRADED MAIN GALLERY SCANNER
     document.getElementById('qr-input-file').addEventListener('change', async e => {
         if (e.target.files.length == 0) return;
         const imageFile = e.target.files[0];
         document.getElementById('gallery-status').style.display = 'block';
 
-        if (html5QrCode && isCameraRunning) {
-            try { await html5QrCode.stop(); isCameraRunning = false; } catch (err) {}
-        }
-        if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+        const img = new Image();
+        img.src = URL.createObjectURL(imageFile);
 
-        html5QrCode.scanFile(imageFile, true)
-            .then(decodedText => {
-                document.getElementById('gallery-status').style.display = 'none';
-                onScanSuccess(decodedText);
-            })
-            .catch(err => {
-                document.getElementById('gallery-status').style.display = 'none';
-                alert("Error scanning file. Try a clearer image.");
-                initCameraSystem(); 
-            });
+        img.onload = async () => {
+            // 1. Try Hardware Acceleration (Scans entire high-res image)
+            if ('BarcodeDetector' in window) {
+                try {
+                    const detector = new BarcodeDetector();
+                    const barcodes = await detector.detect(img);
+                    if (barcodes.length > 0) {
+                        document.getElementById('gallery-status').style.display = 'none';
+                        onScanSuccess(barcodes[0].rawValue);
+                        URL.revokeObjectURL(img.src);
+                        return; 
+                    }
+                } catch (err) { console.warn("Native hardware scanner failed", err); }
+            }
+
+            // 2. Fallback to Standard Scanner (Low-res center scan)
+            if (html5QrCode && isCameraRunning) {
+                try { await html5QrCode.stop(); isCameraRunning = false; } catch (err) {}
+            }
+            if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+
+            html5QrCode.scanFile(imageFile, true)
+                .then(decodedText => {
+                    document.getElementById('gallery-status').style.display = 'none';
+                    onScanSuccess(decodedText);
+                    URL.revokeObjectURL(img.src);
+                })
+                .catch(err => {
+                    document.getElementById('gallery-status').style.display = 'none';
+                    alert("Could not find a QR code. TIP: If the QR is in the corner, try cropping the photo first!");
+                    initCameraSystem(); 
+                    URL.revokeObjectURL(img.src);
+                });
+        };
     });
+
 
     // --- UNIVERSAL DECODER ROUTER ---
     function decodeToolData(compactData) {
@@ -641,8 +687,90 @@
     }
 
     function resetScanner() { location.reload(); }
+
+    // --- MINI ID SCANNER & SMART PARSER ---
+    let idScanner = null;
+
+    function openIdScanner() {
+        document.getElementById('id-scanner-modal').style.display = 'flex';
+        if (!idScanner) { idScanner = new Html5Qrcode("id-reader"); }
+
+        const config = { fps: 10, qrbox: { width: 250, height: 200 } };
+
+        idScanner.start({ facingMode: "environment" }, config, onIdScanSuccess)
+        .catch(err => {
+            console.warn("Camera auto-start failed, please use gallery upload.");
+        });
+    }
+
+    // SHARED SUCCESS LOGIC FOR BOTH CAMERA AND GALLERY
+    function onIdScanSuccess(decodedText) {
+        closeIdScanner();
+        let text = decodedText.trim();
+        let parts = text.split('|');
+
+        if (parts.length > 1) {
+            document.getElementById('pt_id').value = parts[0].substring(0, 12).trim();
+            document.getElementById('pt_name').value = parts[1] ? parts[1].trim() : "";
+            document.getElementById('clinical_remark').value = parts[2] ? parts[2].trim() : "";
+        } else {
+            document.getElementById('pt_id').value = text.substring(0, 12);
+            document.getElementById('pt_name').value = ""; 
+            if (text.length > 12) {
+                document.getElementById('clinical_remark').value = "Overflow: " + text.substring(12);
+            } else {
+                document.getElementById('clinical_remark').value = "";
+            }
+        }
+    }
+
+    // UPGRADED PATIENT ID GALLERY SCANNER
+    document.getElementById('id-qr-input-file').addEventListener('change', async e => {
+        if (e.target.files.length == 0) return;
+        const imageFile = e.target.files[0];
+        
+        const img = new Image();
+        img.src = URL.createObjectURL(imageFile);
+
+        img.onload = async () => {
+            // 1. Hardware-Accelerated Scan (Best for Barcodes in corners)
+            if ('BarcodeDetector' in window) {
+                try {
+                    const detector = new BarcodeDetector();
+                    const barcodes = await detector.detect(img);
+                    if (barcodes.length > 0) {
+                        onIdScanSuccess(barcodes[0].rawValue);
+                        URL.revokeObjectURL(img.src);
+                        return;
+                    }
+                } catch (err) { console.warn("Hardware ID scan failed", err); }
+            }
+
+            // 2. Standard Fallback
+            if (!idScanner) idScanner = new Html5Qrcode("id-reader");
+            
+            idScanner.scanFile(imageFile, true)
+                .then(decodedText => {
+                    onIdScanSuccess(decodedText);
+                    URL.revokeObjectURL(img.src);
+                })
+                .catch(err => {
+                    alert("Could not find an IC Barcode. TIP: If the barcode is in the corner, try cropping the photo first!");
+                    URL.revokeObjectURL(img.src);
+                });
+        };
+    });
+
+    function closeIdScanner() {
+        document.getElementById('id-scanner-modal').style.display = 'none';
+        if (idScanner && idScanner.isScanning) {
+            idScanner.stop().catch(e => console.error("Scanner Stop Error", e));
+        }
+    }
+
 </script>
 <script src="/js/ga-tracking.js"></script>
+
 <div id="pwa-offline-banner" style="display: none; background-color: #f59e0b; color: #fff; text-align: center; padding: 6px 10px; padding-top: max(6px, env(safe-area-inset-top)); font-size: 12px; font-weight: bold; position: fixed; top: 0; left: 0; width: 100%; z-index: 10000; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><i class="bi bi-wifi-off"></i> Offline Mode: Using Local Data</div>
 <script>
     (function(){
