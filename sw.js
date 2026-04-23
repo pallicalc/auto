@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pallicalc-smart-v52'; 
+const CACHE_NAME = 'pallicalc-smart-v53'; 
 
 const CRITICAL_FILES = [
   './app.html',
