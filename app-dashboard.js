@@ -15,117 +15,91 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-let currentUser = null;
 let isVipUser = false;
 
 // ==========================================
-// 1. APP LOAD & LOGIN DETECTION
+// 1. APP LOAD & BULLETPROOF LOGIN DETECTION
 // ==========================================
 window.addEventListener('load', () => {
-    // 👉 Request Apple VIP Storage Armor immediately
     secureOfflineStorage();
 
-    // HELPER: Unlocks the dashboard and starts the SW Engine
-    window.unlockDashboardAndStart = function() {
-        const overlay = document.getElementById('locked-overlay');
-        const dashboard = document.getElementById('dashboard');
-        if (overlay) overlay.style.display = 'none';
-        if (dashboard) dashboard.style.display = 'block';
-
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-                .then((reg) => {
-                    console.log('✅ Service Worker Registered.', reg.scope);
-                    setTimeout(startVisibleOfflineDownload, 1000);
-                })
-                .catch((err) => console.log('❌ SW Fail:', err));
-        }
-
-        detectBrowserAndShowInstructions();
-
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('offline_mode') === 'true') {
-            const offlineMsg = document.createElement('div');
-            offlineMsg.innerHTML = `
-                <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); 
-                            background: #333; color: white; padding: 12px 24px; border-radius: 50px; 
-                            box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; font-size: 14px; 
-                            display: flex; align-items: center; gap: 10px; min-width: 280px;">
-                    <i class="bi bi-wifi-off" style="font-size: 18px; color: #ffca2c;"></i>
-                    <div>
-                        <strong>You are Offline</strong><br>
-                        Redirected to offline dashboard.
-                    </div>
-                    <button onclick="this.parentElement.remove()" style="background:none; border:none; color:#aaa; margin-left:auto; font-size:18px; cursor:pointer;">&times;</button>
-                </div>
-            `;
-            document.body.appendChild(offlineMsg);
-            window.history.replaceState({}, document.title, window.location.pathname);
-            setTimeout(() => { if(offlineMsg) offlineMsg.remove(); }, 5000);
-        }
-    };
-
-    // 1. INSTANT OFFLINE CHECK (Checks local suitcase)
+    // SCENARIO A: Instant Offline Check
     if (localStorage.getItem('palliCalcLoginPassword')) {
-        window.unlockDashboardAndStart();
+        unlockScreen();
     }
 
-    // 2. 🔥 FIREBASE ONLINE CHECK (Detects login from index.html & updates UI) 🔥
+    // SCENARIO B: Online Firebase Check (Catches index.html logins)
     if (typeof firebase !== 'undefined' && firebase.auth) {
-        firebase.auth().onAuthStateChanged((user) => {
-            checkAuthState(user);
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                // 1. Drop the lock screen immediately
+                unlockScreen();
+
+                // 2. Fix the Suitcase if index.html forgot to pack it
+                if (!localStorage.getItem('palliCalcLoginPassword')) {
+                    localStorage.setItem('palliCalcLoginPassword', 'firebase-token');
+                }
+
+                // 3. Update the UI to say Welcome safely
+                let displayName = user.email ? user.email.split('@')[0] : 'Doctor';
+                
+                try {
+                    if (firebase.functions) {
+                        const getStatus = firebase.functions().httpsCallable('getUserStatus');
+                        const result = await getStatus();
+                        if (result && result.data) {
+                            if (result.data.customRatios) {
+                                localStorage.setItem('palliCalc_customRatios', JSON.stringify(result.data.customRatios));
+                                isVipUser = true;
+                            }
+                            if (result.data.username) displayName = result.data.username;
+                        }
+                    }
+                } catch (e) {
+                    if (localStorage.getItem('palliCalc_customRatios')) isVipUser = true;
+                }
+
+                updateUI(displayName);
+            } else {
+                // User is NOT logged in. Show the login button.
+                if (!localStorage.getItem('palliCalcLoginPassword')) {
+                    const overlay = document.getElementById('locked-overlay');
+                    const dashboard = document.getElementById('dashboard');
+                    const userInfo = document.getElementById('user-info');
+                    
+                    if (overlay) overlay.style.display = 'flex';
+                    if (dashboard) dashboard.style.display = 'none';
+                    if (userInfo) userInfo.innerHTML = '<button id="login-btn" class="login-btn" onclick="window.location.href=\'index.html\'">🔐 Login</button>';
+                }
+            }
         });
     }
 });
 
 // ==========================================
-// 2. FIREBASE AUTH STATE & UI LOGIC
+// 2. UI & LOGOUT HELPERS
 // ==========================================
-async function checkAuthState(user) {
-    currentUser = user;
-    const userInfo = document.getElementById('user-info');
+function unlockScreen() {
+    const overlay = document.getElementById('locked-overlay');
+    const dashboard = document.getElementById('dashboard');
+    if (overlay) overlay.style.display = 'none';
+    if (dashboard) dashboard.style.display = 'block';
 
-    if (user) {
-        if (userInfo) userInfo.innerHTML = '<span style="font-size:13px; color:#475569">Verifying account...</span>';
-
-        try {
-            const getStatus = firebase.functions().httpsCallable('getUserStatus');
-            const result = await getStatus();
-            const statusData = result.data;
-
-            if (statusData.isSuspended) {
-                handleSuspension(statusData, statusData.institutionName || "your institution");
-                return;
-            }
-
-            isVipUser = statusData.isVip;
-            if (statusData.customRatios) {
-                localStorage.setItem('palliCalc_customRatios', JSON.stringify(statusData.customRatios));
-            }
-
-            updateUIForLogin(statusData, user.email, false);
-            window.unlockDashboardAndStart(); // Unlock everything!
-
-        } catch(e) {
-            console.warn('Network Error: Relying on local Suitcase.');
-            isVipUser = !!localStorage.getItem('palliCalc_customRatios');
-            updateUIForLogin({}, user.email, false);
-            window.unlockDashboardAndStart(); 
-        }
-    } else {
-        if (userInfo) {
-            userInfo.innerHTML = '<button id="login-btn" class="login-btn" onclick="window.location.href=\'index.html\'">🔐 Login</button>';
-        }
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then((reg) => { setTimeout(startVisibleOfflineDownload, 1000); })
+            .catch((err) => console.log('SW Fail:', err));
     }
+
+    detectBrowserAndShowInstructions();
 }
 
-function updateUIForLogin(userData, email, isSuspended) {
+function updateUI(displayName) {
     const userInfo = document.getElementById('user-info');
     const vipBadge = document.getElementById('user-tier-badge');
     const vipLock = document.getElementById('vip-lock-opioid');
     const toolsSection = document.getElementById('tools-section');
 
-    let displayName = userData.username || email.split('@')[0];
     let welcomeText = `Welcome, ${displayName}`;
     if (isVipUser) welcomeText += ' PRO';
 
@@ -139,34 +113,14 @@ function updateUIForLogin(userData, email, isSuspended) {
             </div>`;
     }
 
-    if (!isSuspended) {
-        if (toolsSection) {
-            toolsSection.classList.add('visible');
-            toolsSection.style.display = 'grid'; 
-        }
-        if (vipBadge) vipBadge.style.display = isVipUser ? 'inline' : 'none';
-        if (vipLock) vipLock.style.display = isVipUser ? 'inline-block' : 'none';
-    }
-}
-
-function handleSuspension(userData, instName) {
-    localStorage.removeItem('palliCalc_customRatios');
-    updateUIForLogin(userData, currentUser.email, true); 
-    const toolsSection = document.getElementById('tools-section');
     if (toolsSection) {
-        toolsSection.innerHTML = `
-            <div style="border: 1px solid #e2e8f0; background: #fffafa; padding: 2rem; text-align: center; border-radius: 12px; margin: 20px auto;">
-                <h3 style="color: #1e293b;">Service Temporarily Paused</h3>
-                <p style="color: #475569;">Premium features for <strong>${instName}</strong> are unavailable.</p>
-            </div>`;
         toolsSection.classList.add('visible');
-        toolsSection.style.display = 'block'; 
+        toolsSection.style.display = 'grid'; 
     }
+    if (vipBadge) vipBadge.style.display = isVipUser ? 'inline' : 'none';
+    if (vipLock) vipLock.style.display = isVipUser ? 'inline-block' : 'none';
 }
 
-// ==========================================
-// 3. LOGOUT SYSTEM
-// ==========================================
 function logout() {
     if (typeof firebase !== 'undefined' && firebase.auth) firebase.auth().signOut();
     localStorage.removeItem('palliCalcLoginPassword');
@@ -175,7 +129,7 @@ function logout() {
 }
 
 // ==========================================
-// 4. ROBUST UPDATE LOGIC
+// 3. ROBUST UPDATE LOGIC
 // ==========================================
 const updateBtn = document.getElementById('update-btn');
 if (updateBtn) {
@@ -200,7 +154,6 @@ if (updateBtn) {
             });
             window.location.reload(true);
         } catch (error) {
-            console.error("Update failed:", error);
             alert("Update failed. Please try again.");
             updateBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Update';
             updateBtn.disabled = false;
@@ -234,7 +187,7 @@ function detectBrowserAndShowInstructions() {
 }
 
 // ==========================================
-// 5. GLOBAL PWA PRE-FETCH (SILENT HEARTBEAT)
+// 4. GLOBAL PWA PRE-FETCH (SILENT HEARTBEAT)
 // ==========================================
 function startGlobalRatioSync() {
     if (!navigator.onLine || typeof firebase === 'undefined' || !firebase.apps.length) return;
@@ -300,7 +253,7 @@ window.addEventListener('online', triggerSync);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && navigator.onLine) triggerSync(); });
 
 // ==========================================
-// 6. VISIBLE OFFLINE ASSET DOWNLOADER
+// 5. VISIBLE OFFLINE ASSET DOWNLOADER
 // ==========================================
 async function startVisibleOfflineDownload() {
     const ASSET_CACHE_NAME = 'pallicalc-smart-v51'; 
@@ -317,4 +270,82 @@ async function startVisibleOfflineDownload() {
     container.style.display = 'block';
 
     const filesToDownload = [
-      './patient-education.js', './
+      './patient-education.js', './all-calculators.html', './js/qr.min.js', './healthcare-guidelines.html',
+      './patient-education.html', './calculators/Benzodiazepine.html', './calculators/demo-opioid.html',
+      './calculators/Infusion-dose.html', './calculators/infusion-volume.html', './calculators/Opioid.html',
+      './calculators/calculator.css', './calculators/js/benzodiazepine.js', './calculators/js/demo-opioid.js',
+      './calculators/js/opioid.js', './guides/Benzodiazepines-conversion.html', './guides/infusion-dose.html',
+      './guides/opioid-conversion.html', './guides/prn-calculation.html', './diagnostic.js', './diagnostic-c.html',
+      './diagnostic-p.html', './diagnostic/distress/eng.html', './diagnostic/distress/bm.html', './diagnostic/distress/ch.html',
+      './diagnostic/hads/eng.html', './diagnostic/hads/bm.html', './diagnostic/hads/ch.html', './diagnostic/ipos/eng.html',
+      './diagnostic/ipos/bm.html', './diagnostic/ipos/ch.html', './diagnostic/akps.html', './diagnostic/flacc.html',
+      './diagnostic/rass.html', './diagnostic/rdos.html', './diagnostic/rug-adl.html', './diagnostic/scan.html',
+      './diagnostic/spict.html', './diagnostic/diagnostic.css', './diagnostic/diagnostic.js', './education/education.css',
+      './education/education.js', './education/opioids/ch.html', './education/opioids/ch.pdf', './education/opioids/eng.html',
+      './education/opioids/eng.pdf', './education/opioids/bm.html', './education/opioids/bm.pdf', './education/bleeding/eng.html',
+      './education/bleeding/bm.html', './education/bleeding/ch.html', './education/bleeding/1.jpg', './education/bleeding/2.jpg',
+      './education/breathlessness/eng.html', './education/breathlessness/bm.html', './education/breathlessness/ch.html',
+      './education/breathlessness/1.jpg', './education/breathlessness/2.jpg', './education/breathlessness/3.jpg',
+      './education/breathlessness/4.jpg', './education/breathlessness/5.jpg', './education/breathlessness/6.jpg',
+      './education/breathlessness/7.jpg', './education/buccal/eng.html', './education/buccal/bm.html', './education/buccal/ch.html',
+      './education/buccal/1.jpg', './education/buccal/2.jpg', './education/delirium/eng.html', './education/delirium/bm.html',
+      './education/delirium/ch.html', './education/delirium/1.jpg', './education/delirium/2.jpg', './education/EOL/eng.html',
+      './education/EOL/bm.html', './education/EOL/ch.html', './education/EOL/1a.jpg', './education/EOL/1b.jpg',
+      './education/EOL/2a.jpg', './education/EOL/2b.jpg', './education/EOL/3a.jpg', './education/EOL/3b.jpg',
+      './education/EOL/4a.jpg', './education/EOL/4b.jpg', './education/EOL/5a.jpg', './education/EOL/5b.jpg',
+      './education/facing-EOL/eng.html', './education/facing-EOL/bm.html', './education/facing-EOL/ch.html',
+      './education/mbo/eng.html', './education/mbo/bm.html', './education/mbo/ch.html', './education/pain/eng.html',
+      './education/pain/bm.html', './education/pain/ch.html', './education/seizure/eng.html', './education/seizure/bm.html',
+      './education/seizure/ch.html', './education/seizure/10mins.png', './education/seizure/seizure.png', './education/seizure/sideway.png',
+      './education/seizure/Xmouth.png', './education/subcutaneous/eng.html', './education/subcutaneous/bm.html',
+      './education/subcutaneous/ch.html', './education/subcutaneous/1.jpg', './education/subcutaneous/2.jpg', './education/subcutaneous/3.jpg',
+      './education/td-fentanyl/eng.html', './education/td-fentanyl/bm.html', './education/td-fentanyl/ch.html',
+      './education/td-fentanyl/1.jpg', './education/td-fentanyl/2.jpg', './research.html', './diagnostic/ohat.html', './diagnostic/cods.html', './diagnostic/sxi.html', './generate.html', './js/html5-qrcode.min.js'
+    ];
+
+    try {
+        const cache = await caches.open(ASSET_CACHE_NAME);
+        let loadedCount = 0;
+        const totalFiles = filesToDownload.length;
+
+        for (const file of filesToDownload) {
+            try {
+                let fetchUrl = file.endsWith('.html') ? file.slice(0, -5) : file;
+                const response = await fetch(fetchUrl);
+                if (response.ok) await cache.put(file, response.clone());
+            } catch (e) { /* skip safely */ }
+
+            loadedCount++;
+            const percent = Math.round((loadedCount / totalFiles) * 100);
+            progressBar.style.width = percent + '%';
+            progressPercent.innerText = percent + '%';
+
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+
+        localStorage.setItem(downloadFlag, 'true');
+        progressText.innerText = '✅ Offline assets ready!';
+        progressBar.style.backgroundColor = '#10b981'; 
+        setTimeout(() => { container.style.display = 'none'; }, 4000);
+
+    } catch (error) {
+        progressText.innerText = '⚠️ Download paused.';
+        progressBar.style.backgroundColor = '#f59e0b'; 
+    }
+}
+
+// ==========================================
+// 6. STORAGE ARMOR
+// ==========================================
+async function secureOfflineStorage() {
+    if (navigator.storage && navigator.storage.persist) {
+        try {
+            const isPersisted = await navigator.storage.persist();
+            if (isPersisted) {
+                console.log("🛡️ VIP Storage Granted: Apple will not silently delete PalliCalc.");
+            }
+        } catch (error) {
+            console.error("Storage persist request failed:", error);
+        }
+    }
+}
