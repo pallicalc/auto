@@ -16,25 +16,20 @@ if (!firebase.apps.length) {
 }
 
 ﻿window.addEventListener('load', () => {
-    // 👉 ADD IT RIGHT HERE: Request Apple VIP Storage Armor immediately
+    // 👉 Request Apple VIP Storage Armor immediately
     secureOfflineStorage();
 
-    const storedPassword = localStorage.getItem('palliCalcLoginPassword');
-
-    // 1. Check Login Status
-    if (storedPassword) {
-        // Unlock the UI
+    // HELPER: Unlocks the dashboard and starts the SW Engine
+    function unlockDashboardAndStart() {
         const overlay = document.getElementById('locked-overlay');
         const dashboard = document.getElementById('dashboard');
         if (overlay) overlay.style.display = 'none';
         if (dashboard) dashboard.style.display = 'block';
 
-        // ✅ CRITICAL RESTORATION: Start the Offline Engine & Trigger Download
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then((reg) => {
                     console.log('✅ Service Worker Registered.', reg.scope);
-                    // 👉 TRIGGER THE PROGRESS BAR HERE:
                     setTimeout(startVisibleOfflineDownload, 1000);
                 })
                 .catch((err) => console.log('❌ SW Fail:', err));
@@ -42,7 +37,7 @@ if (!firebase.apps.length) {
 
         detectBrowserAndShowInstructions();
 
-        // 2. Offline Notification Logic (If redirected from sw.js)
+        // Offline Notification Logic
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('offline_mode') === 'true') {
             const offlineMsg = document.createElement('div');
@@ -60,10 +55,24 @@ if (!firebase.apps.length) {
                 </div>
             `;
             document.body.appendChild(offlineMsg);
-            // Clean the URL so the message doesn't appear on refresh
             window.history.replaceState({}, document.title, window.location.pathname);
             setTimeout(() => { if(offlineMsg) offlineMsg.remove(); }, 5000);
         }
+    }
+
+    // 1. INSTANT OFFLINE CHECK (Checks local suitcase)
+    if (localStorage.getItem('palliCalcLoginPassword')) {
+        unlockDashboardAndStart();
+    }
+
+    // 2. 🔥 FIREBASE ONLINE CHECK (Detects login from index.html!) 🔥
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                // Firebase says we logged in via index.html! Unlock the app!
+                unlockDashboardAndStart();
+            }
+        });
     }
 });
 
