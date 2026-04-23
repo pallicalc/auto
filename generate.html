@@ -30,24 +30,23 @@
         .btn-primary { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .result-card { padding: 15px; border-top: 1px solid #eee; display: none; text-align: center;}
         
-        /* HIDDEN TEMPLATE - Fixed rendering calculation */
         #html-template { position: absolute; top: 0; left: 0; z-index: -100; opacity: 0; pointer-events: none; }
         
         .sticker-canvas { 
             width: 500px; height: 300px; 
             background: white; display: flex; flex-direction: column; justify-content: center;
-            padding: 15px; /* Creates the thin white border safe-zone */
+            padding: 15px; 
             box-sizing: border-box; color: black;
         }
 
         .qr-col { flex-shrink: 0; display: flex; align-items: center; justify-content: center;}
         .info-col { display: flex; flex-direction: column; justify-content: center; text-align: left; overflow: hidden; word-break: break-word;}
 
-        /* General Info Text Styling */
-        .info-text { font-family: 'Inter', sans-serif; line-height: 1.15; }
-        .name-txt { font-weight: 700; margin-bottom: 4px; }
-        .ic-txt { margin-bottom: 2px; white-space: nowrap; } 
-        .notes-txt { font-weight: 400; color: #111; }
+        /* Unified Info Text Styling */
+        .info-text { font-family: 'Inter', sans-serif; line-height: 1.1; }
+        .name-txt { font-weight: 700; margin-bottom: 6px; color: #000; }
+        .ic-txt { margin-bottom: 4px; white-space: nowrap; } 
+        .notes-txt { font-weight: 400; color: #333; }
 
         #final-sticker-img { width: 100%; max-width: 400px; border: 1px dashed #ccc; margin: 10px 0; }
     </style>
@@ -78,10 +77,10 @@
             <input type="radio" name="layout" id="lay-bar" value="barcode">
             <label for="lay-bar">Barcode Only</label>
             
-            <input type="radio" name="layout" id="lay-qr" value="qr">
+            <input type="radio" name="layout" id="lay-qr" value="qr" checked>
             <label for="lay-qr">QR Only</label>
             
-            <input type="radio" name="layout" id="lay-both" value="both" checked>
+            <input type="radio" name="layout" id="lay-both" value="both">
             <label for="lay-both">Both</label>
         </div>
 
@@ -100,35 +99,25 @@
 </div>
 
 <script>
-// Inline ITF Generator with forced symmetric Quiet Zones
 function generateITF(text) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const patterns = ["00110", "10001", "01001", "11000", "00101", "10100", "01100", "00011", "10010", "01010"];
-    
-    let code = "0000"; // Start pattern
+    let code = "0000";
     for (let i = 0; i < text.length; i += 2) {
         let digit1 = patterns[parseInt(text[i])];
         let digit2 = patterns[parseInt(text[i+1])];
-        for (let j = 0; j < 5; j++) {
-            code += digit1[j] + digit2[j];
-        }
+        for (let j = 0; j < 5; j++) { code += digit1[j] + digit2[j]; }
     }
-    code += "100"; // Stop pattern
-
-    // Add 40px to total width (20px left padding + 20px right padding)
+    code += "100";
     let totalWidth = 40; 
-    for (let i = 0; i < code.length; i++) {
-        totalWidth += (code[i] === "1") ? 6 : 2;
-    }
-
+    for (let i = 0; i < code.length; i++) { totalWidth += (code[i] === "1") ? 6 : 2; }
     canvas.width = totalWidth;
     canvas.height = 100;
     ctx.fillStyle = "white";
-    ctx.fillRect(0,0, canvas.width, canvas.height); // Fill entire canvas white
+    ctx.fillRect(0,0, canvas.width, canvas.height);
     ctx.fillStyle = "black";
-
-    let x = 20; // Start drawing after the 20px left quiet zone
+    let x = 20;
     for (let i = 0; i < code.length; i++) {
         let width = (code[i] === "1") ? 6 : 2; 
         if (i % 2 === 0) ctx.fillRect(x, 0, width, 100); 
@@ -155,37 +144,39 @@ function generateLabel() {
                 <img src="${barcodeData}" style="width: 90%; height: 140px; display: inline-block;">
             </div>
             <div class="info-text" style="margin-top:15px; text-align:center; width: 100%;">
-                <div class="name-txt" style="font-size: 30px;">${name}</div>
-                <div class="ic-txt" style="font-size: 22px;">IC: ${ic}</div>
-                <div class="notes-txt" style="font-size: 20px;">Notes: ${notes}</div>
+                <div class="name-txt" style="font-size: 32px;">${name}</div>
+                <div class="ic-txt" style="font-size: 26px;">IC: ${ic}</div>
+                <div class="notes-txt" style="font-size: 24px;">Notes: ${notes}</div>
             </div>`;
     } 
     else if (layout === 'qr') {
+        // SMALLER QR (180px) + MUCH BIGGER TEXT
         target.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%;">
+            <div style="display: flex; align-items: center; justify-content: flex-start; gap: 25px; width: 100%;">
                 <div id="qr-box" class="qr-col"></div>
-                <div class="info-col info-text" style="flex-grow: 1; padding-left: 5px;">
-                    <div class="name-txt" style="font-size: 28px; margin-bottom: 6px;">${name}</div>
-                    <div class="ic-txt" style="font-size: 20px; margin-bottom: 4px;">IC: ${ic}</div>
-                    <div class="notes-txt" style="font-size: 20px;">${notes}</div>
+                <div class="info-col info-text" style="flex-grow: 1;">
+                    <div class="name-txt" style="font-size: 36px; margin-bottom: 10px;">${name}</div>
+                    <div class="ic-txt" style="font-size: 28px; margin-bottom: 6px;">IC: ${ic}</div>
+                    <div class="notes-txt" style="font-size: 28px;">${notes}</div>
                 </div>
             </div>`;
-        new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 250, height: 250 });
+        new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 180, height: 180 });
     } 
     else if (layout === 'both') {
+        // Barcode top, QR + Text bottom (All Centered)
         target.innerHTML = `
-            <div style="width: 100%; text-align: center; margin-bottom: 12px;">
-                <img src="${barcodeData}" style="width: 94%; height: 100px; display: inline-block;">
+            <div style="width: 100%; text-align: center; margin-bottom: 10px;">
+                <img src="${barcodeData}" style="width: 92%; height: 100px; display: inline-block;">
             </div>
             <div style="display: flex; justify-content: center; align-items: center; gap: 20px; width: 100%;">
                 <div id="qr-box" class="qr-col"></div>
-                <div class="info-col info-text" style="flex-grow: 1; padding-left: 5px;">
-                    <div class="name-txt" style="font-size: 24px;">${name}</div>
-                    <div class="ic-txt" style="font-size: 18px;">IC: ${ic}</div>
-                    <div class="notes-txt" style="font-size: 18px;">${notes}</div>
+                <div class="info-col info-text" style="flex-grow: 1;">
+                    <div class="name-txt" style="font-size: 30px; margin-bottom: 4px;">${name}</div>
+                    <div class="ic-txt" style="font-size: 22px;">IC: ${ic}</div>
+                    <div class="notes-txt" style="font-size: 22px;">${notes}</div>
                 </div>
             </div>`;
-        new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 130, height: 130 });
+        new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 140, height: 140 });
     }
 
     setTimeout(() => {
