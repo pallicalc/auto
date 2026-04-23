@@ -290,9 +290,9 @@ async function startVisibleOfflineDownload() {
       './education/facing-EOL/eng.html', './education/facing-EOL/bm.html', './education/facing-EOL/ch.html',
       './education/mbo/eng.html', './education/mbo/bm.html', './education/mbo/ch.html', './education/pain/eng.html',
       './education/pain/bm.html', './education/pain/ch.html', './education/seizure/eng.html', './education/seizure/bm.html',
-      './education/seizure/ch.html', './education/10mins.png', './education/seizure/seizure.png', './education/seizure/sideway.png',
+      './education/seizure/ch.html', './education/seizure/10mins.png', './education/seizure/seizure.png', './education/seizure/sideway.png',
       './education/seizure/Xmouth.png', './education/subcutaneous/eng.html', './education/subcutaneous/bm.html',
-      './education/subcutaneous/ch.html', './education/1.jpg', './education/subcutaneous/2.jpg', './education/subcutaneous/3.jpg',
+      './education/subcutaneous/ch.html', './education/subcutaneous/1.jpg', './education/subcutaneous/2.jpg', './education/subcutaneous/3.jpg',
       './education/td-fentanyl/eng.html', './education/td-fentanyl/bm.html', './education/td-fentanyl/ch.html',
       './education/td-fentanyl/1.jpg', './education/td-fentanyl/2.jpg', './research.html', './diagnostic/ohat.html', './diagnostic/cods.html', './diagnostic/sxi.html', './generate.html', './js/html5-qrcode.min.js'
     ];
