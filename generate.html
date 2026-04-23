@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
     <script src="/js/qr.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
@@ -18,19 +17,17 @@
         .main-container { max-width: 500px; margin: 0 auto; background: white; border-radius: var(--border-radius); box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
         .app-header { background: var(--primary); padding: 15px; text-align: center; color: white; }
         .app-header h1 { margin: 0; font-size: 1.2rem; }
-        
         .form-section { padding: 15px; }
         .form-group { margin-bottom: 12px; }
         .form-label { display: block; font-size: 0.75rem; font-weight: 700; color: #6c757d; margin-bottom: 4px; text-transform: uppercase; }
         .form-control { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 8px; box-sizing: border-box; }
         
-        /* Layout Picker */
         .layout-picker { display: flex; gap: 5px; margin-bottom: 15px; }
         .layout-picker input { display: none; }
         .layout-picker label { flex: 1; padding: 10px 5px; background: #f8f9fa; border: 1px solid #dee2e6; text-align: center; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 600; }
         .layout-picker input:checked + label { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .btn-primary { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 5px; }
+        .btn-primary { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .result-card { padding: 15px; border-top: 1px solid #eee; display: none; text-align: center;}
         
         /* THE STICKER CANVAS (50mm x 30mm) */
@@ -38,30 +35,27 @@
         .sticker-canvas { 
             width: 500px; height: 300px; 
             background: white; display: flex; flex-direction: column; 
-            padding: 12px; box-sizing: border-box; color: black;
+            padding: 15px; box-sizing: border-box; color: black;
         }
 
-        /* Layout 1: Barcode Only (Barcode top, Info below) */
+        /* Layout 1: Barcode Only */
         .mode-barcode { align-items: center; justify-content: center; }
-        .mode-barcode .bc-wrap { height: 130px; width: 100%; display: flex; justify-content: center; align-items: center;}
-        .mode-barcode .info-wrap { margin-top: 10px; text-align: center; }
+        .bc-img { width: 100%; height: 120px; object-fit: stretch; }
 
-        /* Layout 2: QR Only (QR left, Info right) */
-        .mode-qr { flex-direction: row; align-items: center; gap: 15px; }
-        .mode-qr .qr-wrap { flex-shrink: 0; }
-        .mode-qr .info-wrap { flex-grow: 1; text-align: left; }
+        /* Layout 2: QR Only */
+        .mode-qr { flex-direction: row; align-items: center; gap: 20px; }
 
-        /* Layout 3: Both (Barcode top, Info left, QR right) */
+        /* Layout 3: Both */
         .mode-both { justify-content: space-between; }
-        .mode-both .top-row { height: 90px; width: 100%; display: flex; justify-content: center; }
-        .mode-both .bottom-row { display: flex; flex-grow: 1; align-items: center; gap: 15px; width: 100%; }
-        .mode-both .info-col { flex-grow: 1; text-align: left; overflow: hidden; }
+        .mode-both .top-row { height: 80px; width: 100%; display: flex; justify-content: center; }
+        .mode-both .bottom-row { display: flex; flex-grow: 1; align-items: center; gap: 15px; }
+        .mode-both .info-col { flex-grow: 1; text-align: left; }
         .mode-both .qr-col { flex-shrink: 0; }
 
-        .info-text { font-family: 'Inter', sans-serif; font-size: 20px; line-height: 1.3; word-break: break-all; }
-        .info-text strong { font-size: 24px; display: block; }
+        .info-text { font-family: 'Inter', sans-serif; font-size: 20px; line-height: 1.3; }
+        .info-text strong { font-size: 26px; display: block; }
 
-        #final-sticker-img { width: 100%; max-width: 400px; border: 1px dashed #ccc; border-radius: 4px; margin: 10px 0; cursor: pointer; }
+        #final-sticker-img { width: 100%; max-width: 400px; border: 1px dashed #ccc; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -73,7 +67,7 @@
 
     <div class="form-section">
         <div class="form-group">
-            <label class="form-label">Patient IC</label>
+            <label class="form-label">Patient IC (12 Digits)</label>
             <input type="text" id="gen_ic" class="form-control" placeholder="020502050075" maxlength="12">
         </div>
         <div class="form-group">
@@ -88,16 +82,14 @@
         <label class="form-label">Select Layout</label>
         <div class="layout-picker">
             <input type="radio" name="layout" id="lay-bar" value="barcode" checked>
-            <label for="lay-bar"><i class="bi bi-barcode"></i> Barcode Only</label>
-            
+            <label for="lay-bar">Barcode Only</label>
             <input type="radio" name="layout" id="lay-qr" value="qr">
-            <label for="lay-qr"><i class="bi bi-qr-code"></i> QR Only</label>
-            
+            <label for="lay-qr">QR Only</label>
             <input type="radio" name="layout" id="lay-both" value="both">
-            <label for="lay-both"><i class="bi bi-grid-1x2"></i> Both</label>
+            <label for="lay-both">Both</label>
         </div>
 
-        <button onclick="generateLabel()" class="btn-primary" id="btn-gen">Generate JPG</button>
+        <button onclick="generateLabel()" class="btn-primary" id="btn-gen">Generate JPG Sticker</button>
     </div>
 
     <div id="html-template">
@@ -105,69 +97,86 @@
     </div>
 
     <div id="result-area" class="result-card">
-        <p style="font-size: 0.8rem; color:#666; font-weight: 600;"><i class="bi bi-info-circle"></i> Long-press image to Copy/Save</p>
-        <img id="final-sticker-img" src="" title="Long press to save">
-        <button onclick="location.reload()" class="btn-primary" style="background:#212529">Clear & Reset</button>
+        <p style="font-size: 0.8rem; color:#666;">Long-press to Copy/Save</p>
+        <img id="final-sticker-img" src="">
+        <button onclick="location.reload()" class="btn-primary" style="background:#212529; margin-top:10px;">Reset</button>
     </div>
 </div>
 
 <script>
+// --- INLINE ITF BARCODE GENERATOR (NO LIBRARY NEEDED) ---
+function generateITF(text) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const patterns = ["00110", "10001", "01001", "11000", "00101", "10100", "01100", "00011", "10010", "01010"];
+    
+    // Interleave the digits
+    let code = "0000"; // Start pattern (N-N-N-N)
+    for (let i = 0; i < text.length; i += 2) {
+        let digit1 = patterns[parseInt(text[i])];
+        let digit2 = patterns[parseInt(text[i+1])];
+        for (let j = 0; j < 5; j++) {
+            code += digit1[j] + digit2[j];
+        }
+    }
+    code += "100"; // Stop pattern (W-N-N)
+
+    canvas.width = code.length * 4;
+    canvas.height = 100;
+    ctx.fillStyle = "white";
+    ctx.fillRect(0,0, canvas.width, canvas.height);
+    ctx.fillStyle = "black";
+
+    let x = 0;
+    for (let i = 0; i < code.length; i++) {
+        let width = (code[i] === "1") ? 6 : 2; // Wide vs Narrow
+        if (i % 2 === 0) ctx.fillRect(x, 0, width, 100); // Only draw bars (even indices)
+        x += width;
+    }
+    return canvas.toDataURL();
+}
+
 function generateLabel() {
     const ic = document.getElementById('gen_ic').value.trim();
     const name = document.getElementById('gen_name').value.trim() || "---";
     const notes = document.getElementById('gen_notes').value.trim() || "N/A";
     const layout = document.querySelector('input[name="layout"]:checked').value;
     const target = document.getElementById('canvas-target');
-    const btn = document.getElementById('btn-gen');
     
-    if(!ic) return alert("IC is required.");
+    if(!ic || ic.length % 2 !== 0) return alert("Please enter a valid 12-digit IC.");
 
-    btn.innerText = "Processing...";
     target.className = "sticker-canvas mode-" + layout;
     target.innerHTML = "";
-
-    const itfConfig = {
-        format: "ITF",
-        width: 3,
-        height: 70,
-        displayValue: false, // IC not displayed under barcode
-        margin: 0,
-        background: "#ffffff"
-    };
+    const barcodeData = generateITF(ic);
 
     if (layout === 'barcode') {
         target.innerHTML = `
-            <div class="bc-wrap"><svg id="bc-box"></svg></div>
-            <div class="info-wrap info-text"><strong>${name}</strong>IC: ${ic}<br>Notes: ${notes}</div>`;
-        JsBarcode("#bc-box", ic, { ...itfConfig, height: 100, width: 3.5 });
+            <img src="${barcodeData}" class="bc-img">
+            <div class="info-text" style="margin-top:15px;"><strong>${name}</strong>IC: ${ic}<br>Notes: ${notes}</div>`;
     } 
     else if (layout === 'qr') {
         target.innerHTML = `
-            <div class="qr-wrap" id="qr-box"></div>
-            <div class="info-wrap info-text"><strong>${name}</strong>IC: ${ic}<br>Notes: ${notes}</div>`;
+            <div id="qr-box"></div>
+            <div class="info-text"><strong>${name}</strong>IC: ${ic}<br>Notes: ${notes}</div>`;
         new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 190, height: 190 });
     } 
     else if (layout === 'both') {
         target.innerHTML = `
-            <div class="top-row"><svg id="bc-box"></svg></div>
+            <div class="top-row"><img src="${barcodeData}" style="height:80px; width:90%;"></div>
             <div class="bottom-row">
                 <div class="info-col info-text"><strong>${name}</strong>IC: ${ic}<br><small>${notes}</small></div>
-                <div class="qr-col" id="qr-box"></div>
+                <div id="qr-box" class="qr-col"></div>
             </div>`;
-        JsBarcode("#bc-box", ic, { ...itfConfig, height: 60, width: 2.8 });
         new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 120, height: 120 });
     }
 
-    // Small delay to ensure QR/Barcode renders before capturing
     setTimeout(() => {
         html2canvas(target, { scale: 2 }).then(canvas => {
             document.getElementById('final-sticker-img').src = canvas.toDataURL("image/jpeg", 0.9);
             document.getElementById('result-area').style.display = "block";
-            btn.innerText = "Generate JPG";
-            // Scroll to result
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         });
-    }, 250);
+    }, 300);
 }
 </script>
 </body>
