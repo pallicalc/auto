@@ -35,25 +35,26 @@
         .sticker-canvas { 
             width: 500px; height: 300px; 
             background: white; display: flex; flex-direction: column; 
-            padding: 12px; box-sizing: border-box; color: black;
+            padding: 6px; /* Super tight padding to maximize space */
+            box-sizing: border-box; color: black;
         }
 
         /* Layout Specific Adjustments */
         .mode-barcode { align-items: center; justify-content: center; }
-        .mode-qr { flex-direction: row; align-items: center; justify-content: space-between; gap: 15px; }
+        .mode-qr { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
         .mode-both { justify-content: space-between; }
         
-        .mode-both .top-row { height: 110px; width: 100%; display: flex; justify-content: center; margin-bottom: 10px;}
-        .mode-both .bottom-row { display: flex; flex-grow: 1; align-items: center; gap: 15px; width: 100%; }
+        .mode-both .top-row { height: 115px; width: 100%; display: flex; justify-content: center; margin-bottom: 6px;}
+        .mode-both .bottom-row { display: flex; flex-grow: 1; align-items: center; gap: 12px; width: 100%; }
         
         .info-col { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; text-align: left; overflow: hidden; word-break: break-all;}
-        .qr-col { flex-shrink: 0; }
+        .qr-col { flex-shrink: 0; display: flex; align-items: center;}
 
         /* General Info Text Styling */
-        .info-text { font-family: 'Inter', sans-serif; line-height: 1.2; }
+        .info-text { font-family: 'Inter', sans-serif; line-height: 1.1; }
         .name-txt { font-weight: 700; margin-bottom: 4px; }
         .ic-txt { margin-bottom: 2px; }
-        .notes-txt { font-weight: 400; color: #222; }
+        .notes-txt { font-weight: 400; color: #111; }
 
         #final-sticker-img { width: 100%; max-width: 400px; border: 1px dashed #ccc; margin: 10px 0; }
     </style>
@@ -152,39 +153,39 @@ function generateLabel() {
 
     if (layout === 'barcode') {
         target.innerHTML = `
-            <img src="${barcodeData}" style="width: 100%; height: 160px; object-fit: fill;">
-            <div class="info-text" style="margin-top:15px; text-align:center; display:flex; flex-direction:column;">
-                <span class="name-txt" style="font-size: 32px;">${name}</span>
-                <span class="ic-txt" style="font-size: 24px;">IC: ${ic}</span>
-                <span class="notes-txt" style="font-size: 22px;">Notes: ${notes}</span>
+            <img src="${barcodeData}" style="width: 100%; height: 160px; display: block; object-fit: fill;">
+            <div class="info-text" style="margin-top:10px; text-align:center; display:flex; flex-direction:column;">
+                <span class="name-txt" style="font-size: 34px;">${name}</span>
+                <span class="ic-txt" style="font-size: 26px;">IC: ${ic}</span>
+                <span class="notes-txt" style="font-size: 24px;">Notes: ${notes}</span>
             </div>`;
     } 
     else if (layout === 'qr') {
         target.innerHTML = `
             <div id="qr-box" class="qr-col"></div>
             <div class="info-col info-text">
-                <span class="name-txt" style="font-size: 36px; line-height: 1.1; margin-bottom: 8px;">${name}</span>
-                <span class="ic-txt" style="font-size: 26px; margin-bottom: 4px;">IC: ${ic}</span>
-                <span class="notes-txt" style="font-size: 24px;">${notes}</span>
+                <span class="name-txt" style="font-size: 40px; margin-bottom: 8px;">${name}</span>
+                <span class="ic-txt" style="font-size: 30px; margin-bottom: 6px;">IC: ${ic}</span>
+                <span class="notes-txt" style="font-size: 26px;">${notes}</span>
             </div>`;
         // Maximized QR for QR Only layout
-        new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 250, height: 250 });
+        new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 280, height: 280 });
     } 
     else if (layout === 'both') {
         target.innerHTML = `
             <div class="top-row">
-                <img src="${barcodeData}" style="width: 100%; height: 100%; object-fit: fill;">
+                <img src="${barcodeData}" style="width: 100%; height: 100%; display: block; object-fit: fill;">
             </div>
             <div class="bottom-row">
                 <div id="qr-box" class="qr-col"></div>
                 <div class="info-col info-text">
-                    <span class="name-txt" style="font-size: 28px; line-height: 1.1;">${name}</span>
-                    <span class="ic-txt" style="font-size: 22px;">IC: ${ic}</span>
-                    <span class="notes-txt" style="font-size: 20px;">${notes}</span>
+                    <span class="name-txt" style="font-size: 32px;">${name}</span>
+                    <span class="ic-txt" style="font-size: 24px;">IC: ${ic}</span>
+                    <span class="notes-txt" style="font-size: 22px;">${notes}</span>
                 </div>
             </div>`;
         // Expanded QR for the Both layout
-        new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 140, height: 140 });
+        new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 160, height: 160 });
     }
 
     setTimeout(() => {
