@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pallicalc-smart-v50'; 
+const CACHE_NAME = 'pallicalc-smart-v49'; 
 // ==========================================
 // 1. CRITICAL APP SHELL (Must load for app to start)
 // ==========================================
@@ -84,7 +84,7 @@ self.addEventListener('activate', (event) => {
 });
 
 // ==========================================
-// FETCH EVENT (Safe CDN & Bypass Logic)
+// FETCH EVENT (Redirect logic completely removed)
 // ==========================================
 self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('googleapis')) return;
@@ -95,48 +95,46 @@ self.addEventListener('fetch', (event) => {
       const url = new URL(event.request.url);
 
       // 1. EXCLUSION CHECK
-      const isExcluded = DO_NOT_CACHE.some(x => url.pathname.endsWith(x)) || url.pathname.toLowerCase().includes('/admin/');
+      const isExcluded = DO_NOT_CACHE.some(x => url.pathname.endsWith(x)) || url.pathname.includes('/Admin/') || url.pathname.includes('/admin/');
 
       if (isExcluded) {
         try {
           return await fetch(event.request, { redirect: 'manual' });
         } catch (error) {
+          // If offline and requesting root/index, serve cached app.html instead
           if (url.pathname === '/' || url.pathname.endsWith('index.html') || url.pathname.endsWith('index')) {
             const offlineApp = await cache.match('./app.html');
             if (offlineApp) return offlineApp;
           }
+          // Safely fails for other excluded files (like admin pages)
           return new Response('', { status: 503, statusText: 'Offline' });
         }
       }
-
+      
       // 2. NETWORK FIRST (For HTML Pages & Logic)
       if (event.request.mode === 'navigate' || event.request.destination === 'document' || url.pathname.match(/\.(html|js|json)$/i)) {
         try {
+          // 1. Try the standard network fetch
           let networkResponse = await fetch(event.request); 
-
-          // Cloudflare clean URL fallback
+          
+          // 2. SURGICAL FIX: If Cloudflare blocks the .html with a redirect (ok=false), 
+          // manually strip the .html and fetch the clean URL!
           if (!networkResponse.ok && url.pathname.endsWith('.html')) {
              const cleanUrl = url.href.slice(0, -5);
-             const cleanResponse = await fetch(cleanUrl);
-             if (cleanResponse.ok) {
-                 networkResponse = cleanResponse;
-             }
+             networkResponse = await fetch(cleanUrl);
           }
 
+          // 3. If we got a good response, cache it and show it
           if (networkResponse.ok) {
             cache.put(event.request, networkResponse.clone());
+            return networkResponse;
           }
-          
-          // ✅ FIXED: Always return the network response if online! 
-          // This allows QR code scripts to load safely.
-          return networkResponse;
-
         } catch (error) {
-          console.log('Network failed. Checking Offline Cache for:', url.pathname);
+          console.log('Using Offline Cache for:', url.pathname);
         }
 
         let cachedResponse = await cache.match(event.request);
-
+        
         if (!cachedResponse && event.request.mode === 'navigate') {
            cachedResponse = await cache.match(url.pathname + '.html');
            if (!cachedResponse && (url.pathname.endsWith('/app') || url.pathname.endsWith('/app/'))) {
@@ -149,16 +147,18 @@ self.addEventListener('fetch', (event) => {
         return new Response('', { status: 503, statusText: 'Offline' });
       }
 
+
+
       // 3. CACHE FIRST (For Static Assets: Images, CSS, Fonts, PDFs)
       const cachedAsset = await cache.match(event.request);
       if (cachedAsset) return cachedAsset;
 
       try {
-        const networkAsset = await fetch(event.request); // ✅ FIXED: Use standard fetch for external scripts
+        const networkAsset = await fetchClean(event.request.url);
         if (networkAsset.ok) {
           cache.put(event.request, networkAsset.clone());
         }
-        return networkAsset; // ✅ FIXED: Let it pass through!
+        return networkAsset;
       } catch (error) {
         return new Response('', { status: 503, statusText: 'Offline' });
       }

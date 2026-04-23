@@ -15,7 +15,7 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-window.addEventListener('load', () => {
+﻿window.addEventListener('load', () => {
     // 👉 ADD IT RIGHT HERE: Request Apple VIP Storage Armor immediately
     secureOfflineStorage();
 
@@ -359,4 +359,4 @@ async function secureOfflineStorage() {
             console.error("Storage persist request failed:", error);
         }
     }
-} 
+}
