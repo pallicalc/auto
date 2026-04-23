@@ -210,5 +210,37 @@
         toggleBanner();
     })();
 </script>
+<script>
+  (function() {
+    function forceUnlock() {
+        console.log("🔓 Overriding Lock...");
+        const overlay = document.getElementById('locked-overlay');
+        const dashboard = document.getElementById('dashboard');
+        if (overlay) overlay.style.display = 'none';
+        if (dashboard) dashboard.style.display = 'block';
+    }
+
+    // 1. If we are already logged in via index.html, Firebase will know.
+    // We listen for that specifically here in the HTML.
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                console.log("🔥 Firebase detected user in HTML!");
+                forceUnlock();
+            }
+        });
+    }
+
+    // 2. Backup: If you have logged in before, the suitcase exists.
+    if (localStorage.getItem('palliCalcLoginPassword')) {
+        forceUnlock();
+    }
+    
+    // 3. NUCLEAR OPTION: If you just want to get in to press "Update"
+    // Uncomment the line below if nothing else works to force it open
+    // setTimeout(forceUnlock, 3000); 
+  })();
+</script>
+
 </body>
 </html>
