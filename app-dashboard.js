@@ -1,5 +1,5 @@
 // ==========================================
-// 0. FIREBASE INIT (MUST be at the very top!)
+// 0. FIREBASE INIT & GLOBAL VARIABLES
 // ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
@@ -15,12 +15,18 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-﻿window.addEventListener('load', () => {
+let currentUser = null;
+let isVipUser = false;
+
+// ==========================================
+// 1. APP LOAD & LOGIN DETECTION
+// ==========================================
+window.addEventListener('load', () => {
     // 👉 Request Apple VIP Storage Armor immediately
     secureOfflineStorage();
 
     // HELPER: Unlocks the dashboard and starts the SW Engine
-    function unlockDashboardAndStart() {
+    window.unlockDashboardAndStart = function() {
         const overlay = document.getElementById('locked-overlay');
         const dashboard = document.getElementById('dashboard');
         if (overlay) overlay.style.display = 'none';
@@ -37,7 +43,6 @@ if (!firebase.apps.length) {
 
         detectBrowserAndShowInstructions();
 
-        // Offline Notification Logic
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('offline_mode') === 'true') {
             const offlineMsg = document.createElement('div');
@@ -58,78 +63,145 @@ if (!firebase.apps.length) {
             window.history.replaceState({}, document.title, window.location.pathname);
             setTimeout(() => { if(offlineMsg) offlineMsg.remove(); }, 5000);
         }
-    }
+    };
 
     // 1. INSTANT OFFLINE CHECK (Checks local suitcase)
     if (localStorage.getItem('palliCalcLoginPassword')) {
-        unlockDashboardAndStart();
+        window.unlockDashboardAndStart();
     }
 
-    // 2. 🔥 FIREBASE ONLINE CHECK (Detects login from index.html!) 🔥
+    // 2. 🔥 FIREBASE ONLINE CHECK (Detects login from index.html & updates UI) 🔥
     if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                // Firebase says we logged in via index.html! Unlock the app!
-                unlockDashboardAndStart();
-            }
+            checkAuthState(user);
         });
     }
 });
 
+// ==========================================
+// 2. FIREBASE AUTH STATE & UI LOGIC
+// ==========================================
+async function checkAuthState(user) {
+    currentUser = user;
+    const userInfo = document.getElementById('user-info');
+
+    if (user) {
+        if (userInfo) userInfo.innerHTML = '<span style="font-size:13px; color:#475569">Verifying account...</span>';
+
+        try {
+            const getStatus = firebase.functions().httpsCallable('getUserStatus');
+            const result = await getStatus();
+            const statusData = result.data;
+
+            if (statusData.isSuspended) {
+                handleSuspension(statusData, statusData.institutionName || "your institution");
+                return;
+            }
+
+            isVipUser = statusData.isVip;
+            if (statusData.customRatios) {
+                localStorage.setItem('palliCalc_customRatios', JSON.stringify(statusData.customRatios));
+            }
+
+            updateUIForLogin(statusData, user.email, false);
+            window.unlockDashboardAndStart(); // Unlock everything!
+
+        } catch(e) {
+            console.warn('Network Error: Relying on local Suitcase.');
+            isVipUser = !!localStorage.getItem('palliCalc_customRatios');
+            updateUIForLogin({}, user.email, false);
+            window.unlockDashboardAndStart(); 
+        }
+    } else {
+        if (userInfo) {
+            userInfo.innerHTML = '<button id="login-btn" class="login-btn" onclick="window.location.href=\'index.html\'">🔐 Login</button>';
+        }
+    }
+}
+
+function updateUIForLogin(userData, email, isSuspended) {
+    const userInfo = document.getElementById('user-info');
+    const vipBadge = document.getElementById('user-tier-badge');
+    const vipLock = document.getElementById('vip-lock-opioid');
+    const toolsSection = document.getElementById('tools-section');
+
+    let displayName = userData.username || email.split('@')[0];
+    let welcomeText = `Welcome, ${displayName}`;
+    if (isVipUser) welcomeText += ' PRO';
+
+    if (userInfo) {
+        userInfo.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+                <span class="welcome-text">${welcomeText}</span>
+                <button onclick="logout()" style="width: 100%; padding: 6px 12px; font-size: 13px; cursor:pointer;">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+            </div>`;
+    }
+
+    if (!isSuspended) {
+        if (toolsSection) {
+            toolsSection.classList.add('visible');
+            toolsSection.style.display = 'grid'; 
+        }
+        if (vipBadge) vipBadge.style.display = isVipUser ? 'inline' : 'none';
+        if (vipLock) vipLock.style.display = isVipUser ? 'inline-block' : 'none';
+    }
+}
+
+function handleSuspension(userData, instName) {
+    localStorage.removeItem('palliCalc_customRatios');
+    updateUIForLogin(userData, currentUser.email, true); 
+    const toolsSection = document.getElementById('tools-section');
+    if (toolsSection) {
+        toolsSection.innerHTML = `
+            <div style="border: 1px solid #e2e8f0; background: #fffafa; padding: 2rem; text-align: center; border-radius: 12px; margin: 20px auto;">
+                <h3 style="color: #1e293b;">Service Temporarily Paused</h3>
+                <p style="color: #475569;">Premium features for <strong>${instName}</strong> are unavailable.</p>
+            </div>`;
+        toolsSection.classList.add('visible');
+        toolsSection.style.display = 'block'; 
+    }
+}
+
+// ==========================================
+// 3. LOGOUT SYSTEM
+// ==========================================
 function logout() {
+    if (typeof firebase !== 'undefined' && firebase.auth) firebase.auth().signOut();
     localStorage.removeItem('palliCalcLoginPassword');
+    localStorage.removeItem('palliCalc_customRatios');
     window.location.href = 'index.html';
 }
 
-// ✅ ROBUST UPDATE LOGIC (From Version 2)
+// ==========================================
+// 4. ROBUST UPDATE LOGIC
+// ==========================================
 const updateBtn = document.getElementById('update-btn');
 if (updateBtn) {
     updateBtn.addEventListener('click', async () => {
-        // 1. Check Connection First
-        if (!navigator.onLine) {
-            alert("You are offline. Cannot update.");
-            return;
-        }
+        if (!navigator.onLine) { alert("You are offline. Cannot update."); return; }
+        if (!confirm("This will clear the cache and download the latest version. Continue?")) return;
 
-        // 2. Confirm
-        if (!confirm("This will clear the cache and download the latest version. Continue?")) {
-            return;
-        }
-
-        // 3. Loading State
         updateBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Updating...';
         updateBtn.disabled = true;
 
         try {
-            // 4. Hard Reset of Caches
-
-            // Unregister Service Workers
             if ('serviceWorker' in navigator) {
                 const registrations = await navigator.serviceWorker.getRegistrations();
-                for (const registration of registrations) {
-                    await registration.unregister();
-                }
+                for (const registration of registrations) await registration.unregister();
             }
-
-            // Delete All Caches
             if ('caches' in window) {
                 const cacheNames = await caches.keys();
                 await Promise.all(cacheNames.map(name => caches.delete(name)));
             }
-
-            // 👉 NEW: Clear the download flags so the progress bar runs again!
             Object.keys(localStorage).forEach(key => {
-                if (key.startsWith('assets_downloaded_')) {
-                    localStorage.removeItem(key);
-                }
+                if (key.startsWith('assets_downloaded_')) localStorage.removeItem(key);
             });
-
-            // Force Reload (true forces fetch from server)
             window.location.reload(true);
-
         } catch (error) {
             console.error("Update failed:", error);
-            alert("Update failed. Please try again or manually clear browser data.");
+            alert("Update failed. Please try again.");
             updateBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Update';
             updateBtn.disabled = false;
         }
@@ -143,10 +215,7 @@ function detectBrowserAndShowInstructions() {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     const isInApp = /FBAN|FBAV|Instagram|WhatsApp|Line|wv/.test(ua);
 
-    const show = (id) => {
-        const el = document.getElementById(id);
-        if(el) el.style.display = 'block';
-    }
+    const show = (id) => { const el = document.getElementById(id); if(el) el.style.display = 'block'; }
 
     if (isStandalone) { show('msg-installed'); return; }
     if (isInApp) { show('msg-inapp'); return; }
@@ -164,88 +233,58 @@ function detectBrowserAndShowInstructions() {
     show('msg-desktop');
 }
 
-/* =========================================
-   GLOBAL PWA PRE-FETCH (SILENT HEARTBEAT)
-   ========================================= */
+// ==========================================
+// 5. GLOBAL PWA PRE-FETCH (SILENT HEARTBEAT)
+// ==========================================
 function startGlobalRatioSync() {
-    // 1. Only run if online and Firebase is fully loaded
     if (!navigator.onLine || typeof firebase === 'undefined' || !firebase.apps.length) return;
-
     const user = firebase.auth().currentUser;
-    if (!user) return; // Fails safely if Firebase is still loading the login state
+    if (!user) return; 
 
     const uid = user.uid;
-
     const db = firebase.firestore();
 
-    // 2. Check the user's role
     db.collection("users").doc(uid).get().then(snap => {
         if (!snap.exists) return;
         const profile = snap.data();
 
-        // 3. Only sync for Institutional Users
         if (profile.role === "institutionUser" && profile.institutionId) {
             const instId = profile.institutionId;
-
-            // 👉 ADDED: The Master Key so Education module knows who it is offline!
             localStorage.setItem('palliCalc_currentInstId', instId);
 
-            console.log("🔄 Global Sync: Pre-fetching clinical ratios in background...");
-
-            // Fetch & Save Benzodiazepine Rules
             db.collection("benzoRatios").doc(instId).get().then(doc => {
-                if (doc.exists) {
-                    localStorage.setItem('palliCalc_customRatios_benzo', JSON.stringify(doc.data()));
-                }
-            }).catch(e => console.warn("Global Sync (Benzo) failed:", e));
+                if (doc.exists) localStorage.setItem('palliCalc_customRatios_benzo', JSON.stringify(doc.data()));
+            }).catch(e => console.warn(e));
 
-            // Fetch & Save Opioid Rules
             db.collection("opioidRatios").doc(instId).get().then(doc => {
                 if (doc.exists) {
-                    // 👉 FIXED: opioid.js looks for 'palliCalc_customRatios', NOT '_opioid' at the end!
                     localStorage.setItem('palliCalc_customRatios', JSON.stringify(doc.data()));
-                    // (Keeping the old one just in case a cached version still looks for it)
                     localStorage.setItem('palliCalc_customRatios_opioid', JSON.stringify(doc.data()));
                 }
-            }).catch(e => console.warn("Global Sync (Opioid) failed:", e));
+            }).catch(e => console.warn(e));
 
-
-            // Fetch & Save Education Branding Data
             db.collection("institutions").doc(instId).get().then(doc => {
                 if (doc.exists) {
                     const instData = doc.data();
-                    // Saves it exactly how education.js expects it to be saved
                     localStorage.setItem('cached_inst_' + instId, JSON.stringify(instData));
-
-                    // Also updates the generic fallback settings
                     localStorage.setItem('institutionSettings', JSON.stringify({
                         name: instData.headerName || instData.name,
                         contact: instData.headerContact || instData.contact,
                         logos: instData.headerLogos || (instData.logo ? [instData.logo] : []),
                         logo: instData.logo
                     }));
-
-                    // 👉 THE MISSING KEY FOR CALCULATORS:
                     localStorage.setItem('palliCalc_institutionName', instData.headerName || instData.name || "Institution");
-
-                    console.log("✅ Global Sync: Education branding updated.");
                 }
-            }).catch(e => console.warn("Global Sync (Education) failed:", e));
-
-                }
-
-    }).catch(err => console.error("Global sync auth check failed:", err));
+            }).catch(e => console.warn(e));
+        }
+    }).catch(err => console.error(err));
 }
-
-// --- TRIGGERS FOR THE SILENT HEARTBEAT ---
 
 function triggerSync() {
     if (typeof firebase !== 'undefined' && firebase.auth) {
         if (firebase.auth().currentUser) {
-            // If already logged in, run immediately
             startGlobalRatioSync();
         } else {
-            // Otherwise, wait for auth to finish
             const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
                 if (user && navigator.onLine) {
                     startGlobalRatioSync();
@@ -256,28 +295,17 @@ function triggerSync() {
     }
 }
 
-// 1. Run 2 seconds after load (Aggressively packs the Local Storage)
-window.addEventListener('load', () => {
-    setTimeout(triggerSync, 2000); 
-});
-
-// 2. Run silently if the doctor walks out of a dead zone (regains Wi-Fi)
+window.addEventListener('load', () => setTimeout(triggerSync, 2000));
 window.addEventListener('online', triggerSync);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && navigator.onLine) triggerSync(); });
 
-// 3. Run silently if the doctor unlocks their phone or switches back to the app
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && navigator.onLine) {
-        triggerSync();
-    }
-});
-/* =========================================
-   VISIBLE OFFLINE ASSET DOWNLOADER
-   ========================================= */
+// ==========================================
+// 6. VISIBLE OFFLINE ASSET DOWNLOADER
+// ==========================================
 async function startVisibleOfflineDownload() {
-    // 🏥 SURGICAL FIX: This MUST exactly match the CACHE_NAME in sw.js!
     const ASSET_CACHE_NAME = 'pallicalc-smart-v51'; 
     const downloadFlag = `assets_downloaded_${ASSET_CACHE_NAME}`;
-    if (localStorage.getItem(downloadFlag) === 'true') return; // Already downloaded
+    if (localStorage.getItem(downloadFlag) === 'true') return; 
 
     const container = document.getElementById('offline-progress-container');
     const progressBar = document.getElementById('offline-progress-bar');
@@ -288,84 +316,5 @@ async function startVisibleOfflineDownload() {
 
     container.style.display = 'block';
 
-    // Copying your exact list of heavy files from your old sw.js
     const filesToDownload = [
-      './patient-education.js', './all-calculators.html', './js/qr.min.js', './healthcare-guidelines.html',
-      './patient-education.html', './calculators/Benzodiazepine.html', './calculators/demo-opioid.html',
-      './calculators/Infusion-dose.html', './calculators/infusion-volume.html', './calculators/Opioid.html',
-      './calculators/calculator.css', './calculators/js/benzodiazepine.js', './calculators/js/demo-opioid.js',
-      './calculators/js/opioid.js', './guides/Benzodiazepines-conversion.html', './guides/infusion-dose.html',
-      './guides/opioid-conversion.html', './guides/prn-calculation.html', './diagnostic.js', './diagnostic-c.html',
-      './diagnostic-p.html', './diagnostic/distress/eng.html', './diagnostic/distress/bm.html', './diagnostic/distress/ch.html',
-      './diagnostic/hads/eng.html', './diagnostic/hads/bm.html', './diagnostic/hads/ch.html', './diagnostic/ipos/eng.html',
-      './diagnostic/ipos/bm.html', './diagnostic/ipos/ch.html', './diagnostic/akps.html', './diagnostic/flacc.html',
-      './diagnostic/rass.html', './diagnostic/rdos.html', './diagnostic/rug-adl.html', './diagnostic/scan.html',
-      './diagnostic/spict.html', './diagnostic/diagnostic.css', './diagnostic/diagnostic.js', './education/education.css',
-      './education/education.js', './education/opioids/ch.html', './education/opioids/ch.pdf', './education/opioids/eng.html',
-      './education/opioids/eng.pdf', './education/opioids/bm.html', './education/opioids/bm.pdf', './education/bleeding/eng.html',
-      './education/bleeding/bm.html', './education/bleeding/ch.html', './education/bleeding/1.jpg', './education/bleeding/2.jpg',
-      './education/breathlessness/eng.html', './education/breathlessness/bm.html', './education/breathlessness/ch.html',
-      './education/breathlessness/1.jpg', './education/breathlessness/2.jpg', './education/breathlessness/3.jpg',
-      './education/breathlessness/4.jpg', './education/breathlessness/5.jpg', './education/breathlessness/6.jpg',
-      './education/breathlessness/7.jpg', './education/buccal/eng.html', './education/buccal/bm.html', './education/buccal/ch.html',
-      './education/buccal/1.jpg', './education/buccal/2.jpg', './education/delirium/eng.html', './education/delirium/bm.html',
-      './education/delirium/ch.html', './education/delirium/1.jpg', './education/delirium/2.jpg', './education/EOL/eng.html',
-      './education/EOL/bm.html', './education/EOL/ch.html', './education/EOL/1a.jpg', './education/EOL/1b.jpg',
-      './education/EOL/2a.jpg', './education/EOL/2b.jpg', './education/EOL/3a.jpg', './education/EOL/3b.jpg',
-      './education/EOL/4a.jpg', './education/EOL/4b.jpg', './education/EOL/5a.jpg', './education/EOL/5b.jpg',
-      './education/facing-EOL/eng.html', './education/facing-EOL/bm.html', './education/facing-EOL/ch.html',
-      './education/mbo/eng.html', './education/mbo/bm.html', './education/mbo/ch.html', './education/pain/eng.html',
-      './education/pain/bm.html', './education/pain/ch.html', './education/seizure/eng.html', './education/seizure/bm.html',
-      './education/seizure/ch.html', './education/seizure/10mins.png', './education/seizure/seizure.png', './education/seizure/sideway.png',
-      './education/seizure/Xmouth.png', './education/subcutaneous/eng.html', './education/subcutaneous/bm.html',
-      './education/subcutaneous/ch.html', './education/subcutaneous/1.jpg', './education/subcutaneous/2.jpg', './education/subcutaneous/3.jpg',
-      './education/td-fentanyl/eng.html', './education/td-fentanyl/bm.html', './education/td-fentanyl/ch.html',
-      './education/td-fentanyl/1.jpg', './education/td-fentanyl/2.jpg', './research.html', './diagnostic/ohat.html', './diagnostic/cods.html', './diagnostic/sxi.html', './generate.html', './js/html5-qrcode.min.js'
-    ];
-
-    try {
-        const cache = await caches.open(ASSET_CACHE_NAME);
-        let loadedCount = 0;
-        const totalFiles = filesToDownload.length;
-
-        for (const file of filesToDownload) {
-            try {
-                let fetchUrl = file.endsWith('.html') ? file.slice(0, -5) : file;
-                const response = await fetch(fetchUrl);
-                if (response.ok) await cache.put(file, response.clone());
-            } catch (e) { /* skip safely */ }
-
-            loadedCount++;
-            const percent = Math.round((loadedCount / totalFiles) * 100);
-            progressBar.style.width = percent + '%';
-            progressPercent.innerText = percent + '%';
-
-            // Give the iPad a tiny 50ms break to update the screen smoothly
-            await new Promise(resolve => setTimeout(resolve, 50));
-        }
-
-        localStorage.setItem(downloadFlag, 'true');
-        progressText.innerText = '✅ Offline assets ready!';
-        progressBar.style.backgroundColor = '#10b981'; 
-        setTimeout(() => { container.style.display = 'none'; }, 4000);
-
-    } catch (error) {
-        progressText.innerText = '⚠️ Download paused.';
-        progressBar.style.backgroundColor = '#f59e0b'; 
-    }
-}
-// 👉 NEW: The "Do Not Tow" Sticker (Persistent Storage Request)
-async function secureOfflineStorage() {
-    if (navigator.storage && navigator.storage.persist) {
-        try {
-            const isPersisted = await navigator.storage.persist();
-            if (isPersisted) {
-                console.log("🛡️ VIP Storage Granted: Apple will not silently delete PalliCalc.");
-            } else {
-                console.log("⚠️ Storage not strictly persisted, but Home Screen PWA status provides partial armor.");
-            }
-        } catch (error) {
-            console.error("Storage persist request failed:", error);
-        }
-    }
-}
+      './patient-education.js', './
