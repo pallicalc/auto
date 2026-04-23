@@ -1,3 +1,11 @@
+// 🚨 EMERGENCY CROWBAR: Force unlock the screen after 2 seconds
+setTimeout(() => {
+    const lockScreen = document.getElementById('locked-overlay');
+    const mainDash = document.getElementById('dashboard');
+    if (lockScreen) lockScreen.style.display = 'none';
+    if (mainDash) mainDash.style.display = 'block';
+    console.log("🚨 Crowbar activated: Forced Dashboard Open");
+}, 2000);
 // ==========================================
 // 0. FIREBASE INIT & GLOBAL VARIABLES
 // ==========================================
