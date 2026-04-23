@@ -1,13 +1,5 @@
-// 🚨 EMERGENCY CROWBAR: Force unlock the screen after 2 seconds
-setTimeout(() => {
-    const lockScreen = document.getElementById('locked-overlay');
-    const mainDash = document.getElementById('dashboard');
-    if (lockScreen) lockScreen.style.display = 'none';
-    if (mainDash) mainDash.style.display = 'block';
-    console.log("🚨 Crowbar activated: Forced Dashboard Open");
-}, 2000);
 // ==========================================
-// 0. FIREBASE INIT & GLOBAL VARIABLES
+// 0. FIREBASE INIT (MUST be at the very top!)
 // ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
@@ -23,112 +15,73 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-let isVipUser = false;
-
 // ==========================================
-// 1. APP LOAD & BULLETPROOF LOGIN DETECTION
+// 1. DYNAMIC UI UNLOCKER
 // ==========================================
-window.addEventListener('load', () => {
-    secureOfflineStorage();
-
-    // SCENARIO A: Instant Offline Check
-    if (localStorage.getItem('palliCalcLoginPassword')) {
-        unlockScreen();
-    }
-
-    // SCENARIO B: Online Firebase Check (Catches index.html logins)
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-        firebase.auth().onAuthStateChanged(async (user) => {
-            if (user) {
-                // 1. Drop the lock screen immediately
-                unlockScreen();
-
-                // 2. Fix the Suitcase if index.html forgot to pack it
-                if (!localStorage.getItem('palliCalcLoginPassword')) {
-                    localStorage.setItem('palliCalcLoginPassword', 'firebase-token');
-                }
-
-                // 3. Update the UI to say Welcome safely
-                let displayName = user.email ? user.email.split('@')[0] : 'Doctor';
-                
-                try {
-                    if (firebase.functions) {
-                        const getStatus = firebase.functions().httpsCallable('getUserStatus');
-                        const result = await getStatus();
-                        if (result && result.data) {
-                            if (result.data.customRatios) {
-                                localStorage.setItem('palliCalc_customRatios', JSON.stringify(result.data.customRatios));
-                                isVipUser = true;
-                            }
-                            if (result.data.username) displayName = result.data.username;
-                        }
-                    }
-                } catch (e) {
-                    if (localStorage.getItem('palliCalc_customRatios')) isVipUser = true;
-                }
-
-                updateUI(displayName);
-            } else {
-                // User is NOT logged in. Show the login button.
-                if (!localStorage.getItem('palliCalcLoginPassword')) {
-                    const overlay = document.getElementById('locked-overlay');
-                    const dashboard = document.getElementById('dashboard');
-                    const userInfo = document.getElementById('user-info');
-                    
-                    if (overlay) overlay.style.display = 'flex';
-                    if (dashboard) dashboard.style.display = 'none';
-                    if (userInfo) userInfo.innerHTML = '<button id="login-btn" class="login-btn" onclick="window.location.href=\'index.html\'">🔐 Login</button>';
-                }
-            }
-        });
-    }
-});
-
-// ==========================================
-// 2. UI & LOGOUT HELPERS
-// ==========================================
-function unlockScreen() {
+function unlockDashboard() {
     const overlay = document.getElementById('locked-overlay');
     const dashboard = document.getElementById('dashboard');
     if (overlay) overlay.style.display = 'none';
     if (dashboard) dashboard.style.display = 'block';
 
+    // Start the Offline Engine
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
-            .then((reg) => { setTimeout(startVisibleOfflineDownload, 1000); })
-            .catch((err) => console.log('SW Fail:', err));
+            .then((reg) => {
+                console.log('✅ Service Worker Registered.', reg.scope);
+                // Trigger the Progress Bar
+                setTimeout(startVisibleOfflineDownload, 1000);
+            })
+            .catch((err) => console.log('❌ SW Fail:', err));
     }
-
     detectBrowserAndShowInstructions();
 }
 
-function updateUI(displayName) {
-    const userInfo = document.getElementById('user-info');
-    const vipBadge = document.getElementById('user-tier-badge');
-    const vipLock = document.getElementById('vip-lock-opioid');
-    const toolsSection = document.getElementById('tools-section');
+window.addEventListener('load', () => {
+    secureOfflineStorage();
 
-    let welcomeText = `Welcome, ${displayName}`;
-    if (isVipUser) welcomeText += ' PRO';
-
-    if (userInfo) {
-        userInfo.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
-                <span class="welcome-text">${welcomeText}</span>
-                <button onclick="logout()" style="width: 100%; padding: 6px 12px; font-size: 13px; cursor:pointer;">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                </button>
-            </div>`;
+    // SCENARIO A: Check Offline Suitcase (Fastest)
+    if (localStorage.getItem('palliCalcLoginPassword')) {
+        unlockDashboard();
     }
 
-    if (toolsSection) {
-        toolsSection.classList.add('visible');
-        toolsSection.style.display = 'grid'; 
+    // SCENARIO B: Check Firebase (Detects login from index.html)
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                console.log("🔥 Firebase Login Detected.");
+                unlockDashboard();
+            }
+        });
     }
-    if (vipBadge) vipBadge.style.display = isVipUser ? 'inline' : 'none';
-    if (vipLock) vipLock.style.display = isVipUser ? 'inline-block' : 'none';
+
+    // Handle Offline Redirection Message
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('offline_mode') === 'true') {
+        showOfflineAlert();
+    }
+});
+
+function showOfflineAlert() {
+    const offlineMsg = document.createElement('div');
+    offlineMsg.innerHTML = `
+        <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); 
+                    background: #333; color: white; padding: 12px 24px; border-radius: 50px; 
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; font-size: 14px; 
+                    display: flex; align-items: center; gap: 10px; min-width: 280px;">
+            <i class="bi bi-wifi-off" style="font-size: 18px; color: #ffca2c;"></i>
+            <div><strong>You are Offline</strong><br>Redirected to offline dashboard.</div>
+            <button onclick="this.parentElement.remove()" style="background:none; border:none; color:#aaa; margin-left:auto; font-size:18px; cursor:pointer;">&times;</button>
+        </div>
+    `;
+    document.body.appendChild(offlineMsg);
+    window.history.replaceState({}, document.title, window.location.pathname);
+    setTimeout(() => { if(offlineMsg) offlineMsg.remove(); }, 5000);
 }
 
+// ==========================================
+// 2. LOGOUT & UPDATES
+// ==========================================
 function logout() {
     if (typeof firebase !== 'undefined' && firebase.auth) firebase.auth().signOut();
     localStorage.removeItem('palliCalcLoginPassword');
@@ -136,145 +89,68 @@ function logout() {
     window.location.href = 'index.html';
 }
 
-// ==========================================
-// 3. ROBUST UPDATE LOGIC
-// ==========================================
 const updateBtn = document.getElementById('update-btn');
 if (updateBtn) {
     updateBtn.addEventListener('click', async () => {
-        if (!navigator.onLine) { alert("You are offline. Cannot update."); return; }
-        if (!confirm("This will clear the cache and download the latest version. Continue?")) return;
+        if (!navigator.onLine) { alert("Offline. Cannot update."); return; }
+        if (!confirm("Clear cache and download latest version?")) return;
 
         updateBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Updating...';
-        updateBtn.disabled = true;
-
         try {
             if ('serviceWorker' in navigator) {
                 const registrations = await navigator.serviceWorker.getRegistrations();
-                for (const registration of registrations) await registration.unregister();
+                for (const reg of registrations) await reg.unregister();
             }
             if ('caches' in window) {
-                const cacheNames = await caches.keys();
-                await Promise.all(cacheNames.map(name => caches.delete(name)));
+                const names = await caches.keys();
+                await Promise.all(names.map(name => caches.delete(name)));
             }
-            Object.keys(localStorage).forEach(key => {
-                if (key.startsWith('assets_downloaded_')) localStorage.removeItem(key);
-            });
+            Object.keys(localStorage).forEach(k => { if(k.startsWith('assets_downloaded_')) localStorage.removeItem(k); });
             window.location.reload(true);
-        } catch (error) {
-            alert("Update failed. Please try again.");
-            updateBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Update';
-            updateBtn.disabled = false;
-        }
+        } catch (e) { alert("Update failed."); }
     });
 }
 
-function detectBrowserAndShowInstructions() {
-    const ua = navigator.userAgent || navigator.vendor || window.opera;
-    const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-    const isAndroid = /Android/.test(ua);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    const isInApp = /FBAN|FBAV|Instagram|WhatsApp|Line|wv/.test(ua);
-
-    const show = (id) => { const el = document.getElementById(id); if(el) el.style.display = 'block'; }
-
-    if (isStandalone) { show('msg-installed'); return; }
-    if (isInApp) { show('msg-inapp'); return; }
-    if (isIOS) {
-        const isSafari = /Safari/.test(ua) && !/CriOS/.test(ua) && !/FxiOS/.test(ua);
-        show(isSafari ? 'msg-ios-safari' : 'msg-ios-chrome');
-        return;
-    }
-    if (isAndroid) {
-        if (/SamsungBrowser/.test(ua)) show('msg-samsung');
-        else if (/Firefox/.test(ua)) show('msg-firefox');
-        else show('msg-android-chrome');
-        return;
-    }
-    show('msg-desktop');
-}
-
 // ==========================================
-// 4. GLOBAL PWA PRE-FETCH (SILENT HEARTBEAT)
+// 3. CLINICAL SYNC & ASSET DOWNLOADER
 // ==========================================
 function startGlobalRatioSync() {
     if (!navigator.onLine || typeof firebase === 'undefined' || !firebase.apps.length) return;
     const user = firebase.auth().currentUser;
-    if (!user) return; 
+    if (!user) return;
 
-    const uid = user.uid;
     const db = firebase.firestore();
-
-    db.collection("users").doc(uid).get().then(snap => {
+    db.collection("users").doc(user.uid).get().then(snap => {
         if (!snap.exists) return;
         const profile = snap.data();
-
         if (profile.role === "institutionUser" && profile.institutionId) {
             const instId = profile.institutionId;
             localStorage.setItem('palliCalc_currentInstId', instId);
-
+            
+            // Sync custom ratios
             db.collection("benzoRatios").doc(instId).get().then(doc => {
                 if (doc.exists) localStorage.setItem('palliCalc_customRatios_benzo', JSON.stringify(doc.data()));
-            }).catch(e => console.warn(e));
-
+            });
             db.collection("opioidRatios").doc(instId).get().then(doc => {
                 if (doc.exists) {
                     localStorage.setItem('palliCalc_customRatios', JSON.stringify(doc.data()));
                     localStorage.setItem('palliCalc_customRatios_opioid', JSON.stringify(doc.data()));
                 }
-            }).catch(e => console.warn(e));
-
-            db.collection("institutions").doc(instId).get().then(doc => {
-                if (doc.exists) {
-                    const instData = doc.data();
-                    localStorage.setItem('cached_inst_' + instId, JSON.stringify(instData));
-                    localStorage.setItem('institutionSettings', JSON.stringify({
-                        name: instData.headerName || instData.name,
-                        contact: instData.headerContact || instData.contact,
-                        logos: instData.headerLogos || (instData.logo ? [instData.logo] : []),
-                        logo: instData.logo
-                    }));
-                    localStorage.setItem('palliCalc_institutionName', instData.headerName || instData.name || "Institution");
-                }
-            }).catch(e => console.warn(e));
-        }
-    }).catch(err => console.error(err));
-}
-
-function triggerSync() {
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-        if (firebase.auth().currentUser) {
-            startGlobalRatioSync();
-        } else {
-            const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
-                if (user && navigator.onLine) {
-                    startGlobalRatioSync();
-                    unsubscribe(); 
-                }
             });
         }
-    }
+    });
 }
 
-window.addEventListener('load', () => setTimeout(triggerSync, 2000));
-window.addEventListener('online', triggerSync);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && navigator.onLine) triggerSync(); });
-
-// ==========================================
-// 5. VISIBLE OFFLINE ASSET DOWNLOADER
-// ==========================================
 async function startVisibleOfflineDownload() {
     const ASSET_CACHE_NAME = 'pallicalc-smart-v51'; 
     const downloadFlag = `assets_downloaded_${ASSET_CACHE_NAME}`;
-    if (localStorage.getItem(downloadFlag) === 'true') return; 
+    if (localStorage.getItem(downloadFlag) === 'true') return;
 
     const container = document.getElementById('offline-progress-container');
     const progressBar = document.getElementById('offline-progress-bar');
-    const progressText = document.getElementById('offline-progress-text');
     const progressPercent = document.getElementById('offline-progress-percent');
 
     if (!container || !navigator.onLine) return;
-
     container.style.display = 'block';
 
     const filesToDownload = [
@@ -313,47 +189,46 @@ async function startVisibleOfflineDownload() {
 
     try {
         const cache = await caches.open(ASSET_CACHE_NAME);
-        let loadedCount = 0;
-        const totalFiles = filesToDownload.length;
-
+        let loaded = 0;
         for (const file of filesToDownload) {
             try {
                 let fetchUrl = file.endsWith('.html') ? file.slice(0, -5) : file;
                 const response = await fetch(fetchUrl);
                 if (response.ok) await cache.put(file, response.clone());
-            } catch (e) { /* skip safely */ }
-
-            loadedCount++;
-            const percent = Math.round((loadedCount / totalFiles) * 100);
-            progressBar.style.width = percent + '%';
-            progressPercent.innerText = percent + '%';
-
-            await new Promise(resolve => setTimeout(resolve, 50));
+            } catch (e) {}
+            loaded++;
+            const pct = Math.round((loaded / filesToDownload.length) * 100);
+            progressBar.style.width = pct + '%';
+            progressPercent.innerText = pct + '%';
+            await new Promise(r => setTimeout(r, 50));
         }
-
         localStorage.setItem(downloadFlag, 'true');
-        progressText.innerText = '✅ Offline assets ready!';
-        progressBar.style.backgroundColor = '#10b981'; 
-        setTimeout(() => { container.style.display = 'none'; }, 4000);
-
-    } catch (error) {
-        progressText.innerText = '⚠️ Download paused.';
-        progressBar.style.backgroundColor = '#f59e0b'; 
-    }
+        setTimeout(() => { container.style.display = 'none'; }, 3000);
+    } catch (e) {}
 }
 
 // ==========================================
-// 6. STORAGE ARMOR
+// 4. BROWSER HELPERS & STORAGE
 // ==========================================
+function detectBrowserAndShowInstructions() {
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const show = (id) => { const el = document.getElementById(id); if(el) el.style.display = 'block'; }
+    if (isStandalone) { show('msg-installed'); return; }
+    if (isIOS) {
+        show(/Safari/.test(ua) && !/CriOS/.test(ua) ? 'msg-ios-safari' : 'msg-ios-chrome');
+        return;
+    }
+    show(/Android/.test(ua) ? 'msg-android-chrome' : 'msg-desktop');
+}
+
 async function secureOfflineStorage() {
     if (navigator.storage && navigator.storage.persist) {
-        try {
-            const isPersisted = await navigator.storage.persist();
-            if (isPersisted) {
-                console.log("🛡️ VIP Storage Granted: Apple will not silently delete PalliCalc.");
-            }
-        } catch (error) {
-            console.error("Storage persist request failed:", error);
-        }
+        await navigator.storage.persist();
     }
 }
+
+// Heartbeat triggers
+window.addEventListener('online', startGlobalRatioSync);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') startGlobalRatioSync(); });
