@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pallicalc-smart-v59'; 
+const CACHE_NAME = 'pallicalc-smart-v61'; 
 // ==========================================
 // 1. CRITICAL APP SHELL (Must load for app to start)
 // ==========================================
@@ -110,11 +110,21 @@ self.addEventListener('fetch', (event) => {
           return new Response('', { status: 503, statusText: 'Offline' });
         }
       }
-
+      
       // 2. NETWORK FIRST (For HTML Pages & Logic)
       if (event.request.mode === 'navigate' || event.request.destination === 'document' || url.pathname.match(/\.(html|js|json)$/i)) {
         try {
-          const networkResponse = await fetch(event.request); 
+          // 1. Try the standard network fetch
+          let networkResponse = await fetch(event.request); 
+          
+          // 2. SURGICAL FIX: If Cloudflare blocks the .html with a redirect (ok=false), 
+          // manually strip the .html and fetch the clean URL!
+          if (!networkResponse.ok && url.pathname.endsWith('.html')) {
+             const cleanUrl = url.href.slice(0, -5);
+             networkResponse = await fetch(cleanUrl);
+          }
+
+          // 3. If we got a good response, cache it and show it
           if (networkResponse.ok) {
             cache.put(event.request, networkResponse.clone());
             return networkResponse;
@@ -136,6 +146,7 @@ self.addEventListener('fetch', (event) => {
 
         return new Response('', { status: 503, statusText: 'Offline' });
       }
+
 
 
       // 3. CACHE FIRST (For Static Assets: Images, CSS, Fonts, PDFs)

@@ -266,7 +266,7 @@ document.addEventListener('visibilitychange', () => {
    ========================================= */
 async function startVisibleOfflineDownload() {
     // 🏥 SURGICAL FIX: This MUST exactly match the CACHE_NAME in sw.js!
-    const ASSET_CACHE_NAME = 'pallicalc-smart-v59'; 
+    const ASSET_CACHE_NAME = 'pallicalc-smart-v61'; 
     const downloadFlag = `assets_downloaded_${ASSET_CACHE_NAME}`;
     if (localStorage.getItem(downloadFlag) === 'true') return; // Already downloaded
 
