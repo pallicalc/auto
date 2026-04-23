@@ -1,21 +1,4 @@
-// ==========================================
-// 0. FIREBASE INIT (MUST be at the very top!)
-// ==========================================
-const firebaseConfig = {
-  apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
-  authDomain: "pallicalc-eabdc.firebaseapp.com",
-  projectId: "pallicalc-eabdc",
-  storageBucket: "pallicalc-eabdc.firebasestorage.app",
-  messagingSenderId: "347532270864",
-  appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995",
-  measurementId: "G-6G9C984F8E"
-};
-
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-
-﻿window.addEventListener('load', () => {
+window.addEventListener('load', () => {
     // 👉 ADD IT RIGHT HERE: Request Apple VIP Storage Armor immediately
     secureOfflineStorage();
 
@@ -266,7 +249,7 @@ document.addEventListener('visibilitychange', () => {
    ========================================= */
 async function startVisibleOfflineDownload() {
     // 🏥 SURGICAL FIX: This MUST exactly match the CACHE_NAME in sw.js!
-    const ASSET_CACHE_NAME = 'pallicalc-smart-v62'; 
+    const ASSET_CACHE_NAME = 'pallicalc-smart-v63'; 
     const downloadFlag = `assets_downloaded_${ASSET_CACHE_NAME}`;
     if (localStorage.getItem(downloadFlag) === 'true') return; // Already downloaded
 
@@ -307,9 +290,9 @@ async function startVisibleOfflineDownload() {
       './education/facing-EOL/eng.html', './education/facing-EOL/bm.html', './education/facing-EOL/ch.html',
       './education/mbo/eng.html', './education/mbo/bm.html', './education/mbo/ch.html', './education/pain/eng.html',
       './education/pain/bm.html', './education/pain/ch.html', './education/seizure/eng.html', './education/seizure/bm.html',
-      './education/seizure/ch.html', './education/seizure/10mins.png', './education/seizure/seizure.png', './education/seizure/sideway.png',
+      './education/seizure/ch.html', './education/10mins.png', './education/seizure/seizure.png', './education/seizure/sideway.png',
       './education/seizure/Xmouth.png', './education/subcutaneous/eng.html', './education/subcutaneous/bm.html',
-      './education/subcutaneous/ch.html', './education/subcutaneous/1.jpg', './education/subcutaneous/2.jpg', './education/subcutaneous/3.jpg',
+      './education/subcutaneous/ch.html', './education/1.jpg', './education/subcutaneous/2.jpg', './education/subcutaneous/3.jpg',
       './education/td-fentanyl/eng.html', './education/td-fentanyl/bm.html', './education/td-fentanyl/ch.html',
       './education/td-fentanyl/1.jpg', './education/td-fentanyl/2.jpg', './research.html', './diagnostic/ohat.html', './diagnostic/cods.html', './diagnostic/sxi.html', './generate.html', './js/html5-qrcode.min.js'
     ];
