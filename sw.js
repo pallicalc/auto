@@ -1,5 +1,4 @@
-const CACHE_NAME = 'pallicalc-smart-v57'; // Bumped to v40 to force clean update
-
+const CACHE_NAME = 'pallicalc-smart-v59'; 
 // ==========================================
 // 1. CRITICAL APP SHELL (Must load for app to start)
 // ==========================================
@@ -60,6 +59,7 @@ self.addEventListener('install', (event) => {
           await cache.put(file, response);
         } catch (e) {
           console.error(`❌ FATAL: ${file} failed.`);
+          throw e; 
         }
       }
 
@@ -75,7 +75,9 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keyList) => Promise.all(keyList.map((key) => {
-      if (key !== CACHE_NAME) return caches.delete(key);
+      if (key !== CACHE_NAME && !key.includes('pallicalc-smart-v')) {
+        return caches.delete(key);
+      }
     })))
   );
   self.clients.claim();
@@ -112,7 +114,7 @@ self.addEventListener('fetch', (event) => {
       // 2. NETWORK FIRST (For HTML Pages & Logic)
       if (event.request.mode === 'navigate' || event.request.destination === 'document' || url.pathname.match(/\.(html|js|json)$/i)) {
         try {
-          const networkResponse = await fetchClean(event.request.url);
+          const networkResponse = await fetch(event.request); 
           if (networkResponse.ok) {
             cache.put(event.request, networkResponse.clone());
             return networkResponse;
@@ -121,12 +123,20 @@ self.addEventListener('fetch', (event) => {
           console.log('Using Offline Cache for:', url.pathname);
         }
 
-        const cachedResponse = await cache.match(event.request);
+        let cachedResponse = await cache.match(event.request);
+        
+        if (!cachedResponse && event.request.mode === 'navigate') {
+           cachedResponse = await cache.match(url.pathname + '.html');
+           if (!cachedResponse && (url.pathname.endsWith('/app') || url.pathname.endsWith('/app/'))) {
+               cachedResponse = await cache.match('./app.html');
+           }
+        }
+
         if (cachedResponse) return cachedResponse;
 
-        // Redirect completely removed. Safely fails if offline.
         return new Response('', { status: 503, statusText: 'Offline' });
       }
+
 
       // 3. CACHE FIRST (For Static Assets: Images, CSS, Fonts, PDFs)
       const cachedAsset = await cache.match(event.request);
