@@ -44,8 +44,8 @@
 
         /* Unified Info Text Styling */
         .info-text { font-family: 'Inter', sans-serif; line-height: 1.1; }
-        .name-txt { font-weight: 700; margin-bottom: 6px; color: #000; }
-        .ic-txt { margin-bottom: 4px; white-space: nowrap; } 
+        .name-txt { font-weight: 700; color: #000; }
+        .ic-txt { white-space: nowrap; } 
         .notes-txt { font-weight: 400; color: #333; }
 
         #final-sticker-img { width: 100%; max-width: 400px; border: 1px dashed #ccc; margin: 10px 0; }
@@ -144,39 +144,39 @@ function generateLabel() {
                 <img src="${barcodeData}" style="width: 90%; height: 140px; display: inline-block;">
             </div>
             <div class="info-text" style="margin-top:15px; text-align:center; width: 100%;">
-                <div class="name-txt" style="font-size: 32px;">${name}</div>
-                <div class="ic-txt" style="font-size: 26px;">IC: ${ic}</div>
-                <div class="notes-txt" style="font-size: 24px;">Notes: ${notes}</div>
+                <div class="name-txt" style="font-size: 34px; margin-bottom:6px;">${name}</div>
+                <div class="ic-txt" style="font-size: 26px; margin-bottom:4px;">IC: ${ic}</div>
+                <div class="notes-txt" style="font-size: 26px;">Notes: ${notes}</div>
             </div>`;
     } 
     else if (layout === 'qr') {
-        // SMALLER QR (180px) + MUCH BIGGER TEXT
+        // QR FURTHER REDUCED (140px) + BIGGER FONTS
         target.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: flex-start; gap: 25px; width: 100%;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 30px; width: 100%;">
                 <div id="qr-box" class="qr-col"></div>
-                <div class="info-col info-text" style="flex-grow: 1;">
-                    <div class="name-txt" style="font-size: 36px; margin-bottom: 10px;">${name}</div>
-                    <div class="ic-txt" style="font-size: 28px; margin-bottom: 6px;">IC: ${ic}</div>
-                    <div class="notes-txt" style="font-size: 28px;">${notes}</div>
+                <div class="info-col info-text">
+                    <div class="name-txt" style="font-size: 42px; margin-bottom: 10px;">${name}</div>
+                    <div class="ic-txt" style="font-size: 32px; margin-bottom: 6px;">IC: ${ic}</div>
+                    <div class="notes-txt" style="font-size: 32px;">${notes}</div>
                 </div>
             </div>`;
-        new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 180, height: 180 });
+        new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 140, height: 140 });
     } 
     else if (layout === 'both') {
-        // Barcode top, QR + Text bottom (All Centered)
+        // Barcode top, QR + Text bottom (Fully centered horizontally)
         target.innerHTML = `
             <div style="width: 100%; text-align: center; margin-bottom: 10px;">
                 <img src="${barcodeData}" style="width: 92%; height: 100px; display: inline-block;">
             </div>
             <div style="display: flex; justify-content: center; align-items: center; gap: 20px; width: 100%;">
                 <div id="qr-box" class="qr-col"></div>
-                <div class="info-col info-text" style="flex-grow: 1;">
-                    <div class="name-txt" style="font-size: 30px; margin-bottom: 4px;">${name}</div>
-                    <div class="ic-txt" style="font-size: 22px;">IC: ${ic}</div>
-                    <div class="notes-txt" style="font-size: 22px;">${notes}</div>
+                <div class="info-col info-text">
+                    <div class="name-txt" style="font-size: 32px; margin-bottom: 6px;">${name}</div>
+                    <div class="ic-txt" style="font-size: 24px; margin-bottom: 4px;">IC: ${ic}</div>
+                    <div class="notes-txt" style="font-size: 24px;">${notes}</div>
                 </div>
             </div>`;
-        new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 140, height: 140 });
+        new QRCode(document.getElementById("qr-box"), { text: `${ic}|${name}|${notes}`, width: 125, height: 125 });
     }
 
     setTimeout(() => {
