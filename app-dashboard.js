@@ -249,7 +249,7 @@ document.addEventListener('visibilitychange', () => {
    ========================================= */
 async function startVisibleOfflineDownload() {
     // 🏥 SURGICAL FIX: This MUST exactly match the CACHE_NAME in sw.js!
-    const ASSET_CACHE_NAME = 'pallicalc-smart-v48'; 
+    const ASSET_CACHE_NAME = 'pallicalc-smart-v49'; 
     const downloadFlag = `assets_downloaded_${ASSET_CACHE_NAME}`;
     if (localStorage.getItem(downloadFlag) === 'true') return; // Already downloaded
 
@@ -294,7 +294,7 @@ async function startVisibleOfflineDownload() {
       './education/seizure/Xmouth.png', './education/subcutaneous/eng.html', './education/subcutaneous/bm.html',
       './education/subcutaneous/ch.html', './education/1.jpg', './education/subcutaneous/2.jpg', './education/subcutaneous/3.jpg',
       './education/td-fentanyl/eng.html', './education/td-fentanyl/bm.html', './education/td-fentanyl/ch.html',
-      './education/td-fentanyl/1.jpg', './education/td-fentanyl/2.jpg', './research.html', './diagnostic/ohat.html', './diagnostic/cods.html', './diagnostic/sxi.html',
+      './education/td-fentanyl/1.jpg', './education/td-fentanyl/2.jpg', './research.html', './diagnostic/ohat.html', './diagnostic/cods.html', './diagnostic/sxi.html', './generate.html', './js/html5-qrcode.min.js'
     ];
 
     try {
