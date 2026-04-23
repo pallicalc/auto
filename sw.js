@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pallicalc-smart-v63'; 
+const CACHE_NAME = 'pallicalc-smart-v64'; 
 // ==========================================
 // 1. CRITICAL APP SHELL (Must load for app to start)
 // ==========================================
