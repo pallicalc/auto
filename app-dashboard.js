@@ -15,7 +15,7 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-﻿window.addEventListener('load', () => {
+window.addEventListener('load', () => {
     // 👉 ADD IT RIGHT HERE: Request Apple VIP Storage Armor immediately
     secureOfflineStorage();
 
@@ -67,69 +67,10 @@ if (!firebase.apps.length) {
     }
 });
 
-// ==========================================
-// 🔐 RESTORED LOGIN & LOGOUT SYSTEM
-// ==========================================
 function logout() {
-    if (typeof firebase !== 'undefined' && firebase.auth) firebase.auth().signOut();
     localStorage.removeItem('palliCalcLoginPassword');
-    localStorage.removeItem('palliCalc_customRatios');
-    window.location.reload();
+    window.location.href = 'index.html';
 }
-
-window.addEventListener('load', () => {
-    // 1. Open/Close Login Modal Triggers
-    document.addEventListener('click', function(e) {
-        if (e.target.matches('#login-btn, #login-btn *')) {
-            const m = document.getElementById('login-modal');
-            if(m) m.style.display = 'flex';
-        }
-        if (e.target.matches('#login-close, .login-close *')) {
-            const m = document.getElementById('login-modal');
-            if(m) m.style.display = 'none';
-        }
-    });
-
-    // 2. Process the Login Form & Save to Suitcase
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-            const submitBtn = loginForm.querySelector('.login-btn-submit');
-            const errorMsg = document.getElementById('login-error-msg');
-            
-            if (errorMsg) errorMsg.style.display = 'none';
-            if (submitBtn) submitBtn.innerHTML = 'Logging in...';
-
-            try {
-                // Talk to Firebase
-                await firebase.auth().signInWithEmailAndPassword(email, password);
-                localStorage.setItem('palliCalcLoginPassword', password); // Save to Suitcase
-                
-                // Fetch VIP Ratios
-                try {
-                    const getStatus = firebase.functions().httpsCallable('getUserStatus');
-                    const result = await getStatus();
-                    if (result.data && result.data.customRatios) {
-                        localStorage.setItem('palliCalc_customRatios', JSON.stringify(result.data.customRatios));
-                    }
-                } catch (fnErr) { console.warn("Proceeding with standard offline login."); }
-
-                window.location.reload(); // Reloads page to unlock the dashboard
-            } catch (error) {
-                if (errorMsg) {
-                    errorMsg.textContent = "Login failed. Please check credentials.";
-                    errorMsg.style.display = 'block';
-                } else {
-                    alert("Login failed. Please check credentials.");
-                }
-                if (submitBtn) submitBtn.innerHTML = 'Login';
-            }
-        });
-    }
-});
 
 // ✅ ROBUST UPDATE LOGIC (From Version 2)
 const updateBtn = document.getElementById('update-btn');
@@ -325,7 +266,7 @@ document.addEventListener('visibilitychange', () => {
    ========================================= */
 async function startVisibleOfflineDownload() {
     // 🏥 SURGICAL FIX: This MUST exactly match the CACHE_NAME in sw.js!
-    const ASSET_CACHE_NAME = 'pallicalc-smart-v50'; 
+    const ASSET_CACHE_NAME = 'pallicalc-smart-v49'; 
     const downloadFlag = `assets_downloaded_${ASSET_CACHE_NAME}`;
     if (localStorage.getItem(downloadFlag) === 'true') return; // Already downloaded
 
@@ -418,4 +359,4 @@ async function secureOfflineStorage() {
             console.error("Storage persist request failed:", error);
         }
     }
-}
+} 
