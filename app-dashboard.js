@@ -1,3 +1,20 @@
+// ==========================================
+// 0. FIREBASE INIT (MUST be at the very top!)
+// ==========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyAioaDxAEh3Cd-8Bvad9RgWXoOzozGeE_s",
+  authDomain: "pallicalc-eabdc.firebaseapp.com",
+  projectId: "pallicalc-eabdc",
+  storageBucket: "pallicalc-eabdc.firebasestorage.app",
+  messagingSenderId: "347532270864",
+  appId: "1:347532270864:web:bfe5bd1b92ccec22dc5995",
+  measurementId: "G-6G9C984F8E"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+
 ﻿window.addEventListener('load', () => {
     // 👉 ADD IT RIGHT HERE: Request Apple VIP Storage Armor immediately
     secureOfflineStorage();
