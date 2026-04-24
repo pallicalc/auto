@@ -427,6 +427,7 @@ function copyReport() {
     // --- NEW: Append Meta Data ---
     text += `------------------\n`;
     text += `Phase: ${kpiPhase}\n`;
+    if(pallPhase) text += `Pall Care Phase: ${pallPhase}\n`; 
     text += `Reported By: ${reportedBy}\n`;
 
     navigator.clipboard.writeText(text).then(() => {
@@ -445,6 +446,7 @@ function copyReport() {
         alert("Error copying text. Please select manually.");
     });
 }
+
 
 // ============================================================
 // [SIMPLIFIED] SEND TO GOOGLE FORM (Master Summary)
@@ -518,6 +520,7 @@ function sendToGoogleForm() {
     const rdos = val('input_rdos');
     const spictGen = val('input_spict_gen');
     const spictClin = val('input_spict_clin');
+    const pallPhase = val('input_pall_phase');
     
     // 4. Create Combined Summary (The "Master" String)
     let summaryParts = [];
@@ -529,6 +532,7 @@ function sendToGoogleForm() {
     if(rdos) summaryParts.push(`RDOS: ${rdos}`);
     if(spictGen) summaryParts.push(`SPICT Gen: ${spictGen.replace(/\n/g, ' ')}`);
     if(spictClin) summaryParts.push(`SPICT Clin: ${spictClin.replace(/\n/g, ' ')}`);
+    if(pallPhase) summaryParts.push(`Pall Phase: ${pallPhase}`);
 
     // --- NEW: Append Meta Data ---
     summaryParts.push(`Phase: ${kpiPhase}`);
@@ -567,9 +571,14 @@ function clearReport() {
             inputs.forEach(i => i.value = '');
         }
         
-        // Reset dropdown
+        // Reset dropdowns
         const timingDropdown = document.getElementById('kpi_timing');
         if(timingDropdown) timingDropdown.selectedIndex = 0;
+        
+        // --- NEW: Clear the phase dropdown ---
+        const phaseDropdown = document.getElementById('input_pall_phase');
+        if(phaseDropdown) phaseDropdown.selectedIndex = 0; 
+
     }
 }
 
