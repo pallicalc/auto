@@ -393,6 +393,11 @@ function copyReport() {
         text += `Patient: ${pName} (${pId})\n`;
     }
 
+    const pallPhase = getVal('input_pall_phase');
+    if (pallPhase) {
+        text += `Pall Care Phase: ${pallPhase}\n`;
+    }
+
     text += `------------------\n`;
     
     // Standard Scores
