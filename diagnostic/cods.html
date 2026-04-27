@@ -164,6 +164,16 @@
             .score-box > div { margin-bottom: 10px; }
             .btn { width: 100%; margin: 5px 0 0 0 !important; }
         }
+        /* New styling for Schirmer inputs */
+.schirmer-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
+.schirmer-input { 
+    width: 80px; 
+    padding: 8px; 
+    border: 1px solid #dee2e6; 
+    border-radius: 6px; 
+    text-align: center;
+    font-size: 14px;
+}
     </style>
 <script>
     // SAFETY: Prevent crash if Analytics is blocked
@@ -199,8 +209,17 @@
             <div class="question-card">
                 <div class="q-label">Select "Yes" if the feature is present, or "No" if it is absent.</div>
                 <div class="section-header" style="margin-top:0;">Clinical Features</div>
-                <div id="cods-section"></div>
-            </div>
+<div id="cods-section"></div>
+
+<div class="section-header">Modified Schirmer Test (Only if applicable)</div>
+<div class="schirmer-row">
+    <div class="yn-label">i) Buccal mucosa (mm)</div>
+    <input type="number" id="schirmer_buccal" class="schirmer-input" placeholder="mm" min="0">
+</div>
+<div class="schirmer-row" style="border-bottom: none;">
+    <div class="yn-label">ii) Floor of the mouth (mm)</div>
+    <input type="number" id="schirmer_floor" class="schirmer-input" placeholder="mm" min="0">
+</div>
 
             <div class="score-box">
                 <div style="flex-grow: 1; text-align: left;">
@@ -336,12 +355,16 @@
                     }
                     details.push(`Q${i+1}:${ans}`);
                 }
-                
-                // 2. Combine the score and the breakdown 
-                // Result looks like: "5 (Q1:Y, Q2:N, Q3:Y, Q4:- ...)"
-                const detailedReport = `${currentScore} (${details.join(', ')})`;
+            
+                // 2. Grab the new Schirmer values
+                const sBuccal = document.getElementById('schirmer_buccal').value || "-";
+                const sFloor = document.getElementById('schirmer_floor').value || "-";
 
-                // 3. Save to session storage
+                // 3. Combine Score + standard breakdown | ADD Schirmer separate
+                // This keeps the format: "Score (Q1...Q10) | Schirmer: B:Xmm, F:Xmm"
+                const detailedReport = `${currentScore} (${details.join(', ')}) | Schirmer: B:${sBuccal}mm, F:${sFloor}mm`;
+
+                // 4. Save to session storage
                 sessionStorage.setItem(REPORT_KEY, detailedReport);
                 
                 // Show brief confirmation
