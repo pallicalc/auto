@@ -10,7 +10,7 @@
 
     <style>
         body { background-color: #f0f2f5; font-size: 14px; }
-        .main-container { max-width: 900px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .main-container { max-width: 950px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         
         .workspace-header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #f3e8ff; padding-bottom: 15px; }
         .workspace-header h1 { color: #a855f7; font-size: 24px; margin: 0; font-weight: 800; }
@@ -42,14 +42,14 @@
         .pill-group input[type="checkbox"] { margin: 0; cursor: pointer; }
         .pill-group label:hover { background: #f3e8ff; border-color: #a855f7; }
         
-        /* Drug Grid Styling */
+        /* Drug Grid Styling - Now 4 Columns for Editable Indication */
         .drug-row {
-            display: grid; grid-template-columns: 2fr 1.5fr 1.5fr; gap: 10px; align-items: center;
+            display: grid; grid-template-columns: 1.5fr 2fr 1.2fr 1.2fr; gap: 8px; align-items: center;
             padding: 12px 0; border-bottom: 1px solid #f1f3f5;
         }
         .drug-row:last-child { border-bottom: none; }
         .drug-check { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #2c3e50; font-size: 13px; }
-        .drug-input { padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px; width: 100%; }
+        .drug-input { padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px; width: 100%; box-sizing: border-box; }
 
         /* Topics Grid Styling */
         .topics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
@@ -62,7 +62,7 @@
         }
         .btn-save:hover { background: #9333ea; }
         
-        @media (max-width: 700px) {
+        @media (max-width: 768px) {
             .drug-row { grid-template-columns: 1fr; gap: 8px; padding: 15px 0; }
             .drug-row > div:not(:first-child) { padding-left: 25px; }
             .topics-grid { grid-template-columns: 1fr; }
@@ -124,13 +124,14 @@
             </div>
 
             <div class="section-header">2. Medications Counselled</div>
-            <p style="font-size: 12px; color: #6c757d; margin-bottom: 15px;">Tick drugs, confirm route, and enter dose to auto-generate clinical advice. (Indications are auto-included)</p>
+            <p style="font-size: 12px; color: #6c757d; margin-bottom: 15px;">Tick drugs, edit indication if needed, confirm route, and enter dose.</p>
             
             <div id="drug-container">
                 </div>
 
             <div class="drug-row" style="background: #fdfcff; padding: 15px 10px; border-radius: 6px; margin-top: 10px; border: 1px dashed #a855f7;">
                 <div><input type="text" id="custom_drug" class="drug-input" placeholder="➕ Other Drug Name"></div>
+                <div><input type="text" id="custom_ind" class="drug-input" placeholder="Indication"></div>
                 <div>
                     <select id="custom_route" class="drug-input">
                         <option value="">- Route -</option>
@@ -145,7 +146,7 @@
                 </div>
                 <div><input type="text" id="custom_dose" class="drug-input" placeholder="Dose / Freq"></div>
                 <div style="grid-column: 1 / -1; margin-top: 5px;">
-                    <input type="text" id="custom_advice" class="drug-input" placeholder="Indication & specific advice points...">
+                    <input type="text" id="custom_advice" class="drug-input" placeholder="Specific advice points (Optional)...">
                 </div>
             </div>
 
@@ -198,34 +199,36 @@
             'Pain Management', 'Fentanyl Patch Application', 'Facing End of Life'
         ];
 
-        // Simplified routes (No PO controlled/immediate needed, handled by drug selection)
         const routes = ['PO', 'SC', 'IV', 'SL', 'Buccal', 'Transdermal', 'PR'];
 
         // 1. Build the UI on load
         document.addEventListener('DOMContentLoaded', () => {
+            // Build Drugs (4 columns now with Editable Indication)
             const drugContainer = document.getElementById('drug-container');
             let drugHtml = `<div class="drug-row" style="border-bottom: 2px solid #dee2e6; padding-bottom: 5px;">
                 <div style="font-weight:800; font-size:11px; color:#6c757d;">MEDICATION</div>
+                <div style="font-weight:800; font-size:11px; color:#6c757d;">INDICATION</div>
                 <div style="font-weight:800; font-size:11px; color:#6c757d;">ROUTE</div>
                 <div style="font-weight:800; font-size:11px; color:#6c757d;">DOSE / FREQ</div>
             </div>`;
 
             drugsData.forEach(d => {
-                // Auto-select the correct default route
                 let routeOptions = '';
                 routes.forEach(r => {
                     const isSelected = (r === d.defaultRoute) ? 'selected' : '';
                     routeOptions += `<option value="${r}" ${isSelected}>${r}</option>`;
                 });
 
+                // Join indications into a string to pre-fill the input box
                 const indsString = d.inds.join(', ');
 
                 drugHtml += `
                 <div class="drug-row">
-                    <div class="drug-check" title="Indications: ${indsString}">
+                    <div class="drug-check">
                         <input type="checkbox" id="chk_${d.id}" value="${d.id}" style="cursor:pointer;">
                         <label for="chk_${d.id}" style="margin:0; cursor:pointer;">${d.name}</label>
                     </div>
+                    <div><input type="text" id="ind_${d.id}" class="drug-input" value="${indsString}" title="Edit or delete indications if needed"></div>
                     <div><select id="route_${d.id}" class="drug-input">${routeOptions}</select></div>
                     <div><input type="text" id="dose_${d.id}" class="drug-input" placeholder="e.g. 5mg PRN"></div>
                 </div>`;
@@ -281,7 +284,8 @@
                 const isChecked = document.getElementById(`chk_${d.id}`).checked;
                 if(isChecked) {
                     drugCount++;
-                    const autoInds = d.inds.join(', ');
+                    // Pull the indication straight from the text box so edits are captured
+                    const ind = document.getElementById(`ind_${d.id}`).value.trim() || "Unspecified Indication";
                     const route = document.getElementById(`route_${d.id}`).value;
                     const dose = document.getElementById(`dose_${d.id}`).value || "Unspecified Dose";
                     
@@ -296,7 +300,7 @@
                         finalAdvice += ` Instructed to change patch as scheduled. Rotate application sites (hairless, intact skin), avoid heat over patch, and fold old patch to dispose safely.`;
                     }
 
-                    drugSection += `• ${d.name} (${route}, ${dose}) for ${autoInds}:\n  -> ${finalAdvice}\n`;
+                    drugSection += `• ${d.name} (${route}, ${dose}) for ${ind}:\n  -> ${finalAdvice}\n`;
                 }
             });
 
@@ -304,6 +308,7 @@
             const customName = document.getElementById('custom_drug').value.trim();
             if (customName) {
                 drugCount++;
+                const customInd = document.getElementById('custom_ind').value.trim() || "Unspecified Indication";
                 const customRoute = document.getElementById('custom_route').value;
                 const customDose = document.getElementById('custom_dose').value || "Unspecified Dose";
                 let customAdvice = document.getElementById('custom_advice').value || "No specific advice noted.";
@@ -312,7 +317,7 @@
                 else if (customRoute === 'SC') customAdvice += ` Provided hands-on training for Subcutaneous (SC) administration.`;
                 else if (customRoute === 'Transdermal') customAdvice += ` Instructed to change patch as scheduled. Rotate application sites (hairless, intact skin), avoid heat over patch, and fold old patch to dispose safely.`;
 
-                drugSection += `• ${customName} (${customRoute}, ${customDose}):\n  -> ${customAdvice}\n`;
+                drugSection += `• ${customName} (${customRoute}, ${customDose}) for ${customInd}:\n  -> ${customAdvice}\n`;
             }
 
             if(drugCount > 0) report += drugSection + `\n`;
