@@ -173,13 +173,13 @@
     </div>
 
     <script>
-        // Data structure matching specific IR/CR and Route behaviors
+        // Data structure matching specific IR/CR and Route behaviors with Opioid Myths added
         const drugsData = [
-            { id: 'morphine_ir', name: 'Morphine (IR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Explained PRN limits and intervals.' },
-            { id: 'morphine_cr', name: 'Morphine (CR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Instructed strictly NOT to crush, chew, or break the tablet/capsule.' },
-            { id: 'oxycodone_ir', name: 'Oxycodone (IR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Explained PRN limits and intervals.' },
-            { id: 'oxycodone_cr', name: 'Oxycodone (CR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Instructed strictly NOT to crush, chew, or break the tablet/capsule.' },
-            { id: 'fentanyl', name: 'Fentanyl Patch', defaultRoute: 'Transdermal', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Instructed to change patch as scheduled. Rotate application sites (hairless, intact skin), avoid heat over patch, and fold old patch to dispose safely.' },
+            { id: 'morphine_ir', name: 'Morphine (IR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Explained PRN limits and intervals. Counselled on uncovering the myths of opioids.' },
+            { id: 'morphine_cr', name: 'Morphine (CR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Instructed strictly NOT to crush, chew, or break the tablet/capsule. Counselled on uncovering the myths of opioids.' },
+            { id: 'oxycodone_ir', name: 'Oxycodone (IR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Explained PRN limits and intervals. Counselled on uncovering the myths of opioids.' },
+            { id: 'oxycodone_cr', name: 'Oxycodone (CR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Instructed strictly NOT to crush, chew, or break the tablet/capsule. Counselled on uncovering the myths of opioids.' },
+            { id: 'fentanyl', name: 'Fentanyl Patch', defaultRoute: 'Transdermal', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Instructed to change patch as scheduled. Rotate application sites (hairless, intact skin), avoid heat over patch, and fold old patch to dispose safely. Counselled on uncovering the myths of opioids.' },
             { id: 'haloperidol', name: 'Haloperidol', defaultRoute: 'PO', inds: ['Delirium', 'Hiccups', 'Nausea and Vomiting'], advice: 'Monitor for restlessness or extrapyramidal symptoms.' },
             { id: 'lorazepam', name: 'Lorazepam', defaultRoute: 'PO', inds: ['Anxiety', 'Insomnia', 'Delirium'], advice: 'Advised on sedation and fall risk.' },
             { id: 'midazolam', name: 'Midazolam', defaultRoute: 'PO', inds: ['Terminal restlessness', 'Seizures'], advice: 'Advised on sedation and fall risk. Explained administration protocol.' },
@@ -251,6 +251,11 @@
         // 2. Generate Report and Save
         function generateAndSave() {
             let report = "";
+            
+            // Add Timestamp & Signature
+            const now = new Date();
+            report += `Timestamp: ${now.toLocaleString()}\n`;
+            report += `Filled by: Alison\n\n`;
 
             // Context: Counselling Type
             const counselType = document.querySelector('input[name="counselType"]:checked');
@@ -349,7 +354,9 @@
 
             if (additionalSection) report += additionalSection;
 
-            if(report.trim() === "") {
+            // Optional check for empty report removed to ensure it saves even if only Timestamp/Signature exists,
+            // but we can leave a small check to ensure they picked at least one meaningful item.
+            if(drugCount === 0 && topicCount === 0 && remarks === "" && !document.getElementById('safeStorage').checked && selectedRecipients.length === 0) {
                 alert("Please select or enter at least one item before saving.");
                 return;
             }
