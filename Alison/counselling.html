@@ -10,7 +10,7 @@
 
     <style>
         body { background-color: #f0f2f5; font-size: 14px; }
-        .main-container { max-width: 950px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .main-container { max-width: 900px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         
         .workspace-header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #f3e8ff; padding-bottom: 15px; }
         .workspace-header h1 { color: #a855f7; font-size: 24px; margin: 0; font-weight: 800; }
@@ -42,9 +42,9 @@
         .pill-group input[type="checkbox"] { margin: 0; cursor: pointer; }
         .pill-group label:hover { background: #f3e8ff; border-color: #a855f7; }
         
-        /* Drug Grid Styling - 4 Columns */
+        /* Drug Grid Styling */
         .drug-row {
-            display: grid; grid-template-columns: 1.5fr 2fr 1.2fr 1.2fr; gap: 10px; align-items: center;
+            display: grid; grid-template-columns: 2fr 1.5fr 1.5fr; gap: 10px; align-items: center;
             padding: 12px 0; border-bottom: 1px solid #f1f3f5;
         }
         .drug-row:last-child { border-bottom: none; }
@@ -124,18 +124,28 @@
             </div>
 
             <div class="section-header">2. Medications Counselled</div>
-            <p style="font-size: 12px; color: #6c757d; margin-bottom: 15px;">Tick drugs, select route, and dose. Indications are pre-filled; edit or delete them as needed.</p>
+            <p style="font-size: 12px; color: #6c757d; margin-bottom: 15px;">Tick drugs, confirm route, and enter dose to auto-generate clinical advice. (Indications are auto-included)</p>
             
             <div id="drug-container">
                 </div>
 
             <div class="drug-row" style="background: #fdfcff; padding: 15px 10px; border-radius: 6px; margin-top: 10px; border: 1px dashed #a855f7;">
                 <div><input type="text" id="custom_drug" class="drug-input" placeholder="➕ Other Drug Name"></div>
-                <div><input type="text" id="custom_ind" class="drug-input" placeholder="Indication"></div>
-                <div><input type="text" id="custom_route" class="drug-input" placeholder="Route"></div>
+                <div>
+                    <select id="custom_route" class="drug-input">
+                        <option value="">- Route -</option>
+                        <option value="PO" selected>PO</option>
+                        <option value="SC">SC</option>
+                        <option value="IV">IV</option>
+                        <option value="SL">SL</option>
+                        <option value="Buccal">Buccal</option>
+                        <option value="Transdermal">Transdermal</option>
+                        <option value="PR">PR</option>
+                    </select>
+                </div>
                 <div><input type="text" id="custom_dose" class="drug-input" placeholder="Dose / Freq"></div>
                 <div style="grid-column: 1 / -1; margin-top: 5px;">
-                    <input type="text" id="custom_advice" class="drug-input" placeholder="Specific advice points...">
+                    <input type="text" id="custom_advice" class="drug-input" placeholder="Indication & specific advice points...">
                 </div>
             </div>
 
@@ -162,21 +172,23 @@
     </div>
 
     <script>
-        // Updated data structure with new indications
+        // Data structure matching specific IR/CR and Route behaviors
         const drugsData = [
-            { id: 'morphine', name: 'Morphine', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Explained PRN limits and intervals.' },
-            { id: 'oxycodone', name: 'Oxycodone', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Explained PRN limits and intervals.' },
-            { id: 'fentanyl', name: 'Fentanyl', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Explained PRN limits and intervals.' },
-            { id: 'haloperidol', name: 'Haloperidol', inds: ['Delirium', 'Hiccups', 'Nausea and Vomiting'], advice: 'Monitor for restlessness or extrapyramidal symptoms.' },
-            { id: 'lorazepam', name: 'Lorazepam', inds: ['Anxiety', 'Insomnia', 'Delirium', 'Seizures', 'Terminal restlessness'], advice: 'Advised on sedation and fall risk.' },
-            { id: 'midazolam', name: 'Midazolam', inds: ['Terminal restlessness', 'Seizures'], advice: 'Advised on sedation and fall risk. Explained administration protocol.' },
-            { id: 'dexamethasone', name: 'Dexamethasone', inds: ['Remove swelling/inflammation due to cancer'], advice: 'Take in the morning to prevent insomnia. Take with food. May increase blood sugar and appetite.' },
-            { id: 'paracetamol', name: 'Paracetamol', inds: ['Pain', 'Fever'], advice: 'Do not exceed maximum daily dose. Avoid taking other products containing paracetamol.' },
-            { id: 'hyoscine', name: 'Hyoscine', inds: ['Terminal secretions', 'Bowel colic'], advice: 'May cause dry mouth, blurred vision, or drowsiness. Monitor for excessive drying.' },
-            { id: 'esomeprazole', name: 'Esomeprazole', inds: ['Gastric protection'], advice: 'Take 30-60 minutes before meals for optimal effect.' },
-            { id: 'pantoprazole', name: 'Pantoprazole', inds: ['Gastric protection'], advice: 'Take 30-60 minutes before meals for optimal effect.' },
-            { id: 'laxative', name: 'Laxative', inds: ['Constipation'], advice: 'Ensure adequate fluid intake. Titrate dose to bowel response (aim for soft stool every 1-2 days).' },
-            { id: 'antibiotic', name: 'Antibiotic', inds: ['Infection'], advice: 'Complete the full prescribed course. Monitor for diarrhea or allergic reactions.' }
+            { id: 'morphine_ir', name: 'Morphine (IR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Explained PRN limits and intervals.' },
+            { id: 'morphine_cr', name: 'Morphine (CR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Instructed strictly NOT to crush, chew, or break the tablet/capsule.' },
+            { id: 'oxycodone_ir', name: 'Oxycodone (IR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Explained PRN limits and intervals.' },
+            { id: 'oxycodone_cr', name: 'Oxycodone (CR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Instructed strictly NOT to crush, chew, or break the tablet/capsule.' },
+            { id: 'fentanyl', name: 'Fentanyl Patch', defaultRoute: 'Transdermal', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Instructed to change patch as scheduled. Rotate application sites (hairless, intact skin), avoid heat over patch, and fold old patch to dispose safely.' },
+            { id: 'haloperidol', name: 'Haloperidol', defaultRoute: 'PO', inds: ['Delirium', 'Hiccups', 'Nausea and Vomiting'], advice: 'Monitor for restlessness or extrapyramidal symptoms.' },
+            { id: 'lorazepam', name: 'Lorazepam', defaultRoute: 'PO', inds: ['Anxiety', 'Insomnia', 'Delirium'], advice: 'Advised on sedation and fall risk.' },
+            { id: 'midazolam', name: 'Midazolam', defaultRoute: 'PO', inds: ['Terminal restlessness', 'Seizures'], advice: 'Advised on sedation and fall risk. Explained administration protocol.' },
+            { id: 'dexamethasone', name: 'Dexamethasone', defaultRoute: 'PO', inds: ['Remove swelling/inflammation due to cancer'], advice: 'Take in the morning to prevent insomnia. Take with food. May increase blood sugar and appetite.' },
+            { id: 'paracetamol', name: 'Paracetamol', defaultRoute: 'PO', inds: ['Pain', 'Fever'], advice: 'Do not exceed maximum daily dose. Avoid taking other products containing paracetamol.' },
+            { id: 'hyoscine', name: 'Hyoscine', defaultRoute: 'PO', inds: ['Terminal secretions', 'Bowel colic'], advice: 'May cause dry mouth, blurred vision, or drowsiness. Monitor for excessive drying.' },
+            { id: 'esomeprazole', name: 'Esomeprazole', defaultRoute: 'PO', inds: ['Gastric protection', 'GERD'], advice: 'Take 30-60 minutes before meals for optimal effect.' },
+            { id: 'pantoprazole', name: 'Pantoprazole', defaultRoute: 'PO', inds: ['Gastric protection', 'GERD'], advice: 'Take 30-60 minutes before meals for optimal effect.' },
+            { id: 'laxative', name: 'Laxative', defaultRoute: 'PO', inds: ['Constipation', 'Opioid-induced constipation'], advice: 'Ensure adequate fluid intake. Titrate dose to bowel response (aim for soft stool every 1-2 days).' },
+            { id: 'antibiotic', name: 'Antibiotic', defaultRoute: 'PO', inds: ['Infection'], advice: 'Complete the full prescribed course. Monitor for diarrhea or allergic reactions.' }
         ];
 
         const educationTopics = [
@@ -186,32 +198,34 @@
             'Pain Management', 'Fentanyl Patch Application', 'Facing End of Life'
         ];
 
-        const routes = ['PO (Immediate Release)', 'PO (Controlled Release)', 'SC', 'IV', 'SL', 'Buccal', 'Transdermal', 'PR'];
+        // Simplified routes (No PO controlled/immediate needed, handled by drug selection)
+        const routes = ['PO', 'SC', 'IV', 'SL', 'Buccal', 'Transdermal', 'PR'];
 
         // 1. Build the UI on load
         document.addEventListener('DOMContentLoaded', () => {
             const drugContainer = document.getElementById('drug-container');
             let drugHtml = `<div class="drug-row" style="border-bottom: 2px solid #dee2e6; padding-bottom: 5px;">
                 <div style="font-weight:800; font-size:11px; color:#6c757d;">MEDICATION</div>
-                <div style="font-weight:800; font-size:11px; color:#6c757d;">INDICATION(S)</div>
                 <div style="font-weight:800; font-size:11px; color:#6c757d;">ROUTE</div>
                 <div style="font-weight:800; font-size:11px; color:#6c757d;">DOSE / FREQ</div>
             </div>`;
 
             drugsData.forEach(d => {
-                let routeOptions = '<option value="">- Route -</option>';
-                routes.forEach(r => routeOptions += `<option value="${r}">${r}</option>`);
+                // Auto-select the correct default route
+                let routeOptions = '';
+                routes.forEach(r => {
+                    const isSelected = (r === d.defaultRoute) ? 'selected' : '';
+                    routeOptions += `<option value="${r}" ${isSelected}>${r}</option>`;
+                });
 
-                // Pre-fill indications into an editable text input
-                const defaultInds = d.inds.join(', ');
+                const indsString = d.inds.join(', ');
 
                 drugHtml += `
                 <div class="drug-row">
-                    <div class="drug-check">
+                    <div class="drug-check" title="Indications: ${indsString}">
                         <input type="checkbox" id="chk_${d.id}" value="${d.id}" style="cursor:pointer;">
                         <label for="chk_${d.id}" style="margin:0; cursor:pointer;">${d.name}</label>
                     </div>
-                    <div><input type="text" id="ind_${d.id}" class="drug-input" value="${defaultInds}" title="Edit or delete indications as needed"></div>
                     <div><select id="route_${d.id}" class="drug-input">${routeOptions}</select></div>
                     <div><input type="text" id="dose_${d.id}" class="drug-input" placeholder="e.g. 5mg PRN"></div>
                 </div>`;
@@ -267,25 +281,22 @@
                 const isChecked = document.getElementById(`chk_${d.id}`).checked;
                 if(isChecked) {
                     drugCount++;
-                    // Pull the (potentially edited) indications from the text box
-                    const ind = document.getElementById(`ind_${d.id}`).value || "Unspecified indication";
-                    const route = document.getElementById(`route_${d.id}`).value || "Unspecified Route";
+                    const autoInds = d.inds.join(', ');
+                    const route = document.getElementById(`route_${d.id}`).value;
                     const dose = document.getElementById(`dose_${d.id}`).value || "Unspecified Dose";
                     
                     let finalAdvice = d.advice;
 
-                    // SMART ROUTE ADVICE INJECTION
-                    if (route === 'PO (Controlled Release)') {
-                        finalAdvice += ` Instructed strictly NOT to crush, chew, or break the tablet/capsule.`;
-                    } else if (route === 'Buccal') {
+                    // SMART ROUTE ADVICE INJECTION (Added safely to avoid duplicates)
+                    if (route === 'Buccal' && !finalAdvice.includes('buccal')) {
                         finalAdvice += ` Counselled on proper buccal administration technique.`;
-                    } else if (route === 'SC') {
+                    } else if (route === 'SC' && !finalAdvice.includes('Subcutaneous')) {
                         finalAdvice += ` Provided hands-on training for Subcutaneous (SC) administration.`;
-                    } else if (route === 'Transdermal') {
+                    } else if (route === 'Transdermal' && !finalAdvice.includes('patch')) {
                         finalAdvice += ` Instructed to change patch as scheduled. Rotate application sites (hairless, intact skin), avoid heat over patch, and fold old patch to dispose safely.`;
                     }
 
-                    drugSection += `• ${d.name} (${route}, ${dose}) for ${ind}:\n  -> ${finalAdvice}\n`;
+                    drugSection += `• ${d.name} (${route}, ${dose}) for ${autoInds}:\n  -> ${finalAdvice}\n`;
                 }
             });
 
@@ -293,11 +304,15 @@
             const customName = document.getElementById('custom_drug').value.trim();
             if (customName) {
                 drugCount++;
-                const customInd = document.getElementById('custom_ind').value || "Unspecified indication";
-                const customRoute = document.getElementById('custom_route').value || "Unspecified Route";
+                const customRoute = document.getElementById('custom_route').value;
                 const customDose = document.getElementById('custom_dose').value || "Unspecified Dose";
-                const customAdvice = document.getElementById('custom_advice').value || "No specific advice noted.";
-                drugSection += `• ${customName} (${customRoute}, ${customDose}) for ${customInd}:\n  -> ${customAdvice}\n`;
+                let customAdvice = document.getElementById('custom_advice').value || "No specific advice noted.";
+                
+                if (customRoute === 'Buccal') customAdvice += ` Counselled on proper buccal administration technique.`;
+                else if (customRoute === 'SC') customAdvice += ` Provided hands-on training for Subcutaneous (SC) administration.`;
+                else if (customRoute === 'Transdermal') customAdvice += ` Instructed to change patch as scheduled. Rotate application sites (hairless, intact skin), avoid heat over patch, and fold old patch to dispose safely.`;
+
+                drugSection += `• ${customName} (${customRoute}, ${customDose}):\n  -> ${customAdvice}\n`;
             }
 
             if(drugCount > 0) report += drugSection + `\n`;
