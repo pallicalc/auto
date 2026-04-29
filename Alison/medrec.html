@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Medication Reconciliation | Alison's Workspace</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../style.css">
+
+    <style>
+        body { background-color: #f0f2f5; font-size: 14px; }
+        .main-container { max-width: 1100px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        
+        .workspace-header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #e0f2fe; padding-bottom: 15px; }
+        .workspace-header h1 { color: #0284c7; font-size: 24px; margin: 0; font-weight: 800; }
+        .workspace-header p { color: #6c757d; margin: 5px 0 0 0; }
+
+        .section-header { 
+            background: #f0f9ff; padding: 10px 15px; margin: 20px 0 10px 0; 
+            font-weight: 700; color: #0284c7; font-size: 14px; text-transform: uppercase; 
+            border-left: 4px solid #0284c7; border-radius: 4px;
+        }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-weight: 600; color: #495057; margin-bottom: 5px; font-size: 13px; }
+        .input-group input[type="text"], .input-group select, .input-group textarea {
+            width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; box-sizing: border-box;
+        }
+
+        /* Radio & Pill Checkboxes */
+        .radio-group { display: flex; gap: 20px; font-size: 13px; font-weight: 500; color: #2c3e50; }
+        .radio-group label { display: flex; align-items: center; gap: 5px; cursor: pointer; margin: 0; }
+        
+        .pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        .pill-group label { 
+            display: flex; align-items: center; gap: 6px; background: #f8f9fa; 
+            border: 1px solid #ced4da; padding: 8px 14px; border-radius: 20px; 
+            cursor: pointer; font-weight: 500; font-size: 13px; margin: 0; transition: 0.2s;
+        }
+        .pill-group input[type="checkbox"] { margin: 0; cursor: pointer; }
+        .pill-group label:hover { background: #e0f2fe; border-color: #0284c7; }
+
+        /* Scrollable Med Grid */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px; border: 1px solid #dee2e6; border-radius: 8px; }
+        table.med-grid { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 13px; }
+        table.med-grid th { background: #f8f9fa; padding: 12px 8px; text-align: left; font-weight: 700; color: #495057; border-bottom: 2px solid #dee2e6; }
+        table.med-grid td { padding: 8px; border-bottom: 1px solid #e9ecef; vertical-align: middle; }
+        
+        .drug-input { width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px; box-sizing: border-box; }
+        .drug-check { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #2c3e50; cursor: pointer; }
+
+        .btn-save {
+            width: 100%; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: 700; margin-top: 30px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-save:hover { background: #0369a1; }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="workspace-header">
+            <h1>Medication Reconciliation (CP1)</h1>
+            <p>Pharmacist admission & history assessment</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <a href="Alison.html" style="color: #6c757d; text-decoration: none; font-weight: 600; font-size: 14px;">
+                <i class="bi bi-arrow-left"></i> Back to Workspace
+            </a>
+        </div>
+
+        <form id="medrecForm">
+            
+            <div class="section-header">1. History & Sources</div>
+            
+            <div class="input-group" style="background: #fff5f5; padding: 15px; border-radius: 8px; border: 1px solid #ffe3e3;">
+                <label style="color: #e03131;"><i class="bi bi-exclamation-triangle-fill"></i> Allergy & Adverse Drug Reaction:</label>
+                <div class="radio-group" style="margin-bottom: 10px;">
+                    <label><input type="radio" name="allergyStatus" value="Nil" checked onchange="toggleAllergy()"> Nil</label>
+                    <label><input type="radio" name="allergyStatus" value="Yes" onchange="toggleAllergy()"> Yes</label>
+                </div>
+                <input type="text" id="allergyDetails" placeholder="Specify drug and reaction..." style="display: none; border-color: #e03131;">
+            </div>
+
+            <div class="input-group">
+                <label>Source of medication list (Select all that apply):</label>
+                <div class="pill-group" id="sources-group">
+                    <label><input type="checkbox" value="Discharge note"> Discharge note</label>
+                    <label><input type="checkbox" value="Medical report"> Medical report</label>
+                    <label><input type="checkbox" value="Hospice"> Hospice</label>
+                    <label><input type="checkbox" value="Medical card"> Medical card</label>
+                    <label><input type="checkbox" value="PHIS"> PHIS</label>
+                    <label><input type="checkbox" value="Patient's own drugs"> Patient's own drugs</label>
+                </div>
+            </div>
+
+            <div class="section-header">2. Prescribed Medications</div>
+            <p style="font-size: 12px; color: #6c757d; margin-bottom: 10px;">Scroll horizontally on mobile to view all fields.</p>
+
+            <div class="table-responsive">
+                <table class="med-grid">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">MEDICATION (Tick to include)</th>
+                            <th style="width: 10%;">ROUTE</th>
+                            <th style="width: 10%;">DOSE</th>
+                            <th style="width: 10%;">FREQUENCY</th>
+                            <th style="width: 12%;">BALANCE</th>
+                            <th style="width: 13%;">ACTION (C/DC/WH)</th>
+                            <th style="width: 25%;">COMMENTS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="drug-container">
+                        </tbody>
+                    
+                    <tbody>
+                        <tr style="background: #fdfcff; border-top: 2px dashed #0284c7;">
+                            <td>
+                                <div style="color: #0284c7; font-weight: bold; margin-bottom: 5px;">➕ Other Drug:</div>
+                                <input type="text" id="custom_drug" class="drug-input" placeholder="Drug name & strength">
+                            </td>
+                            <td>
+                                <select id="custom_route" class="drug-input">
+                                    <option value="">- Route -</option>
+                                    <option value="PO" selected>PO</option>
+                                    <option value="SC">SC</option>
+                                    <option value="IV">IV</option>
+                                    <option value="SL">SL</option>
+                                    <option value="Buccal">Buccal</option>
+                                    <option value="Transdermal">Transdermal</option>
+                                    <option value="PR">PR</option>
+                                </select>
+                            </td>
+                            <td><input type="text" id="custom_dose" class="drug-input" placeholder="Dose"></td>
+                            <td><input type="text" id="custom_freq" class="drug-input" placeholder="Freq"></td>
+                            <td><input type="text" id="custom_bal" class="drug-input" placeholder="Supply"></td>
+                            <td>
+                                <select id="custom_action" class="drug-input">
+                                    <option value="">- Select -</option>
+                                    <option value="Continue">Continue</option>
+                                    <option value="Discontinue">Discontinue</option>
+                                    <option value="Withhold">Withhold</option>
+                                </select>
+                            </td>
+                            <td><input type="text" id="custom_comment" class="drug-input" placeholder="Comments"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section-header">3. Non-Prescription Medications</div>
+            <div class="input-group">
+                <label>Herbal / Vitamin / Supplement (Include Reason & Balance):</label>
+                <textarea id="nonPrescription" rows="3" placeholder="e.g. Vitamin C 1000mg OD for immunity. Balance: 1 bottle..."></textarea>
+            </div>
+
+            <div class="section-header">4. Pharmacist's Notes</div>
+            <div class="input-group">
+                <label>Notes / Discrepancies Resolved:</label>
+                <textarea id="pharmacistNotes" rows="4" placeholder="Document any discrepancies, interventions, or clarifications with MO..."></textarea>
+            </div>
+
+            <button type="button" class="btn-save" onclick="generateAndSave()">Generate & Save Report</button>
+        </form>
+    </div>
+
+    <script>
+        function toggleAllergy() {
+            const isYes = document.querySelector('input[name="allergyStatus"]:checked').value === 'Yes';
+            const details = document.getElementById('allergyDetails');
+            details.style.display = isYes ? 'block' : 'none';
+            if(!isYes) details.value = '';
+        }
+
+        // Standard Drug List 
+        const drugsData = [
+            { id: 'morphine_ir', name: 'Morphine (IR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'] },
+            { id: 'morphine_cr', name: 'Morphine (CR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'] },
+            { id: 'oxycodone_ir', name: 'Oxycodone (IR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'] },
+            { id: 'oxycodone_cr', name: 'Oxycodone (CR)', defaultRoute: 'PO', inds: ['Pain', 'Breathlessness', 'Refractory Cough'] },
+            { id: 'fentanyl', name: 'Fentanyl Patch', defaultRoute: 'Transdermal', inds: ['Pain', 'Breathlessness', 'Refractory Cough'] },
+            { id: 'haloperidol', name: 'Haloperidol', defaultRoute: 'PO', inds: ['Delirium', 'Hiccups', 'Nausea/Vomiting'] },
+            { id: 'lorazepam', name: 'Lorazepam', defaultRoute: 'PO', inds: ['Anxiety', 'Insomnia', 'Delirium'] },
+            { id: 'midazolam', name: 'Midazolam', defaultRoute: 'PO', inds: ['Terminal restlessness', 'Seizures'] },
+            { id: 'dexamethasone', name: 'Dexamethasone', defaultRoute: 'PO', inds: ['Inflammation/Swelling'] },
+            { id: 'paracetamol', name: 'Paracetamol', defaultRoute: 'PO', inds: ['Pain', 'Fever'] },
+            { id: 'hyoscine', name: 'Hyoscine', defaultRoute: 'PO', inds: ['Terminal secretions', 'Bowel colic'] },
+            { id: 'esomeprazole', name: 'Esomeprazole', defaultRoute: 'PO', inds: ['Gastric protection'] },
+            { id: 'pantoprazole', name: 'Pantoprazole', defaultRoute: 'PO', inds: ['Gastric protection'] },
+            { id: 'laxative', name: 'Laxative', defaultRoute: 'PO', inds: ['Constipation'] },
+            { id: 'antibiotic', name: 'Antibiotic', defaultRoute: 'PO', inds: ['Infection'] }
+        ];
+
+        const routes = ['PO', 'SC', 'IV', 'SL', 'Buccal', 'Transdermal', 'PR'];
+
+        // 1. Build UI
+        document.addEventListener('DOMContentLoaded', () => {
+            const drugContainer = document.getElementById('drug-container');
+            let html = '';
+
+            drugsData.forEach(d => {
+                let routeOptions = '';
+                routes.forEach(r => {
+                    const isSelected = (r === d.defaultRoute) ? 'selected' : '';
+                    routeOptions += `<option value="${r}" ${isSelected}>${r}</option>`;
+                });
+
+                html += `
+                <tr>
+                    <td>
+                        <label class="drug-check" title="Indication: ${d.inds.join(', ')}">
+                            <input type="checkbox" id="chk_${d.id}" value="${d.id}">
+                            ${d.name}
+                        </label>
+                    </td>
+                    <td><select id="route_${d.id}" class="drug-input">${routeOptions}</select></td>
+                    <td><input type="text" id="dose_${d.id}" class="drug-input" placeholder="Dose"></td>
+                    <td><input type="text" id="freq_${d.id}" class="drug-input" placeholder="Freq"></td>
+                    <td><input type="text" id="bal_${d.id}" class="drug-input" placeholder="Supply"></td>
+                    <td>
+                        <select id="action_${d.id}" class="drug-input">
+                            <option value="">- Select -</option>
+                            <option value="Continue">Continue</option>
+                            <option value="Discontinue">Discontinue</option>
+                            <option value="Withhold">Withhold</option>
+                        </select>
+                    </td>
+                    <td><input type="text" id="comment_${d.id}" class="drug-input" placeholder="Comments"></td>
+                </tr>`;
+            });
+            drugContainer.innerHTML = html;
+        });
+
+        // 2. Generate and Save Report
+        function generateAndSave() {
+            let report = "";
+            const now = new Date();
+            report += `Timestamp: ${now.toLocaleString()}\n`;
+            report += `Filled by: Alison\n\n`;
+
+            // Allergies
+            const allergyRadio = document.querySelector('input[name="allergyStatus"]:checked').value;
+            if (allergyRadio === 'Nil') {
+                report += `Allergies: Nil\n`;
+            } else {
+                const details = document.getElementById('allergyDetails').value.trim() || "Unspecified";
+                report += `Allergies: YES - ${details}\n`;
+            }
+
+            // Sources
+            let selectedSources = [];
+            document.querySelectorAll('#sources-group input:checked').forEach(cb => selectedSources.push(cb.value));
+            if (selectedSources.length > 0) {
+                report += `Sources of Med List: ${selectedSources.join(', ')}\n`;
+            }
+            report += `\n`;
+
+            // Medications
+            let drugCount = 0;
+            let drugSection = `[PRESCRIBED MEDICATIONS]\n`;
+
+            drugsData.forEach(d => {
+                if(document.getElementById(`chk_${d.id}`).checked) {
+                    drugCount++;
+                    const route = document.getElementById(`route_${d.id}`).value;
+                    const dose = document.getElementById(`dose_${d.id}`).value || "-";
+                    const freq = document.getElementById(`freq_${d.id}`).value || "-";
+                    const bal = document.getElementById(`bal_${d.id}`).value || "Nil";
+                    const action = document.getElementById(`action_${d.id}`).value || "Not specified";
+                    const comment = document.getElementById(`comment_${d.id}`).value.trim();
+
+                    drugSection += `• ${d.name} [${route}]\n`;
+                    drugSection += `  Dose: ${dose} | Freq: ${freq} | Balance: ${bal} | Action: ${action}\n`;
+                    if (comment) drugSection += `  Comment: ${comment}\n`;
+                    drugSection += `\n`;
+                }
+            });
+
+            // Custom Drug
+            const customName = document.getElementById('custom_drug').value.trim();
+            if (customName) {
+                drugCount++;
+                const customRoute = document.getElementById('custom_route').value;
+                const customDose = document.getElementById('custom_dose').value || "-";
+                const customFreq = document.getElementById('custom_freq').value || "-";
+                const customBal = document.getElementById('custom_bal').value || "Nil";
+                const customAction = document.getElementById('custom_action').value || "Not specified";
+                const customComment = document.getElementById('custom_comment').value.trim();
+
+                drugSection += `• ${customName} [${customRoute}]\n`;
+                drugSection += `  Dose: ${customDose} | Freq: ${customFreq} | Balance: ${customBal} | Action: ${customAction}\n`;
+                if (customComment) drugSection += `  Comment: ${customComment}\n`;
+                drugSection += `\n`;
+            }
+
+            if (drugCount > 0) report += drugSection;
+
+            // Non-Prescription
+            const nonRx = document.getElementById('nonPrescription').value.trim();
+            if (nonRx) {
+                report += `[NON-PRESCRIPTION / SUPPLEMENTS]\n${nonRx}\n\n`;
+            }
+
+            // Notes
+            const notes = document.getElementById('pharmacistNotes').value.trim();
+            if (notes) {
+                report += `[PHARMACIST'S NOTES]\n${notes}\n`;
+            }
+
+            if(report.trim() === "" || (drugCount === 0 && !nonRx && !notes && selectedSources.length === 0)) {
+                alert("Please enter some data before saving.");
+                return;
+            }
+
+            // Save to sessionStorage
+            sessionStorage.setItem('alison_medrec', report.trim());
+            window.location.href = 'Alison.html';
+        }
+    </script>
+</body>
+</html>
