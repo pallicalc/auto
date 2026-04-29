@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pallicalc-smart-v64'; 
+const CACHE_NAME = 'pallicalc-smart-v65'; 
 // ==========================================
 // 1. CRITICAL APP SHELL (Must load for app to start)
 // ==========================================
@@ -28,7 +28,8 @@ const DO_NOT_CACHE = [
   'Admin.html',       
   'admin.js',         
   'admin-style.css',  
-  '/Admin/',          
+  '/Admin/',
+  '/Alison/',          
   '/'
 ];
 
@@ -43,7 +44,14 @@ async function fetchClean(url) {
   }
   return fetch(url);
 }
-
+// ==========================================
+// LISTEN FOR UPDATE COMMAND
+// ==========================================
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
 // ==========================================
 // INSTALL EVENT
 // ==========================================
@@ -75,7 +83,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keyList) => Promise.all(keyList.map((key) => {
-      if (key !== CACHE_NAME && !key.includes('pallicalc-smart-v')) {
+      if (key !== CACHE_NAME) {
         return caches.delete(key);
       }
     })))
