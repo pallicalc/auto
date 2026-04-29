@@ -257,21 +257,16 @@
 
 <div style="background: #f8f9fa; padding: 15px 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e9ecef;">
                 <div class="report-grid" style="margin-bottom: 10px;">
-                    <div class="input-group">
+                          <div class="input-group">
                         <label>Patient ID (IC Number)</label>
-                        <div style="display: flex; gap: 5px;">
-                            <input type="text" id="patient_id" placeholder="Optional">
-                            <button type="button" onclick="openIdScanner()" style="background: #007bff; color: white; border: none; border-radius: 6px; padding: 0 12px; cursor: pointer;">
-                                <i class="bi bi-upc-scan"></i>
-                            </button>
-                        </div>
+                        <input type="text" id="patient_id" placeholder="Optional">
                     </div>
-                    <div class="input-group">
+            <div class="input-group">
                         <label>Patient Name</label>
                         <input type="text" id="patient_name" placeholder="Optional">
                     </div>
                 </div>
-                
+
                 <button type="button" onclick="openIdScanner()" class="btn-start-assess" style="background: #f0f7ff; color: #007bff; border: 1px solid #007bff; margin-top:0; margin-bottom:5px; font-size: 0.85rem; height: auto; padding: 8px;">
                     <i class="bi bi-upc-scan"></i> <strong>Tap to Scan Patient Sticker</strong>
                 </button>
@@ -322,7 +317,7 @@
             </div>
 <div class="step-card" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e9ecef;">
     <span class="step-label" style="color: #0d6efd; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Clinical Context</span>
-    
+
     <select id="kpi_timing" style="width: 100%; padding: 10px; margin-top: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1rem;">
         <option value="Admission/Baseline">Admission/Baseline (Day 0)</option>
         <option value="Post 3">Post 3 (Day 3)</option>
@@ -354,7 +349,7 @@
         <div style="width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 12px; text-align: center;">
             <h4 style="margin-top:0; color: #007bff;"><i class="bi bi-upc-scan"></i> Identify Patient</h4>
             <div id="id-reader" style="width:100%; height:200px; overflow:hidden; border-radius:8px; margin-bottom:15px; background:black;"></div>
-            
+
             <input type="file" id="id-qr-input-file" accept="image/*" style="display:none">
             <button onclick="document.getElementById('id-qr-input-file').click()" class="btn-start-assess" style="background:#eef2f5; color:#007bff; margin-bottom:10px; border: 1px solid #007bff;">
                 <i class="bi bi-image"></i> Upload ID from Gallery
@@ -456,7 +451,7 @@
                 }
 
                 if (!idScanner) idScanner = new Html5Qrcode("id-reader");
-                
+
                 idScanner.scanFile(imageFile, true)
                     .then(decodedText => {
                         onIdScanSuccess(decodedText);
@@ -475,7 +470,7 @@
                 idScanner.stop().catch(e => console.error("Scanner Stop Error", e));
             }
         }
-        
+
         </script>
 
 
