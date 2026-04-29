@@ -28,7 +28,11 @@
             width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;
         }
 
-        /* Pill Checkboxes for Recipients */
+        /* Radio & Pill Checkboxes */
+        .radio-group { display: flex; gap: 20px; font-size: 13px; font-weight: 500; color: #2c3e50; }
+        .radio-group label { display: flex; align-items: center; gap: 5px; cursor: pointer; margin: 0; }
+        .radio-group input[type="radio"] { cursor: pointer; margin: 0; }
+
         .pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
         .pill-group label { 
             display: flex; align-items: center; gap: 6px; background: #f8f9fa; 
@@ -58,10 +62,11 @@
         }
         .btn-save:hover { background: #9333ea; }
         
-        @media (max-width: 600px) {
+        @media (max-width: 700px) {
             .drug-row { grid-template-columns: 1fr; gap: 8px; padding: 15px 0; }
             .drug-row > div:not(:first-child) { padding-left: 25px; }
             .topics-grid { grid-template-columns: 1fr; }
+            .radio-group { flex-direction: column; gap: 10px; }
         }
     </style>
 </head>
@@ -82,6 +87,15 @@
         <form id="counselForm">
             <div class="section-header">1. Consultation Context</div>
             
+            <div class="input-group" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;">
+                <label style="color: #a855f7;">Counselling Type (Choose 1):</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="counselType" value="Bedside Counselling"> Bedside</label>
+                    <label><input type="radio" name="counselType" value="Discharge Counselling"> Discharge</label>
+                    <label><input type="radio" name="counselType" value="Outpatient Counselling"> Outpatient</label>
+                </div>
+            </div>
+
             <div class="input-group">
                 <label>Counselling provided to (Select all that apply):</label>
                 <div class="pill-group" id="recipients-group">
@@ -115,11 +129,33 @@
             <div id="drug-container">
                 </div>
 
+            <div class="drug-row" style="background: #fdfcff; padding: 15px 10px; border-radius: 6px; margin-top: 10px; border: 1px dashed #a855f7;">
+                <div class="drug-check" style="color: #a855f7;">➕ Other Medication:</div>
+                <div><input type="text" id="custom_drug" class="drug-input" placeholder="Drug Name"></div>
+                <div><input type="text" id="custom_route" class="drug-input" placeholder="Route"></div>
+                <div><input type="text" id="custom_dose" class="drug-input" placeholder="Dose / Freq"></div>
+                <div style="grid-column: 1 / -1; margin-top: 5px;">
+                    <input type="text" id="custom_advice" class="drug-input" placeholder="Indication & specific advice points...">
+                </div>
+            </div>
+
             <div class="section-header">3. General Education Topics</div>
             <p style="font-size: 12px; color: #6c757d; margin-bottom: 10px;">Select specific pamphlets/topics covered during the session.</p>
             
             <div class="topics-grid" id="topics-container">
                 </div>
+
+            <div class="section-header">4. Safety & Follow-up</div>
+            
+            <div class="topic-item" style="margin-bottom: 15px; font-weight: 600; background: #fff3cd; padding: 10px; border-radius: 6px; border: 1px solid #ffeeba;">
+                <input type="checkbox" id="safeStorage">
+                <label for="safeStorage" style="margin:0; cursor:pointer; color: #856404;">Counselled on safe storage of controlled drugs and returning unused medications/patches.</label>
+            </div>
+
+            <div class="input-group">
+                <label>Additional Remarks / Follow-up Plan:</label>
+                <textarea id="additionalRemarks" rows="3" style="width:100%; padding:10px; border:1px solid #ced4da; border-radius:6px; font-size:13px; font-family:inherit;" placeholder="e.g., TCA in 2 weeks, referred to community team..."></textarea>
+            </div>
 
             <button type="button" class="btn-save" onclick="generateAndSave()">Generate & Save Report</button>
         </form>
@@ -200,6 +236,12 @@
         function generateAndSave() {
             let report = "";
 
+            // Context: Counselling Type
+            const counselType = document.querySelector('input[name="counselType"]:checked');
+            if (counselType) {
+                report += `Type: ${counselType.value}\n`;
+            }
+
             // Context: Recipients
             let selectedRecipients = [];
             document.querySelectorAll('#recipients-group input:checked').forEach(cb => {
@@ -246,6 +288,17 @@
                     drugSection += `• ${d.name} (${route}, ${dose}) for ${ind}:\n  -> ${finalAdvice}\n`;
                 }
             });
+
+            // Process Custom Drug Row
+            const customName = document.getElementById('custom_drug').value.trim();
+            if (customName) {
+                drugCount++;
+                const customRoute = document.getElementById('custom_route').value || "Unspecified Route";
+                const customDose = document.getElementById('custom_dose').value || "Unspecified Dose";
+                const customAdvice = document.getElementById('custom_advice').value || "No specific advice noted.";
+                drugSection += `• ${customName} (${customRoute}, ${customDose}):\n  -> ${customAdvice}\n`;
+            }
+
             if(drugCount > 0) report += drugSection + `\n`;
 
             // Topics
@@ -259,13 +312,24 @@
             });
             if(topicCount > 0) report += topicSection + `\n`;
 
-            // Final Statement
+            // Safety & Follow-up
+            let additionalSection = "";
+            if (document.getElementById('safeStorage').checked) {
+                additionalSection += `* Counselled on safe storage of controlled drugs and returning unused medications/patches.\n`;
+            }
             if(drugCount > 0 || topicCount > 0) {
-                report += `* Digital copy of education material shared with family member.\n`;
+                additionalSection += `* Digital copy of education material shared with family member.\n`;
+            }
+            
+            const remarks = document.getElementById('additionalRemarks').value.trim();
+            if (remarks) {
+                additionalSection += `\n[REMARKS / FOLLOW-UP]\n${remarks}\n`;
             }
 
+            if (additionalSection) report += additionalSection;
+
             if(report.trim() === "") {
-                alert("Please select at least one item before saving.");
+                alert("Please select or enter at least one item before saving.");
                 return;
             }
 
