@@ -128,15 +128,21 @@
             </div>
 
             <div class="pamphlet-section">
-                <div class="pamphlet-title">Medication Reconciliation</div>
+                <div class="pamphlet-title">Medication Reconciliation (CP1)</div>
                 <div class="pamphlet-subtitle">Admission/Discharge discrepancies and resolutions</div>
                 <a href="medrec.html" class="btn-start-assess">Start Tool</a>
             </div>
 
             <div class="pamphlet-section">
-                <div class="pamphlet-title">Medical Review</div>
-                <div class="pamphlet-subtitle">Clinical interventions and pharmacist reviews</div>
+                <div class="pamphlet-title">Medical Review (CP2)</div>
+                <div class="pamphlet-subtitle">Pharmacist plans, reviews, and monitoring</div>
                 <a href="medrev.html" class="btn-start-assess">Start Tool</a>
+            </div>
+
+            <div class="pamphlet-section">
+                <div class="pamphlet-title">Clinical Intervention</div>
+                <div class="pamphlet-subtitle">Document specific pharmacy interventions</div>
+                <a href="intervention.html" class="btn-start-assess">Start Tool</a>
             </div>
         </section>
     </div> 
@@ -153,11 +159,11 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
                     <div class="input-group" style="margin: 0;">
                         <label style="margin-top:0;">Patient ID (IC Number)</label>
-                        <input type="text" id="patient_name" placeholder="Optional">
+                        <input type="text" id="patient_id" placeholder="Optional">
                     </div>
                     <div class="input-group" style="margin: 0;">
                         <label style="margin-top:0;">Patient Name</label>
-                        <input type="text" id="patient_id" placeholder="Optional">
+                        <input type="text" id="patient_name" placeholder="Optional">
                     </div>
                 </div>
                 
@@ -168,17 +174,22 @@
 
             <div class="input-group">
                 <label style="color:#198754; font-size: 14px;"><i class="bi bi-chat-dots"></i> Medication Counselling</label>
-                <textarea id="input_counsel" rows="6" placeholder="Enter detailed counselling notes here..."></textarea>
+                <textarea id="input_counsel" rows="5" placeholder="Enter detailed counselling notes here..."></textarea>
             </div>
 
             <div class="input-group">
-                <label style="color:#007bff; font-size: 14px; margin-top: 15px;"><i class="bi bi-arrow-left-right"></i> Medication Reconciliation</label>
-                <textarea id="input_medrec" rows="6" placeholder="Enter discrepancies, home meds, and resolutions here..."></textarea>
+                <label style="color:#007bff; font-size: 14px; margin-top: 15px;"><i class="bi bi-arrow-left-right"></i> Medication Reconciliation (CP1)</label>
+                <textarea id="input_medrec" rows="5" placeholder="Enter discrepancies, home meds, and resolutions here..."></textarea>
             </div>
 
             <div class="input-group">
-                <label style="color:#dc3545; font-size: 14px; margin-top: 15px;"><i class="bi bi-file-medical"></i> Medical Review</label>
-                <textarea id="input_medrev" rows="8" placeholder="Enter detailed clinical interventions, lab reviews, and pharmacist plans here..."></textarea>
+                <label style="color:#dc3545; font-size: 14px; margin-top: 15px;"><i class="bi bi-file-medical"></i> Medical Review (CP2)</label>
+                <textarea id="input_medrev" rows="5" placeholder="Enter detailed clinical interventions, lab reviews, and pharmacist plans here..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label style="color:#fd7e14; font-size: 14px; margin-top: 15px;"><i class="bi bi-shield-plus"></i> Clinical Intervention</label>
+                <textarea id="input_intervention" rows="5" placeholder="Enter specific clinical interventions..."></textarea>
             </div>
 
             <div style="display:flex; flex-direction:column; gap:10px; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee;">
@@ -215,14 +226,15 @@
         // ALISON'S PERSONAL WORKSPACE LOGIC
         // ==========================================
         
-        // 🚨 REPLACE THIS LINK WITH YOUR ACTUAL GOOGLE FORM "PRE-FILLED" LINK 🚨
-        const MASTER_GOOGLE_LINK = "https://docs.google.com/forms/d/e/YOUR_FORM_ID_HERE/viewform?usp=pp_url&entry.1=MAGIC_ID&entry.2=MAGIC_IC&entry.3=MAGIC_COUNSELLING&entry.4=MAGIC_MEDREC&entry.5=MAGIC_MEDREVIEW";
+        // Original provided link is intact
+        const MASTER_GOOGLE_LINK = "https://docs.google.com/forms/d/e/1FAIpQLSdin2u5XJAEYjwBogB7PLlKKYFf5GWLcQLvM3_9oPSSoAOYwA/viewform?usp=pp_url&entry.1028968652=MAGIC_NAME&entry.1767473334=MAGIC_IC&entry.1259470317=MAGIC_COUNSELLING&entry.1803240503=MAGIC_CP1&entry.1985261094=MAGIC_CP2&entry.1413852745=MAGIC_INTERVENTION";
 
         // Auto-populate modal from session storage when returning from sub-pages
         document.addEventListener('DOMContentLoaded', () => {
             const counselData = sessionStorage.getItem('alison_counsel');
             const medrecData = sessionStorage.getItem('alison_medrec');
             const medrevData = sessionStorage.getItem('alison_medrev');
+            const interventionData = sessionStorage.getItem('alison_intervention');
             let hasNewData = false;
 
             if (counselData) {
@@ -235,6 +247,10 @@
             }
             if (medrevData) {
                 document.getElementById('input_medrev').value = medrevData;
+                hasNewData = true;
+            }
+            if (interventionData) {
+                document.getElementById('input_intervention').value = interventionData;
                 hasNewData = true;
             }
 
@@ -261,6 +277,7 @@
                 sessionStorage.removeItem('alison_counsel');
                 sessionStorage.removeItem('alison_medrec');
                 sessionStorage.removeItem('alison_medrev');
+                sessionStorage.removeItem('alison_intervention');
                 document.getElementById('cardBadge').style.display = "none";
             }
         }
@@ -271,19 +288,21 @@
             let text = `*PHARMACY CLINICAL HANDOVER*\n`;
             text += `Date: ${new Date().toLocaleDateString()}\n`;
             
-            const pId = val('patient_id'); // patient_id holds Name
-            const pName = val('patient_name'); // patient_name holds IC
-            if(pName || pId) text += `Patient: ${pId} ${pName ? `(IC: ${pName})` : ''}\n`;
+            const pId = val('patient_id');
+            const pName = val('patient_name');
+            if(pName || pId) text += `Patient: ${pName} ${pId ? `(IC: ${pId})` : ''}\n`;
             
             const counsel = val('input_counsel');
             const medrec = val('input_medrec');
             const medrev = val('input_medrev');
+            const intervention = val('input_intervention');
 
             if(counsel) text += `\n*MEDICATION COUNSELLING:*\n${counsel}\n`;
-            if(medrec)  text += `\n*MEDICATION RECONCILIATION:*\n${medrec}\n`;
-            if(medrev)  text += `\n*MEDICAL REVIEW:*\n${medrev}\n`;
+            if(medrec)  text += `\n*MEDICATION RECONCILIATION (CP1):*\n${medrec}\n`;
+            if(medrev)  text += `\n*MEDICAL REVIEW (CP2):*\n${medrev}\n`;
+            if(intervention) text += `\n*CLINICAL INTERVENTION:*\n${intervention}\n`;
 
-            if(!counsel && !medrec && !medrev) {
+            if(!counsel && !medrec && !medrev && !intervention) {
                 alert("No notes to copy yet!");
                 return;
             }
@@ -295,18 +314,19 @@
 
         function submitToMyGoogleForm() {
             if (MASTER_GOOGLE_LINK.includes("YOUR_FORM_ID_HERE")) {
-                alert("Please paste your Google Form link into the code (Line ~200) before submitting!");
+                alert("Please paste your Google Form link into the code before submitting!");
                 return;
             }
 
             const val = (id) => document.getElementById(id)?.value || "";
             
             let finalUrl = MASTER_GOOGLE_LINK
-                .replace(/MAGIC_ID/g, encodeURIComponent(val('patient_id')))
-                .replace(/MAGIC_IC/g, encodeURIComponent(val('patient_name')))
+                .replace(/MAGIC_IC/g, encodeURIComponent(val('patient_id')))
+                .replace(/MAGIC_NAME/g, encodeURIComponent(val('patient_name')))
                 .replace(/MAGIC_COUNSELLING/g, encodeURIComponent(val('input_counsel')))
-                .replace(/MAGIC_MEDREC/g, encodeURIComponent(val('input_medrec')))
-                .replace(/MAGIC_MEDREVIEW/g, encodeURIComponent(val('input_medrev')));
+                .replace(/MAGIC_CP1/g, encodeURIComponent(val('input_medrec')))
+                .replace(/MAGIC_CP2/g, encodeURIComponent(val('input_medrev')))
+                .replace(/MAGIC_INTERVENTION/g, encodeURIComponent(val('input_intervention')));
 
             window.open(finalUrl, '_blank');
         }
@@ -328,11 +348,12 @@
         function onIdScanSuccess(decodedText) {
             closeIdScanner();
             let parts = decodedText.trim().split('|');
+            // MODIFIED: Properly map IC to Left (patient_id) and Name to Right (patient_name)
             if (parts.length > 1) {
-                document.getElementById('patient_name').value = parts[0].substring(0, 12).trim(); // Maps IC to left
-                document.getElementById('patient_id').value = parts[1] ? parts[1].trim() : "";   // Maps Name to right
+                document.getElementById('patient_id').value = parts[0].substring(0, 12).trim(); 
+                document.getElementById('patient_name').value = parts[1] ? parts[1].trim() : "";   
             } else {
-                document.getElementById('patient_name').value = decodedText.substring(0, 12);
+                document.getElementById('patient_id').value = decodedText.substring(0, 12);
             }
         }
 
