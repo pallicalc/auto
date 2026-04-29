@@ -110,7 +110,7 @@
 
             <div class="input-group" style="max-width: 300px;">
                 <label>Social Support Level:</label>
-                <select id="socialSupport">
+                <select id="socialSupport" onchange="this.blur()">
                     <option value="">- Select -</option>
                     <option value="Good">Good</option>
                     <option value="Moderate">Moderate</option>
@@ -133,7 +133,7 @@
                 <div><input type="text" id="custom_drug" class="drug-input" placeholder="➕ Other Drug Name"></div>
                 <div><input type="text" id="custom_ind" class="drug-input" placeholder="Indication"></div>
                 <div>
-                    <select id="custom_route" class="drug-input">
+                    <select id="custom_route" class="drug-input" onchange="this.blur()">
                         <option value="">- Route -</option>
                         <option value="PO" selected>PO</option>
                         <option value="SC">SC</option>
@@ -229,7 +229,7 @@
                         <label for="chk_${d.id}" style="margin:0; cursor:pointer;">${d.name}</label>
                     </div>
                     <div><input type="text" id="ind_${d.id}" class="drug-input" value="${indsString}" title="Edit or delete indications if needed"></div>
-                    <div><select id="route_${d.id}" class="drug-input">${routeOptions}</select></div>
+                    <div><select id="route_${d.id}" class="drug-input" onchange="this.blur()">${routeOptions}</select></div>
                     <div><input type="text" id="dose_${d.id}" class="drug-input" placeholder="e.g. 5mg PRN"></div>
                 </div>`;
             });

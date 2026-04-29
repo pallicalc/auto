@@ -43,7 +43,7 @@
 
         /* Scrollable Med Grid */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; border: 1px solid #dee2e6; border-radius: 8px; }
-        table.med-grid { width: 100%; min-width: 950px; border-collapse: collapse; font-size: 13px; }
+        table.med-grid { width: 100%; min-width: 980px; border-collapse: collapse; font-size: 13px; }
         table.med-grid th { background: #f8f9fa; padding: 12px 8px; text-align: left; font-weight: 700; color: #495057; border-bottom: 2px solid #dee2e6; }
         table.med-grid td { padding: 8px; border-bottom: 1px solid #e9ecef; vertical-align: middle; }
         
@@ -115,9 +115,9 @@
                             <th style="width: 22%;">MEDICATION (Tick to include)</th>
                             <th style="width: 10%;">ROUTE</th>
                             <th style="width: 14%;">DOSE / FREQ</th>
+                            <th style="width: 19%;">ACTION</th>
+                            <th style="width: 25%;">INDICATION / COMMENTS</th>
                             <th style="width: 10%;">BALANCE</th>
-                            <th style="width: 20%;">ACTION</th>
-                            <th style="width: 24%;">INDICATION / COMMENTS</th>
                         </tr>
                     </thead>
                     <tbody id="drug-container">
@@ -139,20 +139,19 @@
             
             <div class="compliance-box">
                 <div class="input-group">
-                    <label>Medication self-taken or given by:</label>
-                    <select id="medGivenBy">
-                        <option value="">- Select -</option>
-                        <option value="Self">Self</option>
-                        <option value="Other family member">Other family member</option>
-                        <option value="Son">Son</option>
-                        <option value="Daughter">Daughter</option>
-                        <option value="Husband/Wife">Husband/Wife</option>
-                        <option value="Hired carer">Hired carer</option>
-                        <option value="Parents">Parents</option>
-                    </select>
+                    <label>Medication self-taken or given by (Select all that apply):</label>
+                    <div class="pill-group" id="givenby-group">
+                        <label><input type="checkbox" value="Self"> Self</label>
+                        <label><input type="checkbox" value="Other family member"> Other family member</label>
+                        <label><input type="checkbox" value="Son"> Son</label>
+                        <label><input type="checkbox" value="Daughter"> Daughter</label>
+                        <label><input type="checkbox" value="Husband/Wife"> Husband/Wife</label>
+                        <label><input type="checkbox" value="Hired carer"> Hired carer</label>
+                        <label><input type="checkbox" value="Parents"> Parents</label>
+                    </div>
                 </div>
 
-                <div class="input-group">
+                <div class="input-group" style="margin-top: 20px;">
                     <label>Reported compliant to medication:</label>
                     <div class="radio-group" style="margin-bottom: 10px;">
                         <label><input type="radio" name="compliantStatus" value="Yes" onchange="toggleCompliance()"> Yes</label>
@@ -207,7 +206,7 @@
 
         const routes = ['PO', 'SC', 'IV', 'SL', 'Buccal', 'Transdermal', 'PR'];
         
-        // Exact actions requested
+        // Actions Html (Added onchange="this.blur()" to auto-close the mobile picker)
         const actionsHtml = `
             <option value="">- Select -</option>
             <option value="Continue (same)">Continue (same)</option>
@@ -233,6 +232,7 @@
                 
                 const indsString = d.inds.join(', ');
 
+                // Notice onchange="this.blur()" added to selects to force close mobile keyboard
                 html += `
                 <tr>
                     <td>
@@ -241,16 +241,15 @@
                             ${d.name}
                         </label>
                     </td>
-                    <td><select id="route_${d.id}" class="drug-input">${routeOptions}</select></td>
+                    <td><select id="route_${d.id}" class="drug-input" onchange="this.blur()">${routeOptions}</select></td>
                     <td><input type="text" id="dose_${d.id}" class="drug-input" placeholder="Dose/Freq"></td>
-                    <td><input type="text" id="bal_${d.id}" class="drug-input" placeholder="Supply"></td>
-                    <td><select id="action_${d.id}" class="drug-input">${actionsHtml}</select></td>
+                    <td><select id="action_${d.id}" class="drug-input" onchange="this.blur()">${actionsHtml}</select></td>
                     <td><input type="text" id="comment_${d.id}" class="drug-input" value="${indsString}" title="Edit indication/comments"></td>
+                    <td><input type="text" id="bal_${d.id}" class="drug-input" placeholder="Supply"></td>
                 </tr>`;
             });
             drugContainer.innerHTML = html;
             
-            // Add one blank custom row by default
             addCustomDrugRow();
         });
 
@@ -266,11 +265,11 @@
             const html = `
                 <tr style="background: #fdfcff; border-top: 1px dashed #0284c7;">
                     <td><input type="text" id="name_${rowId}" class="drug-input" placeholder="➕ Other Drug Name"></td>
-                    <td><select id="route_${rowId}" class="drug-input">${routeOptions}</select></td>
+                    <td><select id="route_${rowId}" class="drug-input" onchange="this.blur()">${routeOptions}</select></td>
                     <td><input type="text" id="dose_${rowId}" class="drug-input" placeholder="Dose/Freq"></td>
-                    <td><input type="text" id="bal_${rowId}" class="drug-input" placeholder="Supply"></td>
-                    <td><select id="action_${rowId}" class="drug-input">${actionsHtml}</select></td>
+                    <td><select id="action_${rowId}" class="drug-input" onchange="this.blur()">${actionsHtml}</select></td>
                     <td><input type="text" id="comment_${rowId}" class="drug-input" placeholder="Indication / Comments"></td>
+                    <td><input type="text" id="bal_${rowId}" class="drug-input" placeholder="Supply"></td>
                 </tr>`;
             container.insertAdjacentHTML('beforeend', html);
         }
@@ -309,16 +308,14 @@
                     drugCount++;
                     const route = document.getElementById(`route_${d.id}`).value || "-";
                     const dose = document.getElementById(`dose_${d.id}`).value || "-";
-                    const bal = document.getElementById(`bal_${d.id}`).value.trim();
                     const action = document.getElementById(`action_${d.id}`).value || "Not specified";
                     const comment = document.getElementById(`comment_${d.id}`).value.trim();
-
-                    // Balance logic: completely omit if empty
-                    const balanceText = bal ? ` | Balance: ${bal}` : "";
+                    const bal = document.getElementById(`bal_${d.id}`).value.trim();
 
                     drugSection += `• ${d.name} [${route}]\n`;
-                    drugSection += `  Dose/Freq: ${dose}${balanceText} | Action: ${action}\n`;
+                    drugSection += `  Dose/Freq: ${dose} | Action: ${action}\n`;
                     if (comment) drugSection += `  Comment: ${comment}\n`;
+                    if (bal) drugSection += `  Balance: ${bal}\n`; // Pushed to the very end
                     drugSection += `\n`;
                 }
             });
@@ -328,21 +325,19 @@
                 const rowId = `custom_${i}`;
                 const nameEl = document.getElementById(`name_${rowId}`);
                 
-                // Only process if they actually typed a drug name
                 if (nameEl && nameEl.value.trim() !== "") {
                     drugCount++;
                     const name = nameEl.value.trim();
                     const route = document.getElementById(`route_${rowId}`).value || "-";
                     const dose = document.getElementById(`dose_${rowId}`).value || "-";
-                    const bal = document.getElementById(`bal_${rowId}`).value.trim();
                     const action = document.getElementById(`action_${rowId}`).value || "Not specified";
                     const comment = document.getElementById(`comment_${rowId}`).value.trim();
-
-                    const balanceText = bal ? ` | Balance: ${bal}` : "";
+                    const bal = document.getElementById(`bal_${rowId}`).value.trim();
 
                     drugSection += `• ${name} [${route}]\n`;
-                    drugSection += `  Dose/Freq: ${dose}${balanceText} | Action: ${action}\n`;
+                    drugSection += `  Dose/Freq: ${dose} | Action: ${action}\n`;
                     if (comment) drugSection += `  Comment: ${comment}\n`;
+                    if (bal) drugSection += `  Balance: ${bal}\n`;
                     drugSection += `\n`;
                 }
             }
@@ -359,9 +354,10 @@
             let notesSection = `[COMPLIANCE & PHARMACIST'S NOTES]\n`;
             let hasNotes = false;
 
-            const givenBy = document.getElementById('medGivenBy').value;
-            if (givenBy) {
-                notesSection += `Medication given by: ${givenBy}\n`;
+            let givenByArr = [];
+            document.querySelectorAll('#givenby-group input:checked').forEach(cb => givenByArr.push(cb.value));
+            if (givenByArr.length > 0) {
+                notesSection += `Medication given by: ${givenByArr.join(', ')}\n`;
                 hasNotes = true;
             }
 
