@@ -1,0 +1,372 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Alison's Workspace | PalliCalc</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../style.css">
+
+<script src="/js/qr.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script>
+    if (!window.Html5Qrcode) {
+        document.write('<script src="../js/html5-qrcode.min.js"><\/script>');
+    }
+</script>
+
+<style>
+    .section-header-text {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #334155;
+        margin: 30px 0 15px 0;
+        padding-left: 10px;
+        border-left: 4px solid #a855f7; /* Personalized Purple */
+    }
+
+    .btn-start-assess {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 12px;
+        background: #a855f7; 
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        margin-top: 15px;
+        transition: background 0.2s;
+        border: none;
+        box-sizing: border-box;
+    }
+
+    .btn-start-assess:hover { background: #9333ea; color: white; }
+
+    .pamphlet-section {
+        background: #faf5ff;
+        border: 2px solid #a855f7;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.1);
+    }
+
+    .input-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: bold;
+        color: #555;
+        margin-bottom: 4px;
+        margin-top: 10px;
+    }
+    .input-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: #f9f9f9;
+        box-sizing: border-box; 
+    }
+    
+    /* Extra large, comfortable text areas for writing */
+    .input-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #fff;
+        box-sizing: border-box;
+        resize: vertical;
+        font-family: inherit;
+        line-height: 1.5;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .input-group textarea:focus {
+        outline: none;
+        border-color: #a855f7;
+        box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+    }
+</style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="back-nav">
+            <a href="../app.html" class="back-link"><i class="bi bi-arrow-left"></i> Back to App</a>
+        </div>
+
+        <div id="shareCallout" class="pamphlet-section" style="border-color: #198754; background-color: #f0fdf4; margin-top: 20px;">
+            <div class="pamphlet-title" style="color: #198754;">
+                Alison's Master Handover
+                <span id="cardBadge" style="display:none; background-color: #dc3545; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px; vertical-align: middle;">New</span>
+            </div>
+            <div class="pamphlet-subtitle">
+                Compile detailed notes and sync directly to database
+            </div>
+
+            <button onclick="openReportModal()" class="btn-start-assess" style="background-color: #198754;">
+                <i class="bi bi-pencil-square"></i> Open Writer Workspace
+            </button>
+        </div>
+
+        <h1>Personal Workspace</h1>
+
+        <section class="pamphlets-available">
+            <div class="section-header-text">Quick Access</div>
+
+            <div class="pamphlet-section">
+                <div class="pamphlet-title">Medication Counselling</div>
+                <div class="pamphlet-subtitle">Patient education and medication advice notes</div>
+                <a href="counselling.html" class="btn-start-assess">Start Tool</a>
+            </div>
+
+            <div class="pamphlet-section">
+                <div class="pamphlet-title">Medication Reconciliation</div>
+                <div class="pamphlet-subtitle">Admission/Discharge discrepancies and resolutions</div>
+                <a href="medrec.html" class="btn-start-assess">Start Tool</a>
+            </div>
+
+            <div class="pamphlet-section">
+                <div class="pamphlet-title">Medical Review</div>
+                <div class="pamphlet-subtitle">Clinical interventions and pharmacist reviews</div>
+                <a href="medrev.html" class="btn-start-assess">Start Tool</a>
+            </div>
+        </section>
+    </div> 
+
+    <div id="reportModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:flex-start; overflow-y:auto; padding:20px 0;">
+        <div class="modal-content" style="max-width: 600px; width: 95%; background: white; padding: 20px; border-radius: 12px; margin: auto;">
+            
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <h2 style="margin:0; font-size: 18px; color: #a855f7;"><i class="bi bi-journal-text"></i> Writer Workspace</h2>
+                <button onclick="closeReportModal()" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #e9ecef;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="input-group" style="margin: 0;">
+                        <label style="margin-top:0;">Patient ID (RN)</label>
+                        <input type="text" id="patient_id" placeholder="Optional">
+                    </div>
+                    <div class="input-group" style="margin: 0;">
+                        <label style="margin-top:0;">Patient Name / IC</label>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="text" id="patient_name" placeholder="Optional">
+                            <button type="button" onclick="openIdScanner()" style="background: #a855f7; color: white; border: none; border-radius: 6px; padding: 0 12px; cursor: pointer;">
+                                <i class="bi bi-upc-scan"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label style="color:#198754; font-size: 14px;"><i class="bi bi-chat-dots"></i> Medication Counselling</label>
+                <textarea id="input_counsel" rows="6" placeholder="Enter detailed counselling notes here..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label style="color:#007bff; font-size: 14px; margin-top: 15px;"><i class="bi bi-arrow-left-right"></i> Medication Reconciliation</label>
+                <textarea id="input_medrec" rows="6" placeholder="Enter discrepancies, home meds, and resolutions here..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label style="color:#dc3545; font-size: 14px; margin-top: 15px;"><i class="bi bi-file-medical"></i> Medical Review</label>
+                <textarea id="input_medrev" rows="8" placeholder="Enter detailed clinical interventions, lab reviews, and pharmacist plans here..."></textarea>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee;">
+                <button class="btn-start-assess" style="background:#25D366; margin-top:0;" onclick="copyMyReport()">
+                    <i class="bi bi-clipboard"></i> Copy Formatted Text
+                </button>
+
+                <button class="btn-start-assess" style="background:#4285F4; margin-top:0;" onclick="submitToMyGoogleForm()">
+                    <i class="bi bi-cloud-upload"></i> Save to Database
+                </button>
+
+                <button onclick="clearMyReport()" style="background:none; border:none; color:#dc3545; text-decoration:underline; cursor:pointer; font-size:12px; padding:10px;">
+                    Clear All Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="id-scanner-modal" class="modal-overlay" style="display:none; z-index:10001; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); flex-direction:column; justify-content:center; align-items:center;">
+        <div style="width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 12px; text-align: center;">
+            <h4 style="margin-top:0; color: #a855f7;"><i class="bi bi-upc-scan"></i> Identify Patient</h4>
+            <div id="id-reader" style="width:100%; height:200px; overflow:hidden; border-radius:8px; margin-bottom:15px; background:black;"></div>
+            
+            <input type="file" id="id-qr-input-file" accept="image/*" style="display:none">
+            <button onclick="document.getElementById('id-qr-input-file').click()" class="btn-start-assess" style="background:#f3e8ff; color:#a855f7; margin-bottom:10px; border: 1px solid #a855f7;">
+                <i class="bi bi-image"></i> Upload from Gallery
+            </button>
+            <button onclick="closeIdScanner()" class="btn-start-assess" style="background:#6c757d; margin-top:0;">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // ALISON'S PERSONAL WORKSPACE LOGIC
+        // ==========================================
+        
+        // 🚨 REPLACE THIS LINK WITH YOUR ACTUAL GOOGLE FORM "PRE-FILLED" LINK 🚨
+        const MASTER_GOOGLE_LINK = "https://docs.google.com/forms/d/e/YOUR_FORM_ID_HERE/viewform?usp=pp_url&entry.1=MAGIC_ID&entry.2=MAGIC_IC&entry.3=MAGIC_COUNSELLING&entry.4=MAGIC_MEDREC&entry.5=MAGIC_MEDREVIEW";
+
+        // Auto-populate modal from session storage when returning from sub-pages
+        document.addEventListener('DOMContentLoaded', () => {
+            const counselData = sessionStorage.getItem('alison_counsel');
+            const medrecData = sessionStorage.getItem('alison_medrec');
+            const medrevData = sessionStorage.getItem('alison_medrev');
+            let hasNewData = false;
+
+            if (counselData) {
+                document.getElementById('input_counsel').value = counselData;
+                hasNewData = true;
+            }
+            if (medrecData) {
+                document.getElementById('input_medrec').value = medrecData;
+                hasNewData = true;
+            }
+            if (medrevData) {
+                document.getElementById('input_medrev').value = medrevData;
+                hasNewData = true;
+            }
+
+            // Show the red badge if any data was found
+            if (hasNewData) {
+                document.getElementById('cardBadge').style.display = "inline-block";
+            }
+        });
+
+        function openReportModal(focusId = null) {
+            document.getElementById('reportModal').style.display = 'flex';
+            if(focusId) {
+                setTimeout(() => { document.getElementById(focusId).focus(); }, 100);
+            }
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+
+        function clearMyReport() {
+            if(confirm("Clear all your notes? This cannot be undone.")) {
+                document.querySelectorAll('#reportModal input, #reportModal textarea').forEach(el => el.value = '');
+                sessionStorage.removeItem('alison_counsel');
+                sessionStorage.removeItem('alison_medrec');
+                sessionStorage.removeItem('alison_medrev');
+                document.getElementById('cardBadge').style.display = "none";
+            }
+        }
+
+        function copyMyReport() {
+            const val = (id) => document.getElementById(id)?.value?.trim() || "";
+            
+            let text = `*PHARMACY CLINICAL HANDOVER*\n`;
+            text += `Date: ${new Date().toLocaleDateString()}\n`;
+            
+            const pId = val('patient_id');
+            const pName = val('patient_name');
+            if(pName || pId) text += `Patient: ${pName} ${pId ? `(RN: ${pId})` : ''}\n`;
+            
+            const counsel = val('input_counsel');
+            const medrec = val('input_medrec');
+            const medrev = val('input_medrev');
+
+            if(counsel) text += `\n*MEDICATION COUNSELLING:*\n${counsel}\n`;
+            if(medrec)  text += `\n*MEDICATION RECONCILIATION:*\n${medrec}\n`;
+            if(medrev)  text += `\n*MEDICAL REVIEW:*\n${medrev}\n`;
+
+            if(!counsel && !medrec && !medrev) {
+                alert("No notes to copy yet!");
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert("✅ Neatly formatted report copied to clipboard!");
+            }).catch(err => alert("Failed to copy. Please try manually."));
+        }
+
+        function submitToMyGoogleForm() {
+            if (MASTER_GOOGLE_LINK.includes("YOUR_FORM_ID_HERE")) {
+                alert("Please paste your Google Form link into the code (Line ~200) before submitting!");
+                return;
+            }
+
+            const val = (id) => document.getElementById(id)?.value || "";
+            
+            let finalUrl = MASTER_GOOGLE_LINK
+                .replace(/MAGIC_ID/g, encodeURIComponent(val('patient_id')))
+                .replace(/MAGIC_IC/g, encodeURIComponent(val('patient_name')))
+                .replace(/MAGIC_COUNSELLING/g, encodeURIComponent(val('input_counsel')))
+                .replace(/MAGIC_MEDREC/g, encodeURIComponent(val('input_medrec')))
+                .replace(/MAGIC_MEDREVIEW/g, encodeURIComponent(val('input_medrev')));
+
+            window.open(finalUrl, '_blank');
+        }
+
+        // ==========================================
+        // SCANNER LOGIC (Copied & Isolated)
+        // ==========================================
+        let idScanner = null;
+
+        function openIdScanner() {
+            document.getElementById('id-scanner-modal').style.display = 'flex';
+            if (!idScanner) idScanner = new Html5Qrcode("id-reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 200 } };
+            idScanner.start({ facingMode: "environment" }, config, onIdScanSuccess).catch(err => {
+                console.warn("Camera auto-start failed, please use gallery upload.");
+            });
+        }
+
+        function onIdScanSuccess(decodedText) {
+            closeIdScanner();
+            let parts = decodedText.trim().split('|');
+            if (parts.length > 1) {
+                document.getElementById('patient_name').value = parts[0].substring(0, 12).trim(); 
+                document.getElementById('patient_id').value = parts[1] ? parts[1].trim() : "";   
+            } else {
+                document.getElementById('patient_name').value = decodedText.substring(0, 12);
+            }
+        }
+
+        document.getElementById('id-qr-input-file').addEventListener('change', async e => {
+            if (e.target.files.length == 0) return;
+            const imageFile = e.target.files[0];
+            const img = new Image();
+            img.src = URL.createObjectURL(imageFile);
+            img.onload = async () => {
+                if ('BarcodeDetector' in window) {
+                    try {
+                        const detector = new BarcodeDetector();
+                        const barcodes = await detector.detect(img);
+                        if (barcodes.length > 0) {
+                            onIdScanSuccess(barcodes[0].rawValue);
+                            URL.revokeObjectURL(img.src);
+                            return;
+                        }
+                    } catch (err) {}
+                }
+                if (!idScanner) idScanner = new Html5Qrcode("id-reader");
+                idScanner.scanFile(imageFile, true)
+                    .then(decodedText => { onIdScanSuccess(decodedText); URL.revokeObjectURL(img.src); })
+                    .catch(err => { alert("No barcode found."); URL.revokeObjectURL(img.src); });
+            };
+        });
+
+        function closeIdScanner() {
+            document.getElementById('id-scanner-modal').style.display = 'none';
+            if (idScanner && idScanner.isScanning) {
+                idScanner.stop().catch(e => {});
+            }
+        }
+    </script>
+</body>
+</html>

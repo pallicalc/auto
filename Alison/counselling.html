@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Medication Counselling | Alison's Workspace</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../style.css">
+
+    <style>
+        body { background-color: #f0f2f5; font-size: 14px; }
+        .main-container { max-width: 900px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        
+        .workspace-header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #f3e8ff; padding-bottom: 15px; }
+        .workspace-header h1 { color: #a855f7; font-size: 24px; margin: 0; font-weight: 800; }
+        .workspace-header p { color: #6c757d; margin: 5px 0 0 0; }
+
+        .section-header { 
+            background: #faf5ff; padding: 10px 15px; margin: 20px 0 10px 0; 
+            font-weight: 700; color: #a855f7; font-size: 14px; text-transform: uppercase; 
+            border-left: 4px solid #a855f7; border-radius: 4px;
+        }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-weight: 600; color: #495057; margin-bottom: 5px; font-size: 13px; }
+        .input-group select, .input-group input[type="text"] {
+            width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;
+        }
+
+        /* Pill Checkboxes for Recipients */
+        .pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        .pill-group label { 
+            display: flex; align-items: center; gap: 6px; background: #f8f9fa; 
+            border: 1px solid #ced4da; padding: 8px 14px; border-radius: 20px; 
+            cursor: pointer; font-weight: 500; font-size: 13px; margin: 0; transition: 0.2s;
+        }
+        .pill-group input[type="checkbox"] { margin: 0; cursor: pointer; }
+        .pill-group label:hover { background: #f3e8ff; border-color: #a855f7; }
+        
+        /* Drug Grid Styling */
+        .drug-row {
+            display: grid; grid-template-columns: 2fr 2fr 2fr 2fr; gap: 10px; align-items: center;
+            padding: 12px 0; border-bottom: 1px solid #f1f3f5;
+        }
+        .drug-row:last-child { border-bottom: none; }
+        .drug-check { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #2c3e50; font-size: 13px; }
+        .drug-input { padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px; width: 100%; }
+
+        /* Topics Grid Styling */
+        .topics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .topic-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: #495057; }
+        .topic-item input { margin-top: 2px; cursor: pointer; }
+
+        .btn-save {
+            width: 100%; padding: 14px; background: #a855f7; color: white; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: 700; margin-top: 30px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-save:hover { background: #9333ea; }
+        
+        @media (max-width: 600px) {
+            .drug-row { grid-template-columns: 1fr; gap: 8px; padding: 15px 0; }
+            .drug-row > div:not(:first-child) { padding-left: 25px; }
+            .topics-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="workspace-header">
+            <h1>Medication Counselling</h1>
+            <p>Generate detailed patient education notes</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <a href="Alison.html" style="color: #6c757d; text-decoration: none; font-weight: 600; font-size: 14px;">
+                <i class="bi bi-arrow-left"></i> Back to Workspace
+            </a>
+        </div>
+
+        <form id="counselForm">
+            <div class="section-header">1. Consultation Context</div>
+            
+            <div class="input-group">
+                <label>Counselling provided to (Select all that apply):</label>
+                <div class="pill-group" id="recipients-group">
+                    <label><input type="checkbox" value="Patient"> Patient</label>
+                    <label><input type="checkbox" value="Parent"> Parent</label>
+                    <label><input type="checkbox" value="Son"> Son</label>
+                    <label><input type="checkbox" value="Daughter"> Daughter</label>
+                    <label><input type="checkbox" value="Other family member"> Other family member</label>
+                    <label><input type="checkbox" value="Hired carer"> Hired carer</label>
+                </div>
+            </div>
+
+            <div class="input-group" style="max-width: 300px;">
+                <label>Social Support Level:</label>
+                <select id="socialSupport">
+                    <option value="">- Select -</option>
+                    <option value="Good">Good</option>
+                    <option value="Moderate">Moderate</option>
+                    <option value="Poor">Poor</option>
+                </select>
+            </div>
+            
+            <div class="topic-item" style="margin-top: 15px; font-weight: 600; background: #eef2f5; padding: 10px; border-radius: 6px;">
+                <input type="checkbox" id="carerUnderstands" checked>
+                <label for="carerUnderstands" style="margin:0; cursor:pointer;">Carer/Patient demonstrated understanding of the management plan.</label>
+            </div>
+
+            <div class="section-header">2. Medications Counselled</div>
+            <p style="font-size: 12px; color: #6c757d; margin-bottom: 15px;">Tick drugs, select indication and route to auto-generate clinical advice.</p>
+            
+            <div id="drug-container">
+                </div>
+
+            <div class="section-header">3. General Education Topics</div>
+            <p style="font-size: 12px; color: #6c757d; margin-bottom: 10px;">Select specific pamphlets/topics covered during the session.</p>
+            
+            <div class="topics-grid" id="topics-container">
+                </div>
+
+            <button type="button" class="btn-save" onclick="generateAndSave()">Generate & Save Report</button>
+        </form>
+    </div>
+
+    <script>
+        // Data structure for auto-generating the list and the clinical points
+        const drugsData = [
+            { id: 'morphine', name: 'Morphine', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Explained PRN limits and intervals.' },
+            { id: 'oxycodone', name: 'Oxycodone', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Explained PRN limits and intervals.' },
+            { id: 'fentanyl', name: 'Fentanyl', inds: ['Pain', 'Breathlessness', 'Refractory Cough'], advice: 'Advised on side effects (drowsiness, nausea, constipation). Explained PRN limits and intervals.' },
+            { id: 'haloperidol', name: 'Haloperidol', inds: ['Delirium', 'Hiccups', 'Nausea and Vomiting'], advice: 'Monitor for restlessness or extrapyramidal symptoms.' },
+            { id: 'lorazepam', name: 'Lorazepam', inds: ['Anxiety', 'Insomnia', 'Delirium'], advice: 'Advised on sedation and fall risk.' },
+            { id: 'midazolam', name: 'Midazolam', inds: ['Terminal restlessness', 'Seizures'], advice: 'Advised on sedation and fall risk. Explained administration protocol.' },
+            { id: 'dexamethasone', name: 'Dexamethasone', inds: ['Remove swelling/inflammation due to cancer'], advice: 'Take in the morning to prevent insomnia. Take with food. May increase blood sugar and appetite.' },
+            { id: 'paracetamol', name: 'Paracetamol', inds: ['Pain', 'Fever'], advice: 'Do not exceed maximum daily dose. Avoid taking other products containing paracetamol.' },
+            { id: 'hyoscine', name: 'Hyoscine', inds: ['Terminal secretions', 'Bowel colic'], advice: 'May cause dry mouth, blurred vision, or drowsiness. Monitor for excessive drying.' },
+            { id: 'esomeprazole', name: 'Esomeprazole', inds: ['Gastric protection', 'GERD'], advice: 'Take 30-60 minutes before meals for optimal effect.' },
+            { id: 'pantoprazole', name: 'Pantoprazole', inds: ['Gastric protection', 'GERD'], advice: 'Take 30-60 minutes before meals for optimal effect.' },
+            { id: 'laxative', name: 'Laxative', inds: ['Constipation', 'Opioid-induced constipation'], advice: 'Ensure adequate fluid intake. Titrate dose to bowel response (aim for soft stool every 1-2 days).' },
+            { id: 'antibiotic', name: 'Antibiotic', inds: ['Infection'], advice: 'Complete the full prescribed course. Monitor for diarrhea or allergic reactions.' }
+        ];
+
+        const educationTopics = [
+            'What are Opioids?', 'End of Life Symptoms Management', 'Subcutaneous Medication Admin',
+            'Buccal Medication Admin', 'Seizure Management', 'Bleeding Management',
+            'Breathlessness Management', 'Delirium Awareness', 'Bowel Obstruction (MBO)',
+            'Pain Management', 'Fentanyl Patch Application', 'Facing End of Life'
+        ];
+
+        const routes = ['PO (Immediate Release)', 'PO (Controlled Release)', 'SC', 'IV', 'SL', 'Buccal', 'Transdermal', 'PR'];
+
+        // 1. Build the UI on load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Build Drugs
+            const drugContainer = document.getElementById('drug-container');
+            let drugHtml = `<div class="drug-row" style="border-bottom: 2px solid #dee2e6; padding-bottom: 5px;">
+                <div style="font-weight:800; font-size:11px; color:#6c757d;">MEDICATION</div>
+                <div style="font-weight:800; font-size:11px; color:#6c757d;">INDICATION</div>
+                <div style="font-weight:800; font-size:11px; color:#6c757d;">ROUTE</div>
+                <div style="font-weight:800; font-size:11px; color:#6c757d;">DOSE / FREQ</div>
+            </div>`;
+
+            drugsData.forEach(d => {
+                let indOptions = '<option value="">- Indication -</option>';
+                d.inds.forEach(i => indOptions += `<option value="${i}">${i}</option>`);
+
+                let routeOptions = '<option value="">- Route -</option>';
+                routes.forEach(r => routeOptions += `<option value="${r}">${r}</option>`);
+
+                drugHtml += `
+                <div class="drug-row">
+                    <div class="drug-check">
+                        <input type="checkbox" id="chk_${d.id}" value="${d.id}" style="cursor:pointer;">
+                        <label for="chk_${d.id}" style="margin:0; cursor:pointer;">${d.name}</label>
+                    </div>
+                    <div><select id="ind_${d.id}" class="drug-input">${indOptions}</select></div>
+                    <div><select id="route_${d.id}" class="drug-input">${routeOptions}</select></div>
+                    <div><input type="text" id="dose_${d.id}" class="drug-input" placeholder="e.g. 5mg PRN"></div>
+                </div>`;
+            });
+            drugContainer.innerHTML = drugHtml;
+
+            // Build Topics
+            const topicContainer = document.getElementById('topics-container');
+            let topicHtml = '';
+            educationTopics.forEach((t, index) => {
+                topicHtml += `
+                <div class="topic-item">
+                    <input type="checkbox" id="topic_${index}" value="${t}">
+                    <label for="topic_${index}" style="cursor:pointer; margin:0;">${t}</label>
+                </div>`;
+            });
+            topicContainer.innerHTML = topicHtml;
+        });
+
+        // 2. Generate Report and Save
+        function generateAndSave() {
+            let report = "";
+
+            // Context: Recipients
+            let selectedRecipients = [];
+            document.querySelectorAll('#recipients-group input:checked').forEach(cb => {
+                selectedRecipients.push(cb.value);
+            });
+            if (selectedRecipients.length > 0) {
+                report += `Counselling provided to: ${selectedRecipients.join(', ')}\n`;
+            }
+
+            // Context: Support & Understanding
+            const support = document.getElementById('socialSupport').value;
+            const understands = document.getElementById('carerUnderstands').checked;
+
+            if(support) report += `Social Support: ${support}\n`;
+            if(understands) report += `Assessment: Carer/Patient demonstrated understanding of the management plan.\n`;
+            
+            report += `\n`;
+
+            // Drugs Logic
+            let drugCount = 0;
+            let drugSection = `[MEDICATIONS COUNSELLED]\n`;
+            
+            drugsData.forEach(d => {
+                const isChecked = document.getElementById(`chk_${d.id}`).checked;
+                if(isChecked) {
+                    drugCount++;
+                    const ind = document.getElementById(`ind_${d.id}`).value || "Unspecified indication";
+                    const route = document.getElementById(`route_${d.id}`).value || "Unspecified Route";
+                    const dose = document.getElementById(`dose_${d.id}`).value || "Unspecified Dose";
+                    
+                    let finalAdvice = d.advice;
+
+                    // SMART ROUTE ADVICE INJECTION
+                    if (route === 'PO (Controlled Release)') {
+                        finalAdvice += ` Instructed strictly NOT to crush, chew, or break the tablet/capsule.`;
+                    } else if (route === 'Buccal') {
+                        finalAdvice += ` Counselled on proper buccal administration technique.`;
+                    } else if (route === 'SC') {
+                        finalAdvice += ` Provided hands-on training for Subcutaneous (SC) administration.`;
+                    } else if (route === 'Transdermal') {
+                        finalAdvice += ` Instructed to change patch as scheduled. Rotate application sites (hairless, intact skin), avoid heat over patch, and fold old patch to dispose safely.`;
+                    }
+
+                    drugSection += `• ${d.name} (${route}, ${dose}) for ${ind}:\n  -> ${finalAdvice}\n`;
+                }
+            });
+            if(drugCount > 0) report += drugSection + `\n`;
+
+            // Topics
+            let topicCount = 0;
+            let topicSection = `[EDUCATION TOPICS COVERED]\n`;
+            educationTopics.forEach((t, index) => {
+                if(document.getElementById(`topic_${index}`).checked) {
+                    topicCount++;
+                    topicSection += `• ${t}\n`;
+                }
+            });
+            if(topicCount > 0) report += topicSection + `\n`;
+
+            // Final Statement
+            if(drugCount > 0 || topicCount > 0) {
+                report += `* Digital copy of education material shared with family member.\n`;
+            }
+
+            if(report.trim() === "") {
+                alert("Please select at least one item before saving.");
+                return;
+            }
+
+            // Save to the exact key Alison.html is looking for
+            sessionStorage.setItem('alison_counsel', report.trim());
+
+            // Go back to the main workspace
+            window.location.href = 'Alison.html';
+        }
+    </script>
+</body>
+</html>
