@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Medical Review (CP2) | Alison's Workspace</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../style.css">
+
+    <style>
+        body { background-color: #f0f2f5; font-size: 14px; }
+        .main-container { max-width: 900px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        
+        .workspace-header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #f8d7da; padding-bottom: 15px; }
+        .workspace-header h1 { color: #dc3545; font-size: 24px; margin: 0; font-weight: 800; }
+        .workspace-header p { color: #6c757d; margin: 5px 0 0 0; }
+
+        .section-header { 
+            background: #fff5f5; padding: 10px 15px; margin: 25px 0 15px 0; 
+            font-weight: 700; color: #dc3545; font-size: 14px; text-transform: uppercase; 
+            border-left: 4px solid #dc3545; border-radius: 4px;
+        }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-weight: 600; color: #495057; margin-bottom: 5px; font-size: 13px; }
+        .input-group select, .input-group input[type="text"], .input-group textarea {
+            width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; box-sizing: border-box; font-family: inherit;
+        }
+        
+        .input-group textarea { resize: vertical; }
+        .input-group select:focus, .input-group input[type="text"]:focus, .input-group textarea:focus {
+            outline: none; border-color: #dc3545; box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
+        }
+
+        .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .grid-3-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+        .social-box { background: #fdfdfd; border: 1px solid #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+
+        .btn-save {
+            width: 100%; padding: 14px; background: #dc3545; color: white; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: 700; margin-top: 30px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-save:hover { background: #c82333; }
+        
+        @media (max-width: 700px) {
+            .grid-2-col, .grid-3-col { grid-template-columns: 1fr; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="workspace-header">
+            <h1><i class="bi bi-file-medical"></i> Medical Review (CP2)</h1>
+            <p>Pharmacist clinical history & care plan</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <a href="Alison.html" style="color: #6c757d; text-decoration: none; font-weight: 600; font-size: 14px;">
+                <i class="bi bi-arrow-left"></i> Back to Workspace
+            </a>
+        </div>
+
+        <form id="cp2Form">
+            
+            <div class="section-header">1. Clinical History</div>
+            
+            <div class="input-group">
+                <label>Chief Complaint / History of Present Illness (HPI):</label>
+                <textarea id="cp2_hpi" rows="3" placeholder="Enter reason for admission or current clinical presentation..."></textarea>
+            </div>
+
+            <div class="grid-2-col">
+                <div class="input-group">
+                    <label>Medical History / Comorbidities:</label>
+                    <textarea id="cp2_comorb" rows="3" placeholder="e.g., HTN, T2DM, CKD..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Family History of Illness:</label>
+                    <textarea id="cp2_family" rows="3" placeholder="e.g., Father had IHD..."></textarea>
+                </div>
+            </div>
+
+            <div class="section-header">2. Drug Related Information</div>
+            
+            <div class="grid-2-col">
+                <div class="input-group">
+                    <label style="color: #dc3545;"><i class="bi bi-exclamation-triangle"></i> Adverse Drug Reaction:</label>
+                    <textarea id="cp2_adr" rows="2" placeholder="Specify drug & reaction if applicable..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label style="color: #fd7e14;"><i class="bi bi-arrow-left-right"></i> Drug Interaction:</label>
+                    <textarea id="cp2_interaction" rows="2" placeholder="Note any significant interactions..."></textarea>
+                </div>
+            </div>
+
+            <div class="section-header">3. Social History</div>
+            
+            <div class="grid-2-col">
+                <div class="social-box">
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Smoking Status:</label>
+                        <select id="soc_smoke" onchange="toggleSmokeDetails()">
+                            <option value="">- Select -</option>
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                            <option value="Ex-smoker">Ex-smoker</option>
+                            <option value="Second-hand Smoker">Second-hand Smoker</option>
+                        </select>
+                    </div>
+                    <div class="grid-2-col" id="smoke_details" style="display:none; gap: 10px;">
+                        <div class="input-group" style="margin:0;"><input type="text" id="smoke_amt" placeholder="Sticks/Day"></div>
+                        <div class="input-group" style="margin:0;"><input type="text" id="smoke_dur" placeholder="For (Years)"></div>
+                    </div>
+                </div>
+
+                <div class="social-box">
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Alcohol Drinking:</label>
+                        <select id="soc_alcohol" onchange="toggleAlcoholDetails()">
+                            <option value="">- Select -</option>
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                            <option value="Ex-Alcoholic">Ex-Alcoholic</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="alcohol_details" style="display:none; margin:0;">
+                        <input type="text" id="alcohol_amt" placeholder="Amount / Frequency">
+                    </div>
+                </div>
+
+                <div class="social-box">
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Pregnancy / Lactation:</label>
+                        <select id="soc_preg" onchange="togglePregDetails()">
+                            <option value="">- Select -</option>
+                            <option value="No">No / NA</option>
+                            <option value="Yes">Yes</option>
+                            <option value="Planning To Get Pregnant">Planning To Get Pregnant</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="preg_details" style="display:none; margin:0;">
+                        <select id="preg_tri">
+                            <option value="">- Select Trimester -</option>
+                            <option value="1st Trimester">1st Trimester</option>
+                            <option value="2nd Trimester">2nd Trimester</option>
+                            <option value="3rd Trimester">3rd Trimester</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="social-box">
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Drug Abuse:</label>
+                        <select id="soc_abuse" onchange="toggleAbuseDetails()">
+                            <option value="">- Select -</option>
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="abuse_details" style="display:none; margin:0;">
+                        <input type="text" id="abuse_amt" placeholder="Specify details...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-header">4. Investigations & Pharmacist Plan</div>
+            
+            <div class="input-group">
+                <label>Diagnostic Tests / Lab Results:</label>
+                <textarea id="cp2_labs" rows="3" placeholder="e.g., Renal profile, LFTs, relevant cultures..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label style="color: #0284c7;"><i class="bi bi-clipboard2-pulse"></i> Pharmacist Care Plan / Monitoring:</label>
+                <textarea id="cp2_plan" rows="4" placeholder="Document your clinical plan, parameters to monitor, and recommendations..."></textarea>
+            </div>
+
+            <button type="button" class="btn-save" onclick="generateAndSave()">Generate & Save CP2</button>
+        </form>
+    </div>
+
+    <script>
+        // Toggle Logic for Social History Fields
+        function toggleSmokeDetails() {
+            const val = document.getElementById('soc_smoke').value;
+            document.getElementById('smoke_details').style.display = (val === 'Yes' || val === 'Ex-smoker') ? 'grid' : 'none';
+        }
+        function toggleAlcoholDetails() {
+            const val = document.getElementById('soc_alcohol').value;
+            document.getElementById('alcohol_details').style.display = (val === 'Yes' || val === 'Ex-Alcoholic') ? 'block' : 'none';
+        }
+        function togglePregDetails() {
+            const val = document.getElementById('soc_preg').value;
+            document.getElementById('preg_details').style.display = (val === 'Yes') ? 'block' : 'none';
+        }
+        function toggleAbuseDetails() {
+            const val = document.getElementById('soc_abuse').value;
+            document.getElementById('abuse_details').style.display = (val === 'Yes') ? 'block' : 'none';
+        }
+
+        // Generate and Save Report
+        function generateAndSave() {
+            let report = "";
+            const now = new Date();
+            
+            // Standard Header
+            report += `Timestamp: ${now.toLocaleString()}\n`;
+            report += `Filled by: Alison\n\n`;
+
+            const val = (id) => document.getElementById(id).value.trim();
+
+            // 1. Clinical History
+            const hpi = val('cp2_hpi');
+            const comorb = val('cp2_comorb');
+            const family = val('cp2_family');
+            
+            if (hpi || comorb || family) {
+                report += `[CLINICAL HISTORY]\n`;
+                if (hpi) report += `HPI/Complaint: ${hpi}\n`;
+                if (comorb) report += `Comorbidities: ${comorb}\n`;
+                if (family) report += `Family History: ${family}\n`;
+                report += `\n`;
+            }
+
+            // 2. Drug Related
+            const adr = val('cp2_adr');
+            const interaction = val('cp2_interaction');
+
+            if (adr || interaction) {
+                report += `[DRUG RELATED]\n`;
+                if (adr) report += `ADR: ${adr}\n`;
+                if (interaction) report += `Drug Interaction: ${interaction}\n`;
+                report += `\n`;
+            }
+
+            // 3. Social History
+            const smoke = val('soc_smoke');
+            const alcohol = val('soc_alcohol');
+            const preg = val('soc_preg');
+            const abuse = val('soc_abuse');
+
+            if (smoke || alcohol || preg || abuse) {
+                report += `[SOCIAL HISTORY]\n`;
+                
+                if (smoke) {
+                    let s_str = `Smoking: ${smoke}`;
+                    if (smoke === 'Yes' || smoke === 'Ex-smoker') {
+                        const amt = val('smoke_amt');
+                        const dur = val('smoke_dur');
+                        if (amt || dur) s_str += ` (${amt ? amt + ' sticks/day' : ''} ${dur ? 'for ' + dur : ''})`;
+                    }
+                    report += s_str.trim() + `\n`;
+                }
+
+                if (alcohol) {
+                    let a_str = `Alcohol: ${alcohol}`;
+                    if (alcohol === 'Yes' || alcohol === 'Ex-Alcoholic') {
+                        const amt = val('alcohol_amt');
+                        if (amt) a_str += ` (${amt})`;
+                    }
+                    report += a_str + `\n`;
+                }
+
+                if (preg) {
+                    let p_str = `Pregnancy: ${preg}`;
+                    if (preg === 'Yes') {
+                        const tri = val('preg_tri');
+                        if (tri) p_str += ` (${tri})`;
+                    }
+                    report += p_str + `\n`;
+                }
+
+                if (abuse) {
+                    let ab_str = `Drug Abuse: ${abuse}`;
+                    if (abuse === 'Yes') {
+                        const amt = val('abuse_amt');
+                        if (amt) ab_str += ` - ${amt}`;
+                    }
+                    report += ab_str + `\n`;
+                }
+                report += `\n`;
+            }
+
+            // 4. Investigations & Plan
+            const labs = val('cp2_labs');
+            const plan = val('cp2_plan');
+
+            if (labs || plan) {
+                report += `[INVESTIGATIONS & CARE PLAN]\n`;
+                if (labs) report += `Diagnostic Tests/Labs:\n${labs}\n\n`;
+                if (plan) report += `Pharmacist Plan:\n${plan}\n`;
+            }
+
+            if (report.trim() === `Timestamp: ${now.toLocaleString()}\nFilled by: Alison`) {
+                alert("Please enter at least one detail before saving.");
+                return;
+            }
+
+            // Save to the exact key Alison.html is looking for
+            sessionStorage.setItem('alison_cp2', report.trim());
+
+            // Go back to the main workspace
+            window.location.href = 'Alison.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clinical Intervention | Alison's Workspace</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../style.css">
+
+    <style>
+        body { background-color: #f0f2f5; font-size: 14px; }
+        .main-container { max-width: 800px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        
+        .workspace-header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #fff3cd; padding-bottom: 15px; }
+        .workspace-header h1 { color: #fd7e14; font-size: 24px; margin: 0; font-weight: 800; }
+        .workspace-header p { color: #6c757d; margin: 5px 0 0 0; }
+
+        .section-header { 
+            background: #fff8f0; padding: 10px 15px; margin: 20px 0 10px 0; 
+            font-weight: 700; color: #fd7e14; font-size: 14px; text-transform: uppercase; 
+            border-left: 4px solid #fd7e14; border-radius: 4px;
+        }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-weight: 600; color: #495057; margin-bottom: 5px; font-size: 13px; }
+        .input-group select, .input-group input[type="text"], .input-group textarea {
+            width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; box-sizing: border-box; font-family: inherit;
+        }
+        
+        .input-group textarea { resize: vertical; }
+        .input-group select:focus, .input-group input[type="text"]:focus, .input-group textarea:focus {
+            outline: none; border-color: #fd7e14; box-shadow: 0 0 0 3px rgba(253, 126, 20, 0.2);
+        }
+
+        .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .btn-save {
+            width: 100%; padding: 14px; background: #fd7e14; color: white; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: 700; margin-top: 30px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-save:hover { background: #e8590c; }
+        
+        @media (max-width: 600px) {
+            .grid-2-col { grid-template-columns: 1fr; gap: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="workspace-header">
+            <h1><i class="bi bi-shield-plus"></i> Clinical Intervention</h1>
+            <p>Document pharmacy interventions & outcomes</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <a href="Alison.html" style="color: #6c757d; text-decoration: none; font-weight: 600; font-size: 14px;">
+                <i class="bi bi-arrow-left"></i> Back to Workspace
+            </a>
+        </div>
+
+        <form id="interventionForm">
+            
+            <div class="section-header">1. Intervention Classification</div>
+            
+            <div class="input-group">
+                <label>Intervention Category:</label>
+                <select id="inv_category">
+                    <option value="">- Select Category -</option>
+                    <option value="Inappropriate Prescription">Inappropriate Prescription</option>
+                    <option value="Incomplete Prescriptions">Incomplete Prescriptions</option>
+                    <option value="Incorrect/Inappropriate/Inadequate Regimen">Incorrect/Inappropriate/Inadequate Regimen</option>
+                    <option value="Miscellaneous">Miscellaneous</option>
+                </select>
+            </div>
+
+            <div class="grid-2-col">
+                <div class="input-group">
+                    <label>Issue Type:</label>
+                    <select id="inv_type">
+                        <option value="">- Select Issue -</option>
+                        <option value="Dose">Dose</option>
+                        <option value="Dr's Stamp And Sign">Dr's Stamp And Sign</option>
+                        <option value="Drug">Drug</option>
+                        <option value="Duration">Duration</option>
+                        <option value="Frequency">Frequency</option>
+                        <option value="Patient Data">Patient Data</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Status of Intervention:</label>
+                    <select id="inv_status" style="background-color: #f8f9fa;">
+                        <option value="">- Select Status -</option>
+                        <option value="Accepted">Accepted</option>
+                        <option value="Not Accepted">Not Accepted</option>
+                        <option value="Not Available">Not Available</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Medication Involved:</label>
+                <input type="text" id="inv_drug" placeholder="e.g., Morphine 10mg...">
+            </div>
+
+            <div class="section-header">2. Clinical Notes</div>
+            
+            <div class="input-group">
+                <label>Description of Issue & Intervention:</label>
+                <textarea id="inv_desc" rows="4" placeholder="Detail the discrepancy, clinical reasoning, and communication with the doctor..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label>Outcome / Action Taken:</label>
+                <textarea id="inv_outcome" rows="3" placeholder="e.g., Prescription amended by MO, dose adjusted to 5mg..."></textarea>
+            </div>
+
+            <button type="button" class="btn-save" onclick="generateAndSave()">Generate & Save Report</button>
+        </form>
+    </div>
+
+    <script>
+        function generateAndSave() {
+            let report = "";
+            const now = new Date();
+            
+            // Standard Header
+            report += `Timestamp: ${now.toLocaleString()}\n`;
+            report += `Filled by: Alison\n\n`;
+
+            // Collect Fields
+            const category = document.getElementById('inv_category').value;
+            const type = document.getElementById('inv_type').value;
+            const status = document.getElementById('inv_status').value;
+            const drug = document.getElementById('inv_drug').value.trim();
+            const desc = document.getElementById('inv_desc').value.trim();
+            const outcome = document.getElementById('inv_outcome').value.trim();
+
+            // Build Report Structure
+            if (category || type || status || drug) {
+                report += `[CLASSIFICATION]\n`;
+                if (category) report += `Category: ${category}\n`;
+                if (type) report += `Issue: ${type}\n`;
+                if (drug) report += `Medication: ${drug}\n`;
+                if (status) report += `Status: ${status}\n`;
+                report += `\n`;
+            }
+
+            if (desc) {
+                report += `[DESCRIPTION]\n${desc}\n\n`;
+            }
+
+            if (outcome) {
+                report += `[OUTCOME]\n${outcome}\n`;
+            }
+
+            // Validation
+            const coreContent = category || type || status || drug || desc || outcome;
+            if (!coreContent) {
+                alert("Please select or enter at least one intervention detail before saving.");
+                return;
+            }
+
+            // Save to the exact key Alison.html is looking for
+            sessionStorage.setItem('alison_intervention', report.trim());
+
+            // Go back to the main workspace
+            window.location.href = 'Alison.html';
+        }
+    </script>
+</body>
+</html>
