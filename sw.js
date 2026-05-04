@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pallicalc-smart-v65'; 
+const CACHE_NAME = 'pallicalc-smart-v66'; 
 // ==========================================
 // 1. CRITICAL APP SHELL (Must load for app to start)
 // ==========================================
@@ -92,10 +92,12 @@ self.addEventListener('activate', (event) => {
 });
 
 // ==========================================
-// FETCH EVENT (Redirect logic completely removed)
+// FETCH EVENT (Robust Runtime Caching Added)
 // ==========================================
 self.addEventListener('fetch', (event) => {
-  if (event.request.url.includes('googleapis')) return;
+  // 👉 FIX 1: Ignore non-GET requests (cannot be cached) and external APIs
+  if (event.request.method !== 'GET') return;
+  if (event.request.url.includes('googleapis') || event.request.url.includes('firestore')) return;
 
   event.respondWith(
     (async () => {
@@ -114,25 +116,29 @@ self.addEventListener('fetch', (event) => {
             const offlineApp = await cache.match('./app.html');
             if (offlineApp) return offlineApp;
           }
-          // Safely fails for other excluded files (like admin pages)
           return new Response('', { status: 503, statusText: 'Offline' });
         }
       }
 
-      // 2. NETWORK FIRST (For HTML Pages & Logic)
+      // 2. NETWORK FIRST (For HTML Pages & Logic - Cache As You Go!)
       if (event.request.mode === 'navigate' || event.request.destination === 'document' || url.pathname.match(/\.(html|js|json)$/i)) {
         try {
           const networkResponse = await fetch(event.request); 
-          if (networkResponse.ok) {
+          
+          // 👉 FIX 2: Only cache successful responses! (status 200)
+          // If they visit an unlisted page, it gets added to the cache here.
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
             cache.put(event.request, networkResponse.clone());
-            return networkResponse;
           }
+          return networkResponse;
+
         } catch (error) {
           console.log('Using Offline Cache for:', url.pathname);
         }
 
         let cachedResponse = await cache.match(event.request);
-        
+
+        // Fallbacks if the exact request isn't found
         if (!cachedResponse && event.request.mode === 'navigate') {
            cachedResponse = await cache.match(url.pathname + '.html');
            if (!cachedResponse && (url.pathname.endsWith('/app') || url.pathname.endsWith('/app/'))) {
@@ -152,7 +158,9 @@ self.addEventListener('fetch', (event) => {
 
       try {
         const networkAsset = await fetchClean(event.request.url);
-        if (networkAsset.ok) {
+        
+        // 👉 FIX 3: Cache valid assets discovered dynamically
+        if (networkAsset && networkAsset.status === 200) {
           cache.put(event.request, networkAsset.clone());
         }
         return networkAsset;
