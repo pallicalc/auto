@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SXI Assessment | PalliCalc</title>
-    
+
     <link rel="stylesheet" href="../diagnostic.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    
+
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
     <script src="/js/qr.min.js"></script>
-    
+
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -34,7 +34,7 @@
     </div>
 
     <div class="main-container">
-        
+
         <div class="header header-ipos">
             <div id="inst-header-container" class="inst-header-container">
                 <img id="inst-logo-img" class="inst-logo" src="" alt="Logo" style="display:none;">
@@ -60,7 +60,7 @@
         </div>
 
         <form id="sxiForm">
-            
+
             <div class="question-card">
                 <label class="q-label">1. My mouth feels dry when eating a meal</label>
                 <div class="scale-container">
@@ -137,6 +137,12 @@
                     <i class="bi bi-printer"></i> Print Blank Form
                 </button>
             </div>
+
+            <div class="no-print" style="text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #888;">
+                Developed for the Mist-Pal Trial, supported by <strong>Oral7®</strong>.<br>
+                Open and free for general clinical use.
+            </div>
+
         </form>
 
     </div>
@@ -145,7 +151,7 @@
         async function printPDF() {
             const loading = document.getElementById('pdf-loading');
             loading.style.display = 'flex';
-            
+
             const printWindow = window.open('', '_blank');
             if (!printWindow) {
                 alert("Please allow 'popups' to view the PDF.");
@@ -177,10 +183,10 @@
 
                 // B. LOAD PDF (Force Cache Busting with '?v=timestamp')
                 const { PDFDocument, rgb, StandardFonts } = PDFLib;
-                
+
                 // CRITICAL FIX: Append timestamp to force new download
                 const pdfUrl = 'eng.pdf?v=' + Date.now();
-                
+
                 const existingPdfBytes = await fetch(pdfUrl).then(res => {
                     if (!res.ok) throw new Error("File eng.pdf not found in sxi folder!");
                     return res.arrayBuffer();
@@ -188,7 +194,7 @@
 
                 const pdfDoc = await PDFDocument.load(existingPdfBytes);
                 const newPdf = await PDFDocument.create();
-                
+
                 const helveticaFont = await newPdf.embedFont(StandardFonts.Helvetica);
                 const helveticaBold = await newPdf.embedFont(StandardFonts.HelveticaBold);
 
@@ -203,7 +209,7 @@
                 // C. STAMP FOOTER (Iterates through ALL pages)
                 for (const page of embeddedPages) {
                     const newPage = newPdf.addPage([A4_W, A4_H]);
-                    
+
                     // 1. Content
                     const scale = Math.min(A4_W / page.width, (A4_H - FOOTER_H) / page.height);
                     const w = page.width * scale;
@@ -232,7 +238,7 @@
 
                                 const lScale = 35 / logoImg.height;
                                 const lWidth = logoImg.width * lScale;
-                                
+
                                 newPage.drawImage(logoImg, {
                                     x: currentX,
                                     y: lineY - 45,
@@ -247,7 +253,7 @@
                     // 4. TEXT (RIGHT)
                     const nameStr = footerData.name || "PalliCalc Patient Education";
                     const contactStr = footerData.contact ? `Contact: ${footerData.contact}` : "";
-                    
+
                     const nameWidth = helveticaBold.widthOfTextAtSize(nameStr, 12);
                     newPage.drawText(nameStr, { 
                         x: A4_W - 30 - nameWidth, 
@@ -268,7 +274,17 @@
                         });
                     }
 
-                    // 5. COPYRIGHT (CENTER)
+                    // 5. COPYRIGHT & SPONSOR (CENTER)
+                    const sponsorText = "Developed for the Mist-Pal Trial, supported by Oral7®. Free for general clinical use.";
+                    const sponsorWidth = helveticaFont.widthOfTextAtSize(sponsorText, 8);
+                    newPage.drawText(sponsorText, {
+                        x: (A4_W - sponsorWidth) / 2,
+                        y: 22, // Placed slightly above the copyright
+                        size: 8,
+                        font: helveticaFont,
+                        color: rgb(0.4, 0.4, 0.4) // Slightly darker than copyright for subtle emphasis
+                    });
+
                     const copyText = "© 2026 Alivioscript Solutions | PalliCalc™";
                     const copyWidth = helveticaFont.widthOfTextAtSize(copyText, 8);
                     newPage.drawText(copyText, {
@@ -278,7 +294,7 @@
                         font: helveticaFont,
                         color: rgb(0.6, 0.6, 0.6)
                     });
-                }
+              }
 
                 const pdfBytes = await newPdf.save();
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -343,7 +359,7 @@
 
         function executeQRGeneration() {
             const totalScore = calculateScore();
-            
+
             // Collect answers as array or string for compact payload
             const ansArr = [
                 getVal('q1') || '-',
