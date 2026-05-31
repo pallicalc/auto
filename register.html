@@ -576,16 +576,8 @@
         Already have an account? <a href="index.html" style="color: #0ea5e9; text-decoration: none;">Log in</a>
       </div>
     </div>
-
-    <div id="success-view" style="display:none; text-align:center;">
-      <i class="bi bi-envelope-check-fill" style="font-size:3rem; color:#0ea5e9;"></i>
-      <h2 class="auth-title mt-3">Verify Your Email</h2>
-      <p style="color:#64748b;">We've sent a link to <span id="display-email"></span></p>
-      <a href="index.html" class="btn-primary" style="display:block; text-decoration:none;">Back to Login</a>
-    </div>
-
   </div>
-  
+
   <div class="legal-footer">
     <p><strong>&copy; 2026 Alivioscript Solutions</strong></p>
     <p class="legal-warning">For Educational Use Only. Not a Medical Device.</p>
@@ -876,9 +868,9 @@ await db.collection('users').doc(uid).set({
                     }
 
                     // 3. Ask Firebase Extension to generate checkout link
-                    const sessionRef = await db.collection("customers").doc(uid).collection("checkout_sessions").add({
+                        const sessionRef = await db.collection("customers").doc(uid).collection("checkout_sessions").add({
                         price: stripeId,
-                        success_url: window.location.origin + '/success.html', // Make sure you have a success.html file!
+                        success_url: window.location.origin + '/success.html',
                         cancel_url: window.location.origin + '/registration.html'
                     });
 
@@ -891,10 +883,7 @@ await db.collection('users').doc(uid).set({
 
                 } else {
                     // It's free (MOH or 100% Promo Code). Skip Stripe entirely.
-                    await cred.user.sendEmailVerification();
-                    document.getElementById('registration-view').style.display = 'none';
-                    document.getElementById('success-view').style.display = 'block';
-                    document.getElementById('display-email').textContent = email;
+                    window.location.assign(window.location.origin + '/success.html');
                 }
 
             } catch(err) {
