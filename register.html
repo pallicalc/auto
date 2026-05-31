@@ -531,25 +531,19 @@
                 <span class="total-badge"><span id="currencySymbol">RM</span> <span id="totalDisplay">0</span></span>
             </div>
 
-            <button type="button" id="proceed-payment-btn" class="btn-primary" style="background-color: #475569;" onclick="showPaymentFields()">
-                Confirm & Proceed to Payment
-            </button>
-
-            <div id="payment-input-container" style="display:none;">
-                <div class="print-warning">
-                    <i class="bi bi-exclamation-triangle-fill"></i> <strong>Important:</strong> Please print your Document <strong>now</strong>.
-                </div>
-                <div class="doc-buttons">
-                    <button type="button" class="btn-small-outline" onclick="generateInvoice()"><i class="bi bi-file-text"></i> Invoice</button>
-                    <button type="button" class="btn-small-outline" onclick="generateInstantReceipt()"><i class="bi bi-printer"></i> Receipt</button>
-                </div>
-                <label class="form-label">Payment Reference / Receipt No.</label>
-                <input id="paymentRef" type="text" class="form-input" placeholder="Paste DuitNow / Stripe Ref">
-                <div style="margin-top:10px;">
-                    <label style="font-size:0.8rem; color:#475569;">
+<div id="payment-input-container" style="display:none; margin-top:15px; border-top: 1px solid #e2e8f0; padding-top:15px;">
+<div id="lhdn-section">
+                    <label style="font-size:0.8rem; color:#475569; font-weight: 600;">
                         <input type="checkbox" id="requestEInvoice"> Request Official LHDN e-Invoice
                     </label>
+                    <p style="font-size: 0.75rem; color: #dc2626; margin-top: 4px; margin-bottom: 0;">
+                        * Note: Official LHDN e-Invoices are exclusively issued for Institution Admin setup packages.
+                    </p>
                 </div>
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">
+                    <i class="bi bi-shield-lock-fill text-success" style="margin-right: 5px;"></i>
+                    You will be redirected to Stripe's secure checkout automatically.
+                </p>
             </div>
         </div>
 
@@ -731,22 +725,28 @@
             }
             else {
                 // Personal
-                total = prices.personal;
+                total = isMoH ? 0 : prices.personal;
                 breakdownHtml = `<strong>Personal Account</strong><ul><li>Local storage access.</li></ul>`;
             }
 
             // Update DOM
             document.getElementById('pricing-section').style.display = total > 0 ? 'block' : 'none';
             document.getElementById('totalDisplay').textContent = total;
-            document.getElementById('currencySymbol').textContent = isMalaysia ? 'RM' : 'USD';
+            document.getElementById('currencySymbol').textContent = 'RM';  
             document.getElementById('service-breakdown-box').innerHTML = breakdownHtml;
             document.getElementById('paymentFrequency').textContent = freqText;
             
-            // Handle Proceed Button visibility
-            const proceedBtn = document.getElementById('proceed-payment-btn');
+// Handle Payment Info visibility
             const payFields = document.getElementById('payment-input-container');
-            if(total > 0 && payFields.style.display === 'none') proceedBtn.style.display = 'block';
-            else proceedBtn.style.display = 'none';
+            payFields.style.display = total > 0 ? 'block' : 'none';
+            
+            // Only show LHDN checkbox to Institution Admins
+            const lhdnSection = document.getElementById('lhdn-section');
+            if (lhdnSection) {
+                lhdnSection.style.display = (role === 'institutionAdmin') ? 'block' : 'none';
+                // Uncheck it automatically if hidden
+                if (role !== 'institutionAdmin') document.getElementById('requestEInvoice').checked = false;
+            }
         }
 
         // --- EVENT LISTENERS ---
@@ -795,14 +795,13 @@
             btn.disabled = true; btn.textContent = 'Processing...'; msg.style.display = 'none';
 
             try {
-                const email = document.getElementById('email').value.trim().toLowerCase();
+const email = document.getElementById('email').value.trim().toLowerCase();
                 const pwd = document.getElementById('password').value;
                 const role = document.querySelector('input[name="role"]:checked').value;
                 const total = parseInt(document.getElementById('totalDisplay').textContent);
-                const payRef = document.getElementById('paymentRef').value.trim();
+                const country = countrySelect.value;
 
                 if(document.getElementById('confirm-password').value !== pwd) throw new Error("Passwords mismatch");
-                if(total > 0 && !payRef) throw new Error("Please enter Payment Reference.");
 
                 // --- RESTORED LOGIC FOR BETA PROMO ---
                 const isMoH = email.endsWith('@moh.gov.my');
@@ -841,24 +840,62 @@
                     });
                 }
 
-                await db.collection('users').doc(uid).set({
+await db.collection('users').doc(uid).set({
                     username: document.getElementById('username').value,
                     email: email, role: role,
-                    country: countrySelect.value,
+                    country: country,
                     isPremium: isPremium, 
-                    trustStatus: total > 0 ? 'pending-verification' : 'verified',
-                    paymentReference: payRef || "N/A",
+                    trustStatus: total > 0 ? 'pending-payment' : 'verified',
                     registrationAmount: total,
-                    manualDiscount: manualDiscount, // Saved for record
+                    manualDiscount: manualDiscount, 
                     requestEInvoice: document.getElementById('requestEInvoice').checked,
                     institutionId: instId, institutionName: instName,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                await cred.user.sendEmailVerification();
-                document.getElementById('registration-view').style.display = 'none';
-                document.getElementById('success-view').style.display = 'block';
-                document.getElementById('display-email').textContent = email;
+                if (total > 0) {
+                    btn.textContent = 'Redirecting to Secure Checkout...';
+                    
+                    // 1. Identify if it's Malaysia or International
+                    const isMalaysia = (country === 'Malaysia' || country === 'Select country...');
+                    const regionData = LIVE_REG_PRICES[isMalaysia ? 'malaysia' : 'international'];
+                    
+// 2. Fetch the correct Stripe ID from your Firebase Settings
+                    let stripeId = "";
+                    if(role === 'institutionAdmin') {
+                        if (isPremium) {
+                            // If MOH, use the special RM 500 ID. If private, use the combo RM 1000 ID.
+                            stripeId = isMoH ? regionData.moh_premium_stripe_id : regionData.admin_premium_stripe_id;
+                        } else {
+                            stripeId = regionData.admin_reg_stripe_id;
+                        }
+                    } else if(role === 'institutionUser') {
+                        stripeId = regionData.institutionUser_stripe_id;
+                    } else {
+                        stripeId = regionData.personal_stripe_id;
+                    }
+
+                    // 3. Ask Firebase Extension to generate checkout link
+                    const sessionRef = await db.collection("customers").doc(uid).collection("checkout_sessions").add({
+                        price: stripeId,
+                        success_url: window.location.origin + '/success.html', // Make sure you have a success.html file!
+                        cancel_url: window.location.origin + '/registration.html'
+                    });
+
+                    // 4. Instantly redirect browser when link is ready
+                    sessionRef.onSnapshot((snap) => {
+                        const data = snap.data();
+                        if (data && data.error) throw new Error(data.error.message);
+                        if (data && data.url) window.location.assign(data.url);
+                    });
+
+                } else {
+                    // It's free (MOH or 100% Promo Code). Skip Stripe entirely.
+                    await cred.user.sendEmailVerification();
+                    document.getElementById('registration-view').style.display = 'none';
+                    document.getElementById('success-view').style.display = 'block';
+                    document.getElementById('display-email').textContent = email;
+                }
 
             } catch(err) {
                 console.error(err);
@@ -871,68 +908,6 @@
             }
         });
 
-        // --- PDF GENERATORS (SPECIFIC DESCRIPTIONS) ---
-        function getFeeDescription() {
-            const role = document.querySelector('input[name="role"]:checked').value;
-            const premium = premiumToggle.checked;
-            
-            if (role === 'institutionUser') {
-                return "Identity Verification & Access Security Fee (One-off)";
-            } else if (role === 'institutionAdmin') {
-                if (premium) {
-                    return "Premium Setup Package: Datasheet Integration, Logo Injection & 4-Hour Consultation Retainer";
-                } else {
-                    return "Standard Institution Setup: Custom Ratio Config, Logo Injection & 2-Hour Consultation";
-                }
-            } else {
-                return "Personal Account Setup";
-            }
-        }
-
-        window.generateInvoice = function() {
-            printDoc("PRO-FORMA INVOICE", "DuitNow / Stripe", "Please attach proof of payment.", getFeeDescription());
-        };
-        window.generateInstantReceipt = function() {
-            const ref = document.getElementById('paymentRef').value || "PENDING";
-            printDoc("INSTANT RECEIPT", `Payment Ref: ${ref}`, "Keep as proof of transaction.", getFeeDescription());
-        };
-
-        function printDoc(title, payInfo, note, description) {
-            const amt = document.getElementById('totalDisplay').textContent;
-            const curr = document.getElementById('currencySymbol').textContent;
-            
-            const win = window.open('', '_blank');
-            win.document.write(`
-                <html><head><title>${title}</title>
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-                <style>
-                    body{padding:40px;font-family:sans-serif}
-                    .header{border-bottom:2px solid #0ea5e9;margin-bottom:30px}
-                    .verification-notice{border: 2px solid #dc3545; padding: 15px; border-radius: 8px; margin-top: 20px; color: #b91c1c; font-size: 0.9rem;}
-                </style>
-                </head><body onload="window.print()">
-                <div class="header d-flex justify-content-between">
-                    <div><h2 style="color:#0ea5e9">PalliCalc</h2><small>Alivioscript Solutions</small></div>
-                    <div class="text-end"><h4>${title}</h4><p>${new Date().toLocaleDateString()}</p></div>
-                </div>
-                <div class="p-4 bg-light rounded mb-4">
-                    <strong>Payable To:</strong> Alivioscript Solutions<br><strong>Method:</strong> ${payInfo}
-                </div>
-                <table class="table table-bordered">
-                    <tr><th>Service Description</th><th class="text-end">Amount</th></tr>
-                    <tr><td>${description}</td><td class="text-end fw-bold">${curr} ${amt}</td></tr>
-                </table>
-                <div class="verification-notice">
-                    <strong>STATUS: PENDING VERIFICATION</strong><br>
-                    Note: ${note}<br><br>
-                    <em>Charges are for administrative verification, technical configuration, and consultation services only.</em>
-                </div>
-                <p class="text-center text-muted mt-5 small">
-                    For support, contact support@pallicalc.com<br>Alison Chai, RPh: 9093
-                </p>
-            `);
-            win.document.close();
-        }
 
         updateUI(); // Initial run
     });
