@@ -221,7 +221,7 @@
         <h4 style="margin-top:0; color: var(--primary);"><i class="bi bi-upc-scan"></i> Identify Patient</h4>
         <p style="font-size: 0.85rem; color: #6c757d; margin-bottom: 15px;">Aim at hospital sticker or Research QR</p>
         
-        <div id="id-reader" style="width:100%; height:200px; overflow:hidden; border-radius:8px; margin-bottom:15px; background:black;"></div>
+        <div id="id-reader" style="width:100%; overflow:hidden; border-radius:8px; margin-bottom:15px; background:black;"></div>
         
         <input type="file" id="id-qr-input-file" accept="image/*" style="display:none">
         
@@ -700,9 +700,20 @@
 
     function openIdScanner() {
         document.getElementById('id-scanner-modal').style.display = 'flex';
-        if (!idScanner) { idScanner = new Html5Qrcode("id-reader"); }
+        
+        if (!idScanner) { 
+            // Turn on Hardware Acceleration for faster barcode reading
+            idScanner = new Html5Qrcode("id-reader", { 
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true } 
+            }); 
+        }
 
-        const config = { fps: 10, qrbox: { width: 250, height: 200 } };
+        // Use a perfect 180x180 square so it doesn't decapitate the QR code
+        const config = { 
+            fps: 10, 
+            qrbox: { width: 180, height: 180 },
+            videoConstraints: { facingMode: "environment" }
+        };
 
         idScanner.start({ facingMode: "environment" }, config, onIdScanSuccess)
         .catch(err => {
