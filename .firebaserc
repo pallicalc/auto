@@ -5,7 +5,11 @@
   "targets": {},
   "etags": {
     "pallicalc-eabdc": {
-      "firestore-send-email": "26120cfdae7a74caefb1cb18a8d44b"
+      "firestore-send-email": "26120cfdae7a74caefb1cb18a8d44b",
+      "extensionInstances": {
+        "firestore-send-email": "26120cfdae7a74caefb1cb18a8d44be3e8d9048da0713ddbb5f86d38d5d4d35d",
+        "stripe-main-v22": "34ddfb8296a0358ef076bffaf29ff585e4db8bd973a83addba6fc4fbad5bc985"
+      }
     }
   }
 }

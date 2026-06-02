@@ -827,6 +827,7 @@ const email = document.getElementById('email').value.trim().toLowerCase();
                             name: instName, 
                             country: countrySelect.value, 
                             adminUid: uid, 
+                            status: 'active',
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
                     });
