@@ -1,5 +1,11 @@
 {
   "projects": {
     "default": "pallicalc-eabdc"
+  },
+  "targets": {},
+  "etags": {
+    "pallicalc-eabdc": {
+      "firestore-send-email": "26120cfdae7a74caefb1cb18a8d44b"
+    }
   }
 }
